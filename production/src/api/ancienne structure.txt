@@ -1,0 +1,157 @@
+
+## authService.ts
+
+Ce service gère l'authentification, la création de comptes et les actions liées aux utilisateurs.
+
+-   **loginWithEmail()**: Connecte un utilisateur via son adresse e-mail.
+    
+-   **loginWithSocialProvider()**: Gère la connexion ou l'inscription via un fournisseur social (Google, etc.).
+    
+-   **createUserAccount()**: Crée un nouveau compte utilisateur avec des informations détaillées.
+    
+-   **validateAuthToken()**: Valide un token de session pour maintenir la connexion d'un utilisateur.
+    
+-   **logoutUser()**: Déconnecte un utilisateur.
+    
+-   **resetPassword()**: Envoie un e-mail de réinitialisation de mot de passe.
+    
+-   **subscribeToNewsletterOnApi()**: Inscrit une adresse e-mail à la newsletter.
+    
+
+----------
+
+## contentService.ts
+
+Ce service est responsable de la création de contenu (idées, posts) et de la récupération des détails complets d'une entité.
+
+-   **createIdeaOnApi()**: Crée une nouvelle idée dans le système.
+    
+-   **createPostOnApi()**: Crée un nouveau post.
+    
+-   **fetchIdeaDetails()**: Récupère toutes les informations détaillées d'une idée spécifique.
+    
+-   **fetchPostDetails()**: Récupère toutes les informations détaillées d'un post spécifique.
+    
+-   **fetchUserProfileFromApi()**: Récupère le profil complet et détaillé d'un utilisateur.
+    
+
+----------
+
+## dataService.ts
+
+Ce service est la couche d'accès direct aux données brutes. Il est principalement utilisé par les autres services pour interroger la base de données simulée.
+
+-   **loadMockDataSet()**: Charge (et met en cache) l'ensemble des données simulées.
+    
+-   **invalidateMockDataCache()**: Efface le cache des données pour forcer un rechargement.
+    
+-   **getUserById()**: Récupère un utilisateur par son ID.
+    
+-   **getUserByEmail()**: Récupère un utilisateur par son adresse e-mail.
+    
+-   **getIdeaById()**: Récupère une idée par son ID.
+    
+-   **getPostById()**: Récupère un post par son ID.
+    
+-   **getIdeasByUserId()**: Récupère toutes les idées créées par un utilisateur.
+    
+-   **getPostsByUserId()**: Récupère tous les posts créés par un utilisateur.
+    
+-   **getAllDiscussions()**: Retourne la liste de toutes les discussions.
+    
+-   **getAllIdeas()**: Retourne la liste de toutes les idées.
+    
+-   **getAllPosts()**: Retourne la liste de tous les posts.
+    
+-   **getAllUsers()**: Retourne la liste de tous les utilisateurs.
+    
+
+----------
+
+## detailsService.ts
+
+Ce service charge les informations complémentaires et contextuelles pour les pages de détail, souvent en fonction de l'onglet actif.
+
+-   **fetchDiscussions()**: Récupère les discussions associées à une idée ou un post.
+    
+-   **fetchIdeaRatings()**: Récupère les données d'évaluation (critères, scores) pour une idée.
+    
+-   **fetchPostReplies()**: Récupère les réponses (commentaires) d'un post.
+    
+-   **fetchIdeaTabDetails()**: Fonction unifiée pour charger les détails d'une idée en fonction de l'onglet demandé (`discussions`, `ratings`, etc.).
+    
+-   **fetchPostTabDetails()**: Fonction unifiée pour charger les détails d'un post en fonction de l'onglet demandé (`discussions`, `content`, etc.).
+    
+
+----------
+
+## feedService.ts
+
+Ce service est spécialisé dans la construction de listes et de "feeds" (fils d'actualité) avec des données optimisées et minimalistes pour un affichage rapide.
+
+-   **fetchHomePageStats()**: Récupère les statistiques globales affichées sur la page d'accueil pour les utilisateurs non connectés.
+    
+-   **fetchFeed()**: Récupère le contenu du feed principal ("Découverte"), incluant idées, posts et communautés.
+    
+-   **fetchUserContributionsFromApi()**: Récupère toutes les contributions d'un utilisateur (idées et posts créés, soutenus ou aimés).
+    
+
+----------
+
+## interactionService.ts
+
+Ce service centralise la gestion de toutes les interactions des utilisateurs avec le contenu (likes, supports, commentaires, etc.).
+
+-   **toggleIdeaSupportOnApi()**: Ajoute ou retire le soutien d'un utilisateur à une idée.
+    
+-   **togglePostLikeOnApi()**: Ajoute ou retire le "like" d'un utilisateur sur un post.
+    
+-   **rateIdeaOnApi()**: Permet à un utilisateur d'évaluer une idée selon un critère spécifique.
+    
+-   **reportContentOnApi()**: Enregistre un signalement de contenu inapproprié.
+    
+-   **ignoreContentOnApi()**: Permet à un utilisateur de masquer un contenu de son feed.
+    
+-   **shareContentOnApi()**: Génère une URL de partage pour une idée ou un post.
+    
+-   **toggleUserFollowOnApi()**: Permet à un utilisateur de suivre ou de ne plus suivre un autre utilisateur.
+    
+-   **togglePostReplyLikeOnApi()**: Ajoute ou retire le "like" sur une réponse à un post.
+    
+-   **addPostReplyOnApi()**: Ajoute une nouvelle réponse à un post.
+    
+-   **upvoteDiscussionTopicOnApi()**: Ajoute un vote positif sur un sujet de discussion.
+    
+-   **upvoteDiscussionPostOnApi()**: Ajoute un vote positif sur un message dans une discussion.
+    
+-   **createDiscussionTopicOnApi()**: Crée un nouveau sujet de discussion lié à une idée.
+    
+-   **createDiscussionPostOnApi()**: Ajoute un nouveau message dans un sujet de discussion.
+    
+-   **markDiscussionPostAsAnswerOnApi()**: Marque un message de discussion comme étant la réponse acceptée.
+    
+
+----------
+
+## lineageService.ts
+
+Ce service gère les relations de "parenté" entre les contenus (par exemple, une idée qui dérive d'une autre).
+
+-   **fetchLineage()**: Récupère l'arbre généalogique complet (parents et enfants) d'une idée ou d'un post.
+    
+-   **fetchIdeaVersionsData()**: Récupère les données de versioning d'une idée (idées sources, idées dérivées, etc.).
+    
+
+----------
+
+## transformService.ts
+
+Ce service contient des fonctions pures pour convertir les données d'un format à un autre (par exemple, transformer les données minimalistes d'un feed en un objet complet pour le store).
+
+-   **transformIdeaCardToIdea()**: Convertit les données minimales d'une "carte idée" (du feed) en un objet `Idea` complet mais avec des champs vides à charger plus tard.
+    
+-   **transformPostCardToPost()**: Convertit les données minimales d'une "carte post" en un objet `Post` complet mais avec des champs vides.
+    
+-   **transformLineageItemToEntity()**: Convertit un élément de l'arbre généalogique en un objet `Idea` ou `Post` minimal.
+    
+-   **createVisitorUser()**: Crée un objet utilisateur par défaut pour un visiteur non identifié.

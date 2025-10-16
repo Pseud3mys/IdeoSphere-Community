@@ -1,0 +1,134 @@
+
+### Analyse Détaillée par Service
+
+Voici une comparaison point par point pour chaque service que vous avez listé.
+
+#### 1. `authService.ts`
+
+-   **Statut :** Quasiment identique.
+    
+-   ✅ **Fonctions couvertes :**
+    
+    -   `loginWithEmail`
+        
+    -   `loginWithSocialProvider`
+        
+    -   `createUserAccount`
+        
+-   ⚠️ **Fonctions simulées (nécessitent un backend) :**
+    
+    -   `validateAuthToken`, `logoutUser`, `resetPassword` sont présents mais simulés, car il n'y a pas de points d'accès API correspondants.
+        
+-   ❌ **Fonction manquante :**
+    
+    -   `subscribeToNewsletterOnApi()` : Cette fonction n'existe pas dans le code actuel.
+        
+
+#### 2. `contentService.ts`
+
+-   **Statut :** Correspondance parfaite.
+    
+-   ✅ **Fonctions couvertes :**
+    
+    -   `createIdeaOnApi()`
+        
+    -   `createPostOnApi()`
+        
+    -   `fetchIdeaDetails()`
+        
+    -   `fetchPostDetails()`
+        
+    -   `fetchUserProfileFromApi()`
+        
+-   **Note :** Le service actuel délègue correctement les écritures à `interactionService` et les lectures à `apiService`, ce qui est une excellente pratique.
+    
+
+#### 3. `dataService.ts`
+
+-   **Statut :** Remplacé par `apiService.ts`.
+    
+-   **Analyse :** Ce service a été supprimé, et c'est le changement d'architecture majeur. Toutes ses responsabilités de récupération de données sont maintenant gérées par `apiService.ts`, qui effectue de vrais appels HTTP.
+    
+    -   `getUserById` -> `getUserById` dans `apiService`
+        
+    -   `getIdeaById` -> `getIdeaById` dans `apiService`
+        
+    -   `getAllIdeas` -> `getAllIdeas` dans `apiService`
+        
+    -   etc.
+        
+-   **Action :** C'est une modification attendue et correcte. Le changement est transparent car les autres services appellent simplement `apiService` au lieu de `dataService`.
+    
+
+#### 4. `detailsService.ts`
+
+-   **Statut :** Bonne correspondance, un léger manque.
+    
+-   ✅ **Fonctions couvertes :**
+    
+    -   `fetchIdeaRatings`
+        
+    -   `fetchPostReplies`
+        
+    -   `fetchIdeaTabDetails`
+        
+    -   `fetchPostTabDetails`
+        
+-   ⚠️ **Équivalence fonctionnelle :**
+    
+    -   `fetchDiscussions()` : Cette fonction n'est pas exportée directement. Cependant, la fonctionnalité existe à l'intérieur de `fetchIdeaTabDetails` qui, lorsque l'onglet est `"discussions"`, appelle `fetchIdeaDiscussions` de l'`apiService`. La fonctionnalité est donc présente, mais pas en tant que fonction autonome.
+        
+
+#### 5. `feedService.ts`
+
+-   **Statut :** Correspondance parfaite.
+    
+-   ✅ **Fonctions couvertes :**
+    
+    -   `fetchHomePageStats`
+        
+    -   `fetchFeed`
+        
+    -   `fetchUserContributionsFromApi`
+        
+
+#### 6. `interactionService.ts`
+
+-   **Statut :** **Incomplet.** C'est ici que se trouvent les plus grands écarts.
+    
+-   ✅ **Fonctions couvertes (parfois avec un nom légèrement différent) :**
+    
+    -   `toggleIdeaSupportOnApi` -> `toggleSupport`
+        
+    -   `togglePostLikeOnApi` -> `togglePostLike`
+        
+    -   `rateIdeaOnApi` -> `rateIdeaOnApi`
+        
+    -   `reportContentOnApi` -> `reportContentOnApi`
+        
+    -   `togglePostReplyLikeOnApi` -> `togglePostReplyLikeOnApi`
+        
+    -   `addPostReplyOnApi` -> `addPostReplyOnApi`
+        
+-   ❌ **Fonctions manquantes :**
+    
+    -   `ignoreContentOnApi`
+        
+    -   `shareContentOnApi`
+        
+    -   `toggleUserFollowOnApi`
+        
+    -   Toutes les fonctions liées aux discussions spécifiques (`upvoteDiscussionTopicOnApi`, `createDiscussionTopicOnApi`, `markDiscussionPostAsAnswerOnApi`, etc.). L'API actuelle ne semble pas avoir de routes pour ces interactions granulaires.
+        
+
+#### 7. `lineageService.ts`
+
+-   **Statut :** Partiellement couvert.
+    
+-   ✅ **Fonctions couvertes :**
+    
+    -   `fetchLineage`
+        
+-   ⚠️ **Équivalence fonctionnelle :**
+    
+    -   `fetchIdeaVersionsData()` : Cette fonction n'existe pas, mais sa logique est probablement incluse dans `fetchLineage`, qui récupère déjà les `sources` (parents) et les `versions` (enfants/dérivés). La fonction dédiée est donc peut-être devenue redondante.

@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+bower_components/
+
+# docker conf:
+.dockerignore
+Dockerfile
+
+# network files and conf
+docker-compose.yml
+nginx.conf
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.db
+
+# Uploads & user content
+uploads/
+temp/
+*.tmp
+
+# Secrets & credentials
+config/secrets.json
+*.pem
+*.key
+*.cert
+
+# Large files
+*.mp4
+*.mov
+*.avi
+*.zip
+*.tar.gz
