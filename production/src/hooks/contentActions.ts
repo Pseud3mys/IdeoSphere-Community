@@ -1,5 +1,6 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
+import { toast } from 'sonner@2.0.3';
 
 /**
  * Actions de contenu pour l'Entity Store
@@ -153,55 +154,71 @@ export function createContentActions(
     
     // Actions d'évaluation
     rateIdea: async (ideaId: string, criterionId: string, value: number) => {
+      const currentUser = boundSelectors.getCurrentUser();
+      if (!currentUser) return;
+      
       try {
         const { rateIdeaOnApi } = await import('../api/interactionService');
         
-        // Utiliser storeUpdater avec une fonction pour éviter les stale closures
+        // 1. Appeler l'API pour enregistrer l'évaluation
+        const result = await rateIdeaOnApi(ideaId, currentUser.id, criterionId, value);
+        
+        if (!result || !result.success) {
+          console.error('❌ Échec de l\'évaluation via l\'API');
+          toast.error('Erreur lors de l\'enregistrement de votre évaluation');
+          return;
+        }
+        
+        // 2. Mettre à jour le store avec les nouvelles ratings retournées par l'API
         storeUpdater(prevStore => {
-          // 1. Lire l'état le plus récent
           const idea = selectors.getIdeaById(prevStore)(ideaId);
-          const currentUser = selectors.getCurrentUser(prevStore);
-
-          if (!idea || !currentUser) return {}; // Ne rien mettre à jour
-
-          // 2. Appeler l'API de manière asynchrone
-          rateIdeaOnApi(ideaId, currentUser.id, criterionId, value).then(success => {
-            if (!success) {
-              console.error('❌ Échec de l\'évaluation via l\'API');
-            }
-          }).catch(error => {
-            console.error('❌ Erreur API lors de l\'évaluation:', error);
-          });
-
-          // 3. Calculer le nouvel état à partir de prevStore
-          const existingRatingIndex = idea.ratings.findIndex(
-            r => r.userId === currentUser.id && r.criterionId === criterionId
-          );
-
-          let newRatings;
-          if (existingRatingIndex >= 0) {
-            // Mise à jour d'une évaluation existante
-            newRatings = [...idea.ratings];
-            newRatings[existingRatingIndex] = {
-              criterionId,
-              value,
-              userId: currentUser.id
-            };
-          } else {
-            // Nouvelle évaluation
-            newRatings = [...idea.ratings, {
-              criterionId,
-              value,
-              userId: currentUser.id
-            }];
-          }
+          if (!idea) return {};
 
           const updatedIdea = {
             ...idea,
-            ratings: newRatings
+            ratings: result.ratings
           };
 
-          // 4. Retourner uniquement les parties du store qui ont changé
+          return {
+            ideas: {
+              ...prevStore.ideas,
+              [ideaId]: updatedIdea
+            }
+          };
+        });
+        
+        toast.success('Évaluation enregistrée');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'évaluation:', error);
+        toast.error('Erreur lors de l\'évaluation');
+      }
+    },
+    
+    // Charger les ratings d'une idée
+    loadIdeaRatings: async (ideaId: string) => {
+      try {
+        const { getIdeaRatingsOnApi } = await import('../api/interactionService');
+        
+        // 1. Récupérer les ratings depuis l'API
+        const ratings = await getIdeaRatingsOnApi(ideaId);
+        
+        if (!ratings) {
+          console.error('❌ Échec du chargement des ratings');
+          return;
+        }
+        
+        console.log('✅ [contentActions] Ratings chargés pour idée:', ideaId, ':', ratings.length, 'évaluations');
+        
+        // 2. Mettre à jour le store avec les ratings récupérés
+        storeUpdater(prevStore => {
+          const idea = selectors.getIdeaById(prevStore)(ideaId);
+          if (!idea) return {};
+
+          const updatedIdea = {
+            ...idea,
+            ratings
+          };
+
           return {
             ideas: {
               ...prevStore.ideas,
@@ -210,7 +227,7 @@ export function createContentActions(
           };
         });
       } catch (error) {
-        console.error('❌ Erreur lors de l\'évaluation:', error);
+        console.error('❌ Erreur lors du chargement des ratings:', error);
       }
     },
     

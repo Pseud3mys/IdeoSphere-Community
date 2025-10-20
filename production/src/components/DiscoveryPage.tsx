@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { IdeaCard } from './IdeaCard';
 import { PostCard } from './PostCard';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { analyzeContentChains, ContentChain, getItemChainContext } from '../utils/feedChainUtils';
 import { 
   Plus,
   Sparkles,
@@ -14,7 +15,8 @@ import {
   Lightbulb,
   ChevronDown,
   Clock,
-  Zap
+  Zap,
+  GitBranch
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -56,6 +58,8 @@ export function DiscoveryPage({
   // ✅ Stocker l'ordre des items pour éviter le re-tri à chaque interaction
   const [sortedItemsCache, setSortedItemsCache] = useState<(FeedItem & { type: 'post' | 'idea' })[]>([]);
   const [lastSortKey, setLastSortKey] = useState<string>('default-all');
+  const [contentChains, setContentChains] = useState<ContentChain[]>([]);
+  const [seenItems, setSeenItems] = useState<Set<string>>(new Set()); // Items déjà vus par l'utilisateur
   // Removed unused state: showTips
 
   // Utiliser l'Entity Store pour les données optimisées
@@ -112,10 +116,10 @@ export function DiscoveryPage({
           .sort((a, b) => {
             const scoreA = a.type === 'post' 
               ? (a.supporters?.length || 0) + a.replies.length * 2 
-              : (a.supporters?.length || 0) + (a.discussionTopics?.length || 0) * 2;
+              : (a.supporters?.length || 0) + (a.discussionIds?.length || 0) * 2;
             const scoreB = b.type === 'post' 
               ? (b.supporters?.length || 0) + b.replies.length * 2 
-              : (b.supporters?.length || 0) + (b.discussionTopics?.length || 0) * 2;
+              : (b.supporters?.length || 0) + (b.discussionIds?.length || 0) * 2;
             return scoreB - scoreA;
           })
           .slice(0, 20);
@@ -129,10 +133,10 @@ export function DiscoveryPage({
           
           const engagementA = a.type === 'post' 
             ? (a.supporters?.length || 0) + a.replies.length * 1.5
-            : (a.supporters?.length || 0) + (a.discussionTopics?.length || 0) * 1.5;
+            : (a.supporters?.length || 0) + (a.discussionIds?.length || 0) * 1.5;
           const engagementB = b.type === 'post' 
             ? (b.supporters?.length || 0) + b.replies.length * 1.5
-            : (b.supporters?.length || 0) + (b.discussionTopics?.length || 0) * 1.5;
+            : (b.supporters?.length || 0) + (b.discussionIds?.length || 0) * 1.5;
           
           // Score combiné : engagement / âge (plus récent = meilleur)
           const scoreA = engagementA / Math.max(ageA / 24, 0.1); // normaliser par jour
@@ -167,6 +171,38 @@ export function DiscoveryPage({
       console.log('🔄 [DiscoveryPage] Tri recalculé:', currentSortKey);
     }
   }, [sortOrder, contentFilter, currentSortKey, lastSortKey]);
+
+  // ✅ Analyser les chaînes de contenu quand les données changent
+  useEffect(() => {
+    if (posts.length > 0 || ideas.length > 0) {
+      const chains = analyzeContentChains(posts, ideas, seenItems);
+      setContentChains(chains);
+      console.log('🔗 [DiscoveryPage] Chaînes analysées:', chains.length);
+    }
+  }, [posts.length, ideas.length, seenItems]);
+
+  // Marquer un item comme vu quand on clique dessus
+  const markAsSeen = (itemId: string, itemType: 'post' | 'idea') => {
+    const key = `${itemType}-${itemId}`;
+    if (!seenItems.has(key)) {
+      setSeenItems(new Set([...seenItems, key]));
+      // Dans une vraie app, on sauvegarderait ça dans le backend/localStorage
+      localStorage.setItem('seenItems', JSON.stringify([...seenItems, key]));
+    }
+  };
+
+  // Charger les items vus depuis le localStorage
+  useEffect(() => {
+    const savedSeenItems = localStorage.getItem('seenItems');
+    if (savedSeenItems) {
+      try {
+        const parsed = JSON.parse(savedSeenItems);
+        setSeenItems(new Set(parsed));
+      } catch (e) {
+        console.error('Erreur lors du chargement des items vus', e);
+      }
+    }
+  }, []);
 
   // ✅ Utiliser le cache d'items triés, mais avec les données à jour du store
   // On garde l'ordre mais on met à jour les données (supportCount, etc.)
@@ -248,68 +284,70 @@ export function DiscoveryPage({
       </div>
 
       {/* Navigation améliorée */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-        {/* Filtres de contenu */}
-        <div className="flex items-center space-x-1 bg-gray-100 rounded-full p-1">
-          {(['all', 'posts', 'ideas'] as ContentFilter[]).map((filter) => (
-            <Button
-              key={filter}
-              variant={contentFilter === filter ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setContentFilter(filter)}
-              className={`rounded-full px-4 h-8 transition-all ${
-                contentFilter === filter 
-                  ? 'bg-white shadow-sm text-gray-900' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              {filter === 'posts' && <MessageSquare className="w-3 h-3 mr-1" />}
-              {filter === 'ideas' && <Lightbulb className="w-3 h-3 mr-1" />}
-              {getContentFilterLabel(filter)}
-              <span className="ml-1 text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
-                {getContentCount(filter)}
-              </span>
-            </Button>
-          ))}
-        </div>
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Filtres de contenu */}
+          <div className="flex items-center space-x-1 bg-gray-100 rounded-full p-1">
+            {(['all', 'posts', 'ideas'] as ContentFilter[]).map((filter) => (
+              <Button
+                key={filter}
+                variant={contentFilter === filter ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setContentFilter(filter)}
+                className={`rounded-full px-4 h-8 transition-all ${
+                  contentFilter === filter 
+                    ? 'bg-white shadow-sm text-gray-900' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {filter === 'posts' && <MessageSquare className="w-3 h-3 mr-1" />}
+                {filter === 'ideas' && <Lightbulb className="w-3 h-3 mr-1" />}
+                {getContentFilterLabel(filter)}
+                <span className="ml-1 text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
+                  {getContentCount(filter)}
+                </span>
+              </Button>
+            ))}
+          </div>
 
-        {/* Sélecteur d'ordre */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="rounded-full px-4 h-8">
-              {(() => {
-                const Icon = getSortOrderIcon(sortOrder);
+          {/* Sélecteur d'ordre */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full px-4 h-8">
+                {(() => {
+                  const Icon = getSortOrderIcon(sortOrder);
+                  return (
+                    <>
+                      <Icon className="w-3 h-3 mr-2" />
+                      {getSortOrderLabel(sortOrder)}
+                      <ChevronDown className="w-3 h-3 ml-2" />
+                    </>
+                  );
+                })()}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {(['default', 'chronological', 'trending'] as SortOrder[]).map((order) => {
+                const Icon = getSortOrderIcon(order);
                 return (
-                  <>
-                    <Icon className="w-3 h-3 mr-2" />
-                    {getSortOrderLabel(sortOrder)}
-                    <ChevronDown className="w-3 h-3 ml-2" />
-                  </>
+                  <DropdownMenuItem
+                    key={order}
+                    onClick={() => setSortOrder(order)}
+                    className={`flex items-center space-x-2 ${
+                      sortOrder === order ? 'bg-blue-50 text-blue-700' : ''
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{getSortOrderLabel(order)}</span>
+                    {order === 'default' && (
+                      <span className="text-xs text-gray-500 ml-auto">Recommandé</span>
+                    )}
+                  </DropdownMenuItem>
                 );
-              })()}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {(['default', 'chronological', 'trending'] as SortOrder[]).map((order) => {
-              const Icon = getSortOrderIcon(order);
-              return (
-                <DropdownMenuItem
-                  key={order}
-                  onClick={() => setSortOrder(order)}
-                  className={`flex items-center space-x-2 ${
-                    sortOrder === order ? 'bg-blue-50 text-blue-700' : ''
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{getSortOrderLabel(order)}</span>
-                  {order === 'default' && (
-                    <span className="text-xs text-gray-500 ml-auto">Recommandé</span>
-                  )}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Indicateur du filtre actuel */}
@@ -321,32 +359,58 @@ export function DiscoveryPage({
         </div>
       )}
 
-      {/* Feed mixte */}
+      {/* Feed mixte avec contexte de chaîne intégré */}
       <div className="space-y-4">
         {filteredItems.length > 0 ? (
-          filteredItems.map(item => (
-            item.type === 'post' ? (
+          filteredItems.map(item => {
+            // Obtenir le contexte de chaîne pour cet item
+            const chainContext = getItemChainContext(
+              item.id,
+              item.type,
+              contentChains,
+              seenItems
+            );
+
+            return item.type === 'post' ? (
               <PostCard
                 key={`post-${item.id}`}
                 post={item}
-                onPostClick={onPostClick}
+                onPostClick={(postId) => {
+                  markAsSeen(postId, 'post');
+                  onPostClick(postId);
+                }}
                 onLike={onLike}
                 currentUser={currentUser}
                 onIgnore={onIgnorePost}
                 onReport={onReportPost}
+                chainContext={chainContext}
+                onIdeaClick={(ideaId) => {
+                  markAsSeen(ideaId, 'idea');
+                  onIdeaClick(ideaId);
+                }}
+                onSupport={onSupport}
               />
             ) : (
               <IdeaCard
                 key={`idea-${item.id}`}
                 idea={item}
-                onIdeaClick={onIdeaClick}
+                onIdeaClick={(ideaId) => {
+                  markAsSeen(ideaId, 'idea');
+                  onIdeaClick(ideaId);
+                }}
                 onSupport={onSupport}
                 currentUser={currentUser}
                 onIgnore={onIgnoreIdea}
                 onReport={onReportIdea}
+                chainContext={chainContext}
+                onPostClick={(postId) => {
+                  markAsSeen(postId, 'post');
+                  onPostClick(postId);
+                }}
+                onLike={onLike}
               />
-            )
-          ))
+            );
+          })
         ) : (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

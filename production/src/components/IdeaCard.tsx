@@ -1,14 +1,17 @@
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag, Share2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
-import { UserLink } from './UserLink';
 import { ContentActionDialogs } from './ContentActionDialogs';
 import { ShareIdeaDialog } from './ShareIdeaDialog';
+import { ChainBadge } from './ChainBadge';
+import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
+import { CreatorAvatar } from './CreatorAvatar';
+import { CreatorNames } from './CreatorNames';
+import { getFirstCreator } from '../utils/userValidation';
 
 interface IdeaCardProps {
   idea: Idea;
@@ -18,6 +21,9 @@ interface IdeaCardProps {
   showInteractions?: boolean;
   onIgnore?: (ideaId: string) => void;
   onReport?: (ideaId: string) => void;
+  chainContext?: ItemChainContext; // Nouveau : contexte de chaîne
+  onPostClick?: (postId: string) => void; // Pour naviguer vers les posts dans la chaîne
+  onLike?: (postId: string) => void; // Pour liker les posts dans la chaîne
 }
 
 // Simple function to format time distance
@@ -43,7 +49,10 @@ export function IdeaCard({
   currentUser, 
   showInteractions = true,
   onIgnore,
-  onReport
+  onReport,
+  chainContext,
+  onPostClick,
+  onLike
 }: IdeaCardProps) {
   // États pour les dialogues de confirmation
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
@@ -153,18 +162,30 @@ export function IdeaCard({
             {latestIdea.title}
           </h3>
           
-          {/* Localisation avec badge Projet */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-            {latestIdea.creators.length > 0 && latestIdea.creators[0].location && (
-              <>
-                <MapPin className="w-4 h-4" />
-                <span>{latestIdea.creators[0].location}</span>
-                <span>•</span>
-              </>
-            )}
+          {/* Localisation avec badge Projet et badge de chaîne */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
+            {(() => {
+              const firstCreator = getFirstCreator(latestIdea.creators);
+              return firstCreator?.location ? (
+                <>
+                  <MapPin className="w-4 h-4" />
+                  <span>{firstCreator.location}</span>
+                  <span>•</span>
+                </>
+              ) : null;
+            })()}
             <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20">
               Projet
             </Badge>
+            {chainContext && chainContext.isInChain && (
+              <>
+                <span>•</span>
+                <ChainBadge 
+                  context={chainContext} 
+                  itemType="idea"
+                />
+              </>
+            )}
           </div>
         </div>
         
@@ -234,18 +255,8 @@ export function IdeaCard({
 
       {/* Auteur - après la description */}
       <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-        <Avatar className="w-5 h-5">
-          <AvatarImage src={latestIdea.creators[0]?.avatar} alt={latestIdea.creators[0]?.name} />
-          <AvatarFallback className="text-xs">{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
-        </Avatar>
-        <span>
-          {latestIdea.creators.length === 1 
-            ? latestIdea.creators[0].name
-            : latestIdea.creators.length === 2
-              ? `${latestIdea.creators[0].name} et ${latestIdea.creators[1].name}`
-              : `${latestIdea.creators[0].name} et ${latestIdea.creators.length - 1} autre${latestIdea.creators.length > 2 ? 's' : ''}`
-          }
-        </span>
+        <CreatorAvatar creators={latestIdea.creators} />
+        <CreatorNames creators={latestIdea.creators} />
         <span>•</span>
         <span>{timeAgo}</span>
       </div>

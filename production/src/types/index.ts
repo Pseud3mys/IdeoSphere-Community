@@ -4,8 +4,9 @@ export interface User {
   email: string;
   avatar: string;
   bio?: string;
-  location?: string;
-  preciseAddress?: string; // Adresse (optionnelle) - seule la localisation approximative nous intéresse
+  location?: string; // Deprecated - kept for backward compatibility
+  preciseAddress?: string; // Deprecated - kept for backward compatibility
+  address?: string; // Adresse complète de l'utilisateur (optionnelle)
   birthYear?: number; // Année de naissance (obligatoire pour les utilisateurs enregistrés)
   createdAt: Date;
   isRegistered: boolean; // true = utilisateur connecté, false = invité/anonyme

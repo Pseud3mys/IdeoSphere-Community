@@ -8,8 +8,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5d3?w=64',
     bio: "Commerçante retraitée passionnée par l'amélioration du cadre de vie à Le Blanc.",
     createdAt: new Date('2023-06-15'),
-    location: 'Le Blanc',
-    preciseAddress: '12 rue du Commerce',
+    address: '12 rue du Commerce, Le Blanc',
     birthYear: 1965,
     isRegistered: true
   },
@@ -20,8 +19,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64',
     bio: "Artisan et conseiller municipal sortant, investi dans les projets locaux concrets.",
     createdAt: new Date('2023-08-22'),
-    location: 'Le Blanc',
-    preciseAddress: '45 avenue des Chaumettes',
+    address: '45 avenue des Chaumettes, Le Blanc',
     birthYear: 1972,
     isRegistered: true
   },
@@ -32,8 +30,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64',
     bio: "Enseignante et mère de famille, engagée pour l'éducation et la famille à Le Blanc.",
     createdAt: new Date('2023-09-10'),
-    location: 'Le Blanc',
-    preciseAddress: '8 rue Saint-Genitou',
+    address: '8 rue Saint-Genitou, Le Blanc',
     birthYear: 1985,
     isRegistered: true
   },
@@ -44,8 +41,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64',
     bio: "Jeune entrepreneur local spécialisé dans le numérique et l'innovation.",
     createdAt: new Date('2023-07-05'),
-    location: 'Le Blanc',
-    preciseAddress: '23 rue des Vignes',
+    address: '23 rue des Vignes, Le Blanc',
     birthYear: 1992,
     isRegistered: true
   },
@@ -56,8 +52,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=64',
     bio: "Infirmière libérale et présidente d'association, active dans le tissu social blanc.",
     createdAt: new Date('2023-05-30'),
-    location: 'Le Blanc',
-    preciseAddress: '17 allée de Beaulieu',
+    address: '17 allée de Beaulieu, Le Blanc',
     birthYear: 1989,
     isRegistered: true
   },
@@ -68,8 +63,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=64',
     bio: "Retraité engagé, animateur du comité de quartier Nord depuis plusieurs années.",
     createdAt: new Date('2023-10-15'),
-    location: 'Le Blanc',
-    preciseAddress: '34 boulevard du Nord',
+    address: '34 boulevard du Nord, Le Blanc',
     birthYear: 1958,
     isRegistered: true
   },
@@ -80,8 +74,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=64',
     bio: "Étudiante en sciences politiques, coordinatrice du collectif jeunes de Saint-Laurent.",
     createdAt: new Date('2024-01-30'),
-    location: 'Saint-Laurent',
-    preciseAddress: '5 place de la Mairie',
+    address: '5 place de la Mairie, Saint-Laurent',
     birthYear: 2001,
     isRegistered: true
   }
@@ -95,7 +88,7 @@ export const guestUser: User = {
   avatar: '', // Avatar par défaut pour les invités
   bio: "Visiteur de la plateforme IdeoSphere",
   createdAt: new Date(),
-  location: 'Le Blanc',
+  address: 'Le Blanc',
   isRegistered: false
 };
 
@@ -106,8 +99,7 @@ export const currentUser: User = {
   avatar: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=64',
   bio: "Membre active du COLLECTIF BLANCOIS CITOYEN, passionnée par l'amélioration de notre commune.",
   createdAt: new Date('2023-04-12'),
-  location: 'Le Blanc',
-  preciseAddress: '15 rue de la République',
+  address: '15 rue de la République, Le Blanc',
   birthYear: 1988,
   isRegistered: true
 };

@@ -190,8 +190,6 @@ export async function createDiscussionPostOnApi(
   }
 }
 
-// ... (le reste du fichier ne change pas)
-
 /**
  * Marque un post de discussion (commentaire) comme réponse acceptée via l'API.
  * @param topic - L'objet du topic (le post parent).
@@ -237,6 +235,11 @@ export async function markDiscussionPostAsAnswerOnApi(
 }
 
 // --- Fonctions sans endpoint API défini ---
+export async function getIdeaRatingsOnApi(
+  ideaId: string
+): Promise<void> {
+  console.log(`LOG: getIdeaRatingsOnApi a été appelé pour ${ideaId}. Ce service nécessite un endpoint API dédié.`);
+}
 
 export async function ignoreContentOnApi(contentId: string, userId: string): Promise<void> {
   console.log(`LOG: ignoreContentOnApi a été appelé pour ${contentId} par ${userId}. Ce service nécessite un endpoint API dédié.`);

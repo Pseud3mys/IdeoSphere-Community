@@ -36,6 +36,10 @@ interface SimpleEntityStore {
   // IDs des items du feed (pour filtrer ce qui doit être affiché dans Discovery)
   feedIdeaIds: string[];
   feedPostIds: string[];
+  
+  // Cache management
+  feedLastFetched: number | null;
+  contributionsLastFetched: number | null;
 }
 
 // Actions pour modifier le store
@@ -89,6 +93,12 @@ interface SimpleEntityActions {
   setFeedIdeaIds: (ids: string[]) => void;
   setFeedPostIds: (ids: string[]) => void;
   
+  // Actions pour le cache
+  setFeedLastFetched: (timestamp: number | null) => void;
+  setContributionsLastFetched: (timestamp: number | null) => void;
+  invalidateFeedCache: () => void;
+  invalidateContributionsCache: () => void;
+  
   // Actions combinées
   initializeStore: (initialData: {
     users: User[];
@@ -135,7 +145,9 @@ const createInitialStore = (): SimpleEntityStore => ({
   prefilledSourcePostId: null,
   prefilledSignupData: null,
   feedIdeaIds: [],
-  feedPostIds: []
+  feedPostIds: [],
+  feedLastFetched: null,
+  contributionsLastFetched: null
 });
 
 // Fonctions helper pour extraire les utilisateurs des idées et posts
@@ -491,6 +503,12 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),
     setFeedPostIds: (ids) => setStore(prev => ({ ...prev, feedPostIds: ids })),
     setPrefilledSignupData: (data) => setStore(prev => ({ ...prev, prefilledSignupData: data })),
+    
+    // Cache Actions
+    setFeedLastFetched: (timestamp) => setStore(prev => ({ ...prev, feedLastFetched: timestamp })),
+    setContributionsLastFetched: (timestamp) => setStore(prev => ({ ...prev, contributionsLastFetched: timestamp })),
+    invalidateFeedCache: () => setStore(prev => ({ ...prev, feedLastFetched: null })),
+    invalidateContributionsCache: () => setStore(prev => ({ ...prev, contributionsLastFetched: null })),
 
     // Initialize store
     initializeStore: (initialData) => {

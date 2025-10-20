@@ -70,6 +70,46 @@ export async function createUserAccount(userData: Partial<User>): Promise<User |
 }
 
 /**
+ * Crée un compte utilisateur non finalisé (temporaire) en appelant l'API.
+ * Pour permettre aux visiteurs de publier du contenu avant de s'inscrire.
+ * @param guestData - Données optionnelles du visiteur
+ * @returns L'utilisateur temporaire créé par le backend avec isRegistered: false
+ */
+export async function createUnfinalizedAccountOnApi(guestData?: {
+  name?: string;
+  location?: string;
+  preciseAddress?: string;
+}): Promise<User | null> {
+  console.log('🔄 [AUTH] Création de compte non finalisé (temporaire) via API');
+  console.log(guestData);
+  try {
+    // 1. Préparer le payload pour l'API.
+    // L'email est généré aléatoirement pour être unique, car il est requis par le backend.
+    const tempEmail = `guest-${Date.now()}@temp.guest`;
+    const payload = {
+      name: guestData?.name || `Invité ${Math.floor(Math.random() * 1000)}`,
+      email: tempEmail,
+      location: guestData?.location || '',
+      preciseAddress: guestData?.preciseAddress || '',
+      isRegistered: false, // ✅ C'est le champ clé pour indiquer un compte non finalisé.
+    };
+
+    // 2. Appeler l'endpoint POST /users du backend.
+    const response = await apiClient.post<RawUser>('/users', payload);
+
+    // 3. Transformer la réponse de l'API en objet User pour le frontend.
+    const newUser = transformUser(response.data);
+    
+    console.log('✅ [AUTH] Compte non finalisé créé via API:', newUser?.name);
+    return newUser;
+
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur lors de la création du compte non finalisé:', error);
+    return null;
+  }
+}
+
+/**
  * Valide un token de session. (Nécessite un endpoint backend)
  */
 export async function validateAuthToken(token: string): Promise<User | null> {

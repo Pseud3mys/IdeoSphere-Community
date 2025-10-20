@@ -82,15 +82,40 @@ export function createApiActions(
     },
     
     /**
-     * Charge le feed de découverte avec chargement progressif
+     * Charge le feed de découverte avec système de cache
      */
-    fetchFeed: async () => {
+    fetchFeed: async (forceRefresh: boolean = false) => {
       try {
         // Récupérer l'utilisateur actuel pour personnaliser le feed
         const currentUser = boundSelectors.getCurrentUser();
         const userId = currentUser?.id;
         
-        console.log(`[hook/apiActions] fetchFeed - User: ${userId || 'anonymous'}`);
+        // Vérifier si on a déjà les données en cache (valide pendant 5 minutes)
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        const now = Date.now();
+        const lastFetched = store.feedLastFetched;
+        const isCacheValid = lastFetched && (now - lastFetched) < CACHE_DURATION;
+        
+        if (!forceRefresh && isCacheValid && store.feedIdeaIds.length > 0) {
+          console.log(`♻️ [apiActions] fetchFeed - Utilisation du cache (${store.feedIdeaIds.length} idées, ${store.feedPostIds.length} posts)`);
+          
+          // Récupérer directement depuis le store
+          const ideasFromStore = store.feedIdeaIds.map(id => boundSelectors.getIdeaById(id)).filter(Boolean);
+          const postsFromStore = store.feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
+          
+          // Naviguer vers la page discovery
+          actions.setActiveTab('discovery');
+          
+          return {
+            posts: postsFromStore,
+            ideas: ideasFromStore,
+            totalPosts: postsFromStore.length,
+            totalIdeas: ideasFromStore.length,
+            totalItems: postsFromStore.length + ideasFromStore.length
+          };
+        }
+        
+        console.log(`🔄 [apiActions] fetchFeed - Chargement depuis l'API (User: ${userId || 'anonymous'})`);
         
         const { fetchFeed } = await import('../api/feedService');
         const feedData = await fetchFeed(userId);
@@ -113,15 +138,16 @@ export function createApiActions(
           feedPostIds.push(minimalPost.id);
         });
         
-        // Stocker les IDs des items du feed
+        // Stocker les IDs des items du feed et mettre à jour le timestamp du cache
         actions.setFeedIdeaIds(feedIdeaIds);
         actions.setFeedPostIds(feedPostIds);
+        actions.setFeedLastFetched(now);
         
         // 3. LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
         const ideasFromStore = feedIdeaIds.map(id => boundSelectors.getIdeaById(id)).filter(Boolean);
         const postsFromStore = feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
         
-        console.log(`✅ [apiActions] fetchFeed: Chargé ${ideasFromStore.length} idées et ${postsFromStore.length} posts depuis le store`);
+        console.log(`✅ [apiActions] fetchFeed: Chargé ${ideasFromStore.length} idées et ${postsFromStore.length} posts depuis l'API`);
         
         // Naviguer vers la page discovery
         actions.setActiveTab('discovery');
@@ -135,7 +161,7 @@ export function createApiActions(
         };
         
       } catch (error) {
-        console.error('�� [hook/apiActions] fetchFeed:', error);
+        console.error('[apiActions] fetchFeed Error:', error);
         
         // Fallback vers le comportement actuel en cas d'erreur
         const allIdeas = boundSelectors.getPublishedIdeas();
@@ -155,9 +181,9 @@ export function createApiActions(
     },
     
     /**
-     * Charge les contributions de l'utilisateur actuel
+     * Charge les contributions de l'utilisateur actuel avec système de cache
      */
-    fetchMyContributions: async () => {
+    fetchMyContributions: async (forceRefresh: boolean = false) => {
       const currentUser = boundSelectors.getCurrentUser();
       if (!currentUser) {
         console.error('❌ [apiActions] fetchMyContributions: Aucun utilisateur connecté');
@@ -165,6 +191,34 @@ export function createApiActions(
       }
       
       try {
+        // Vérifier si on a déjà les données en cache (valide pendant 5 minutes)
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        const now = Date.now();
+        const lastFetched = store.contributionsLastFetched;
+        const isCacheValid = lastFetched && (now - lastFetched) < CACHE_DURATION;
+        
+        // Si le cache est valide et on a déjà des données, on les utilise
+        if (!forceRefresh && isCacheValid) {
+          console.log(`♻️ [apiActions] fetchMyContributions - Utilisation du cache`);
+          
+          // Récupérer les contributions depuis le store via le selector
+          const contributions = boundSelectors.getMyContributions();
+          
+          if (contributions) {
+            // Naviguer vers mes idées
+            actions.setActiveTab('my-ideas');
+            
+            return {
+              participationIdeas: contributions.participationIdeas,
+              supportIdeas: contributions.supportIdeas,
+              participationPosts: contributions.participationPosts,
+              supportPosts: contributions.supportPosts
+            };
+          }
+        }
+        
+        console.log(`🔄 [apiActions] fetchMyContributions - Chargement depuis l'API (User: ${currentUser.id})`);
+        
         // 1. APPELER L'API pour obtenir les contributions
         const { fetchUserContributionsFromApi } = await import('../api/feedService');
         const apiContributionsData = await fetchUserContributionsFromApi(currentUser.id);
@@ -188,6 +242,9 @@ export function createApiActions(
           actions.addPost(post);
           allPostIds.push(post.id);
         });
+        
+        // Mettre à jour le timestamp du cache
+        actions.setContributionsLastFetched(now);
         
         // 3. LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
         const participationIdeas = allIdeaIds
@@ -223,7 +280,7 @@ export function createApiActions(
           supportPosts
         };
         
-        console.log(`✅ [apiActions] fetchMyContributions: Chargé ${participationIdeas.length} idées participation et ${supportIdeas.length} idées soutien depuis le store`);
+        console.log(`✅ [apiActions] fetchMyContributions: Chargé ${participationIdeas.length} idées participation et ${supportIdeas.length} idées soutien depuis l'API`);
         
         // Naviguer vers mes idées
         actions.setActiveTab('my-ideas');

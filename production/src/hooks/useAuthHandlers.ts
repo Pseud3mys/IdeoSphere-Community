@@ -21,8 +21,7 @@ export function useAuthHandlers(
     name: string;
     email: string;
     password: string;
-    location?: string;
-    preciseAddress?: string;
+    address?: string;
     birthYear?: number;
   }) => Promise<User | null>,
   subscribeToNewsletter: (email: string) => Promise<boolean>
@@ -63,7 +62,7 @@ export function useAuthHandlers(
   };
 
   /**
-   * Gère la connexion sociale (Google, Facebook, Microsoft)
+   * Gère la connexion sociale (Google, Facebook, Discord)
    * ✅ Utilise l'action loginWithSocialProvider du store
    */
   const handleSocialLogin = async (provider: string): Promise<boolean> => {
@@ -73,7 +72,8 @@ export function useAuthHandlers(
         email: `demo@${provider}.com`,
         name: provider === 'google' ? 'Utilisateur Google' : 
               provider === 'facebook' ? 'Utilisateur Facebook' : 
-              'Utilisateur Microsoft',
+              provider === 'discord' ? 'Utilisateur Discord' :
+              'Utilisateur Social',
         avatar: ''
       };
       

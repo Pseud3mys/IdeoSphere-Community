@@ -24,8 +24,7 @@ export function createUserActions(
     createUserAccount: async (userData: {
       name: string;
       email: string;
-      location: string;
-      preciseAddress?: string;
+      address?: string;
       bio?: string;
       birthYear?: number;
     }) => {
@@ -50,7 +49,7 @@ export function createUserActions(
       }
     },
     
-    createTemporaryGuest: async (guestData?: { name?: string; location?: string; preciseAddress?: string }) => {
+    createTemporaryGuest: async (guestData?: { name?: string; address?: string }) => {
       try {
         // ✅ Appeler le service API pour créer un compte non finalisé
         const { createUnfinalizedAccountOnApi } = await import('../api/authService');
@@ -79,8 +78,7 @@ export function createUserActions(
           email: '',
           bio: 'Utilisateur visiteur non enregistré',
           avatar: '',
-          location: '',
-          preciseAddress: '',
+          address: '',
           birthYear: new Date().getFullYear() - 30,
           createdAt: new Date(),
           isRegistered: false
@@ -100,8 +98,7 @@ export function createUserActions(
           email: 'test@example.com',
           bio: 'Utilisateur de test pour le développement',
           avatar: '',
-          location: 'Paris',
-          preciseAddress: '123 Rue de Test, 75001 Paris',
+          address: '123 Rue de Test, 75001 Paris',
           birthYear: 1990,
           createdAt: new Date(),
           isRegistered: true
@@ -160,8 +157,7 @@ export function createUserActions(
       name: string;
       email: string;
       password: string;
-      location?: string;
-      preciseAddress?: string;
+      address?: string;
       birthYear?: number;
     }) => {
       try {
@@ -171,8 +167,7 @@ export function createUserActions(
         const apiData = {
           name: userData.name,
           email: userData.email,
-          location: userData.location || '',
-          preciseAddress: userData.preciseAddress,
+          address: userData.address,
           birthYear: userData.birthYear || new Date().getFullYear() - 25
         };
         

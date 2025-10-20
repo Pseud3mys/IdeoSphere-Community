@@ -20,6 +20,7 @@ export function createNavigationActions(
         // 1. APPELER L'API pour obtenir les détails de l'idée
         const { fetchIdeaDetails } = await import('../api/contentService');
         const { fetchDiscussions } = await import('../api/detailsService');
+        const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
         const apiIdeaDetails = await fetchIdeaDetails(ideaId);
         
@@ -31,7 +32,15 @@ export function createNavigationActions(
         // 2. AJOUTER AU STORE
         actions.addIdea(apiIdeaDetails);
         
-        // 3. Charger les discussions et mettre à jour l'idée
+        // 3. Charger les ratings de l'idée
+        const ratings = await getIdeaRatingsOnApi(ideaId);
+        if (ratings) {
+          console.log(`✅ [navigationActions] Ratings chargés pour idée ${ideaId}:`, ratings.length, 'évaluations');
+          // Mettre à jour l'idée avec les ratings
+          actions.updateIdea(ideaId, { ratings });
+        }
+        
+        // 4. Charger les discussions et mettre à jour l'idée
         const discussions = await fetchDiscussions(ideaId, 'idea');
         
         if (discussions && discussions.length > 0) {
@@ -51,7 +60,7 @@ export function createNavigationActions(
           }
         }
         
-        // 4. LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
+        // 5. LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
         const ideaFromStore = boundSelectors.getIdeaById(ideaId);
         
         if (!ideaFromStore) {
@@ -59,7 +68,7 @@ export function createNavigationActions(
           return;
         }
         
-        console.log(`✅ [navigationActions] goToIdea: Chargé idée "${ideaFromStore.title}" depuis le store avec ${ideaFromStore.discussionIds?.length || 0} discussions`);
+        console.log(`✅ [navigationActions] goToIdea: Chargé idée "${ideaFromStore.title}" depuis le store avec ${ideaFromStore.discussionIds?.length || 0} discussions et ${ideaFromStore.ratings?.length || 0} évaluations`);
         
       } catch (error) {
         console.error(`❌ [navigationActions] goToIdea:`, error);

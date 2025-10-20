@@ -20,7 +20,7 @@ interface AppContentProps {
     name: string;
     email: string;
     password: string;
-    location?: string;
+    address?: string;
   }) => Promise<boolean>;
   onNewsletterSubscribe?: (data: {
     email: string;
@@ -148,20 +148,21 @@ export function AppContent({
       <SignupPage
         onBack={() => actions.goToTab('welcome')}
         onSignup={async (userData) => {
-          // Utiliser onSignup si fourni, sinon créer un nouveau utilisateur via le store
-          if (onSignup) {
-            await onSignup({
-              name: userData.name,
-              email: userData.email,
-              password: '', // Mot de passe temporaire ou géré ailleurs
-              location: userData.location
-            });
-          } else {
-            // Créer directement via le store
-            actions.createUserAccount(userData);
+          // Créer le compte directement via le store action signupUser
+          // qui appelle l'API authService correctement
+          const success = await actions.signupUser({
+            name: userData.name,
+            email: userData.email,
+            password: '', // Password généré automatiquement dans ce flow
+            address: userData.address,
+            birthYear: userData.birthYear
+          });
+          
+          if (success) {
+            actions.enterPlatform();
           }
-          actions.enterPlatform();
         }}
+        onSocialLogin={onSocialLogin}
         prefilledData={store.prefilledSignupData}
       />
     );

@@ -8,6 +8,8 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { UserLink } from './UserLink';
 import { ContentActionDialogs } from './ContentActionDialogs';
 import { SharePostDialog } from './SharePostDialog';
+import { ChainBadge } from './ChainBadge';
+import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
 
 interface PostCardProps {
@@ -18,6 +20,9 @@ interface PostCardProps {
   showInteractions?: boolean;
   onIgnore?: (postId: string) => void;
   onReport?: (postId: string) => void;
+  chainContext?: ItemChainContext; // Nouveau : contexte de chaîne
+  onIdeaClick?: (ideaId: string) => void; // Pour naviguer vers les idées dans la chaîne
+  onSupport?: (ideaId: string) => void; // Pour supporter les idées dans la chaîne
 }
 
 // Simple function to format time distance
@@ -43,7 +48,10 @@ export function PostCard({
   currentUser, 
   showInteractions = true,
   onIgnore,
-  onReport
+  onReport,
+  chainContext,
+  onIdeaClick,
+  onSupport
 }: PostCardProps) {
   // États pour les dialogues de confirmation
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
@@ -153,8 +161,8 @@ export function PostCard({
             {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
           </h3>
           
-          {/* Localisation avec badge Post */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+          {/* Localisation avec badge Post et badge de chaîne */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
             {latestPost.author.location && (
               <>
                 <MapPin className="w-4 h-4" />
@@ -165,6 +173,15 @@ export function PostCard({
             <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20">
               Post
             </Badge>
+            {chainContext && chainContext.isInChain && (
+              <>
+                <span>•</span>
+                <ChainBadge 
+                  context={chainContext} 
+                  itemType="post"
+                />
+              </>
+            )}
           </div>
         </div>
         
