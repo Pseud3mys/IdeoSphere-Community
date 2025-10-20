@@ -7,8 +7,11 @@ import {
   transformUser,
   transformIdea,
   transformPost,
+  transformPostToDiscussion,
   RawUser,
-  RawContent
+  RawContent,
+  RawIdea,
+  RawPost
 } from './transformService';
 
 // --- INTERFACES POUR LES DONNÉES BRUTES DE L'API ---
@@ -139,10 +142,22 @@ export async function fetchFeed(userId: string): Promise<{
     const posts: Post[] = [];
 
     rawData.content.forEach(item => {
+      // 1. Détecter si c'est une Idée (logique inchangée)
       if (item.description !== undefined || item.summary !== undefined) {
-        ideas.push(transformIdea(item, usersMap));
-      } else {
-        posts.push(transformPost(item, usersMap));
+        ideas.push(transformIdea(item as RawIdea, usersMap));
+      } 
+      // 2. Sinon, c'est un Post. Il faut maintenant vérifier son type.
+      else {
+        const postItem = item as RawPost;
+        
+        // 3. Aiguillage basé sur la présence et la valeur de 'isDiscussion'
+        if (postItem.isDiscussion === true) {
+          // Avertir que nous avons détecté une discussion. créer un warning:
+          console.warn(`[API] fetchFeed - Discussion détectée pour le post ID ${postItem._id}. DiscussionTopic ignoré.`);
+          } else {
+          // C'est un post standard
+          posts.push(transformPost(postItem, usersMap));
+        }
       }
     });
     
@@ -241,8 +256,10 @@ const transformPostToCard = (post: Post): FeedPostCard => ({
     location: post.location,
     author: { id: post.author.id, name: post.author.name, avatar: post.author.avatar },
     createdAt: post.createdAt,
-    likeCount: post.likeCount,
-    replyCount: post.replies.length,
+    // Correction 1: Gère 'likeCount' (pour Post) et 'upvotes' (pour DiscussionTopic)
+    likeCount: post.likeCount ?? (post.upvotes || []).length,
+    // Correction 2: Gère 'replies' (pour Post) et 'posts' (pour DiscussionTopic)
+    replyCount: (post.replies || post.posts || []).length,
     tags: post.tags || [],
     type: 'post',
 });

@@ -70,6 +70,8 @@ export interface RawContent {
   upvotes?: string[]; // List of user _ids
   comments?: RawComment[];
   type?: string; // e.g., 'question', 'general'
+  //Discussion-specific
+  isDiscussion?: boolean;
 }
 
 export type RawIdea = RawContent;
