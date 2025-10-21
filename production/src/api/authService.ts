@@ -76,9 +76,10 @@ export async function createUserAccount(userData: Partial<User>): Promise<User |
  * @returns L'utilisateur temporaire créé par le backend avec isRegistered: false
  */
 export async function createUnfinalizedAccountOnApi(guestData?: {
-  name?: string;
-  location?: string;
-  preciseAddress?: string;
+    name?: string;
+    email?: string;
+    address?: string;
+    bio?: string;
 }): Promise<User | null> {
   console.log('🔄 [AUTH] Création de compte non finalisé (temporaire) via API');
   console.log(guestData);
@@ -88,9 +89,9 @@ export async function createUnfinalizedAccountOnApi(guestData?: {
     const tempEmail = `guest-${Date.now()}@temp.guest`;
     const payload = {
       name: guestData?.name || `Invité ${Math.floor(Math.random() * 1000)}`,
-      email: tempEmail,
-      location: guestData?.location || '',
-      preciseAddress: guestData?.preciseAddress || '',
+      email: guestData?.email || tempEmail,
+      location: guestData?.address || '',
+      bio: guestData?.bio || '',
       isRegistered: false, // ✅ C'est le champ clé pour indiquer un compte non finalisé.
     };
 

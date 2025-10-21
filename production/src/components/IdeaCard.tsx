@@ -1,11 +1,10 @@
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { ContentActionDialogs } from './ContentActionDialogs';
-import { ShareIdeaDialog } from './ShareIdeaDialog';
 import { ChainBadge } from './ChainBadge';
 import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
@@ -312,18 +311,6 @@ export function IdeaCard({
               <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Voir détails</span>
             </Button>
-            
-            <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-              >
-                <Share2 className="w-5 h-5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Partager</span>
-              </Button>
-            </ShareIdeaDialog>
             
             <Button 
               size="sm"

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { SharePostDialog } from './SharePostDialog';
+import { getValidAvatar } from '../api/avatarService';
 
 interface PostDetailPageProps {
   post: Post;
@@ -167,7 +168,7 @@ export function PostDetailPage({
               >
                 <div className="flex items-start space-x-2">
                   <Avatar className="w-6 h-6">
-                    <AvatarImage src={sourcePost?.author.avatar} alt={sourcePost?.author.name} />
+                    <AvatarImage src={getValidAvatar(sourcePost?.author.name || '', sourcePost?.author.avatar)} alt={sourcePost?.author.name} />
                     <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
                       {sourcePost?.author.name.slice(0, 2)}
                     </AvatarFallback>
@@ -190,7 +191,7 @@ export function PostDetailPage({
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-start space-x-3">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={latestPost.author.avatar} alt={latestPost.author.name} />
+              <AvatarImage src={getValidAvatar(latestPost.author.name, latestPost.author.avatar)} alt={latestPost.author.name} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                 {latestPost.author.name.slice(0, 2)}
               </AvatarFallback>
@@ -393,7 +394,7 @@ export function PostDetailPage({
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={derivedPost?.author.avatar} alt={derivedPost?.author.name} />
+                      <AvatarImage src={getValidAvatar(derivedPost?.author.name || '', derivedPost?.author.avatar)} alt={derivedPost?.author.name} />
                       <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
                         {derivedPost?.author.name.slice(0, 2)}
                       </AvatarFallback>
@@ -435,7 +436,7 @@ export function PostDetailPage({
           <div className="p-4 border-b border-gray-100">
             <div className="flex space-x-3">
               <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
                   {currentUser.name.slice(0, 2)}
                 </AvatarFallback>
@@ -470,7 +471,7 @@ export function PostDetailPage({
                 <div className="flex space-x-3">
                   <div className="flex flex-col items-center space-y-1">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={reply.author.avatar} alt={reply.author.name} />
+                      <AvatarImage src={getValidAvatar(reply.author.name, reply.author.avatar)} alt={reply.author.name} />
                       <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
                         {reply.author.name.slice(0, 2)}
                       </AvatarFallback>

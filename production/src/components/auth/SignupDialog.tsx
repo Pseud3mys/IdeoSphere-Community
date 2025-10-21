@@ -49,6 +49,7 @@ interface SignupDialogProps {
     email: string;
     password: string;
     address?: string;
+    bio?: string;
   }) => Promise<boolean>;
   onSocialLogin: (provider: string) => Promise<boolean>;
   onSwitchToLogin: () => void;

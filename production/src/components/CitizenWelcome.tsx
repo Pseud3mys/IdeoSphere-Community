@@ -36,6 +36,7 @@ interface CitizenWelcomeProps {
     email: string;
     password: string;
     location?: string;
+    bio?: string;
   }) => Promise<boolean>;
   onNewsletterSubscribe: (data: {
     email: string;
@@ -50,6 +51,9 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestLocation, setGuestLocation] = useState('');
   
   // État pour les données autonomes
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
@@ -99,27 +103,37 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   };
 
   const handleSkipLocation = async () => {
-    // 1. Créer un utilisateur temporaire via le service API
-    const tempUser = await actions.createTemporaryGuest();
+    // 1. Créer un utilisateur temporaire via le service API avec les données saisies
+    const guestData = {
+      name: guestName.trim() || undefined,
+      email: guestEmail.trim() || undefined,
+      address: guestLocation.trim() || undefined
+    };
+    
+    const tempUser = await actions.createTemporaryGuest(guestData);
     
     if (!tempUser) {
       console.error('❌ Impossible de créer un utilisateur temporaire');
       return;
     }
     
+    console.log('✅ [CitizenWelcome] Utilisateur temporaire créé:', tempUser.id, tempUser.name);
+    
     // 2. Entrer dans la plateforme
     actions.enterPlatform();
     
     // 3. Publier le post avec l'utilisateur temporaire
+    // ✅ IMPORTANT: Passer explicitement l'ID de l'utilisateur temporaire
     // publishPost navigue automatiquement vers la page de détail du post
     await actions.publishPost({
-      content: quickIdea
+      content: quickIdea,
+      location: guestLocation.trim() || undefined,
+      authorId: tempUser.id // ✅ Utiliser l'utilisateur temporaire qu'on vient de créer
     });
   };
 
   const handleAddLocation = () => {
-    // Pour l'instant, même comportement que skip location
-    // Dans une version plus avancée, on pourrait capturer les données du formulaire
+    // Même comportement que skip location mais avec capture des données
     handleSkipLocation();
   };
 
@@ -300,6 +314,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                       <Input
                         placeholder="Ex: Place de la République, Le Blanc"
                         className="text-base"
+                        value={guestLocation}
+                        onChange={(e) => setGuestLocation(e.target.value)}
                       />
                     </div>
                     
@@ -311,11 +327,15 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                         <Input
                           placeholder="Votre nom"
                           className="text-base"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
                         />
                         <Input
                           type="email"
                           placeholder="Votre email"
                           className="text-base"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
                         />
                       </div>
                       <p className="text-sm text-muted-foreground">

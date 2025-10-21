@@ -2,15 +2,15 @@ import { Post, User } from '../types';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
-import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { UserLink } from './UserLink';
 import { ContentActionDialogs } from './ContentActionDialogs';
-import { SharePostDialog } from './SharePostDialog';
 import { ChainBadge } from './ChainBadge';
 import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
+import { getValidAvatar } from '../api/avatarService';
 
 interface PostCardProps {
   post: Post;
@@ -252,7 +252,7 @@ export function PostCard({
       {/* Auteur - après la description */}
       <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
         <Avatar className="w-5 h-5">
-          <AvatarImage src={latestPost.author.avatar} alt={latestPost.author.name} />
+          <AvatarImage src={getValidAvatar(latestPost.author.name, latestPost.author.avatar)} alt={latestPost.author.name} />
           <AvatarFallback className="text-xs">{latestPost.author.name.slice(0, 2)}</AvatarFallback>
         </Avatar>
         <span>{latestPost.author.name}</span>
@@ -311,18 +311,6 @@ export function PostCard({
               <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Voir détails</span>
             </Button>
-            
-            <SharePostDialog postId={latestPost.id} postContent={latestPost.content}>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-              >
-                <Share2 className="w-5 h-5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Partager</span>
-              </Button>
-            </SharePostDialog>
             
             <Button 
               size="sm"

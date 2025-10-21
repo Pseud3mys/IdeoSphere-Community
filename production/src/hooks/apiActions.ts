@@ -534,12 +534,13 @@ export function createApiActions(
         const { fetchIdeaRatings } = await import('../api/detailsService');
         const ratings = await fetchIdeaRatings(ideaId);
         
-        // Récupérer l'idée actuelle et l'enrichir
+        // ✅ Récupérer l'idée actuelle et l'enrichir avec les ratings (même si tableau vide)
         const currentIdea = boundSelectors.getIdeaById(ideaId);
-        if (currentIdea && ratings.length > 0) {
+        if (currentIdea) {
           actions.updateIdea(ideaId, {
-            ratingDetails: ratings
+            ratings: ratings // ✅ Mettre à jour 'ratings' au lieu de 'ratingDetails'
           });
+          console.log(`✅ [hook/apiActions] loadIdeaRatings - Idée ${ideaId} mise à jour avec ${ratings.length} évaluations`);
         }
         
         return ratings;
@@ -887,6 +888,14 @@ export function createApiActions(
           return null;
         }
 
+        // ✅ Déterminer l'auteur réel : si authorId est fourni, le récupérer du store
+        const finalAuthorId = payload.authorId || currentUser.id;
+        const finalAuthor = payload.authorId 
+          ? boundSelectors.getUserById(payload.authorId) || currentUser
+          : currentUser;
+        
+        console.log(`✅ [hook/apiActions] publishPost - Auteur: ${finalAuthor.id} ${finalAuthor.name}`);
+
         // Extraction automatique des hashtags
         const { extractHashtagsFromMultipleTexts } = await import('../utils/hashtagUtils');
         const extractedTags = extractHashtagsFromMultipleTexts(
@@ -902,7 +911,8 @@ export function createApiActions(
         const newPost = await createPostOnApi({
           content: payload.content,
           location: payload.location,
-          authorId: payload.authorId || currentUser.id,
+          authorId: finalAuthorId,
+          author: finalAuthor, // ✅ Passer l'objet author complet pour éviter les problèmes avec les utilisateurs temporaires
           sourcePostIds: payload.sourcePostIds || [],
           tags: finalTags // ✅ Envoyer les tags au service API
         });

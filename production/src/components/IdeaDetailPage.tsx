@@ -12,6 +12,7 @@ import { ShareIdeaDialog } from './ShareIdeaDialog';
 import { IdeaDescriptionTab } from './IdeaDescriptionTab';
 import { IdeaDiscussionsTab } from './IdeaDiscussionsTab';
 import { IdeaVersionsTab } from './IdeaVersionsTab';
+import { getValidAvatar } from '../api/avatarService';
 
 import { 
   ArrowLeft, 
@@ -229,7 +230,7 @@ export function IdeaDetailPage({
         <div className="block md:hidden mb-6">
           <div className="flex items-center space-x-3 mb-3">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={latestIdea.creators[0]?.avatar} alt={latestIdea.creators[0]?.name} />
+              <AvatarImage src={getValidAvatar(latestIdea.creators[0]?.name || '', latestIdea.creators[0]?.avatar)} alt={latestIdea.creators[0]?.name} />
               <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -255,7 +256,7 @@ export function IdeaDetailPage({
         <div className="hidden md:flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={latestIdea.creators[0]?.avatar} alt={latestIdea.creators[0]?.name} />
+              <AvatarImage src={getValidAvatar(latestIdea.creators[0]?.name || '', latestIdea.creators[0]?.avatar)} alt={latestIdea.creators[0]?.name} />
               <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div>

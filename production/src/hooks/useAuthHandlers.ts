@@ -22,6 +22,7 @@ export function useAuthHandlers(
     email: string;
     password: string;
     address?: string;
+    bio?: string;
     birthYear?: number;
   }) => Promise<User | null>,
   subscribeToNewsletter: (email: string) => Promise<boolean>
@@ -121,8 +122,21 @@ export function useAuthHandlers(
         return false;
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [hook/useAuthHandlers] handleSignup:', error);
+      
+      // Gérer les différents types d'erreur
+      if (error?.message === 'EMAIL_EXISTS') {
+        toast.error('Cet email est déjà utilisé. Essayez de vous connecter ou utilisez un autre email.');
+        return false;
+      }
+      
+      if (error?.message === 'INVALID_DATA') {
+        toast.error('Données invalides. Veuillez vérifier les informations saisies.');
+        return false;
+      }
+      
+      // Erreur générique
       toast.error('Erreur lors de la création du compte. Veuillez réessayer.');
       return false;
     }

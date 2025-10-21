@@ -132,7 +132,7 @@ export interface Idea {
   supporters: User[];
   discussionIds: string[];
   ratingCriteria: RatingCriterion[];
-  ratings: Rating[];
+  ratings?: Rating[]; // ✅ Optionnel - chargé uniquement dans l'onglet évaluation
   sourceIdeas: string[];
   derivedIdeas: string[];
   sourcePosts: string[];

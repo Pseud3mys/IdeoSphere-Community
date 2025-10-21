@@ -49,7 +49,7 @@ export function createUserActions(
       }
     },
     
-    createTemporaryGuest: async (guestData?: { name?: string; address?: string }) => {
+    createTemporaryGuest: async (guestData?: { name?: string; email?: string; address?: string }) => {
       try {
         // ✅ Appeler le service API pour créer un compte non finalisé
         const { createUnfinalizedAccountOnApi } = await import('../api/authService');
@@ -59,7 +59,7 @@ export function createUserActions(
         actions.addUser(tempUser);
         actions.setCurrentUserId(tempUser.id);
         
-        console.log('✅ [hook/userActions] Utilisateur temporaire créé via API:', tempUser.id);
+        console.log('✅ [hook/userActions] Utilisateur temporaire créé via API:', tempUser.id, tempUser.name, tempUser.email);
         return tempUser;
         
       } catch (error) {
@@ -158,6 +158,7 @@ export function createUserActions(
       email: string;
       password: string;
       address?: string;
+      bio?: string;
       birthYear?: number;
     }) => {
       try {
@@ -168,6 +169,7 @@ export function createUserActions(
           name: userData.name,
           email: userData.email,
           address: userData.address,
+          bio: userData.bio,
           birthYear: userData.birthYear || new Date().getFullYear() - 25
         };
         
@@ -177,12 +179,25 @@ export function createUserActions(
           actions.addUser(newUser);
           actions.setCurrentUserId(newUser.id);
           actions.setPrefilledSignupData(null);
+          return newUser;
         }
         
-        return newUser;
-      } catch (error) {
+        // Si l'API retourne null, c'est probablement que l'email existe déjà
+        throw new Error('EMAIL_EXISTS');
+      } catch (error: any) {
         console.error('❌ [hook/userActions] signupUser:', error);
-        return null;
+        
+        // Propager l'erreur avec un message compréhensible
+        if (error?.response?.status === 409 || error?.message === 'EMAIL_EXISTS') {
+          throw new Error('EMAIL_EXISTS');
+        }
+        
+        if (error?.response?.status === 400) {
+          throw new Error('INVALID_DATA');
+        }
+        
+        // Erreur générique
+        throw new Error('SIGNUP_FAILED');
       }
     },
     

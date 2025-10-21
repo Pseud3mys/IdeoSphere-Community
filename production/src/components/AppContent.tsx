@@ -21,6 +21,7 @@ interface AppContentProps {
     email: string;
     password: string;
     address?: string;
+    bio?: string;
   }) => Promise<boolean>;
   onNewsletterSubscribe?: (data: {
     email: string;
@@ -148,18 +149,35 @@ export function AppContent({
       <SignupPage
         onBack={() => actions.goToTab('welcome')}
         onSignup={async (userData) => {
-          // Créer le compte directement via le store action signupUser
-          // qui appelle l'API authService correctement
-          const success = await actions.signupUser({
-            name: userData.name,
-            email: userData.email,
-            password: '', // Password généré automatiquement dans ce flow
-            address: userData.address,
-            birthYear: userData.birthYear
-          });
-          
-          if (success) {
-            actions.enterPlatform();
+          try {
+            // Créer le compte directement via le store action signupUser
+            // qui appelle l'API authService correctement
+            const success = await actions.signupUser({
+              name: userData.name,
+              email: userData.email,
+              password: '', // Password généré automatiquement dans ce flow
+              address: userData.address,
+              bio: userData.bio,
+              birthYear: userData.birthYear
+            });
+            
+            if (success) {
+              actions.enterPlatform();
+              return true;
+            }
+            return false;
+          } catch (error: any) {
+            // Gérer les erreurs avec des messages personnalisés
+            const { toast } = await import('sonner@2.0.3');
+            
+            if (error?.message === 'EMAIL_EXISTS') {
+              toast.error('Cet email est déjà utilisé. Essayez de vous connecter ou utilisez un autre email.');
+            } else if (error?.message === 'INVALID_DATA') {
+              toast.error('Données invalides. Veuillez vérifier les informations saisies.');
+            } else {
+              toast.error('Erreur lors de la création du compte. Veuillez réessayer.');
+            }
+            return false;
           }
         }}
         onSocialLogin={onSocialLogin}

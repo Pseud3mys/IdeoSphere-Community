@@ -37,6 +37,7 @@ interface SignupPageProps {
     name: string;
     email: string;
     address?: string;
+    bio?: string;
     birthYear: number;
   }) => void;
   onSocialLogin?: (provider: string) => Promise<boolean>;
@@ -100,16 +101,20 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
     setIsLoading(true);
     
     try {
-      await onSignup({
+      const success = await onSignup({
         name: formData.name.trim(),
         email: formData.email.trim(),
         address: formData.address.trim() || undefined,
+        bio: formData.bio.trim() || undefined,
         birthYear: birthYear
       });
       
-      toast.success('Compte créé avec succès ! Bienvenue sur IdeoSphere ! 🎉');
+      if (success) {
+        toast.success('Compte créé avec succès ! Bienvenue sur IdeoSphere ! 🎉');
+      }
+      // Les messages d'erreur sont déjà gérés dans AppContent.tsx
     } catch (error) {
-      toast.error('Erreur lors de la création du compte');
+      // Les erreurs sont déjà gérées dans AppContent.tsx
       console.error('Signup error:', error);
     } finally {
       setIsLoading(false);

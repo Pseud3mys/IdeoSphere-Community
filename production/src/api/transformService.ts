@@ -206,7 +206,7 @@ export const transformUser = (raw: RawUser): User => ({
   name: raw.name,
   email: raw.email,
   createdAt: new Date(raw.createdAt),
-  avatar: raw.avatar || `https://i.pravatar.cc/150?u=${raw._id}`, // Placeholder
+  avatar: raw.avatar || '', // Placeholder
   bio: raw.bio || '',
   location: raw.location || '',
   neighborhood: raw.neighborhood || '',
