@@ -29,16 +29,23 @@ export async function toggleSupportOnApi(contentId: string, userId: string, cont
 export async function rateIdeaOnApi(ideaId: string, userId: string, criterionId: string, value: number): Promise<any> {
   console.log(`🔄 [API] Évaluation pour ${ideaId}`);
   try {
-    const payload = { 
-      userId, 
-      contentId: ideaId, 
-      type: 'supports', // La notation est une mise à jour d'un soutien
-      ratings: [{ criterionName: criterionId, value: value }] 
+    const ideaKey = ideaId.split('/')[1];
+    const payload = {
+        userId,
+        // L'objet "rating" correspond à ce que le backend attend
+        rating: { criterionName: criterionId, value: value }
     };
-    const response = await apiClient.put('/feedback', payload);
-    return response.data;
+    // Appel de la nouvelle route dédiée
+    const response = await apiClient.post(`/ideas/${ideaKey}/rate`, payload);
+    
+    // Le frontend doit maintenant gérer la réponse qui contient le document feedback complet
+    // et mettre à jour le store en conséquence.
+    // L'idéal est de retourner le tableau 'ratings' mis à jour.
+    return { success: true, ratings: response.data.ratings };
+
   } catch (error) {
     console.error(`❌ Error rating content ${ideaId}:`, error);
+    return { success: false, error: error.message };
   }
 }
 

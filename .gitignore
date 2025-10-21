@@ -4,11 +4,7 @@ bower_components/
 
 # docker conf:
 .dockerignore
-Dockerfile
 
-# network files and conf
-docker-compose.yml
-nginx.conf
 
 # Environment variables
 .env

@@ -9,6 +9,7 @@ import {
   IdeaStatus,
   DiscussionTopic
 } from '../types';
+import { defaultRatingCriteria } from '../data/ratings'; // Importation ajoutée
 
 // =============================================================================
 // RAW INTERFACES - Mirror the JSON structure from the Python API
@@ -16,7 +17,7 @@ import {
 
 /**
  * Raw user data directly from the ArangoDB/Python API.
- * [cite: 9-18]
+ *
  */
 export interface RawUser {
   _id: string;
@@ -35,7 +36,7 @@ export interface RawUser {
 
 /**
  * Raw comment data as a sub-document within a Post.
- * [cite: 43-50]
+ *
  */
 export interface RawComment {
   id: string;
@@ -50,7 +51,7 @@ export interface RawComment {
 
  * A generic raw content item (Idea or Post) from the API.
  * Fields match the ArangoDB schema definition.
- * [cite: 19-28, 33-52]
+ *
  */
 export interface RawContent {
   _id: string;
@@ -79,7 +80,7 @@ export type RawPost = RawContent;
 
 /**
  * The standard structure for feed responses.
- * [cite: 53-58]
+ *
  */
 export interface RawFeedData {
   content: RawContent[];
@@ -88,7 +89,7 @@ export interface RawFeedData {
 
 /**
  * The structure for lineage (history) API responses.
- * [cite: 83, 87]
+ *
  */
 export interface RawLineageData {
   sources: RawContent[];
@@ -132,7 +133,7 @@ export function transformIdeaCardToIdea(ideaCard: any): Idea {
     // Champs chargés progressivement - initialisés vides
     supporters: [], // Chargé dans onglet description
     discussionIds: [], // Chargé dans onglet discussions
-    ratingCriteria: [], // Chargé dans onglet évaluation
+    ratingCriteria: defaultRatingCriteria, // CORRIGÉ
     ratings: [], // Chargé dans onglet évaluation
     sourceIdeas: [], // Chargé dans onglet versions
     derivedIdeas: [], // Chargé dans onglet versions
@@ -275,7 +276,7 @@ export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea =
     location: raw.location || '',
     // Initialize progressive load fields as empty
     discussionIds: [],
-    ratingCriteria: [],
+    ratingCriteria: defaultRatingCriteria, // CORRIGÉ
     ratings: [],
     sourceIdeas: [],
     derivedIdeas: [],

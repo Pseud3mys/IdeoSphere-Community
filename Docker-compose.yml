@@ -1,0 +1,8 @@
+services:
+  frontend:
+    build: ./production
+    container_name: ideosphere_frontend
+    restart: unless-stopped
+    ports:
+      # Expose votre application sur le port 8080 de votre machine
+      - "${FRONTEND_PORT:-8080}:80"
