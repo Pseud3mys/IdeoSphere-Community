@@ -5,6 +5,9 @@ bower_components/
 # docker conf:
 .dockerignore
 
+docker-compose.override.yml
+
+nginx.dev.conf
 
 # Environment variables
 .env

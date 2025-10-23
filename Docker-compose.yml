@@ -3,6 +3,11 @@ services:
     build: ./production
     container_name: ideosphere_frontend
     restart: unless-stopped
-    ports:
-      # Expose votre application sur le port 8080 de votre machine
-      - "${FRONTEND_PORT:-8080}:80"
+    # ❌ PAS DE PORTS ICI. Le proxy s'en charge.
+    networks:
+      - web-services # Réseau externe pour le proxy Nginx
+
+networks:
+  web-services:   # Réseau externe partagé
+    external: true
+
