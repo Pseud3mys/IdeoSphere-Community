@@ -1,7 +1,7 @@
 services:
   frontend:
     build: ./production
-    container_name: ideosphere_frontend
+    container_name: ideosphere_community_frontend
     restart: unless-stopped
     # ❌ PAS DE PORTS ICI. Le proxy s'en charge.
     networks:
