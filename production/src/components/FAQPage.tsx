@@ -229,7 +229,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                 <h4 className="font-medium text-gray-900">Discord</h4>
                 <p className="text-sm text-gray-600 mb-3">Discussions en temps réel avec la communauté</p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                  <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                     Rejoindre Discord
                   </a>
                 </Button>
@@ -242,7 +242,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                 <h4 className="font-medium text-gray-900">Email</h4>
                 <p className="text-sm text-gray-600 mb-3">Support direct pour vos questions</p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="mailto:contact@ideosphere.org">
+                  <a href="mailto:contact@holonsystems.org">
                     Nous écrire
                   </a>
                 </Button>

@@ -240,12 +240,12 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" asChild>
-                <a href="mailto:contact@ideosphere.org">
+                <a href="mailto:contact@holonsystems.org">
                   Nous écrire
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                   Discord
                 </a>
               </Button>

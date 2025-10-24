@@ -74,7 +74,7 @@ export function getMockIdeas(): Idea[] {
 
 Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
       creators: [users[0], users[3]], // Marie et Emma
-      supporters: [users[0], users[1], users[2], users[3], currentUser],
+      supporters: [users[0].id, users[1].id, users[2].id, users[3].id, currentUser.id],
       status: 'published',
       sourceIdeas: [],
       sourcePosts: ['post-1', 'post-2', 'post-3'], // Vient de plusieurs posts sur les bancs
@@ -163,7 +163,7 @@ Ce qui me plaît dans cette idée, c'est qu'on arrête ce réflexe de "c'est cas
 
 Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix ! 🔧✨`,
       creators: [users[1], users[4]], // Pierre + Thomas
-      supporters: [users[1], users[2], users[4], currentUser],
+      supporters: [users[1].id, users[2].id, users[4].id, currentUser.id],
       status: 'published',
       sourceIdeas: [],
       sourcePosts: ['post-4'], // Vient du post sur le grille-pain cassé
@@ -265,7 +265,7 @@ Je pense qu'on a tous quelque chose à offrir et quelque chose à demander. L'en
 
 Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arrangerait bien ! 😅`,
       creators: [users[2], users[3]], // Sophie + Emma
-      supporters: [users[0], users[2], users[3], users[4], currentUser],
+      supporters: [users[0].id, users[2].id, users[3].id, users[4].id, currentUser.id],
       status: 'published',
       sourceIdeas: [],
       sourcePosts: ['post-5'], // Vient du post sur l'aide pour les courses
@@ -370,7 +370,7 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
 
 Cette idée peut paraître basique, mais c'est exactement le genre de problème concret qu'on peut résoudre en s'y mettant tous ensemble ! Et franchement, ne plus esquiver les trous comme des slalomeurs, ça serait le bonheur ! 🚗`,
       creators: [users[1], users[4]], // Pierre + Thomas
-      supporters: [users[0], users[1], users[2], users[4], currentUser],
+      supporters: [users[0].id, users[1].id, users[2].id, users[4].id, currentUser.id],
       status: 'published',
       sourceIdeas: [],
       sourcePosts: ['post-6'], // Vient du post sur les nids de poule
@@ -489,7 +489,7 @@ Tous les matins et le soir, c'est la même galère ! Les voitures garées n'impo
 
 Cette problématique, on la vit tous ! Avec un peu d'organisation et de bonne volonté, on peut transformer ce moment de stress quotidien en quelque chose qui marche pour tout le monde ! 🚸`,
       creators: [users[0], users[3]], // Marie + Emma
-      supporters: [users[0], users[1], users[3], users[4], currentUser],
+      supporters: [users[0].id, users[1].id, users[3].id, users[4].id, currentUser.id],
       status: 'published',
       sourceIdeas: [],
       sourcePosts: ['post-7', 'post-8'], // Vient des posts sur le stationnement école
@@ -587,7 +587,7 @@ L'idée de Marie était excellente pour créer du lien social. Cette version gar
 
 C'est un investissement plus important mais qui transforme vraiment l'espace public ! 📱⚡️🔗`,
       creators: [users[4]], // Thomas (qui aime la tech)
-      supporters: [users[0], users[2], users[4], currentUser], // Marie soutient sa version améliorée
+      supporters: [users[0].id, users[2].id, users[4].id, currentUser.id], // Marie soutient sa version améliorée
       status: 'published',
       sourceIdeas: ['1'], // Basée sur l'idée des bancs de Marie
       sourcePosts: [],
@@ -690,7 +690,7 @@ L'idée de Pierre était excellente pour l'efficacité énergétique. Cette vers
 
 Un petit village qui innove et implique ses citoyens ! 💡📱🌙`,
       creators: [users[2]], // Sophie (enseignante, aime l'innovation participative)
-      supporters: [users[1], users[2], users[3], currentUser], // Pierre soutient l'évolution de son idée
+      supporters: [users[1].id, users[2].id, users[3].id, currentUser.id], // Pierre soutient l'évolution de son idée
       status: 'published',
       sourceIdeas: ['2'], // Basée sur l'idée d'éclairage de Pierre
       sourcePosts: [],

@@ -251,7 +251,6 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
  */
 export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea => {
   const creators = (raw.creators || []).map(id => usersMap.get(id) || { ...unknownUser, id });
-  const supporters = (raw.supporters || []).map(id => usersMap.get(id) || { ...unknownUser, id });
 
   return {
     id: raw._id,
@@ -261,7 +260,7 @@ export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea =
     description: raw.description || '',
     createdAt: new Date(raw.createdAt),
     creators,
-    supporters,
+    supporters: raw.supporters || [],
     status: 'published' as IdeaStatus, // Default status
     tags: raw.tags || [],
     location: raw.location || '',

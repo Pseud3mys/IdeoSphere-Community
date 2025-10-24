@@ -57,7 +57,7 @@ export function IdeaVersionsTab({
   const versionSupports = useMemo(() => {
     const supports: {[key: string]: boolean} = {};
     versionIdeas.forEach(versionIdea => {
-      supports[versionIdea.id] = versionIdea.supporters?.some(s => s.id === currentUser.id) || false;
+      supports[versionIdea.id] = versionIdea.supporters?.includes(currentUser.id) || false;
     });
     return supports;
   }, [versionIdeas, currentUser.id]);

@@ -127,7 +127,7 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" size="sm" asChild>
-              <a href="https://github.com/ideosphere" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/Pseud3mys/IdeoSphere-Community" target="_blank" rel="noopener noreferrer">
                 Voir le code source
               </a>
             </Button>

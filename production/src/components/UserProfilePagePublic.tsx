@@ -136,7 +136,7 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
                     <div className="flex items-center justify-center space-x-1 text-green-600 mb-1">
                       <MessageSquare className="w-4 h-4" />
                       <span className="text-xl font-semibold">
-                        {ideas.filter(idea => idea.supporters?.some(s => s.id === userId)).length}
+                        {ideas.filter(idea => idea.supporters?.includes(userId)).length}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">Idées soutenues</p>

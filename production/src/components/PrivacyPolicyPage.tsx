@@ -192,7 +192,7 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
               <h4 className="font-medium text-gray-900 mb-2">Comment exercer vos droits :</h4>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>Paramètres de votre compte pour les modifications de base</li>
-                <li>Contact à <a href="mailto:contact@ideosphere.org" className="text-gray-600 underline hover:text-gray-900">contact@ideosphere.org</a> pour les demandes spécifiques</li>
+                <li>Contact à <a href="mailto:contact@holonsystems.org" className="text-gray-600 underline hover:text-gray-900">contact@holonsystems.org</a> pour les demandes spécifiques</li>
                 <li>Réponse garantie sous 30 jours maximum</li>
               </ul>
             </div>
@@ -211,12 +211,12 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" asChild>
-                <a href="mailto:contact@ideosphere.org">
+                <a href="mailto:contact@holonsystems.org">
                   Nous écrire
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                   Discord
                 </a>
               </Button>

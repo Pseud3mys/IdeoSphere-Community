@@ -129,7 +129,7 @@ export interface Idea {
   tags?: string[];
   location?: string;
   // Champs chargés progressivement (peuvent être vides au début)
-  supporters: User[];
+  supporters: string[]; // User IDs qui soutiennent cette idée
   discussionIds: string[];
   ratingCriteria: RatingCriterion[];
   ratings?: Rating[]; // ✅ Optionnel - chargé uniquement dans l'onglet évaluation

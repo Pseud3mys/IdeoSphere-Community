@@ -67,7 +67,7 @@ export function createContentActions(
 
           if (!idea || !currentUser) return {}; // Ne rien mettre à jour
 
-          const isSupporting = idea.supporters?.some(s => s.id === currentUser.id);
+          const isSupporting = idea.supporters?.includes(currentUser.id);
           const action = isSupporting ? 'unsupport' : 'support';
 
           // 2. Appeler l'API avec isCurrentlySupporting calculé ici dans le hook
@@ -82,8 +82,8 @@ export function createContentActions(
 
           // 3. Calculer le nouvel état à partir de prevStore
           const newSupporters = isSupporting
-            ? (idea.supporters || []).filter(s => s.id !== currentUser.id)
-            : [...(idea.supporters || []), currentUser];
+            ? (idea.supporters || []).filter(id => id !== currentUser.id)
+            : [...(idea.supporters || []), currentUser.id];
 
           const updatedIdea = {
             ...idea,

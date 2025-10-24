@@ -60,7 +60,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-sm font-medium text-gray-900 mb-3">Nous rejoindre</h4>
             <div className="space-y-2">
               <a 
-                href="https://discord.gg/ideosphere" 
+                href="https://discord.gg/WuUY5dtB" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -69,14 +69,14 @@ export function Footer({ onNavigate }: FooterProps) {
                 Discord
               </a>
               <a 
-                href="mailto:contact@ideosphere.org" 
+                href="mailto:contact@holonsystems.org" 
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <Mail size={14} />
                 Email
               </a>
               <a 
-                href="https://github.com/ideosphere" 
+                href="https://github.com/Pseud3mys/IdeoSphere-Community" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"

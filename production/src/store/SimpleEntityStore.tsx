@@ -163,14 +163,7 @@ const extractUsersFromIdea = (idea: Idea): User[] => {
     });
   }
   
-  // Ajouter les supporters
-  if (idea.supporters && Array.isArray(idea.supporters)) {
-    idea.supporters.forEach(supporter => {
-      if (supporter && typeof supporter === 'object' && 'id' in supporter) {
-        users.push(supporter);
-      }
-    });
-  }
+  // Les supporters sont maintenant des IDs, pas besoin de les extraire
   
   return users;
 };

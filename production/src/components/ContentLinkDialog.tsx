@@ -52,7 +52,7 @@ export function ContentLinkDialog({
           author: idea.creators[0] || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } }, // Protection contre creators vide
           createdAt: idea.createdAt,
           supportCount: idea.supporters?.length || 0,
-          isSupported: idea.supporters?.some(supporter => supporter.id === currentUser.id) || false
+          isSupported: idea.supporters?.includes(currentUser.id) || false
         });
       });
     }

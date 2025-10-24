@@ -212,6 +212,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Button 
                 variant="ghost" 
+                onClick={() => actions.goToTab('how-it-works')}
+                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
+              >
+                Comment ça marche ?
+              </Button>
+              <Button 
+                variant="ghost" 
                 onClick={() => handleAuthAction('login')}
                 className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
               >
