@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // L'URL de base de votre API backend.
-// Idéalement, ceci devrait provenir d'une variable d'environnement.
-const API_BASE_URL = '/api';
+// api/apiClient.ts
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'; // Fallback au cas où
 
 /**
  * Instance Axios pré-configurée pour toutes les requêtes API.
