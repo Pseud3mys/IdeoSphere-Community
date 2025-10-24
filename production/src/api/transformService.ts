@@ -28,8 +28,6 @@ export interface RawUser {
   bio?: string;
   location?: string;
   avatar?: string;
-  neighborhood?: string;
-  preciseAddress?: string;
   birthYear?: number;
   isRegistered?: boolean;
 }
@@ -128,10 +126,9 @@ export function transformIdeaCardToIdea(ideaCard: any): Idea {
     creators: ideaCard.creators.map((creator: any) => transformCreatorToUser(creator)),
     status: ideaCard.status,
     createdAt: new Date(ideaCard.createdAt),
-    supportCount: ideaCard.supportCount || 0,
     tags: ideaCard.tags || [],
+    supporters: ideaCard.supporters || [],
     // Champs chargés progressivement - initialisés vides
-    supporters: [], // Chargé dans onglet description
     discussionIds: [], // Chargé dans onglet discussions
     ratingCriteria: defaultRatingCriteria, // CORRIGÉ
     ratings: [], // Chargé dans onglet évaluation
@@ -155,10 +152,9 @@ export function transformPostCardToPost(postCard: any): Post {
     location: postCard.location,
     author: transformCreatorToUser(postCard.author),
     createdAt: new Date(postCard.createdAt),
-    likeCount: postCard.likeCount || 0,
+    supporters: postCard.supporters || [],
     tags: postCard.tags || [],
     // Champs chargés progressivement - initialisés vides
-    likes: [], // Chargé dans onglet détails
     replies: [], // Chargé dans onglet discussions
     derivedIdeas: [], // Chargé dans onglet versions
     derivedPosts: [], // Chargé dans onglet versions
@@ -179,7 +175,6 @@ function transformCreatorToUser(creator: any): User {
     email: creator.email || '',
     bio: creator.bio || '',
     location: creator.location || '',
-    neighborhood: creator.neighborhood || '',
     preciseAddress: creator.preciseAddress,
     birthYear: creator.birthYear,
     createdAt: creator.createdAt ? new Date(creator.createdAt) : new Date(),
@@ -210,8 +205,6 @@ export const transformUser = (raw: RawUser): User => ({
   avatar: raw.avatar || '', // Placeholder
   bio: raw.bio || '',
   location: raw.location || '',
-  neighborhood: raw.neighborhood || '',
-  preciseAddress: raw.preciseAddress || '',
   birthYear: raw.birthYear,
   isRegistered: raw.isRegistered ?? false,
 });
@@ -242,8 +235,7 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
     content: raw.content || raw.title || '',
     author,
     createdAt: new Date(raw.createdAt),
-    likes: raw.upvotes || [],
-    likeCount: (raw.upvotes || []).length,
+    supporters: raw.supporters || [],
     replies: (raw.comments || []).map(comment => transformComment(comment, usersMap)),
     tags: raw.tags || [],
     location: raw.location || '',
@@ -270,7 +262,6 @@ export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea =
     createdAt: new Date(raw.createdAt),
     creators,
     supporters,
-    supportCount: (raw.supporters || []).length,
     status: 'published' as IdeaStatus, // Default status
     tags: raw.tags || [],
     location: raw.location || '',

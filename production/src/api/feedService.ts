@@ -39,6 +39,7 @@ export interface FeedIdeaCard {
   creators: Array<{ id: string; name: string; avatar: string }>;
   status: string;
   createdAt: Date;
+  supporters: string[]; // ✅ AJOUTER CETTE LIGNE
   supportCount: number;
   tags: string[];
   type: 'idea';
@@ -50,7 +51,8 @@ export interface FeedPostCard {
   location?: string;
   author: { id: string; name: string; avatar: string };
   createdAt: Date;
-  likeCount: number;
+  supporters: string[]; // ✅ AJOUTER CETTE LIGNE
+  supportCount: number;
   replyCount: number;
   tags: string[];
   type: 'post';
@@ -245,6 +247,7 @@ const transformIdeaToCard = (idea: Idea): FeedIdeaCard => ({
     creators: idea.creators.map(c => ({ id: c.id, name: c.name, avatar: c.avatar })),
     status: idea.status,
     createdAt: idea.createdAt,
+    supporters: idea.supporters || [],
     supportCount: idea.supportCount,
     tags: idea.tags || [],
     type: 'idea',
@@ -256,8 +259,8 @@ const transformPostToCard = (post: Post): FeedPostCard => ({
     location: post.location,
     author: { id: post.author.id, name: post.author.name, avatar: post.author.avatar },
     createdAt: post.createdAt,
-    // Correction 1: Gère 'likeCount' (pour Post) et 'upvotes' (pour DiscussionTopic)
-    likeCount: post.likeCount ?? (post.upvotes || []).length,
+    supporters: post.supporters || [],
+    likeCount: post.supportCount ?? (post.supporters || []).length,
     // Correction 2: Gère 'replies' (pour Post) et 'posts' (pour DiscussionTopic)
     replyCount: (post.replies || post.posts || []).length,
     tags: post.tags || [],
