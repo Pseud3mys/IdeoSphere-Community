@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Search, Plus, X, Lightbulb, MessageSquare, Filter } from 'lucide-react';
+import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 interface ContentLinkDialogProps {
   ideas: Idea[];
@@ -24,6 +25,7 @@ export function ContentLinkDialog({
   onContentToggle, 
   children 
 }: ContentLinkDialogProps) {
+  const { getUserById } = useEntityStoreSimple();
   const [searchQuery, setSearchQuery] = useState('');
   const [contentFilter, setContentFilter] = useState<'all' | 'ideas' | 'posts'>('all');
   const [isOpen, setIsOpen] = useState(false);
@@ -59,16 +61,19 @@ export function ContentLinkDialog({
 
     if (contentFilter === 'all' || contentFilter === 'posts') {
       posts.forEach(post => {
-        combinedContent.push({
-          id: post.id,
-          type: 'post',
-          title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
-          summary: post.content,
-          author: post.author,
-          createdAt: post.createdAt,
-          supportCount: post.supporters?.length || 0,
-          isSupporting: post.supporters?.includes(currentUser.id) || false
-        });
+        const author = getUserById(post.authorId);
+        if (author) {
+          combinedContent.push({
+            id: post.id,
+            type: 'post',
+            title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
+            summary: post.content,
+            author: author,
+            createdAt: post.createdAt,
+            supportCount: post.supporters?.length || 0,
+            isSupporting: post.supporters?.includes(currentUser.id) || false
+          });
+        }
       });
     }
 

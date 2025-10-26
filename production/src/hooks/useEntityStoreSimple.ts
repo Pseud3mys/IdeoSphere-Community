@@ -120,26 +120,26 @@ export function useEntityStoreSimple() {
       }
       
       // PARTICIPATIONS (créé ou commenté/noté)
-      const myPosts = allPosts.filter(post => post.author?.id === currentUser.id);
-      const myIdeas = allIdeas.filter(idea => idea.creators?.some(c => c.id === currentUser.id));
+      const myPosts = allPosts.filter(post => post.authorId === currentUser.id);
+      const myIdeas = allIdeas.filter(idea => idea.creators?.includes(currentUser.id));
       const commentedPosts = allPosts.filter(post => 
-        post.author?.id !== currentUser.id &&
-        post.replies?.some(reply => reply.author?.id === currentUser.id)
+        post.authorId !== currentUser.id &&
+        post.replies?.some(reply => reply.authorId === currentUser.id)
       );
       const ratedIdeas = allIdeas.filter(idea => 
-        !idea.creators?.some(c => c.id === currentUser.id) && 
+        !idea.creators?.includes(currentUser.id) && 
         idea.ratings?.some(rating => rating.userId === currentUser.id)
       );
 
       // SOUTIENS UNIQUEMENT (likes/soutiens sans participation active)
       const likedPosts = allPosts.filter(post => 
         post.supporters?.includes(currentUser.id) && 
-        post.author?.id !== currentUser.id &&
-        !post.replies?.some(reply => reply.author?.id === currentUser.id) // Pas commenté
+        post.authorId !== currentUser.id &&
+        !post.replies?.some(reply => reply.authorId === currentUser.id) // Pas commenté
       );
       const supportedIdeas = allIdeas.filter(idea => 
         idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
-        !idea.creators?.some(c => c.id === currentUser.id) && // Pas créé
+        !idea.creators?.includes(currentUser.id) && // Pas créé
         !idea.ratings?.some(rating => rating.userId === currentUser.id) // Pas noté
       );
 

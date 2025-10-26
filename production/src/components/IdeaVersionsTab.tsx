@@ -42,7 +42,7 @@ export function IdeaVersionsTab({
   isSupported,
 }: IdeaVersionsTabProps) {
   // Utilisation du store pour les actions
-  const { actions, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
+  const { actions, getUserById, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
   const allPosts = getAllPosts();
   const allDiscussions = getAllDiscussionTopics();
 
@@ -147,13 +147,16 @@ export function IdeaVersionsTab({
               const parentPost = allPosts.find(p => p.id === parentId);
               if (!parentPost) return null;
               
+              const parentPostAuthor = getUserById(parentPost.authorId);
+              if (!parentPostAuthor) return null;
+              
               return (
                 <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.goToPost(parentId)}>
                   <div className="flex-shrink-0">
                     <MessageSquare className="w-4 h-4 text-purple-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm text-purple-900">Post de {parentPost.author.name}</p>
+                    <p className="font-medium text-sm text-purple-900">Post de {parentPostAuthor.name}</p>
                     <p className="text-xs text-purple-700 mt-1 line-clamp-2">{parentPost.content}</p>
                     <div className="flex items-center space-x-3 text-xs text-purple-600 mt-2">
                       <div className="flex items-center space-x-1">
@@ -391,11 +394,14 @@ function StoreDebugPanel({ idea, allIdeas, allPosts, versionIdeas }: StoreDebugP
       title: i.title,
       summary: i.summary
     })),
-    sourcePostsInStore: allPosts.filter(p => idea.sourcePosts?.includes(p.id)).map(p => ({
-      id: p.id,
-      content: p.content.substring(0, 50) + '...',
-      author: p.author.name
-    })),
+    sourcePostsInStore: allPosts.filter(p => idea.sourcePosts?.includes(p.id)).map(p => {
+      const author = getUserById(p.authorId);
+      return {
+        id: p.id,
+        content: p.content.substring(0, 50) + '...',
+        author: author?.name || 'Inconnu'
+      };
+    }),
     versionsInStore: versionIdeas.map(v => ({
       id: v.id,
       title: v.title,

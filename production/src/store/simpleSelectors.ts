@@ -43,7 +43,7 @@ export const getPublishedIdeas = (store: SimpleEntityStore): Idea[] => {
 
 export const getUserIdeas = (store: SimpleEntityStore) => (userId: string): Idea[] => {
   return Object.values(store.ideas).filter(idea => 
-    idea.creators?.some(creator => creator.id === userId)
+    idea.creators?.includes(userId)
   );
 };
 
@@ -53,7 +53,7 @@ export const getDraftIdeas = (store: SimpleEntityStore): Idea[] => {
   
   return Object.values(store.ideas).filter(idea => 
     idea.status === 'draft' && 
-    idea.creators?.some(creator => creator.id === currentUser.id)
+    idea.creators?.includes(currentUser.id)
   );
 };
 
@@ -77,7 +77,7 @@ export const getSelectedUser = (store: SimpleEntityStore): User | null => {
 };
 
 export const getUserPosts = (store: SimpleEntityStore) => (userId: string): Post[] => {
-  return Object.values(store.posts).filter(post => post.author.id === userId);
+  return Object.values(store.posts).filter(post => post.authorId === userId);
 };
 
 export const getPostsByIds = (store: SimpleEntityStore) => (postIds: string[]): Post[] => {

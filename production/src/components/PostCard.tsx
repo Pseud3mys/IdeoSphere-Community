@@ -58,13 +58,16 @@ export function PostCard({
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Utiliser l'Entity Store pour les actions optimisées et récupérer les données les plus récentes
-  const { actions, getCurrentUser, getPostById } = useEntityStoreSimple();
+  const { actions, getCurrentUser, getPostById, getUserById } = useEntityStoreSimple();
   
   // Utiliser le currentUser du store si pas fourni en props
   const user = currentUser || getCurrentUser();
   
   // Récupérer le post le plus récent depuis le store
   const latestPost = getPostById(post.id) || post;
+  
+  // ✅ Résoudre l'auteur du post
+  const postAuthor = getUserById(latestPost.authorId);
   
   const isSupporting = user && (latestPost.supporters?.includes(user.id) || false);
   const supportCount = latestPost.supporters?.length || 0;
@@ -163,10 +166,10 @@ export function PostCard({
           
           {/* Localisation avec badge Post et badge de chaîne */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
-            {latestPost.author.location && (
+            {postAuthor?.location && (
               <>
                 <MapPin className="w-4 h-4" />
-                <span>{latestPost.author.location}</span>
+                <span>{postAuthor.location}</span>
                 <span>•</span>
               </>
             )}
@@ -250,15 +253,17 @@ export function PostCard({
       </div>
 
       {/* Auteur - après la description */}
-      <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-        <Avatar className="w-5 h-5">
-          <AvatarImage src={getValidAvatar(latestPost.author.name, latestPost.author.avatar)} alt={latestPost.author.name} />
-          <AvatarFallback className="text-xs">{latestPost.author.name.slice(0, 2)}</AvatarFallback>
-        </Avatar>
-        <span>{latestPost.author.name}</span>
-        <span>•</span>
-        <span>{timeAgo}</span>
-      </div>
+      {postAuthor && (
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
+          <Avatar className="w-5 h-5">
+            <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+            <AvatarFallback className="text-xs">{postAuthor.name.slice(0, 2)}</AvatarFallback>
+          </Avatar>
+          <span>{postAuthor.name}</span>
+          <span>•</span>
+          <span>{timeAgo}</span>
+        </div>
+      )}
 
       {/* Actions */}
       {showInteractions && (

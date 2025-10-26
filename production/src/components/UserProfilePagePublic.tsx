@@ -46,7 +46,7 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
   const userIdeas = (ideas || []).filter(idea => 
     idea?.creators?.some(creator => creator.id === userId)
   );
-  const userPosts = (posts || []).filter(post => post?.author?.id === userId);
+  const userPosts = (posts || []).filter(post => post?.authorId === userId);
   const totalSupports = userIdeas.reduce((sum, idea) => sum + (idea.supporters?.length || 0), 0);
 
   // Format de date de création du compte

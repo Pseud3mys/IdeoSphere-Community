@@ -73,6 +73,9 @@ export function PostDetailPage({
   
   // Récupérer le post le plus récent depuis le store
   const latestPost = getPostById(post.id) || post;
+  
+  // ✅ Résoudre l'auteur du post
+  const postAuthor = getUserById(latestPost.authorId);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {
@@ -160,27 +163,32 @@ export function PostDetailPage({
             <span>En réponse à {sourcePosts.length > 1 ? `${sourcePosts.length} posts` : 'ce post'}</span>
           </div>
           <div className="space-y-2">
-            {sourcePosts.map((sourcePost, index) => (
-              <div 
-                key={sourcePost?.id}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => sourcePost && onPostClick(sourcePost.id)}
-              >
-                <div className="flex items-start space-x-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={getValidAvatar(sourcePost?.author.name || '', sourcePost?.author.avatar)} alt={sourcePost?.author.name} />
-                    <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
-                      {sourcePost?.author.name.slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-gray-900">{sourcePost?.author.name}</span>
-                    <p className="text-sm text-gray-600 line-clamp-2 mt-1">{sourcePost?.content}</p>
+            {sourcePosts.map((sourcePost, index) => {
+              const sourceAuthor = getUserById(sourcePost?.authorId);
+              if (!sourceAuthor) return null;
+              
+              return (
+                <div 
+                  key={sourcePost?.id}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => sourcePost && onPostClick(sourcePost.id)}
+                >
+                  <div className="flex items-start space-x-2">
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={getValidAvatar(sourceAuthor.name, sourceAuthor.avatar)} alt={sourceAuthor.name} />
+                      <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
+                        {sourceAuthor.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-gray-900">{sourceAuthor.name}</span>
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{sourcePost?.content}</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-gray-400" />
                   </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -188,25 +196,27 @@ export function PostDetailPage({
       {/* Post principal - Style Reddit/Twitter */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Header utilisateur */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-start space-x-3">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={getValidAvatar(latestPost.author.name, latestPost.author.avatar)} alt={latestPost.author.name} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {latestPost.author.name.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <UserLink user={latestPost.author} className="font-semibold text-gray-900" />
-                <span className="text-gray-500">•</span>
-                <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+        {postAuthor && (
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-start space-x-3">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {postAuthor.name.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <UserLink user={postAuthor} className="font-semibold text-gray-900" />
+                  <span className="text-gray-500">•</span>
+                  <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                </div>
+                <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
               </div>
-              <p className="text-sm text-gray-500">{latestPost.author.location || 'Membre de la communauté'}</p>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Contenu */}
         <div className="p-4">
@@ -385,39 +395,44 @@ export function PostDetailPage({
             ))}
 
             {/* Posts dérivés */}
-            {derivedPosts.map(derivedPost => (
-              <Card 
-                key={derivedPost?.id}
-                className="border-blue-200 bg-blue-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
-                onClick={() => derivedPost && onPostClick(derivedPost.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={getValidAvatar(derivedPost?.author.name || '', derivedPost?.author.avatar)} alt={derivedPost?.author.name} />
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                        {derivedPost?.author.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                          💬 Post de réponse
-                        </Badge>
-                        <span className="text-xs text-gray-500">par <UserLink user={derivedPost?.author} className="text-gray-700 hover:text-primary" /></span>
-                        <span className="text-xs text-gray-500">{derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+            {derivedPosts.map(derivedPost => {
+              const derivedAuthor = getUserById(derivedPost?.authorId);
+              if (!derivedAuthor) return null;
+              
+              return (
+                <Card 
+                  key={derivedPost?.id}
+                  className="border-blue-200 bg-blue-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
+                  onClick={() => derivedPost && onPostClick(derivedPost.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={getValidAvatar(derivedAuthor.name, derivedAuthor.avatar)} alt={derivedAuthor.name} />
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {derivedAuthor.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                            💬 Post de réponse
+                          </Badge>
+                          <span className="text-xs text-gray-500">par <UserLink user={derivedAuthor} className="text-gray-700 hover:text-primary" /></span>
+                          <span className="text-xs text-gray-500">{derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+                        </div>
+                        <p className="text-sm text-gray-800 line-clamp-3">{derivedPost?.content}</p>
+                        <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
+                          <span>{derivedPost?.supporters?.length || 0} soutiens</span>
+                          <span>{derivedPost?.replies.length} réponses</span>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-800 line-clamp-3">{derivedPost?.content}</p>
-                      <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
-                        <span>{derivedPost?.supporters?.length || 0} soutiens</span>
-                        <span>{derivedPost?.replies.length} réponses</span>
-                      </div>
+                      <ExternalLink className="w-4 h-4 text-gray-400" />
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}

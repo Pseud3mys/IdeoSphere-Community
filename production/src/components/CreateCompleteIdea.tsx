@@ -42,6 +42,7 @@ export function CreateCompleteIdea({
   const {
     store,
     getCurrentUser,
+    getUserById,
     getAllUsers,
     getAllIdeas,
     getAllPosts,
@@ -68,6 +69,9 @@ export function CreateCompleteIdea({
   const derivedSourcePost = sourcePost || 
     (store.prefilledSourcePostId ? posts.find(p => p.id === store.prefilledSourcePostId) : null);
   
+  // ✅ Résoudre l'auteur du post source
+  const derivedSourcePostAuthor = derivedSourcePost ? getUserById(derivedSourcePost.authorId) : null;
+  
   // États pour le formulaire
   const [title, setTitle] = useState(() => {
     if (loadedDraft) {
@@ -86,7 +90,7 @@ export function CreateCompleteIdea({
     if (sourceIdea) {
       return `[À modifier] ${sourceIdea.summary}`;
     }
-    return derivedSourcePost ? `Inspiré par le post de ${derivedSourcePost.author.name}...` : '';
+    return derivedSourcePost && derivedSourcePostAuthor ? `Inspiré par le post de ${derivedSourcePostAuthor.name}...` : '';
   });
   
   const [description, setDescription] = useState(() => {
@@ -107,7 +111,7 @@ export function CreateCompleteIdea({
 
 *Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceIdea.creators[0]?.name || 'l\'équipe'}.*`;
     }
-    return derivedSourcePost ? `En me basant sur le post de ${derivedSourcePost.author.name}:
+    return derivedSourcePost && derivedSourcePostAuthor ? `En me basant sur le post de ${derivedSourcePostAuthor.name}:
 
 "${derivedSourcePost.content}"
 

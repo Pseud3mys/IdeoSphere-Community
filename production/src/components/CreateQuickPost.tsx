@@ -17,7 +17,7 @@ interface CreateQuickPostProps {
 
 export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
-  const { store, getCurrentUser, actions } = useEntityStoreSimple();
+  const { store, getCurrentUser, getUserById, actions } = useEntityStoreSimple();
   const currentUser = getCurrentUser();
 
   // Si currentUser est null, ne pas afficher le composant
@@ -25,7 +25,10 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     return <div>Loading...</div>;
   }
 
-  const [title, setTitle] = useState(sourcePost ? `En réponse à ${sourcePost.author.name}` : '');
+  // ✅ Résoudre l'auteur du post source
+  const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
+  
+  const [title, setTitle] = useState(sourcePost && sourcePostAuthor ? `En réponse à ${sourcePostAuthor.name}` : '');
   const [location, setLocation] = useState(() => {
     // Pré-remplir avec la localisation du store ou du post source
     return store.prefilledLocation || sourcePost?.location || '';

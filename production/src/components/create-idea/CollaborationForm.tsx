@@ -98,12 +98,15 @@ export function CollaborationForm({
           }
         });
       } else if (post) {
-        selectedContent.push({
-          id: post.id,
-          type: 'post',
-          title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
-          author: post.author
-        });
+        const author = getUserById(post.authorId);
+        if (author) {
+          selectedContent.push({
+            id: post.id,
+            type: 'post',
+            title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
+            author: author
+          });
+        }
       }
     });
 

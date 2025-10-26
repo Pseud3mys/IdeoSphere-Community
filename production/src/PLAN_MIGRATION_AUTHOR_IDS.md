@@ -530,7 +530,60 @@ Cependant, cette approche **n'est pas recommandée** car elle complexifie le cod
 - ✅ Code mort complètement nettoyé (fonction `extractUsersFromDiscussionTopic` et ses appels supprimés)
 
 **Entités restantes à migrer:**
-- ⏳ `Post.author` → `Post.authorId`
+- ⏳ `Idea.creators` → `Idea.creatorIds`
+
+---
+
+### ✅ Phase Posts (Post, PostReply) - COMPLÉTÉE
+
+**Date:** 26 octobre 2025
+
+**Types modifiés:**
+- ✅ `Post.authorId` (string au lieu de User)
+- ✅ `PostReply.authorId` (string au lieu de User) - déjà fait avec les discussions
+
+**Données mockées:**
+- ✅ `/data/posts.ts` - Tous les `author: users[X]` remplacés par `authorId: users[X].id`
+- ✅ `/data/posts.ts` - Toutes les `replies[]` utilisent déjà `authorId`
+
+**Store adapté:**
+- ✅ `extractUsersFromPost()` retourne maintenant un array vide (fonction obsolète mais conservée pour compatibilité)
+- ✅ Les appels à `extractUsersFromPost` dans `setPosts` et `addPost` ne font plus rien (retourne [])
+
+**Selectors adaptés:**
+- ✅ `getUserPosts()` dans `/store/simpleSelectors.ts` utilise `post.authorId` (ligne 80)
+
+**Services API adaptés:**
+- ✅ `/api/contentService.ts` - `createPostOnApi()` retourne `authorId: payload.authorId` (ligne 106)
+- ✅ `/api/contentService.ts` - `fetchPostDetails()` retourne le Post tel quel avec `authorId`
+
+**Composants adaptés (tous utilisent `getUserById(post.authorId)`):**
+- ✅ `PostCard.tsx` - Utilise `getUserById(latestPost.authorId)` (ligne 70)
+- ✅ `PostDetailPage.tsx` - Utilise `getUserById(latestPost.authorId)` (ligne 78)
+- ✅ `ContentLinkSearch.tsx` - Filtre avec `post.authorId === currentUser.id` (ligne 59) et résout avec `getUserById(post.authorId)` (ligne 71)
+- ✅ `ContentLinkDialog.tsx` - Résout avec `getUserById(post.authorId)` (ligne 64)
+- ✅ `CreateQuickPost.tsx` - Résout avec `getUserById(sourcePost.authorId)` (ligne 29)
+- ✅ `CreateCompleteIdea.tsx` - Résout avec `getUserById(derivedSourcePost.authorId)` (ligne 73)
+- ✅ `IdeaVersionsTab.tsx` - Résout avec `getUserById(parentPost.authorId)` (ligne 150)
+- ✅ `create-idea/BasicIdeaForm.tsx` - Résout avec `getUserById(sourcePost.authorId)` (ligne 37)
+- ✅ `create-idea/CollaborationForm.tsx` - Résout avec `getUserById(post.authorId)` (ligne 101)
+- ✅ `create-idea/CreateIdeaHeader.tsx` - Résout avec `getUserById(sourcePost.authorId)` (ligne 23)
+- ✅ `create-idea/DetailedDescriptionSection.tsx` - Résout avec `getUserById(sourcePost.authorId)` (ligne 23)
+- ✅ `create-idea/SourceIndicatorBanner.tsx` - Résout avec `getUserById(sourcePost.authorId)` (ligne 26)
+- ✅ `CitizenWelcome.tsx` - Adapté pour utiliser `authorId`
+- ✅ `MyIdeasPage.tsx` - Adapté pour utiliser `authorId`
+- ✅ `UserProfilePagePublic.tsx` - Adapté pour utiliser `authorId`
+
+**Résultat:**
+- ✅ Aucune erreur TypeScript
+- ✅ Tous les composants utilisent correctement `getUserById()` pour résoudre les authorId
+- ✅ Les posts s'affichent correctement avec les bons auteurs dans le feed
+- ✅ La création de nouveaux posts fonctionne avec `authorId`
+- ✅ Les détails de posts affichent correctement l'auteur
+- ✅ Les réponses aux posts utilisent également `authorId`
+- ✅ Code mort nettoyé (`extractUsersFromPost` renvoie un array vide)
+
+**Entités restantes à migrer:**
 - ⏳ `Idea.creators` → `Idea.creatorIds`
 
 ---

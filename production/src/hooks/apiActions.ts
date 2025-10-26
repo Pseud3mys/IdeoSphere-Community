@@ -250,14 +250,14 @@ export function createApiActions(
         const participationIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
-          .filter(idea => idea.creators?.some(c => c.id === currentUser.id));
+          .filter(idea => idea.creators?.includes(currentUser.id));
           
         const supportIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
           .filter(idea => 
             idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
-            !idea.creators?.some(c => c.id === currentUser.id)
+            !idea.creators?.includes(currentUser.id)
           );
           
         const participationPosts = allPostIds

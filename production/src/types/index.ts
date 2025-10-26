@@ -89,7 +89,7 @@ export type IdeaStatus = 'draft' | 'published' | 'featured' | 'archived';
 export interface Post {
   id: string;
   content: string;
-  author: User;
+  authorId: string;
   createdAt: Date;
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];

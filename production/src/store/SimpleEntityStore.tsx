@@ -169,23 +169,11 @@ const extractUsersFromIdea = (idea: Idea): User[] => {
 };
 
 const extractUsersFromPost = (post: Post): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter l'auteur
-  if (post.author && typeof post.author === 'object' && 'id' in post.author) {
-    users.push(post.author);
-  }
-  
-  // Ajouter les utilisateurs dans les réponses
-  if (post.replies && Array.isArray(post.replies)) {
-    post.replies.forEach(reply => {
-      if (reply.author && typeof reply.author === 'object' && 'id' in reply.author) {
-        users.push(reply.author);
-      }
-    });
-  }
-  
-  return users;
+  // ✅ Cette fonction n'est plus nécessaire car :
+  // - Post.authorId est maintenant un string (ID)
+  // - Reply.authorId est maintenant un string (ID)
+  // Les utilisateurs sont déjà dans le store via extractUsersFromData
+  return [];
 };
 
 // Fonctions helper pour normaliser les données

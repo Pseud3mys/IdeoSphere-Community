@@ -3,6 +3,7 @@ import { Badge } from '../ui/badge';
 import { RichTextEditor } from '../RichTextEditor';
 import { FileText } from 'lucide-react';
 import { Post } from '../../types';
+import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface DetailedDescriptionSectionProps {
   description: string;
@@ -17,6 +18,10 @@ export function DetailedDescriptionSection({
   onDescriptionChange,
   getWordCount
 }: DetailedDescriptionSectionProps) {
+  // ✅ Résoudre l'auteur du post source
+  const { getUserById } = useEntityStoreSimple();
+  const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
+  
   return (
     <Card>
       <CardHeader>
@@ -36,7 +41,7 @@ export function DetailedDescriptionSection({
           onChange={onDescriptionChange}
           placeholder={`## Contexte et enjeu
  
-${sourcePost ? `Suite au post de ${sourcePost.author.name}, je pense que...` : 'Décrivez le problème ou l\'opportunité que vous avez identifié...'}
+${sourcePost && sourcePostAuthor ? `Suite au post de ${sourcePostAuthor.name}, je pense que...` : 'Décrivez le problème ou l\'opportunité que vous avez identifié...'}
  
 ## Solution proposée
  

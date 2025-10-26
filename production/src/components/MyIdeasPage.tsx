@@ -152,7 +152,13 @@ export function MyIdeasPage({
       feedItems = feedItems.filter(item => {
         const content = item.type === 'post' ? item.content : `${item.title} ${item.summary}`;
         const tags = item.tags?.join(' ') || '';
-        const author = item.type === 'post' ? item.author?.name || '' : item.creators?.[0]?.name || '';
+        let author = '';
+        if (item.type === 'post') {
+          const postAuthor = getUserById(item.authorId);
+          author = postAuthor?.name || '';
+        } else {
+          author = item.creators?.[0]?.name || '';
+        }
         return (content + tags + author).toLowerCase().includes(searchQuery.toLowerCase());
       });
     }

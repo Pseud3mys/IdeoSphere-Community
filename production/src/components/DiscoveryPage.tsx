@@ -68,6 +68,7 @@ export function DiscoveryPage({
     getFeedItemsFlat,
     getHomePageData, 
     getCurrentUser,
+    getUserById,
     actions
   } = useEntityStoreSimple();
 
@@ -435,12 +436,22 @@ export function DiscoveryPage({
               {/* Avatars de membres actifs */}
               <div className="flex -space-x-2">
                 {[...posts, ...ideas].slice(0, 3).map((item, index) => {
-                  const author = 'author' in item ? item.author : item.creators[0];
+                  let author: User | undefined;
+                  if ('authorId' in item) {
+                    // C'est un Post
+                    author = getUserById(item.authorId);
+                  } else if ('creators' in item && item.creators && item.creators.length > 0) {
+                    // C'est une Idea
+                    author = getUserById(item.creators[0]);
+                  }
+                  
+                  if (!author) return null;
+                  
                   return (
                     <Avatar key={index} className="w-8 h-8 ring-2 ring-white">
-                      <AvatarImage src={author?.avatar} alt={author?.name} />
+                      <AvatarImage src={author.avatar} alt={author.name} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                        {author?.name.slice(0, 2)}
+                        {author.name.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                   );
