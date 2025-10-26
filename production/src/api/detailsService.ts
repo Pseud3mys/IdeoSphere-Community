@@ -126,27 +126,31 @@ export async function fetchPostReplies(postId: string): Promise<PostReply[]> {
  * Retrieves the discussions associated with an idea.
  * Calls the /ideas/{key}/discussions route.
  */
-export async function fetchDiscussions(ideaId: string): Promise<DiscussionTopic[]> {
+export async function fetchDiscussions(ideaId: string): Promise<{ discussions: DiscussionTopic[], users: User[] }> {
   console.log(`[API] fetchDiscussions - for idea ${ideaId}`);
   try {
     const ideaKey = ideaId.split('/')[1];
     const response = await apiClient.get<RawFeedData>(`/ideas/${ideaKey}/discussions`);
 
     const rawData = response.data;
-    if (!rawData || !rawData.content) {
-        return [];
+    if (!rawData || !rawData.content || !rawData.users) {
+        console.log('[API] fetchDiscussions - No discussions or users found');
+        return { discussions: [], users: [] };
     }
 
-    const usersMap = new Map(rawData.users.map(u => [u._id, transformUser(u)]));
+    const users = rawData.users.map(transformUser);
+    const usersMap = new Map(users.map(u => [u.id, u]));
+    
     const discussions = rawData.content.map(rawPost =>
       transformPostToDiscussion(rawPost as RawPost, usersMap)
     );
 
-    console.log(`[API] fetchDiscussions - ${discussions.length} discussions found`);
-    return discussions;
+    console.log(`[API] fetchDiscussions - ${discussions.length} discussions and ${users.length} users found`);
+    return { discussions, users };
+
   } catch (error) {
     console.error(`[API] fetchDiscussions - Error:`, error);
-    return [];
+    return { discussions: [], users: [] };
   }
 }
 

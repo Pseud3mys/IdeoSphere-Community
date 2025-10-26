@@ -382,7 +382,7 @@ export function createApiActions(
               actions.addPost({
                 id: parentItem.id,
                 content: parentItem.content || '',
-                author: parentItem.authors?.[0] || { id: 'unknown', name: 'Unknown', email: '', bio: '', avatar: '', createdAt: new Date(), isRegistered: false },
+                authorId: parentItem.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
                 createdAt: parentItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -424,7 +424,7 @@ export function createApiActions(
               actions.addPost({
                 id: childItem.id,
                 content: childItem.content || '',
-                author: childItem.authors?.[0] || { id: 'unknown', name: 'Unknown', email: '', bio: '', avatar: '', createdAt: new Date(), isRegistered: false },
+                authorId: childItem.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
                 createdAt: childItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -606,7 +606,7 @@ export function createApiActions(
                 actions.addPost({
                   id: parent.id,
                   content: parent.content || '',
-                  author: parent.authors?.[0] || { id: 'unknown', name: 'Unknown', email: '', bio: '', avatar: '', createdAt: new Date(), isRegistered: false },
+                  authorId: parent.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
                   createdAt: parent.createdAt,
                   supportCount: 0,
                   supporters: [],

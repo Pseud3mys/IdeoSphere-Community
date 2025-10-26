@@ -150,7 +150,7 @@ export function transformPostCardToPost(postCard: any): Post {
     id: postCard.id,
     content: postCard.content,
     location: postCard.location,
-    author: transformCreatorToUser(postCard.author),
+    authorId: postCard.authorId,
     createdAt: new Date(postCard.createdAt),
     supporters: postCard.supporters || [],
     tags: postCard.tags || [],
@@ -215,7 +215,7 @@ export const transformUser = (raw: RawUser): User => ({
  */
 export const transformComment = (raw: RawComment, usersMap: Map<string, User>): PostReply => ({
   id: raw.id,
-  author: usersMap.get(raw.authorId) || { ...unknownUser, id: raw.authorId },
+  authorId: raw.authorId,
   content: raw.content,
   createdAt: new Date(raw.createdAt),
   likes: raw.upvotes || [],
@@ -226,14 +226,12 @@ export const transformComment = (raw: RawComment, usersMap: Map<string, User>): 
  * Transforms a RawPost into the frontend Post type.
  */
 export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post => {
-  const authorId = raw.creators?.[0];
-  const author = authorId ? (usersMap.get(authorId) || { ...unknownUser, id: authorId }) : unknownUser;
-  
+
   return {
     id: raw._id,
     type: 'post', // Ajoutez cette ligne
     content: raw.content || raw.title || '',
-    author,
+    authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),
     supporters: raw.supporters || [],
     replies: (raw.comments || []).map(comment => transformComment(comment, usersMap)),
@@ -280,14 +278,11 @@ export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea =
  * This is used for the "discussions" attached to an idea.
  */
 export const transformPostToDiscussion = (raw: RawPost, usersMap: Map<string, User>): DiscussionTopic => {
-    const authorId = raw.creators?.[0];
-    const author = authorId ? (usersMap.get(authorId) || { ...unknownUser, id: authorId }) : unknownUser;
-    
     return {
         id: raw._id,
         title: raw.title || 'Discussion',
         type: (raw.type as 'general' | 'question' | 'suggestion' | 'technical') || 'general',
-        author,
+        authorId: raw.creators?.[0],
         content: raw.content || '',
         timestamp: new Date(raw.createdAt),
         createdAt: new Date(raw.createdAt),

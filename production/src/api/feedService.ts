@@ -49,7 +49,7 @@ export interface FeedPostCard {
   id: string;
   content: string;
   location?: string;
-  author: { id: string; name: string; avatar: string };
+  authorId: string;
   createdAt: Date;
   supporters: string[]; // ✅ AJOUTER CETTE LIGNE
   supportCount: number;
@@ -257,7 +257,7 @@ const transformPostToCard = (post: Post): FeedPostCard => ({
     id: post.id,
     content: post.content,
     location: post.location,
-    author: { id: post.author.id, name: post.author.name, avatar: post.author.avatar },
+    authorId: post.authorId,
     createdAt: post.createdAt,
     supporters: post.supporters || [],
     likeCount: post.supportCount ?? (post.supporters || []).length,

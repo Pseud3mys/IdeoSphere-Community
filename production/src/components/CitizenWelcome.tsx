@@ -60,7 +60,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser l'Entity Store uniquement pour les actions (pas pour les données)
-  const { actions } = useEntityStoreSimple();
+  const { actions, getUserById } = useEntityStoreSimple();
   
   // Charger les données de manière autonome
   useEffect(() => {
@@ -179,11 +179,12 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       };
     } else {
       // C'est un post
+      const author = getUserById(item.authorId);
       return {
         id: item.id,
         title: item.content.length > 60 ? item.content.substring(0, 60) + '...' : item.content,
         content: item.content,
-        location: item.location || item.author?.name + " (auteur)" || "Localisation non précisée",
+        location: item.location || (author ? author.name + " (auteur)" : "Localisation non précisée"),
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         category: item.tags?.[0] || "Discussion citoyenne",

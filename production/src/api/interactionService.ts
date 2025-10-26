@@ -127,7 +127,6 @@ export async function createDiscussionTopicOnApi(
   console.log(`🔄 [API] Création d'un topic de discussion pour l'idée ${ideaId}`);
 
   try {
-    // MODIFICATION : Le payload est ajusté pour la nouvelle logique.
     const payload = {
       authorId: userId,
       title: data.title,
