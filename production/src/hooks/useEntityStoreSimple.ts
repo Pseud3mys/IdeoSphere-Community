@@ -138,7 +138,7 @@ export function useEntityStoreSimple() {
         !post.replies?.some(reply => reply.author?.id === currentUser.id) // Pas commenté
       );
       const supportedIdeas = allIdeas.filter(idea => 
-        idea.supporters?.includes(currentUser.id) &&
+        idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
         !idea.creators?.some(c => c.id === currentUser.id) && // Pas créé
         !idea.ratings?.some(rating => rating.userId === currentUser.id) // Pas noté
       );

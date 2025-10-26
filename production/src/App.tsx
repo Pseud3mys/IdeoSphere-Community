@@ -10,6 +10,8 @@ import { Footer } from './components/Footer';
 import { FAQPage } from './components/FAQPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsPage } from './components/TermsPage';
+import { AboutPage } from './components/AboutPage';
+import { HowItWorksPage } from './components/HowItWorksPage';
 import { OnboardingTour } from './components/OnboardingTour';
 import { Toaster } from './components/ui/sonner';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -154,16 +156,12 @@ function AppWithStore() {
   if (footerPages.includes(store.activeTab)) {
     let PageComponent;
     switch (store.activeTab) {
-      case 'about': {
-        const { AboutPage } = require('./components/AboutPage');
+      case 'about':
         PageComponent = () => <AboutPage onNavigateBack={handleNavigateBackToWelcome} />;
         break;
-      }
-      case 'how-it-works': {
-        const { HowItWorksPage } = require('./components/HowItWorksPage');
+      case 'how-it-works':
         PageComponent = () => <HowItWorksPage onNavigateBack={handleNavigateBackToWelcome} />;
         break;
-      }
       case 'faq':
         PageComponent = () => <FAQPage onNavigateBack={handleNavigateBackToWelcome} />;
         break;

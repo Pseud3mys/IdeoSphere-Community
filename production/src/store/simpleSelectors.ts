@@ -195,7 +195,7 @@ export const getUserStats = (store: SimpleEntityStore) => (userId: string) => {
   const userPosts = getUserPosts(store)(userId);
   
   const supportedIdeas = Object.values(store.ideas).filter(idea =>
-    idea.supporters?.includes(userId)
+    idea.supporters?.includes(userId) // ✅ supporters est maintenant string[]
   );
   
   const totalPostSupports = userPosts.reduce((sum, post) => sum + (post.supporters?.length || 0), 0);

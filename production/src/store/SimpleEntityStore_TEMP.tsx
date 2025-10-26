@@ -183,26 +183,6 @@ const extractUsersFromPost = (post: Post): User[] => {
   return users;
 };
 
-const extractUsersFromDiscussionTopic = (topic: DiscussionTopic): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter l'auteur
-  if (topic.author && typeof topic.author === 'object' && 'id' in topic.author) {
-    users.push(topic.author);
-  }
-  
-  // Ajouter les utilisateurs dans les posts
-  if (topic.posts && Array.isArray(topic.posts)) {
-    topic.posts.forEach(post => {
-      if (post.author && typeof post.author === 'object' && 'id' in post.author) {
-        users.push(post.author);
-      }
-    });
-  }
-  
-  return users;
-};
-
 // Fonctions helper pour normaliser les données
 const normalizeUsers = (users: User[]): Record<string, User> => {
   return users.reduce((acc, user) => {
@@ -399,37 +379,14 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // Discussion Topics
-    setDiscussionTopics: (topics) => setStore(prev => {
-      // Extraire tous les utilisateurs de tous les topics
-      const allUsers = { ...prev.users };
-      Object.values(topics).forEach(topic => {
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        usersFromTopic.forEach(user => {
-          if (!allUsers[user.id]) {
-            allUsers[user.id] = user;
-          }
-        });
-      });
-      return { ...prev, users: allUsers, discussionTopics: topics };
-    }),
-    addDiscussionTopic: (topic) => {
-      setStore(prev => {
-        // Extraire et ajouter les utilisateurs du topic au store
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        const newUsers = { ...prev.users };
-        usersFromTopic.forEach(user => {
-          if (!newUsers[user.id]) {
-            newUsers[user.id] = user;
-          }
-        });
-        
-        return { 
-          ...prev,
-          users: newUsers,
-          discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
-        };
-      });
-    },
+    setDiscussionTopics: (topics) => setStore(prev => ({
+      ...prev,
+      discussionTopics: topics
+    })),
+    addDiscussionTopic: (topic) => setStore(prev => ({
+      ...prev,
+      discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
+    })),
     updateDiscussionTopic: (topicId, updates) => setStore(prev => ({
       ...prev,
       discussionTopics: {

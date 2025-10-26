@@ -66,7 +66,7 @@ export function IdeaCard({
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
   
-  const isSupported = user && (latestIdea.supporters?.includes(user.id) || false);
+  const isSupported = user && (latestIdea.supporters?.includes(user.id) || false); // ✅ supporters est maintenant string[]
   const supportCount = latestIdea.supporters?.length || 0;
   const timeAgo = formatTimeAgo(latestIdea.createdAt);
 

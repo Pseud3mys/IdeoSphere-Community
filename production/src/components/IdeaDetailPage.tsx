@@ -97,7 +97,7 @@ export function IdeaDetailPage({
   }, [activeTab, latestIdea.id]); // Retirer loadTabData des dépendances car elle ne change pas vraiment
 
   const isSupported = useMemo(() => {
-    return latestIdea.supporters?.includes(currentUser.id) || false;
+    return latestIdea.supporters?.includes(currentUser.id) || false; // ✅ supporters est maintenant string[]
   }, [latestIdea.supporters, currentUser.id]);
   
   const supportCount = useMemo(() => {

@@ -17,14 +17,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-1',
-          author: users[3], // Emma
+          authorId: users[3].id, // ✅ Emma - ID au lieu de l'objet
           content: 'Carrément ! Moi avec la poussette, j\'aimerais bien pouvoir m\'arrêter devant la pharmacie 👶',
           createdAt: new Date('2024-01-08T11:15:00'),
           likes: ['1', '3']
         },
         {
           id: 'reply-2',
-          author: users[1], // Pierre
+          authorId: users[1].id, // ✅ Pierre - ID au lieu de l'objet
           content: 'C\'est vrai qu\'il en faudrait au moins un devant la boulangerie, on fait souvent la queue dehors !',
           createdAt: new Date('2024-01-08T14:20:00'),
           likes: ['1', '2']
@@ -44,14 +44,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-3',
-          author: users[2], // Sophie
+          authorId: users[2].id, // ✅ Sophie - ID au lieu de l'objet
           content: 'Et près de l\'école ! Pour les parents qui attendent les enfants 🏫',
           createdAt: new Date('2024-01-09T17:20:00'),
           likes: ['3', '4']
         },
         {
           id: 'reply-4',
-          author: users[0], // Marie
+          authorId: users[0].id, // ✅ Marie - ID au lieu de l'objet
           content: 'Oui ! On va peut-être pouvoir monter un projet pour ça... 💡',
           createdAt: new Date('2024-01-09T18:00:00'),
           likes: ['1', '4']
@@ -71,14 +71,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-5',
-          author: users[1], // Pierre
+          authorId: users[1].id, // ✅ Pierre - ID au lieu de l'objet
           content: 'Excellente idée ! Ça redonnerait vie à notre place 🏘️',
           createdAt: new Date('2024-01-10T19:30:00'),
           likes: ['2', '4']
         },
         {
           id: 'reply-6',
-          author: users[0], // Marie
+          authorId: users[0].id, // ✅ Marie - ID au lieu de l'objet
           content: 'Je vais creuser le sujet et voir ce qu\'on peut faire concrètement ! 📝',
           createdAt: new Date('2024-01-10T20:15:00'),
           likes: ['1', '3']
@@ -98,14 +98,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-7',
-          author: users[1], // Pierre
+          authorId: users[1].id, // ✅ Pierre - ID au lieu de l'objet
           content: 'Carrément ! J\'ai plein d\'outils et j\'adore réparer. Un samedi par mois ça serait top 🔧',
           createdAt: new Date('2024-01-12T17:20:00'),
           likes: ['3', '4']
         },
         {
           id: 'reply-8',
-          author: users[2], // Sophie
+          authorId: users[2].id, // ✅ Sophie - ID au lieu de l'objet
           content: 'Génial ! Moi je peux aider pour la couture et les reprises de vêtements 🧵',
           createdAt: new Date('2024-01-12T18:00:00'),
           likes: ['1', '4']
@@ -125,14 +125,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-9',
-          author: users[3], // Emma
+          authorId: users[3].id, // ✅ Emma - ID au lieu de l'objet
           content: 'Excellente idée ! Moi je peux aider pour les transports et garde d\'enfants 🚗',
           createdAt: new Date('2024-01-18T19:30:00'),
           likes: ['2', '4']
         },
         {
           id: 'reply-10',
-          author: users[0], // Marie
+          authorId: users[0].id, // ✅ Marie - ID au lieu de l'objet
           content: 'Super ! On pourrait faire un tableau avec qui propose quoi. Ça m\'inspire ! 💡',
           createdAt: new Date('2024-01-18T20:15:00'),
           likes: ['1', '3']
@@ -152,14 +152,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-11',
-          author: users[4], // Thomas
+          authorId: users[4].id, // ✅ Thomas - ID au lieu de l'objet
           content: 'Moi j\'ai crevé la semaine dernière ! Il faut qu\'on fasse quelque chose 😤',
           createdAt: new Date('2024-01-16T09:00:00'),
           likes: ['4', '1']
         },
         {
           id: 'reply-12',
-          author: users[0], // Marie
+          authorId: users[0].id, // ✅ Marie - ID au lieu de l'objet
           content: 'On devrait faire un signalement groupé à la mairie, ça aurait plus de poids !',
           createdAt: new Date('2024-01-16T09:30:00'),
           likes: ['1', '2']
@@ -179,14 +179,14 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-13',
-          author: users[0], // Marie
+          authorId: users[0].id, // ✅ Marie - ID au lieu de l'objet
           content: 'Tellement vrai ! Et nous à la pharmacie on ne peut plus sortir aux heures d\'école 🚗',
           createdAt: new Date('2024-01-22T09:15:00'),
           likes: ['1', '3']
         },
         {
           id: 'reply-14',
-          author: users[4], // Thomas
+          authorId: users[4].id, // ✅ Thomas - ID au lieu de l'objet
           content: 'Peut-être qu\'on pourrait organiser un système de surveillance entre parents ?',
           createdAt: new Date('2024-01-22T10:00:00'),
           likes: ['3', '1']
@@ -206,7 +206,7 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-15',
-          author: users[2], // Sophie
+          authorId: users[2].id, // ✅ Sophie - ID au lieu de l'objet
           content: 'Bonne idée le covoiturage ! Moi je peux prendre 2 enfants en plus dans ma voiture 👍',
           createdAt: new Date('2024-01-23T18:00:00'),
           likes: ['1', '3']
@@ -226,7 +226,7 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-16',
-          author: users[2], // Sophie
+          authorId: users[2].id, // ✅ Sophie - ID au lieu de l'objet
           content: 'Moi couture et petit électroménager ! Emma elle est douée avec les vélos aussi 🚲',
           createdAt: new Date('2024-01-28T16:20:00'),
           likes: ['1', '3']
@@ -246,7 +246,7 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-17',
-          author: users[1], // Pierre
+          authorId: users[1].id, // ✅ Pierre - ID au lieu de l'objet
           content: 'Ahah oui ! Moi c\'est plutôt jardinage, et toi l\'informatique ! 😂',
           createdAt: new Date('2024-02-01T10:00:00'),
           likes: ['1', '2']
@@ -266,7 +266,7 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-18',
-          author: users[1], // Pierre
+          authorId: users[1].id, // ✅ Pierre - ID au lieu de l'objet
           content: 'C\'est clair ! Et ma voiture en prend un coup aussi... On va finir par le combler nous-mêmes ! 😤',
           createdAt: new Date('2024-01-30T14:00:00'),
           likes: ['1', '2']
@@ -286,7 +286,7 @@ export function getMockPosts(): Post[] {
       replies: [
         {
           id: 'reply-19',
-          author: users[2], // Sophie
+          authorId: users[2].id, // ✅ Sophie - ID au lieu de l'objet
           content: 'Oui ! On a plein d\'idées concrètes maintenant, il faut qu\'on s\'organise pour les réaliser 💪',
           createdAt: new Date('2024-02-03T18:00:00'),
           likes: ['1', '3']

@@ -163,7 +163,7 @@ const extractUsersFromIdea = (idea: Idea): User[] => {
     });
   }
   
-  // Les supporters sont maintenant des IDs, pas besoin de les extraire
+  // ✅ Les supporters sont maintenant des IDs (string[]) - pas d'extraction nécessaire
   
   return users;
 };
@@ -181,26 +181,6 @@ const extractUsersFromPost = (post: Post): User[] => {
     post.replies.forEach(reply => {
       if (reply.author && typeof reply.author === 'object' && 'id' in reply.author) {
         users.push(reply.author);
-      }
-    });
-  }
-  
-  return users;
-};
-
-const extractUsersFromDiscussionTopic = (topic: DiscussionTopic): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter l'auteur
-  if (topic.author && typeof topic.author === 'object' && 'id' in topic.author) {
-    users.push(topic.author);
-  }
-  
-  // Ajouter les utilisateurs dans les posts
-  if (topic.posts && Array.isArray(topic.posts)) {
-    topic.posts.forEach(post => {
-      if (post.author && typeof post.author === 'object' && 'id' in post.author) {
-        users.push(post.author);
       }
     });
   }
@@ -404,37 +384,14 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // Discussion Topics
-    setDiscussionTopics: (topics) => setStore(prev => {
-      // Extraire tous les utilisateurs de tous les topics
-      const allUsers = { ...prev.users };
-      Object.values(topics).forEach(topic => {
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        usersFromTopic.forEach(user => {
-          if (!allUsers[user.id]) {
-            allUsers[user.id] = user;
-          }
-        });
-      });
-      return { ...prev, users: allUsers, discussionTopics: topics };
-    }),
-    addDiscussionTopic: (topic) => {
-      setStore(prev => {
-        // Extraire et ajouter les utilisateurs du topic au store
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        const newUsers = { ...prev.users };
-        usersFromTopic.forEach(user => {
-          if (!newUsers[user.id]) {
-            newUsers[user.id] = user;
-          }
-        });
-        
-        return { 
-          ...prev,
-          users: newUsers,
-          discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
-        };
-      });
-    },
+    setDiscussionTopics: (topics) => setStore(prev => ({
+      ...prev,
+      discussionTopics: topics
+    })),
+    addDiscussionTopic: (topic) => setStore(prev => ({
+      ...prev,
+      discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
+    })),
     updateDiscussionTopic: (topicId, updates) => setStore(prev => ({
       ...prev,
       discussionTopics: {

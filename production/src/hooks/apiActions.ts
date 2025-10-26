@@ -256,7 +256,7 @@ export function createApiActions(
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
           .filter(idea => 
-            idea.supporters?.includes(currentUser.id) &&
+            idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
             !idea.creators?.some(c => c.id === currentUser.id)
           );
           

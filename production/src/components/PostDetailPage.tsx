@@ -52,7 +52,6 @@ function formatTimeAgo(date: Date): string {
 export function PostDetailPage({ 
   post, 
   onBack, 
-  onLike, 
   onPromoteToIdea,
   onCreateResponsePost,
   onIdeaClick,
@@ -61,6 +60,7 @@ export function PostDetailPage({
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
+    getUserById,
     getAllIdeas,
     getAllPosts,
     getPostById,
@@ -466,52 +466,58 @@ export function PostDetailPage({
 
           {/* Liste des commentaires */}
           <div className="divide-y divide-gray-100">
-            {latestPost.replies.map(reply => (
-              <div key={reply.id} className="p-4 hover:bg-gray-50/50 transition-colors">
-                <div className="flex space-x-3">
-                  <div className="flex flex-col items-center space-y-1">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={getValidAvatar(reply.author.name, reply.author.avatar)} alt={reply.author.name} />
-                      <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
-                        {reply.author.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+            {latestPost.replies.map(reply => {
+              // ✅ Résoudre l'authorId en objet User
+              const replyAuthor = getUserById(reply.authorId);
+              if (!replyAuthor) return null; // Skip si l'utilisateur n'existe pas
+              
+              return (
+                <div key={reply.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                  <div className="flex space-x-3">
                     <div className="flex flex-col items-center space-y-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
-                        onClick={() => handleLikeReply(reply.id)}
-                      >
-                        <ArrowUp className="w-3 h-3" />
-                      </Button>
-                      <span className="text-xs font-medium text-gray-600">
-                        {reply.likes?.length || 0}
-                      </span>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={getValidAvatar(replyAuthor.name, replyAuthor.avatar)} alt={replyAuthor.name} />
+                        <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
+                          {replyAuthor.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-center space-y-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
+                          onClick={() => handleLikeReply(reply.id)}
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </Button>
+                        <span className="text-xs font-medium text-gray-600">
+                          {reply.likes?.length || 0}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <UserLink user={reply.author} className="font-medium text-gray-900 text-sm" />
-                      <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
-                    </div>
-                    <p className="text-gray-800 leading-relaxed text-sm">{reply.content}</p>
                     
-                    <div className="flex items-center space-x-3 mt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
-                      >
-                        <Reply className="w-3 h-3 mr-1" />
-                        Répondre
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <UserLink user={replyAuthor} className="font-medium text-gray-900 text-sm" />
+                        <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
+                      </div>
+                      <p className="text-gray-800 leading-relaxed text-sm">{reply.content}</p>
+                      
+                      <div className="flex items-center space-x-3 mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                        >
+                          <Reply className="w-3 h-3 mr-1" />
+                          Répondre
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {latestPost.replies.length === 0 && (
               <div className="p-8 text-center text-gray-500">

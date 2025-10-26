@@ -34,7 +34,7 @@ export interface DiscussionTopic {
   id: string;
   title: string;
   type: 'general' | 'question' | 'suggestion' | 'technical';
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   upvotes: string[]; // User IDs who upvoted
@@ -46,7 +46,7 @@ export interface DiscussionTopic {
 
 export interface DiscussionPost {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   upvotes: string[]; // User IDs who upvoted
@@ -55,7 +55,7 @@ export interface DiscussionPost {
 
 export interface Discussion {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   replies: Discussion[];
@@ -63,7 +63,7 @@ export interface Discussion {
 
 export interface PostReply {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   createdAt: Date;
   likes: string[];
@@ -129,7 +129,7 @@ export interface Idea {
   tags?: string[];
   location?: string;
   // Champs chargés progressivement (peuvent être vides au début)
-  supporters: string[]; // User IDs qui soutiennent cette idée
+  supporters: string[]; // ✅ IDs des utilisateurs (aligné avec Post.supporters)
   discussionIds: string[];
   ratingCriteria: RatingCriterion[];
   ratings?: Rating[]; // ✅ Optionnel - chargé uniquement dans l'onglet évaluation
