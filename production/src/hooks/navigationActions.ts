@@ -41,7 +41,14 @@ export function createNavigationActions(
         }
         
         // 4. Charger les discussions et mettre à jour l'idée
-        const discussions = await fetchDiscussions(ideaId, 'idea');
+        const { discussions, users } = await fetchDiscussions(ideaId, 'idea');
+        
+        // ✅ Ajouter les utilisateurs au store
+        if (users && users.length > 0) {
+          users.forEach(user => {
+            actions.addUser(user);
+          });
+        }
         
         if (discussions && discussions.length > 0) {
           // Ajouter les discussions au store

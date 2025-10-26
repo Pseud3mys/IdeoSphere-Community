@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User, Idea, Post, DiscussionTopic, TabType, PrefilledContent, Community, CommunityMembership } from '../types';
+import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
 interface SimpleEntityStore {
@@ -451,16 +452,24 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     // Initialize store
     initializeStore: (initialData) => {
       try {
-        setStore(prev => ({
-          ...prev,
-          users: normalizeUsers(initialData.users || []),
-          ideas: normalizeIdeas(initialData.ideas || []),
-          posts: normalizePosts(initialData.posts || []),
-          discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
-          communities: normalizeCommunities(initialData.communities || []),
-          communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
-          currentUserId: initialData.currentUserId || ''
-        }));
+        setStore(prev => {
+          const normalizedUsers = normalizeUsers(initialData.users || []);
+          // ✅ S'assurer que unknownUser est toujours dans le store
+          normalizedUsers[unknownUser.id] = unknownUser;
+          
+          console.log('✅ [Store] Utilisateur inconnu ajouté au store:', unknownUser.name);
+          
+          return {
+            ...prev,
+            users: normalizedUsers,
+            ideas: normalizeIdeas(initialData.ideas || []),
+            posts: normalizePosts(initialData.posts || []),
+            discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
+            communities: normalizeCommunities(initialData.communities || []),
+            communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
+            currentUserId: initialData.currentUserId || ''
+          };
+        });
       } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation du store:', error);
       }

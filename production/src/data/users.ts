@@ -80,6 +80,18 @@ export const users: User[] = [
   }
 ];
 
+// ✅ Utilisateur inconnu - utilisé comme fallback quand un authorId n'est pas trouvé
+export const unknownUser: User = {
+  id: 'unknown',
+  name: 'Utilisateur Inconnu',
+  email: '',
+  avatar: '', // Avatar par défaut
+  bio: "Utilisateur non trouvé",
+  createdAt: new Date(),
+  address: '',
+  isRegistered: false
+};
+
 // Utilisateur invité par défaut
 export const guestUser: User = {
   id: 'guest',

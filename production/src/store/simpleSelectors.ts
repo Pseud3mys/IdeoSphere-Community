@@ -1,5 +1,6 @@
 import { SimpleEntityStore } from './SimpleEntityStore';
 import { User, Idea, Post, DiscussionTopic, Community, CommunityMembership } from '../types';
+import { unknownUser } from '../data/users';
 
 /**
  * Selectors simples pour extraire des données du store
@@ -11,8 +12,12 @@ export const getCurrentUser = (store: SimpleEntityStore): User | null => {
   return store.users[store.currentUserId] || null;
 };
 
-export const getUserById = (store: SimpleEntityStore) => (userId: string): User | null => {
-  return store.users[userId] || null;
+/**
+ * ✅ Récupère un utilisateur par ID avec fallback automatique
+ * @returns L'utilisateur trouvé, ou unknownUser si non trouvé (jamais null)
+ */
+export const getUserById = (store: SimpleEntityStore) => (userId: string): User => {
+  return store.users[userId] || unknownUser;
 };
 
 export const getAllUsers = (store: SimpleEntityStore): User[] => {

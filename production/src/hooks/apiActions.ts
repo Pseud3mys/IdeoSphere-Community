@@ -349,9 +349,16 @@ export function createApiActions(
     loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
         const { fetchLineage } = await import('../api/lineageService');
-        const lineageResult = await fetchLineage(itemId, itemType);
+        const result = await fetchLineage(itemId, itemType);
         
-        if (lineageResult) {
+        if (result) {
+          const { lineage: lineageResult, users } = result;
+          
+          // ✅ Ajouter les utilisateurs au store
+          users.forEach((user: User) => {
+            actions.addUser(user);
+          });
+          
           // Ajouter/fusionner les éléments au store directement
           const parentIds: string[] = [];
           const childIds: string[] = [];
@@ -499,7 +506,12 @@ export function createApiActions(
     loadDiscussions: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
         const { fetchDiscussions } = await import('../api/detailsService');
-        const discussions = await fetchDiscussions(itemId, itemType);
+        const { discussions, users } = await fetchDiscussions(itemId, itemType);
+        
+        // ✅ Ajouter les utilisateurs au store
+        users.forEach((user: User) => {
+          actions.addUser(user);
+        });
         
         // Ajouter les discussions au store
         discussions.forEach((discussion: DiscussionTopic) => {
@@ -559,16 +571,24 @@ export function createApiActions(
         if (tabType === 'versions') {
           // 1. APPELER L'API pour obtenir les données de lineage (depuis données mockées)
           const { fetchLineage } = await import('../api/lineageService');
-          const lineageData = await fetchLineage(ideaId);
+          const result = await fetchLineage(ideaId);
           
-          if (!lineageData) {
+          if (!result) {
             console.error(`❌ [apiActions] loadIdeaTabData versions: Échec du chargement du lineage pour ${ideaId}`);
             return null;
           }
           
+          const { lineage: lineageData, users } = result;
+          
+          // ✅ Ajouter les utilisateurs au store
+          users.forEach((user: User) => {
+            actions.addUser(user);
+          });
+          
           console.log(`✅ [apiActions] Lineage chargé depuis l'API:`, {
             parents: lineageData.parents.length,
-            children: lineageData.children.length
+            children: lineageData.children.length,
+            users: users.length
           });
           
           // 2. AJOUTER toutes les entités du lineage au store
