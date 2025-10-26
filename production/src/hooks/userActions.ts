@@ -69,9 +69,8 @@ export function createUserActions(
     },
     
     switchToVisitor: () => {
-      // Vérifier si l'utilisateur visiteur existe déjà
-      const visitorUser = boundSelectors.getUserById('visitor');
-      if (!visitorUser) {
+      // ✅ Vérifier si l'utilisateur visiteur existe vraiment dans le store
+      if (!boundSelectors.userExists('visitor')) {
         const visitorUser: User = {
           id: 'visitor',
           name: 'Visiteur',
@@ -89,9 +88,8 @@ export function createUserActions(
     },
     
     switchToTestUser: () => {
-      // Vérifier si l'utilisateur de test existe déjà
-      const testUser = boundSelectors.getUserById('test-user');
-      if (!testUser) {
+      // ✅ Vérifier si l'utilisateur de test existe vraiment dans le store
+      if (!boundSelectors.userExists('test-user')) {
         const testUser: User = {
           id: 'test-user',
           name: 'Test User',
@@ -137,9 +135,8 @@ export function createUserActions(
         const user = await loginWithSocialProviderApi(provider, socialData);
         
         if (user) {
-          // Vérifier si l'utilisateur existe déjà dans le store local
-          const existingUser = boundSelectors.getUserById(user.id);
-          if (!existingUser) {
+          // ✅ Vérifier si l'utilisateur existe vraiment dans le store local
+          if (!boundSelectors.userExists(user.id)) {
             actions.addUser(user);
           }
           actions.setCurrentUserId(user.id);
@@ -240,9 +237,9 @@ export function createUserActions(
     // Action pour ajouter un utilisateur au store et le sélectionner
     addUserAndSetAsCurrent: (userData: User) => {
       try {
-        // Vérifier si l'utilisateur existe déjà
-        const existingUser = boundSelectors.getUserById(userData.id);
-        if (existingUser) {
+        // ✅ Vérifier si l'utilisateur existe vraiment dans le store
+        if (boundSelectors.userExists(userData.id)) {
+          const existingUser = boundSelectors.getUserById(userData.id);
           actions.setCurrentUserId(userData.id);
           return existingUser;
         }

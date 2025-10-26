@@ -20,6 +20,14 @@ export const getUserById = (store: SimpleEntityStore) => (userId: string): User 
   return store.users[userId] || unknownUser;
 };
 
+/**
+ * ✅ Vérifie si un utilisateur existe réellement dans le store
+ * @returns true si l'utilisateur existe, false sinon
+ */
+export const userExists = (store: SimpleEntityStore) => (userId: string): boolean => {
+  return userId in store.users;
+};
+
 export const getAllUsers = (store: SimpleEntityStore): User[] => {
   return Object.values(store.users);
 };

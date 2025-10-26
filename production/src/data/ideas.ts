@@ -79,7 +79,7 @@ Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
       sourceIdeas: [],
       sourcePosts: ['post-1', 'post-2', 'post-3'], // Vient de plusieurs posts sur les bancs
       sourceDiscussions: [],
-      derivedIdeas: [],
+      derivedIdeas: ['idea-version-1'], // Version améliorée avec tech
       discussionIds: ['dt11', 'dt12', 'dt13'], // Discussions sur les emplacements, financement, modèles
       ratingCriteria: defaultRatingCriteria,
       ratings: [
@@ -168,7 +168,7 @@ Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix
       sourceIdeas: [],
       sourcePosts: ['post-4'], // Vient du post sur le grille-pain cassé
       sourceDiscussions: [], // Discussions qui ont inspiré cette idée
-      derivedIdeas: ['7'], // L'idée 7 est une version de cette idée
+      derivedIdeas: [], // Aucune version pour le moment
       discussionIds: ['dt4', 'dt5', 'dt6'], // Discussions sur le matériel, le lieu, l'organisation
       ratingCriteria: defaultRatingCriteria,
       ratings: [

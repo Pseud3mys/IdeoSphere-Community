@@ -51,6 +51,7 @@ export function useEntityStoreSimple() {
     // User selectors
     getCurrentUser: () => selectors.getCurrentUser(store),
     getUserById: (userId: string) => selectors.getUserById(store)(userId),
+    userExists: (userId: string) => selectors.userExists(store)(userId),
     getAllUsers: () => selectors.getAllUsers(store),
     
     // Idea selectors

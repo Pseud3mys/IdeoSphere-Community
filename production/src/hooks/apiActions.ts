@@ -351,8 +351,14 @@ export function createApiActions(
         const { fetchLineage } = await import('../api/lineageService');
         const result = await fetchLineage(itemId, itemType);
         
-        if (result) {
-          const { lineage: lineageResult, users } = result;
+        if (result && result.lineage) {
+          const { lineage: lineageResult, users = [] } = result;
+          
+          // Vérifier que lineageResult a les propriétés attendues
+          if (!lineageResult.parents || !lineageResult.children) {
+            console.error(`❌ [apiActions] loadLineage: Structure de lineage invalide`, lineageResult);
+            return;
+          }
           
           // ✅ Ajouter les utilisateurs au store
           users.forEach((user: User) => {
@@ -381,7 +387,7 @@ export function createApiActions(
                 status: 'published',
                 sourceIdeas: [],
                 sourcePosts: [],
-                derivedIdeas: [],
+                derivedIdeas: itemType === 'idea' ? [itemId] : [], // ✅ L'idée parente a l'item actuel comme dérivée si c'est une idée
                 discussionIds: []
               });
             } else {
@@ -398,8 +404,8 @@ export function createApiActions(
                 location: '',
                 linkedContent: [],
                 sourcePosts: [],
-                derivedIdeas: [],
-                derivedPosts: []
+                derivedIdeas: itemType === 'idea' ? [itemId] : [], // ✅ Le post parent a l'item actuel comme dérivée si c'est une idée
+                derivedPosts: itemType === 'post' ? [itemId] : [] // ✅ Ou comme post dérivé si c'est un post
               });
             }
             parentIds.push(parentItem.id);
@@ -421,8 +427,8 @@ export function createApiActions(
                 ratingCriteria: [],
                 tags: [],
                 status: 'published',
-                sourceIdeas: [],
-                sourcePosts: [],
+                sourceIdeas: itemType === 'idea' ? [itemId] : [], // ✅ L'idée dérivée provient de l'item actuel si c'est une idée
+                sourcePosts: itemType === 'post' ? [itemId] : [], // ✅ Ou du post actuel si c'est un post
                 derivedIdeas: [],
                 discussionIds: []
               });
@@ -571,14 +577,20 @@ export function createApiActions(
         if (tabType === 'versions') {
           // 1. APPELER L'API pour obtenir les données de lineage (depuis données mockées)
           const { fetchLineage } = await import('../api/lineageService');
-          const result = await fetchLineage(ideaId);
+          const result = await fetchLineage(ideaId, 'idea');
           
-          if (!result) {
+          if (!result || !result.lineage) {
             console.error(`❌ [apiActions] loadIdeaTabData versions: Échec du chargement du lineage pour ${ideaId}`);
             return null;
           }
           
-          const { lineage: lineageData, users } = result;
+          const { lineage: lineageData, users = [] } = result;
+          
+          // Vérifier que lineageData a les propriétés attendues
+          if (!lineageData || !lineageData.parents || !lineageData.children) {
+            console.error(`❌ [apiActions] loadIdeaTabData versions: Structure de lineage invalide`, lineageData);
+            return null;
+          }
           
           // ✅ Ajouter les utilisateurs au store
           users.forEach((user: User) => {
@@ -615,7 +627,7 @@ export function createApiActions(
                   status: 'published',
                   sourceIdeas: [],
                   sourcePosts: [],
-                  derivedIdeas: [],
+                  derivedIdeas: [ideaId], // ✅ L'idée parente a l'idée actuelle comme dérivée
                   discussionIds: []
                 });
               }
@@ -635,7 +647,7 @@ export function createApiActions(
                   location: '',
                   linkedContent: [],
                   sourcePosts: [],
-                  derivedIdeas: [],
+                  derivedIdeas: [ideaId], // ✅ Le post parent a l'idée actuelle comme dérivée
                   derivedPosts: []
                 });
               }
@@ -661,7 +673,7 @@ export function createApiActions(
                   ratingCriteria: [],
                   tags: [],
                   status: 'published',
-                  sourceIdeas: [],
+                  sourceIdeas: [ideaId], // ✅ L'idée dérivée provient de l'idée actuelle
                   sourcePosts: [],
                   derivedIdeas: [],
                   discussionIds: []
