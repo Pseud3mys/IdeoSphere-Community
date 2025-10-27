@@ -19,7 +19,7 @@ export interface FeedPostCard {
   id: string;
   content: string;
   location?: string;
-  author: { id: string; name: string; avatar: string };
+  authorId: string;
   createdAt: Date;
   supportCount: number;
   replyCount: number;
@@ -141,11 +141,7 @@ export async function fetchFeed(userId?: string): Promise<{
     id: post.id,
     content: post.content,
     location: post.location,
-    author: {
-      id: post.author.id,
-      name: post.author.name,
-      avatar: post.author.avatar
-    },
+    authorId: post.author.id,
     createdAt: post.createdAt,
     supportCount: post.supporters?.length || 0, // ✅ Calculer dynamiquement
     replyCount: post.replies?.length || 0,

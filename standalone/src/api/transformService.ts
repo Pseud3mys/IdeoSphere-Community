@@ -45,7 +45,7 @@ export function transformPostCardToPost(postCard: any): Post {
     id: postCard.id,
     content: postCard.content,
     location: postCard.location,
-    author: transformCreatorToUser(postCard.author),
+    authorId: postCard.author.id,
     createdAt: new Date(postCard.createdAt),
     supportCount: postCard.supporters?.length || 0, // ✅ Calculer dynamiquement
     tags: postCard.tags || [],
@@ -109,7 +109,7 @@ export function transformLineageItemToEntity(lineageItem: any): Idea | Post {
       id: lineageItem.id,
       content: lineageItem.content || '',
       location: '',
-      author: transformCreatorToUser(lineageItem.authors[0]),
+      authorId: lineageItem.authors[0].id,
       createdAt: new Date(lineageItem.createdAt),
       supporters: [],
       supportCount: 0,

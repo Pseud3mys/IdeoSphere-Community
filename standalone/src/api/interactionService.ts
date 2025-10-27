@@ -421,7 +421,7 @@ export async function addPostReplyOnApi(
   // Créer l'objet PostReply complet
   const newReply: import('../types').PostReply = {
     id: `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    author: user,
+    authorId: user.id,
     content: content.trim(),
     createdAt: new Date(),
     likes: [],

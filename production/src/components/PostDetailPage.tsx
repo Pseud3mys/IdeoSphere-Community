@@ -165,7 +165,8 @@ export function PostDetailPage({
           <div className="space-y-2">
             {sourcePosts.map((sourcePost, index) => {
               const sourceAuthor = getUserById(sourcePost?.authorId);
-              if (!sourceAuthor) return null;
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!sourceAuthor || sourceAuthor.id === 'unknown') return null;
               
               return (
                 <div 
@@ -363,7 +364,11 @@ export function PostDetailPage({
           
           <div className="space-y-4">
             {/* Projets dérivés */}
-            {derivedIdeas.map(idea => (
+            {derivedIdeas.map(idea => {
+              // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
+              const firstCreator = idea?.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+              
+              return (
               <Card 
                 key={idea?.id}
                 className="border-purple-200 bg-purple-50/30 cursor-pointer hover:bg-purple-50/50 transition-colors"
@@ -379,7 +384,7 @@ export function PostDetailPage({
                         <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
                           💡 Idée créée
                         </Badge>
-                        <span className="text-xs text-gray-500">par <UserLink user={idea?.creators[0]} className="text-gray-700 hover:text-primary" /></span>
+                        <span className="text-xs text-gray-500">par <UserLink user={firstCreator} className="text-gray-700 hover:text-primary" /></span>
                       </div>
                       <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
                       <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
@@ -392,12 +397,14 @@ export function PostDetailPage({
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
 
             {/* Posts dérivés */}
             {derivedPosts.map(derivedPost => {
               const derivedAuthor = getUserById(derivedPost?.authorId);
-              if (!derivedAuthor) return null;
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!derivedAuthor || derivedAuthor.id === 'unknown') return null;
               
               return (
                 <Card 

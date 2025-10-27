@@ -289,7 +289,7 @@ export const transformPostToDiscussion = (raw: RawPost, usersMap: Map<string, Us
         upvotes: raw.upvotes || [],
         posts: (raw.comments || []).map(c => ({
             id: c.id,
-            author: usersMap.get(c.authorId) || { ...unknownUser, id: c.authorId },
+            authorId: c.authorId,
             content: c.content,
             timestamp: new Date(c.createdAt),
             upvotes: c.upvotes || [],

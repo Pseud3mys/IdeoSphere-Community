@@ -84,18 +84,22 @@ export function CollaborationForm({
       const post = posts.find(p => p.id === id);
       
       if (idea) {
+        // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
+        const firstCreator = idea.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+        const author = firstCreator || { 
+          id: 'unknown', 
+          name: 'Créateur inconnu', 
+          email: '', 
+          avatar: '', 
+          createdAt: new Date(),
+          isRegistered: false
+        };
+        
         selectedContent.push({
           id: idea.id,
           type: 'idea',
           title: idea.title,
-          author: idea.creators[0] || { 
-            id: 'unknown', 
-            name: 'Créateur inconnu', 
-            email: '', 
-            avatar: '', 
-            createdAt: new Date(),
-            isRegistered: false
-          }
+          author: author
         });
       } else if (post) {
         const author = getUserById(post.authorId);

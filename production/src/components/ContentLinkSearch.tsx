@@ -108,9 +108,12 @@ export function ContentLinkSearch({
 
   const getContentAuthor = (content: any) => {
     if (content.type === 'idea') {
-      return content.creators && content.creators.length > 0 
-        ? content.creators[0] 
-        : { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
+      // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
+      if (content.creators && content.creators.length > 0) {
+        const firstCreator = getUserById(content.creators[0].id);
+        return firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
+      }
+      return { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
     }
     // Pour les posts, récupérer l'auteur depuis l'ID
     const author = getUserById(content.authorId);

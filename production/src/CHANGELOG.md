@@ -1,5 +1,74 @@
 # Changelog - IdeoSphere Architecture
 
+## [2025-10-27] - Correction Utilisateur Connecté Non Ajouté au Store
+
+### 🐛 Bug Fix Critique: Utilisateur Connecté Affiché comme "Utilisateur Inconnu"
+
+**Problème résolu** : L'utilisateur connecté voyait son propre nom affiché comme "Utilisateur Inconnu" dans ses propres posts et partout où son ID était référencé.
+
+**Cause** : Après connexion (email ou sociale), `store.currentUserId` était bien défini, mais `store.users[currentUserId]` n'existait pas. L'utilisateur n'était jamais ajouté au dictionnaire `users` du store.
+
+**Solution** :
+- ✅ **`/hooks/userActions.ts`** : Fonction `checkEmailExists()` modifiée pour **ajouter l'utilisateur au store immédiatement** après l'appel API
+- ✅ Si l'utilisateur existe déjà dans le store, le met à jour avec les données fraîches de l'API
+- ✅ Fonction `loginWithSocialProvider()` améliorée avec la même logique
+- ✅ **`/hooks/useAuthHandlers.ts`** : Fonction `handleLogin()` clarifiée avec meilleure gestion d'erreur et fallback
+- ✅ Logs de débogage ajoutés : "Utilisateur ajouté au store après login"
+
+**Impact** : L'utilisateur connecté s'affiche maintenant correctement partout dans l'application (en-tête, posts, profil, etc.)
+
+**Documentation** : Voir `/docs/BUGFIX_CURRENT_USER_NOT_IN_STORE.md` pour analyse détaillée
+
+---
+
+## [2025-10-26] - Correction Race Condition & Nettoyage Code
+
+### 🐛 Bug Fix: Race Condition "Utilisateur Inconnu"
+
+**Problème résolu** : Flash visuel affichant "Utilisateur Inconnu" avant le nom réel des auteurs dans `PostDetailPage` et `IdeaVersionsTab`.
+
+**Cause** : Race condition lors du chargement du lineage - les posts étaient créés dans le store AVANT que leurs auteurs ne soient ajoutés.
+
+**Solution** :
+- ✅ **`/hooks/apiActions.ts`** : Fonction `loadLineage()` modifiée pour ajouter TOUS les utilisateurs au store EN PREMIER
+- ✅ Extraction et déduplication de tous les auteurs du lineage (parents + enfants)
+- ✅ Logs de debug indiquant le nombre d'utilisateurs ajoutés
+- ✅ **`/components/PostDetailPage.tsx`** : Ajout de garde-fous `if (user.id === 'unknown') return null`
+- ✅ **`/components/IdeaVersionsTab.tsx`** : Même protection anti-unknownUser
+
+**Documentation** : Voir `/docs/BUGFIX_RACE_CONDITION_USERS.md` pour analyse détaillée
+
+### 🧹 Nettoyage Code & Suppression Dépréciés
+
+**Fichiers supprimés** :
+- ❌ `/store/SimpleEntityStore_TEMP.tsx` - Fichier temporaire non utilisé
+
+**Fonctions dépréciées supprimées** dans `/api/interactionService.ts` :
+- ❌ `toggleIdeaSupportOnApi()` - Remplacée par `toggleSupportOnApi(contentType: 'idea')`
+- ❌ `togglePostLikeOnApi()` - Remplacée par `toggleSupportOnApi(contentType: 'post')`
+
+**Imports inutilisés nettoyés** :
+- ❌ `loadMockDataSet` dans `/api/interactionService.ts`
+
+**Types nettoyés** dans `/types/index.ts` :
+- ❌ `preciseAddress?: string` du type `User` (déprécié et non utilisé)
+- ✅ Commentaire de `location` mis à jour : "Localisation de l'utilisateur (ville, région)"
+
+**Hooks nettoyés** dans `/hooks/useAuthHandlers.ts` :
+- ❌ `preciseAddress?: string` supprimé de la signature de `handleSignup()`
+
+**Impact** : ~60 lignes de code mort supprimées, 0 régression
+
+### 📊 Résumé des Modifications
+
+- **3 fichiers modifiés** : apiActions.ts, PostDetailPage.tsx, IdeaVersionsTab.tsx
+- **3 fichiers supprimés/nettoyés** : SimpleEntityStore_TEMP.tsx, 2 fonctions, 2 imports
+- **1 nouveau document** : BUGFIX_RACE_CONDITION_USERS.md
+- **Amélioration UX** : Plus de flash "Utilisateur Inconnu"
+- **Code plus propre** : Suppression du code déprécié et des imports morts
+
+---
+
 ## [2025-10-10] - Refactorisation Architecture Store-Centrée
 
 ### ✅ Corrections Majeures

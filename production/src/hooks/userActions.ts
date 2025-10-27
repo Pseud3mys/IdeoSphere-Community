@@ -121,7 +121,22 @@ export function createUserActions(
     checkEmailExists: async (email: string) => {
       try {
         const { loginWithEmail } = await import('../api/authService');
-        return await loginWithEmail(email);
+        const user = await loginWithEmail(email);
+        
+        // ✅ Si l'utilisateur existe, l'ajouter au store immédiatement
+        if (user) {
+          // Vérifier si l'utilisateur n'est pas déjà dans le store
+          if (!boundSelectors.userExists(user.id)) {
+            actions.addUser(user);
+            console.log('✅ [hook/userActions] Utilisateur ajouté au store après login:', user.name);
+          } else {
+            // Mettre à jour l'utilisateur existant avec les données fraîches de l'API
+            actions.updateUser(user.id, user);
+            console.log('✅ [hook/userActions] Utilisateur mis à jour dans le store après login:', user.name);
+          }
+        }
+        
+        return user;
       } catch (error) {
         console.error('❌ [hook/userActions] checkEmailExists:', error);
         return null;
@@ -138,6 +153,11 @@ export function createUserActions(
           // ✅ Vérifier si l'utilisateur existe vraiment dans le store local
           if (!boundSelectors.userExists(user.id)) {
             actions.addUser(user);
+            console.log('✅ [hook/userActions] Utilisateur social ajouté au store:', user.name);
+          } else {
+            // Mettre à jour l'utilisateur existant avec les données fraîches de l'API
+            actions.updateUser(user.id, user);
+            console.log('✅ [hook/userActions] Utilisateur social mis à jour dans le store:', user.name);
           }
           actions.setCurrentUserId(user.id);
         }

@@ -33,23 +33,28 @@ export function useAuthHandlers(
    */
   const handleLogin = async (email: string, password: string = ''): Promise<boolean> => {
     try {
-      // Appeler l'action du store
+      // ✅ Appeler l'action du store qui vérifie l'email ET ajoute l'user au store
       const existingUser = await checkEmailExists(email);
       
       if (existingUser) {
-        // Essayer de basculer vers l'utilisateur local
+        // ✅ L'utilisateur est maintenant dans le store grâce à checkEmailExists
+        // Basculer vers cet utilisateur (setCurrentUserId)
         const localUser = switchToUserByEmail(email);
+        
         if (localUser) {
           toast.success(`Connecté en tant que ${localUser.name} ! 🎉`);
           handleEnterPlatform();
           return true;
+        } else {
+          // ⚠️ Cela ne devrait jamais arriver car checkEmailExists a ajouté l'user au store
+          console.error('❌ [useAuthHandlers] handleLogin: L\'utilisateur n\'a pas été trouvé dans le store après checkEmailExists');
+          
+          // Fallback: ajouter manuellement l'utilisateur au store
+          setCurrentUserData(existingUser);
+          toast.success(`Connecté en tant que ${existingUser.name} ! 🎉`);
+          handleEnterPlatform();
+          return true;
         }
-        
-        // Ajouter l'utilisateur au store
-        setCurrentUserData(existingUser);
-        toast.success(`Connecté en tant que ${existingUser.name} ! 🎉`);
-        handleEnterPlatform();
-        return true;
       } else {
         toast.error('Aucun compte trouvé avec cet email. Créez d\'abord un compte.');
         return false;
@@ -106,7 +111,6 @@ export function useAuthHandlers(
     email: string;
     password: string;
     location?: string;
-    preciseAddress?: string;
     birthYear?: number;
   }): Promise<boolean> => {
     try {

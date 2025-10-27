@@ -148,7 +148,8 @@ export function IdeaVersionsTab({
               if (!parentPost) return null;
               
               const parentPostAuthor = getUserById(parentPost.authorId);
-              if (!parentPostAuthor) return null;
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!parentPostAuthor || parentPostAuthor.id === 'unknown') return null;
               
               return (
                 <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.goToPost(parentId)}>
@@ -240,18 +241,33 @@ export function IdeaVersionsTab({
                     </div>
                     
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
-                      <Avatar className="w-6 h-6">
-                        <AvatarImage src={versionIdea.creators[0]?.avatar} alt={versionIdea.creators[0]?.name} />
-                        <AvatarFallback className="text-xs">{versionIdea.creators[0]?.name.slice(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <span>
-                        {versionIdea.creators.length === 1 
-                          ? versionIdea.creators[0].name
-                          : versionIdea.creators.length === 2
-                            ? `${versionIdea.creators[0].name} et ${versionIdea.creators[1].name}`
-                            : `${versionIdea.creators[0].name} et ${versionIdea.creators.length - 1} autre${versionIdea.creators.length > 2 ? 's' : ''}`
-                        }
-                      </span>
+                      {(() => {
+                        // ✅ Résoudre les créateurs depuis le store pour avoir les données complètes
+                        const resolvedCreators = versionIdea.creators
+                          .map(c => getUserById(c.id))
+                          .filter(Boolean) as User[];
+                        
+                        if (resolvedCreators.length === 0) return null;
+                        
+                        const firstCreator = resolvedCreators[0];
+                        
+                        return (
+                          <>
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={firstCreator.avatar} alt={firstCreator.name} />
+                              <AvatarFallback className="text-xs">{firstCreator.name.slice(0, 1)}</AvatarFallback>
+                            </Avatar>
+                            <span>
+                              {resolvedCreators.length === 1 
+                                ? firstCreator.name
+                                : resolvedCreators.length === 2
+                                  ? `${firstCreator.name} et ${resolvedCreators[1].name}`
+                                  : `${firstCreator.name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
+                              }
+                            </span>
+                          </>
+                        );
+                      })()}
                       <span>•</span>
                       <Calendar className="w-3 h-3" />
                       <span>{versionIdea.createdAt.toLocaleDateString('fr-FR')}</span>
@@ -399,7 +415,7 @@ function StoreDebugPanel({ idea, allIdeas, allPosts, versionIdeas }: StoreDebugP
       return {
         id: p.id,
         content: p.content.substring(0, 50) + '...',
-        author: author?.name || 'Inconnu'
+        author: (author && author.id !== 'unknown') ? author.name : 'Inconnu'
       };
     }),
     versionsInStore: versionIdeas.map(v => ({

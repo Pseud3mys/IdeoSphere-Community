@@ -360,10 +360,14 @@ export function createApiActions(
             return;
           }
           
-          // ✅ Ajouter les utilisateurs au store
+          // ✅ IMPORTANT: Ajouter TOUS les utilisateurs au store EN PREMIER
+          // pour éviter la race condition qui cause l'affichage de "utilisateur inconnu"
+          // L'API retourne déjà tous les utilisateurs nécessaires (auteurs des posts et créateurs des ideas)
           users.forEach((user: User) => {
             actions.addUser(user);
           });
+          
+          console.log(`✅ [apiActions] loadLineage - ${users.length} utilisateurs ajoutés au store`);
           
           // Ajouter/fusionner les éléments au store directement
           const parentIds: string[] = [];
@@ -377,7 +381,7 @@ export function createApiActions(
                 title: parentItem.title || '',
                 summary: parentItem.summary || '',
                 description: '',
-                creators: parentItem.authors || [],
+                creators: parentItem.creators || [], // ✅ Ideas: utiliser creators (User[])
                 createdAt: parentItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -395,7 +399,7 @@ export function createApiActions(
               actions.addPost({
                 id: parentItem.id,
                 content: parentItem.content || '',
-                authorId: parentItem.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
+                authorId: parentItem.authorId || 'unknown', // ✅ Posts: utiliser authorId (string)
                 createdAt: parentItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -419,7 +423,7 @@ export function createApiActions(
                 title: childItem.title || '',
                 summary: childItem.summary || '',
                 description: '',
-                creators: childItem.authors || [],
+                creators: childItem.creators || [], // ✅ Ideas: utiliser creators (User[])
                 createdAt: childItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -437,7 +441,7 @@ export function createApiActions(
               actions.addPost({
                 id: childItem.id,
                 content: childItem.content || '',
-                authorId: childItem.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
+                authorId: childItem.authorId || 'unknown', // ✅ Posts: utiliser authorId (string)
                 createdAt: childItem.createdAt,
                 supportCount: 0,
                 supporters: [],

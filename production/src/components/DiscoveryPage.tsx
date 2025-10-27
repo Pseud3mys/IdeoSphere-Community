@@ -441,8 +441,8 @@ export function DiscoveryPage({
                     // C'est un Post
                     author = getUserById(item.authorId);
                   } else if ('creators' in item && item.creators && item.creators.length > 0) {
-                    // C'est une Idea
-                    author = getUserById(item.creators[0]);
+                    // C'est une Idea - ✅ Passer l'ID et non l'objet complet
+                    author = getUserById(item.creators[0].id);
                   }
                   
                   if (!author) return null;

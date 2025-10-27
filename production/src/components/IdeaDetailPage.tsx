@@ -38,6 +38,7 @@ export function IdeaDetailPage({
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
+    getUserById,
     getAllIdeas,
     getAllDiscussionTopics,
     getIdeaById,
@@ -50,6 +51,13 @@ export function IdeaDetailPage({
   
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
+
+  // ✅ Résoudre les créateurs depuis le store pour avoir les données complètes
+  const resolvedCreators = useMemo(() => 
+    latestIdea.creators
+      .map(c => getUserById(c.id))
+      .filter(Boolean) as User[]
+  , [latestIdea.creators, getUserById]);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {
@@ -230,20 +238,20 @@ export function IdeaDetailPage({
         <div className="block md:hidden mb-6">
           <div className="flex items-center space-x-3 mb-3">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={getValidAvatar(latestIdea.creators[0]?.name || '', latestIdea.creators[0]?.avatar)} alt={latestIdea.creators[0]?.name} />
-              <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
+              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
+              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {latestIdea.creators.length === 1 
-                  ? latestIdea.creators[0].name
-                  : latestIdea.creators.length === 2
-                    ? `${latestIdea.creators[0].name} et ${latestIdea.creators[1].name}`
-                    : `${latestIdea.creators[0].name} et ${latestIdea.creators.length - 1} autre${latestIdea.creators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 1 
+                  ? resolvedCreators[0].name
+                  : resolvedCreators.length === 2
+                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                {latestIdea.creators.length === 1 ? 'Créateur' : 'Créateurs'}
+                {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}
               </p>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -256,20 +264,20 @@ export function IdeaDetailPage({
         <div className="hidden md:flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={getValidAvatar(latestIdea.creators[0]?.name || '', latestIdea.creators[0]?.avatar)} alt={latestIdea.creators[0]?.name} />
-              <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
+              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
+              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm">
-                {latestIdea.creators.length === 1 
-                  ? latestIdea.creators[0].name
-                  : latestIdea.creators.length === 2
-                    ? `${latestIdea.creators[0].name} et ${latestIdea.creators[1].name}`
-                    : `${latestIdea.creators[0].name} et ${latestIdea.creators.length - 1} autre${latestIdea.creators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 1 
+                  ? resolvedCreators[0].name
+                  : resolvedCreators.length === 2
+                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                {latestIdea.creators.length === 1 ? 'Créateur' : 'Créateurs'}
+                {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}
               </p>
             </div>
           </div>

@@ -1,24 +1,27 @@
 // src/services/interactionService.ts
-
 import apiClient from './apiClient';
-import { PostReply, Post } from '../types';
-import { transformComment, transformUser, RawComment, RawUser } from './transformService';
+import { PostReply, Post, Rating, DiscussionTopic } from '../types';
+import { transformComment, transformUser, RawComment, RawUser, transformPostToDiscussion, transformFeedbackToRatings, RawFeedback } from './transformService';
 
 /**
  * Ajoute ou retire le soutien d'un utilisateur à une idée.
  * Corresponds à POST/DELETE /feedback
  */
-export async function toggleSupportOnApi(contentId: string, userId: string, contentType: string, isCurrentlySupporting: boolean): Promise<any> {
+export async function toggleSupportOnApi(contentId: string, userId: string, contentType: string, isCurrentlySupporting: boolean): Promise<{ success: boolean }> {
   console.log(`🔄 [API] Toggle soutien pour ${contentId}`);
   console.log(`🔄 [API] État actuel du soutien: ${isCurrentlySupporting}`);
   try {
     if (isCurrentlySupporting) {
-      return await apiClient.delete('/feedback', { params: { userId, contentId } });
+      await apiClient.delete('/feedback', { params: { userId, contentId } });
     } else {
-      return await apiClient.post('/feedback', { userId, contentId, type: 'supports' });
+      await apiClient.post('/feedback', { userId, contentId, type: 'supports' });
     }
+    // Si l'appel réussit (pas d'erreur), retourner un objet avec success: true
+    return { success: true };
   } catch (error) {
     console.error(`❌ Error toggling support for ${contentId}:`, error);
+    // En cas d'erreur, retourner un objet avec success: false
+    return { success: false };
   }
 }
 
@@ -26,29 +29,26 @@ export async function toggleSupportOnApi(contentId: string, userId: string, cont
  * Permet à un utilisateur d'évaluer une idée selon un critère.
  * Corresponds à PUT /feedback
  */
-export async function rateIdeaOnApi(ideaId: string, userId: string, criterionId: string, value: number): Promise<any> {
+export async function rateIdeaOnApi(ideaId: string, userId: string, criterionId: string, value: number): Promise<{ success: boolean, ratings: Rating[] }> {
   console.log(`🔄 [API] Évaluation pour ${ideaId}`);
   try {
     const ideaKey = ideaId.split('/')[1];
     const payload = {
         userId,
-        // L'objet "rating" correspond à ce que le backend attend
         rating: { criterionName: criterionId, value: value }
     };
-    // Appel de la nouvelle route dédiée
-    const response = await apiClient.post(`/ideas/${ideaKey}/rate`, payload);
+    const response = await apiClient.post<RawFeedback[]>(`/ideas/${ideaKey}/rate`, payload);
     
-    // Le frontend doit maintenant gérer la réponse qui contient le document feedback complet
-    // et mettre à jour le store en conséquence.
-    // L'idéal est de retourner le tableau 'ratings' mis à jour.
-    return { success: true, ratings: response.data.ratings };
+    // CORRECTION: Transformer la réponse brute en format Rating[] attendu par le hook
+    const ratings = transformFeedbackToRatings(response.data);
+
+    return { success: true, ratings: ratings };
 
   } catch (error) {
     console.error(`❌ Error rating content ${ideaId}:`, error);
-    return { success: false, error: error.message };
+    return { success: false, ratings: [] };
   }
 }
-
 /**
  * Enregistre un signalement de contenu inapproprié.
  * Corresponds à POST /feedback avec type='reports'
@@ -240,24 +240,38 @@ export async function markDiscussionPostAsAnswerOnApi(
   }
 }
 
-// --- Fonctions sans endpoint API défini ---
-export async function getIdeaRatingsOnApi(
-  ideaId: string
-): Promise<void> {
-  console.log(`LOG: getIdeaRatingsOnApi a été appelé pour ${ideaId}. Ce service nécessite un endpoint API dédié.`);
+export async function getIdeaRatingsOnApi(ideaId: string): Promise<Rating[] | null> {
+  console.log(`[API] getIdeaRatingsOnApi a été appelé pour ${ideaId}.`);
+  try {
+      const ideaKey = ideaId.split('/')[1];
+      const response = await apiClient.get<RawFeedback[]>(`/ideas/${ideaKey}/feedback`);
+      return transformFeedbackToRatings(response.data);
+  } catch (error) {
+      console.error(`❌ Error fetching ratings for idea ${ideaId}:`, error);
+      return [];
+  }
 }
 
-export async function ignoreContentOnApi(contentId: string, userId: string): Promise<void> {
-  console.log(`LOG: ignoreContentOnApi a été appelé pour ${contentId} par ${userId}. Ce service nécessite un endpoint API dédié.`);
+
+export async function ignoreContentOnApi(contentType: 'idea' | 'post', contentId: string, userId: string): Promise<boolean> {
+  console.log(`LOG: ignoreContentOnApi a été appelé pour ${contentType} ${contentId} par ${userId}. Ce service nécessite un endpoint API dédié.`);
+  // Simulation d'une réussite
+  return Promise.resolve(true);
 }
 
-export async function shareContentOnApi(contentId: string): Promise<string> {
+export async function shareContentOnApi(contentType: 'idea' | 'post', contentId: string, userId: string): Promise<string> {
   console.log(`LOG: shareContentOnApi a été appelé pour ${contentId}. Ce service ne nécessite pas d'API, il génère une URL côté client.`);
-  return window.location.origin + `/content/${contentId}`;
+  return Promise.resolve(window.location.origin + `/${contentType}/${contentId}?ref=${userId}`);
 }
 
-export async function toggleUserFollowOnApi(currentUserId: string, targetUserId: string): Promise<void> {
+export async function toggleUserFollowOnApi(targetUserId: string, currentUserId: string): Promise<boolean> {
   console.log(`LOG: toggleUserFollowOnApi a été appelé par ${currentUserId} pour suivre/unfollow ${targetUserId}. Ce service nécessite un endpoint API dédié.`);
+  return Promise.resolve(true);
 }
 
-// ... Les autres fonctions de discussion sont des alias ou nécessitent des endpoints spécifiques ...
+// jamais utilisée.
+/*export async function upvoteDiscussionTopicOnApi(topicId: string, userId: string): Promise<boolean> {
+  console.log(`LOG: upvoteDiscussionTopicOnApi a été appelé pour le topic ${topicId} par ${userId}. Ce service nécessite un endpoint API dédié.`);
+  // Simuler une réussite
+  return Promise.resolve(true);
+}*/

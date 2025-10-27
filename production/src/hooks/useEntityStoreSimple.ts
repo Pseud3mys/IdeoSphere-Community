@@ -122,13 +122,14 @@ export function useEntityStoreSimple() {
       
       // PARTICIPATIONS (créé ou commenté/noté)
       const myPosts = allPosts.filter(post => post.authorId === currentUser.id);
-      const myIdeas = allIdeas.filter(idea => idea.creators?.includes(currentUser.id));
+      // ✅ FIX: Comparer les IDs au lieu des objets User
+      const myIdeas = allIdeas.filter(idea => idea.creators?.some(creator => creator.id === currentUser.id));
       const commentedPosts = allPosts.filter(post => 
         post.authorId !== currentUser.id &&
         post.replies?.some(reply => reply.authorId === currentUser.id)
       );
       const ratedIdeas = allIdeas.filter(idea => 
-        !idea.creators?.includes(currentUser.id) && 
+        !idea.creators?.some(creator => creator.id === currentUser.id) && 
         idea.ratings?.some(rating => rating.userId === currentUser.id)
       );
 
@@ -140,7 +141,7 @@ export function useEntityStoreSimple() {
       );
       const supportedIdeas = allIdeas.filter(idea => 
         idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
-        !idea.creators?.includes(currentUser.id) && // Pas créé
+        !idea.creators?.some(creator => creator.id === currentUser.id) && // ✅ FIX: Comparer les IDs
         !idea.ratings?.some(rating => rating.userId === currentUser.id) // Pas noté
       );
 

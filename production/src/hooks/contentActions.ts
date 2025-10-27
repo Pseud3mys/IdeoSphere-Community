@@ -587,43 +587,33 @@ export function createContentActions(
           return null;
         }
         
-        // Appeler l'API
-        const topicId = await createDiscussionTopicOnApi(ideaId, currentUser.id, data);
+        // Appeler l'API - reçoit maintenant un objet DiscussionTopic complet
+        const newTopic = await createDiscussionTopicOnApi(ideaId, currentUser.id, data);
         
-        if (!topicId) {
+        if (!newTopic) {
           console.error('❌ Échec de la création du topic');
           return null;
         }
         
-        // Mettre à jour le store
+        // Mettre à jour le store avec l'objet DiscussionTopic reçu de l'API
         storeUpdater(prevStore => {
           const idea = selectors.getIdeaById(prevStore)(ideaId);
           if (!idea) return {};
           
-          const newTopic = {
-            id: topicId,
-            title: data.title,
-            content: data.content,
-            type: data.type,
-            author: currentUser,
-            timestamp: new Date(),
-            upvotes: [],
-            posts: []
-          };
-          
+          // ✅ Utiliser directement l'objet newTopic de l'API
           // Ajouter le topic au store
           const updatedDiscussionTopics = {
             ...prevStore.discussionTopics,
-            [topicId]: newTopic
+            [newTopic.id]: newTopic
           };
           
           // Ajouter l'ID du topic à l'idée
           const updatedIdea = {
             ...idea,
-            discussionIds: [...idea.discussionIds, topicId]
+            discussionIds: [...idea.discussionIds, newTopic.id]
           };
           
-          console.log('✅ Topic de discussion créé');
+          console.log('✅ Topic de discussion créé avec ID:', newTopic.id);
           
           return {
             discussionTopics: updatedDiscussionTopics,
@@ -634,7 +624,8 @@ export function createContentActions(
           };
         });
         
-        return topicId;
+        // Retourner l'ID du topic créé
+        return newTopic.id;
       } catch (error) {
         console.error('❌ Erreur lors de la création du topic:', error);
         return null;
@@ -657,34 +648,26 @@ export function createContentActions(
           return null;
         }
         
-        // Appeler l'API
-        const postId = await createDiscussionPostOnApi(topicId, currentUser.id, content);
+        // Appeler l'API - reçoit maintenant un objet DiscussionPost complet
+        const newPost = await createDiscussionPostOnApi(topicId, currentUser.id, content);
         
-        if (!postId) {
+        if (!newPost) {
           console.error('❌ Échec de la création du post');
           return null;
         }
         
-        // Mettre à jour le store
+        // Mettre à jour le store avec l'objet DiscussionPost reçu de l'API
         storeUpdater(prevStore => {
           const topic = selectors.getDiscussionTopicById(prevStore)(topicId);
           if (!topic) return {};
           
-          const newPost = {
-            id: postId,
-            author: currentUser,
-            content,
-            timestamp: new Date(),
-            upvotes: [],
-            isAnswer: false
-          };
-          
+          // ✅ Utiliser directement l'objet newPost de l'API
           const updatedTopic = {
             ...topic,
             posts: [...topic.posts, newPost]
           };
           
-          console.log('✅ Post de discussion créé');
+          console.log('✅ Post de discussion créé avec ID:', newPost.id);
           
           return {
             discussionTopics: {
@@ -694,7 +677,8 @@ export function createContentActions(
           };
         });
         
-        return postId;
+        // Retourner l'ID du post créé
+        return newPost.id;
       } catch (error) {
         console.error('❌ Erreur lors de la création du post:', error);
         return null;

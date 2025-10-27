@@ -46,12 +46,16 @@ export function ContentLinkDialog({
 
     if (contentFilter === 'all' || contentFilter === 'ideas') {
       ideas.forEach(idea => {
+        // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
+        const firstCreator = idea.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+        const author = firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } };
+        
         combinedContent.push({
           id: idea.id,
           type: 'idea',
           title: idea.title,
           summary: idea.summary,
-          author: idea.creators[0] || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } }, // Protection contre creators vide
+          author: author,
           createdAt: idea.createdAt,
           supportCount: idea.supporters?.length || 0,
           isSupported: idea.supporters?.includes(currentUser.id) || false // ✅ supporters est maintenant string[]

@@ -1,1 +1,0 @@
-// Ce fichier a été supprimé - la fonctionnalité de notation est maintenant intégrée dans RatingSection.tsx
