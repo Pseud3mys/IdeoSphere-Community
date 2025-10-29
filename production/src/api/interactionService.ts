@@ -109,11 +109,7 @@ export async function upvoteDiscussionPostOnApi(topicId: string, postId: string,
 }
 
 /**
- * Crée un nouveau Post
- * @param ideaId L'ID de l'idée à laquelle ce sujet de discussion est rattaché.
- * @param userId L'ID de l'auteur du sujet de discussion.
- * @param data Les détails du sujet : titre, contenu et type.
- * @returns L'objet Post complet nouvellement créé, ou null en cas d'erreur.
+ * Crée un nouveau Post qui sert de sujet de discussion pour une idée.
  */
 export async function createDiscussionTopicOnApi(
   ideaId: string,
@@ -123,24 +119,22 @@ export async function createDiscussionTopicOnApi(
     content: string;
     type: 'general' | 'question' | 'suggestion' | 'technical';
   }
-): Promise<Post | null> {
+): Promise<DiscussionTopic | null> {
   console.log(`🔄 [API] Création d'un topic de discussion pour l'idée ${ideaId}`);
-
   try {
     const payload = {
       authorId: userId,
       title: data.title,
       content: data.content,
       type: data.type,
-      discussionForIdeaId: ideaId 
+      isDiscussion: true, 
+      sourceIds: [ideaId] 
     };
-
-    // L'appel à l'endpoint reste le même (POST /posts), mais le payload a changé.
-    const response = await apiClient.post<Post>('/posts', payload);
-
-    console.log('✅ [API] Topic de discussion (Post) créé et lié avec succès:', response.data);
+    const response = await apiClient.post<any>('/posts', payload);
+    const usersMap = new Map<string, User>();
     
-    return response.data;
+    // **CORRECTION APPLIQUÉE**
+    return transformPostToDiscussion(response.data, usersMap);
 
   } catch (error) {
     console.error(`❌ [API] Erreur lors de la création du topic pour l'idée ${ideaId}:`, error);
@@ -150,30 +144,12 @@ export async function createDiscussionTopicOnApi(
 
 /**
  * Ajoute un nouveau commentaire (un post) à un topic de discussion (un Post parent).
- * @param topicOrId - L'ID complet du topic (chaîne) ou l'objet topic complet.
- * @param userId - L'ID de l'auteur du commentaire.
- * @param content - Le contenu textuel du commentaire.
- * @returns L'objet PostReply complet nouvellement créé, ou null en cas d'erreur.
  */
 export async function createDiscussionPostOnApi(
-  topicOrId: any, // On utilise 'any' pour accepter les deux types
+  topicId: string,
   userId: string,
   content: string
 ): Promise<PostReply | null> {
-  // --- DÉBUT DE LA CORRECTION ---
-  let topicId: string;
-
-  // On vérifie si on a reçu une chaîne de caractères (un ID) ou un objet
-  if (typeof topicOrId === 'string') {
-    topicId = topicOrId;
-  } else if (topicOrId && typeof topicOrId === 'object') {
-    // Si c'est un objet, on cherche la propriété `id` (frontend) ou `_id` (backend)
-    topicId = topicOrId.id || topicOrId._id;
-  } else {
-    console.error('❌ [API] createDiscussionPostOnApi a été appelé avec un argument invalide pour le topic.');
-    return null;
-  }
-
   console.log(`🔄 [API] Ajout d'une réponse dans le topic ${topicId}`);
 
   if (!content || content.trim().length === 0) {
@@ -187,9 +163,13 @@ export async function createDiscussionPostOnApi(
       authorId: userId, 
       content: content 
     };
-    const response = await apiClient.post<PostReply>(`/posts/${postKey}/comments`, payload);
+    const response = await apiClient.post<{ comment: RawComment, user: RawUser }>(`/posts/${postKey}/comments`, payload);
+    const usersMap = new Map([[response.data.user._id, transformUser(response.data.user)]]);
     console.log('✅ [API] Post de discussion (commentaire) créé avec succès !');
-    return response.data;
+
+    // **CORRECTION APPLIQUÉE**
+    return transformComment(response.data.comment, usersMap);
+    
   } catch (error) {
     console.error(`❌ [API] Erreur lors de l'ajout du post au topic ${topicId}:`, error);
     return null;
@@ -198,38 +178,33 @@ export async function createDiscussionPostOnApi(
 
 /**
  * Marque un post de discussion (commentaire) comme réponse acceptée via l'API.
- * @param topic - L'objet du topic (le post parent).
- * @param post - L'objet du post à marquer (le commentaire).
+ * @param topicId - L'ID du topic (le post parent).
+ * @param postId - L'ID du post à marquer (le commentaire).
  * @param userId - L'ID de l'utilisateur qui effectue l'action (pour validation).
  * @returns true si succès, false sinon.
  */
 export async function markDiscussionPostAsAnswerOnApi(
-  topic: any, // Le paramètre reçu est un objet, pas une chaîne
-  post: any,  // Le paramètre reçu est un objet, pas une chaîne
+  topicId: string,
+  postId: string,
   userId: string
 ): Promise<boolean> {
-  // Le log confirme que des objets sont passés
-  console.log(`🔄 [API] Marquer le post ${JSON.stringify(post, null, 2)} comme réponse dans le topic ${JSON.stringify(topic, null, 2)}`);
+  console.log(`🔄 [API] Marquer le post ${postId} comme réponse dans le topic ${topicId}`);
 
   try {
-    // CORRECTION : On extrait les identifiants requis depuis les objets passés en paramètre.
-    const topicIdString = topic._id; // On récupère la chaîne "posts/270270"
-    const postIdString = post.id;    // On récupère l'ID unique du commentaire, ex: "fad05f4b-..."
-
-    // On ajoute une sécurité pour s'assurer que les IDs sont bien des chaînes de caractères.
-    if (typeof topicIdString !== 'string' || typeof postIdString !== 'string') {
+    // S'assurer que les IDs sont valides
+    if (typeof topicId !== 'string' || typeof postId !== 'string') {
         console.error('❌ [API] Les identifiants du topic ou du post sont invalides.');
         return false;
     }
 
     // 1. Extraire la clé du topic à partir de son ID complet (ex: "posts/270270" -> "270270")
-    const topicKey = topicIdString.split('/')[1];
+    const topicKey = topicId.split('/')[1];
 
     // 2. Définir le payload.
     const payload = { userId: userId };
 
     // 3. Appeler la route de l'API avec les identifiants corrects.
-    await apiClient.post(`/posts/${topicKey}/comments/${postIdString}/mark-as-answer`, payload);
+    await apiClient.post(`/posts/${topicKey}/comments/${postId}/mark-as-answer`, payload);
 
     console.log('✅ [API] Post marqué comme réponse acceptée avec succès !');
     return true;

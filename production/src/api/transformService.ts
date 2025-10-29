@@ -7,7 +7,8 @@ import {
   PostReply,
   Rating,
   IdeaStatus,
-  DiscussionTopic
+  DiscussionTopic,
+  DiscussionPost
 } from '../types';
 import { defaultRatingCriteria } from '../data/ratings'; // Importation ajoutée
 
@@ -175,7 +176,6 @@ function transformCreatorToUser(creator: any): User {
     email: creator.email || '',
     bio: creator.bio || '',
     location: creator.location || '',
-    preciseAddress: creator.preciseAddress,
     birthYear: creator.birthYear,
     createdAt: creator.createdAt ? new Date(creator.createdAt) : new Date(),
     isRegistered: creator.isRegistered !== undefined ? creator.isRegistered : true
@@ -213,13 +213,13 @@ export const transformUser = (raw: RawUser): User => ({
  * Transforms a RawComment into the frontend PostReply type.
  * Requires a map of users to populate the author field.
  */
-export const transformComment = (raw: RawComment, usersMap: Map<string, User>): PostReply => ({
-  id: raw.id,
+export const transformComment = (raw: RawComment, usersMap: Map<string, User>): DiscussionPost => ({
+  id: raw.id, // Utilise _id pour l'ID
   authorId: raw.authorId,
   content: raw.content,
-  createdAt: new Date(raw.createdAt),
-  likes: raw.upvotes || [],
-  likeCount: (raw.upvotes || []).length,
+  timestamp: new Date(raw.createdAt), // Mappe createdAt vers timestamp
+  upvotes: raw.upvotes || [],
+  isAnswer: raw.isAnswer
 });
 
 /**
