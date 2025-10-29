@@ -26,29 +26,46 @@ export async function toggleSupportOnApi(contentId: string, userId: string, cont
 }
 
 /**
- * Permet à un utilisateur d'évaluer une idée selon un critère.
+ * Permet à un utilisateur d'évaluer une idée selon UN SEUL critère.
  * Corresponds à PUT /feedback
  */
-export async function rateIdeaOnApi(ideaId: string, userId: string, criterionId: string, value: number): Promise<{ success: boolean, ratings: Rating[] }> {
-  console.log(`🔄 [API] Évaluation pour ${ideaId}`);
+export async function rateIdeaOnApi(
+    ideaId: string, 
+    userId: string, 
+    criterionId: string, // Le critère que l'utilisateur a noté
+    value: number
+): Promise<{ success: boolean, rating: Rating | null }> {
+  console.log(`🔄 [API] Évaluation pour ${ideaId}, critère: ${criterionId}`);
   try {
     const ideaKey = ideaId.split('/')[1];
     const payload = {
         userId,
         rating: { criterionName: criterionId, value: value }
     };
-    const response = await apiClient.post<RawFeedback[]>(`/ideas/${ideaKey}/rate`, payload);
+    const response = await apiClient.post<RawFeedback>(`/ideas/${ideaKey}/rate`, payload);
     
-    // CORRECTION: Transformer la réponse brute en format Rating[] attendu par le hook
-    const ratings = transformFeedbackToRatings(response.data);
+    // La réponse de l'API est transformée en un tableau de TOUS les ratings
+    const ratingsArray = transformFeedbackToRatings(response.data);
 
-    return { success: true, ratings: ratings };
+    // ====================== LA CORRECTION EST ICI ======================
+    // On cherche le rating qui correspond EXACTEMENT au critère qui vient d'être noté
+    const updatedRating = ratingsArray.find(r => r.criterionId === criterionId);
+
+    if (!updatedRating) {
+      console.error(`❌ [API] Le rating pour le critère "${criterionId}" n'a pas été trouvé dans la réponse de l'API.`);
+      return { success: false, rating: null };
+    }
+    // =================================================================
+
+    // On retourne l'objet Rating correct au lieu du premier du tableau
+    return { success: true, rating: updatedRating };
 
   } catch (error) {
     console.error(`❌ Error rating content ${ideaId}:`, error);
-    return { success: false, ratings: [] };
+    return { success: false, rating: null };
   }
 }
+
 /**
  * Enregistre un signalement de contenu inapproprié.
  * Corresponds à POST /feedback avec type='reports'

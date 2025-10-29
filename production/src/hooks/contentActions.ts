@@ -154,6 +154,7 @@ export function createContentActions(
     
     // Actions d'évaluation
     rateIdea: async (ideaId: string, criterionId: string, value: number) => {
+      // ✅ Récupérer l'utilisateur pour l'appel API initial
       const currentUser = boundSelectors.getCurrentUser();
       if (!currentUser) return;
       
@@ -169,14 +170,39 @@ export function createContentActions(
           return;
         }
         
-        // 2. Mettre à jour le store avec les nouvelles ratings retournées par l'API
+        // 2. ✅ Approche optimisée : mettre à jour intelligemment le tableau de ratings
+        // L'API ne renvoie que le rating modifié, on l'intègre dans le tableau existant
         storeUpdater(prevStore => {
           const idea = selectors.getIdeaById(prevStore)(ideaId);
           if (!idea) return {};
 
+          // Copier le tableau de ratings existant
+          const currentRatings = [...(idea.ratings || [])];
+          
+          // ✅ BUGFIX: Utiliser result.rating.userId (du rating retourné par l'API)
+          // au lieu de currentUser.id (stale closure)
+          // Cela garantit qu'on cherche avec le bon userId qui correspond au rating reçu
+          const existingRatingIndex = currentRatings.findIndex(
+            r => r.criterionId === result.rating.criterionId && r.userId === result.rating.userId
+          );
+          
+          // Créer le nouveau tableau de ratings
+          let updatedRatings: typeof currentRatings;
+          
+          if (existingRatingIndex >= 0) {
+            // Remplacer le rating existant
+            updatedRatings = [...currentRatings];
+            updatedRatings[existingRatingIndex] = result.rating;
+            console.log('✅ [Hook] Rating mis à jour dans le store pour critère:', criterionId, 'userId:', result.rating.userId);
+          } else {
+            // Ajouter le nouveau rating
+            updatedRatings = [...currentRatings, result.rating];
+            console.log('✅ [Hook] Nouveau rating ajouté au store pour critère:', criterionId, 'userId:', result.rating.userId);
+          }
+
           const updatedIdea = {
             ...idea,
-            ratings: result.ratings
+            ratings: updatedRatings
           };
 
           return {

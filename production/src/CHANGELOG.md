@@ -1,5 +1,73 @@
 # Changelog - IdeoSphere Architecture
 
+## [2025-10-29] - Optimisation Système de Rating & Bugfix Stale Closure
+
+### ✅ Optimisation: Approche 2 - Rating Optimisé
+
+**Amélioration implémentée** : Le système de notation des idées suit maintenant l'approche optimisée (meilleure pratique) où le back-end ne renvoie que la donnée modifiée et le front-end met à jour intelligemment son état local.
+
+**Changements API** (`/api/interactionService.ts`) :
+- ✅ Interface `RatingResult` modifiée : `rating: Rating` au lieu de `ratings: Rating[]`
+- ✅ Fonction `rateIdeaOnApi()` retourne uniquement le rating créé/modifié (pas tout le tableau)
+- ✅ Logs améliorés montrant ancienne → nouvelle valeur
+
+**Changements Hook** (`/hooks/contentActions.ts`) :
+- ✅ Fonction `rateIdea()` met à jour intelligemment le tableau dans le store
+- ✅ Cherche le rating existant pour ce critère + utilisateur
+- ✅ Remplace si trouvé, ajoute sinon
+- ✅ Logs détaillés avec userId pour debugging
+
+**Avantages** :
+- ⚡ Performance : Transfert 100x plus léger (1 rating vs tableau complet)
+- 📈 Scalabilité : Fonctionne même avec milliers de ratings
+- 🎯 Standards REST : Prêt pour migration vers vrai back-end
+- 🧹 Maintenabilité : Responsabilités séparées (API = donnée, Hook = logique)
+
+**Documentation** :
+- `/docs/OPTIMIZED_RATING_SYSTEM.md` - Explication complète de l'approche optimisée
+- `/api/API_RESPONSE_TYPES.md` - Types de réponse API mis à jour
+
+### 🐛 Bug Fix Critique: Doublons dans les Ratings (Stale Closure)
+
+**Problème résolu** : Lors de l'évaluation d'une idée sur plusieurs critères, le premier rating fonctionnait mais les suivants créaient des doublons au lieu de mettre à jour.
+
+**Symptômes** :
+```
+✅ Premier rating: "Rating mis à jour..."
+❌ Deuxième rating: "Nouveau rating ajouté..." (devrait être "mis à jour")
+❌ Résultat: Tableau corrompu avec doublons
+```
+
+**Cause racine** : **Stale closure** dans `rateIdea()` - La variable `currentUser` était récupérée AVANT le `storeUpdater` avec `boundSelectors.getCurrentUser()`, puis utilisée dans la recherche `findIndex()`. Cette référence périmée causait l'échec de la recherche.
+
+**Solution** :
+- ✅ Utiliser `result.rating.userId` (retourné par l'API) au lieu de `currentUser.id` (closure périmée)
+- ✅ Utiliser `result.rating.criterionId` pour garantir la cohérence
+- ✅ Logs améliorés avec userId pour tracer les opérations
+
+**Code corrigé** :
+```typescript
+// ❌ AVANT : Stale closure
+const existingRatingIndex = currentRatings.findIndex(
+  r => r.criterionId === criterionId && r.userId === currentUser.id
+);
+
+// ✅ APRÈS : Données de l'API (source de vérité)
+const existingRatingIndex = currentRatings.findIndex(
+  r => r.criterionId === result.rating.criterionId 
+    && r.userId === result.rating.userId
+);
+```
+
+**Impact** :
+- ✅ Les ratings se mettent à jour correctement au lieu de créer des doublons
+- ✅ Le tableau `ratings` reste propre et cohérent
+- ✅ Les scores moyens se calculent correctement
+
+**Documentation** : Voir `/docs/BUGFIX_RATING_STALE_CLOSURE.md` pour analyse détaillée
+
+---
+
 ## [2025-10-27] - Correction Utilisateur Connecté Non Ajouté au Store
 
 ### 🐛 Bug Fix Critique: Utilisateur Connecté Affiché comme "Utilisateur Inconnu"

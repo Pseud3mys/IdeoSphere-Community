@@ -100,11 +100,11 @@ export interface RawLineageData {
  * Raw feedback data from the API, representing an edge.
  */
 export interface RawFeedback {
-    _from: string; // User ID
-    _to: string; // Content ID
-    type: 'supports' | 'reports' | 'objects' | 'ignores';
-    createdAt: string;
-    ratings?: { criterionName: string; value: number }[];
+  _id: string;
+  _from: string; // L'ID de l'utilisateur
+  _to: string;   // L'ID du contenu (idea)
+  type: 'supports' | 'reports' | 'objects' | 'ignores';
+  ratings?: { [criterionName: string]: number }; // C'est un objet, pas un tableau
 }
 
 
@@ -326,20 +326,30 @@ export const transformFeedData = (rawData: RawFeedData): { ideas: Idea[], posts:
 };
 
 /**
- * Transforms raw feedback data into the frontend Rating type.
+ * Transforme un ou plusieurs objets RawFeedback de l'API
+ * en un tableau plat d'objets Rating utilisable par le front-end.
  */
-export const transformFeedbackToRatings = (feedbacks: RawFeedback[]): Rating[] => {
-    const ratings: Rating[] = [];
-    for (const feedback of feedbacks) {
-        if (feedback.ratings && feedback.ratings.length > 0) {
-            for (const rawRating of feedback.ratings) {
-                ratings.push({
-                    criterionId: rawRating.criterionName, // Assuming name is used as ID
-                    value: rawRating.value,
-                    userId: feedback._from,
-                });
-            }
-        }
+export function transformFeedbackToRatings(
+  data: RawFeedback | RawFeedback[]
+): Rating[] {
+  // 1. S'assurer que nous travaillons toujours avec un tableau
+  const feedbackItems = Array.isArray(data) ? data : [data];
+
+  // 2. Transformer chaque feedback en un tableau de ratings, puis aplatir le résultat
+  return feedbackItems.flatMap(item => {
+    // Si un feedback n'a pas de ratings ou que l'objet est vide, on retourne un tableau vide
+    if (!item.ratings || Object.keys(item.ratings).length === 0) {
+      return [];
     }
-    return ratings;
+
+    const userId = item._from; // L'auteur du feedback est l'auteur du rating
+
+    // 3. Utiliser Object.entries pour convertir l'objet { key: value } en un tableau [ [key, value] ]
+    // Ensuite, mapper ce tableau pour créer nos objets Rating
+    return Object.entries(item.ratings).map(([criterionName, value]) => ({
+      criterionId: criterionName,
+      value: value,
+      userId: userId,
+    }));
+  });
 }
