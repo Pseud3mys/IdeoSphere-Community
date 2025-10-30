@@ -43,9 +43,11 @@ interface CitizenWelcomeProps {
     frequency: string;
   }) => Promise<boolean>;
   cityName: string;
+  onLoginSSO?: () => void;
+  onRegisterSSO?: () => void;
 }
 
-export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName }: CitizenWelcomeProps) {
+export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
@@ -527,6 +529,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
           setShowLoginDialog(false);
           actions.goToSignup();
         }}
+        onLoginSSO={onLoginSSO}
       />
     </div>
   );

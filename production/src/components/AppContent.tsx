@@ -28,13 +28,17 @@ interface AppContentProps {
     location: string;
     frequency: string;
   }) => Promise<boolean>;
+  onLoginSSO?: () => void;
+  onRegisterSSO?: () => void;
 }
 
 export function AppContent({ 
   onLogin, 
   onSocialLogin, 
   onSignup, 
-  onNewsletterSubscribe 
+  onNewsletterSubscribe,
+  onLoginSSO,
+  onRegisterSSO
 }: AppContentProps) {
   // Utiliser l'Entity Store pour récupérer toutes les données et actions nécessaires
   const { 
@@ -48,6 +52,9 @@ export function AppContent({
   const currentUserData = getCurrentUser();
   const ideas = getAllIdeas();
   const posts = getAllPosts();
+
+  // Vérifier si l'utilisateur est authentifié (non temporaire)
+  const isAuthenticated = currentUserData?.isRegistered ?? false;
 
   // Fonction sécurisée pour créer un utilisateur temporaire
   const createTempUserSafely = async () => {
@@ -66,8 +73,8 @@ export function AppContent({
     }
   };
 
-  // Afficher la page d'accueil si l'utilisateur n'est pas encore entré dans la plateforme
-  if (store.activeTab === 'welcome' && !store.hasEnteredPlatform) {
+  // Afficher la page d'accueil si l'utilisateur n'est pas encore entré dans la plateforme ET n'est pas authentifié
+  if (store.activeTab === 'welcome' && !store.hasEnteredPlatform && !isAuthenticated) {
     return (
       <CitizenWelcome 
         onEnterPlatform={actions.enterPlatform}
@@ -78,6 +85,8 @@ export function AppContent({
         onSignup={onSignup || (() => Promise.resolve(false))}
         onNewsletterSubscribe={onNewsletterSubscribe || (() => Promise.resolve(false))}
         cityName="Le Blanc" // Peut être dynamique selon la configuration
+        onLoginSSO={onLoginSSO}
+        onRegisterSSO={onRegisterSSO}
       />
     );
   }
@@ -182,6 +191,7 @@ export function AppContent({
         }}
         onSocialLogin={onSocialLogin}
         prefilledData={store.prefilledSignupData}
+        onRegisterSSO={onRegisterSSO}
       />
     );
   }

@@ -32,7 +32,8 @@ export function createApiActions(
           discussions: mockData.discussions.length
         });
         
-        // Initialiser le store avec toutes les données
+        // Initialiser le store avec toutes les données SANS utilisateur connecté
+        // Les boutons de connexion définiront le currentUserId
         actions.initializeStore({
           users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
           ideas: mockData.ideas,
@@ -40,10 +41,10 @@ export function createApiActions(
           discussionTopics: mockData.discussions,
           communities: [],
           communityMemberships: [],
-          currentUserId: mockData.currentUser.id
+          currentUserId: null // ✅ Pas d'utilisateur connecté par défaut
         });
         
-        console.log('✅ [apiActions] Store initialisé avec toutes les données');
+        console.log('✅ [apiActions] Store initialisé avec toutes les données (currentUserId: null)');
         
         return true;
       } catch (error) {

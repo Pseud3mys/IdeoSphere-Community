@@ -467,7 +467,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
             communities: normalizeCommunities(initialData.communities || []),
             communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
-            currentUserId: initialData.currentUserId || ''
+            currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
           };
         });
       } catch (error) {

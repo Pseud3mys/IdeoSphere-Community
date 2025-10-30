@@ -25,7 +25,9 @@ export function useAuthHandlers(
     bio?: string;
     birthYear?: number;
   }) => Promise<User | null>,
-  subscribeToNewsletter: (email: string) => Promise<boolean>
+  subscribeToNewsletter: (email: string) => Promise<boolean>,
+  loginWithSSO?: () => void,
+  registerWithSSO?: () => void
 ) {
   /**
    * Gère la connexion d'un utilisateur
@@ -178,10 +180,48 @@ export function useAuthHandlers(
     }
   };
 
+  /**
+   * Gère la connexion via SSO (Single Sign-On)
+   * ✅ Utilise l'action loginWithSSO du store
+   */
+  const handleLoginSSO = () => {
+    try {
+      if (loginWithSSO) {
+        loginWithSSO();
+        // Note: la fonction SSO provoque une redirection, le code suivant ne sera pas exécuté
+      } else {
+        toast.error('La connexion SSO n\'est pas disponible');
+      }
+    } catch (error) {
+      console.error('❌ [hook/useAuthHandlers] handleLoginSSO:', error);
+      toast.error('Erreur lors de la connexion SSO. Veuillez réessayer.');
+    }
+  };
+
+  /**
+   * Gère l'inscription via SSO (Single Sign-On)
+   * ✅ Utilise l'action registerWithSSO du store
+   */
+  const handleRegisterSSO = () => {
+    try {
+      if (registerWithSSO) {
+        registerWithSSO();
+        // Note: la fonction SSO provoque une redirection, le code suivant ne sera pas exécuté
+      } else {
+        toast.error('L\'inscription SSO n\'est pas disponible');
+      }
+    } catch (error) {
+      console.error('❌ [hook/useAuthHandlers] handleRegisterSSO:', error);
+      toast.error('Erreur lors de l\'inscription SSO. Veuillez réessayer.');
+    }
+  };
+
   return {
     handleLogin,
     handleSocialLogin,
     handleSignup,
-    handleNewsletterSubscribe
+    handleNewsletterSubscribe,
+    handleLoginSSO,
+    handleRegisterSSO
   };
 }

@@ -55,21 +55,24 @@ export const initAuth = async (): Promise<boolean> => {
   }
 };
 
-// --- NOUVELLES FONCTIONS D'ACTION ---
 
 /**
- * Redirige l'utilisateur vers la page de connexion de Keycloak.
+ * Connexion via SSO (Single Sign-On)
+ * Redirige vers le service d'authentification externe
+ * Cette fonction provoquera une redirection complète de la page
  */
-export function login(): void {
-  console.log('[AUTH] Redirection vers la page de connexion Keycloak...');
+export function loginWithSSO(): void {
+  console.log('🔄 [AUTH] Redirection vers SSO pour connexion');
   keycloak.login();
 }
 
 /**
- * Redirige l'utilisateur vers la page d'inscription de Keycloak.
+ * Inscription via SSO (Single Sign-On)
+ * Redirige vers le service d'inscription externe
+ * Cette fonction provoquera une redirection complète de la page
  */
-export function register(): void {
-  console.log('[AUTH] Redirection vers la page d\'inscription Keycloak...');
+export function registerWithSSO(): void {
+  console.log('🔄 [AUTH] Redirection vers SSO pour inscription');
   keycloak.register();
 }
 
@@ -112,57 +115,70 @@ export function isAuthenticated(): boolean {
   return !!keycloak.authenticated;
 }
 
+
 /**
- * LANCE le processus de connexion en redirigeant l'utilisateur vers Keycloak.
- * CETTE FONCTION NE RETOURNE PAS D'UTILISATEUR.
- * La récupération de l'utilisateur se fait via getUserProfile() APRES le rechargement de la page.
- * @param _email - Ignoré, présent pour la compatibilité
- * @param _password - Ignoré, présent pour la compatibilité
- * @returns {Promise<void>} Une promesse qui ne se résoudra jamais avec une valeur, car la page sera redirigée.
+ * Tente de connecter un utilisateur via son email.
+ * Corresponds à POST /users/login
  */
-export async function loginWithEmail(_email: string, _password: string): Promise<User | null> {
-  console.log('🔄 [AUTH] Lancement du processus de connexion via redirection...');
-  // On ne fait qu'appeler la fonction de redirection simple.
-  // Les arguments email/password ne sont plus utilisés.
-  keycloak.login();
+export async function loginWithEmail(email: string): Promise<User | null> {
+  console.log('🔄 [AUTH] Tentative de connexion API avec email:', email);
+  try {
+    const response = await apiClient.post<RawUser>('/users/login', { email });
+    const user = transformUser(response.data);
+    
+    if (user && user.isRegistered) {
+      console.log('✅ [AUTH] Utilisateur trouvé via API:', user.name);
+      return user;
+    }
+    
+    console.log('❌ [AUTH] Utilisateur non trouvé ou non enregistré pour:', email);
+    return null;
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur lors de la connexion:', error);
+    return null;
+  }
+}
+
+/**
+ * Gère la connexion ou l'inscription via un fournisseur social.
+ */
+export async function loginWithSocialProvider(
+  provider: string, 
+  userData: { email: string; name: string; avatar?: string; }
+): Promise<User | null> {
+  console.log('🔄 [AUTH] Connexion sociale API avec:', provider, userData.email);
   
-  // NOTE IMPORTANTE :
-  // Le code ci-dessous ne sera jamais atteint car le navigateur redirige la page.
-  // Nous retournons null pour satisfaire le typage de la fonction, mais en pratique,
-  // le composant qui appelle cette fonction doit gérer l'état d'authentification
-  // de manière globale (via un Context, Redux, etc.) et non via la valeur de retour.
-  return null; 
-}
+  try {
+    const existingUser = await loginWithEmail(userData.email);
+    if (existingUser) {
+      console.log('✅ [AUTH] Utilisateur social existant trouvé:', existingUser.name);
+      return existingUser;
+    }
+    
+    console.log('✨ [AUTH] Création d\'un nouvel utilisateur social...');
+    return await createUserAccount({ ...userData, isRegistered: true });
 
-
-/**
- * LANCE le processus d'inscription en redirigeant l'utilisateur vers Keycloak.
- * CETTE FONCTION NE RETOURNE PAS D'UTILISATEUR.
- * @param _userData - Données ignorées, présentes pour la compatibilité.
- * @returns {Promise<void>} Une promesse qui ne se résoudra jamais avec une valeur.
- */
-export async function createUserAccount(_userData: Partial<User> & { password?: string }): Promise<User | null> {
-  console.log('🔄 [AUTH] Lancement du processus d\'inscription via redirection...');
-  // On appelle simplement la méthode register de keycloak-js.
-  keycloak.register();
-
-  // Mêmes remarques que pour loginWithEmail.
-  return null;
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur lors de la connexion sociale:', error);
+    return null;
+  }
 }
 
 /**
- * Déconnecte l'utilisateur.
+ * Crée un nouveau compte utilisateur.
+ * Corresponds à POST /users
  */
-export async function logoutUser(): Promise<void> {
-  await initAuth();
-  delete apiClient.defaults.headers.common['Authorization'];
-  await keycloak.logout({ redirectUri: window.location.origin });
-}
-
-// Les fonctions de connexion sociale continuent d'utiliser la redirection
-export async function loginWithSocialProvider(provider: string): Promise<void> {
-  await initAuth();
-  await keycloak.login({ idpHint: provider });
+export async function createUserAccount(userData: Partial<User>): Promise<User | null> {
+  console.log('🔄 [AUTH] Création de compte API pour:', userData.email);
+  try {
+    const response = await apiClient.post<RawUser>('/users', { ...userData, isRegistered: true });
+    const newUser = transformUser(response.data);
+    console.log('✅ [AUTH] Compte utilisateur créé via API:', newUser?.name);
+    return newUser;
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur lors de la création du compte:', error);
+    return null;
+  }
 }
 
 // la suite des fonction doit encore être migré pour utiliser Keycloak

@@ -274,6 +274,28 @@ export function createUserActions(
         console.error('❌ [hook/userActions] addUserAndSetAsCurrent:', error);
         return null;
       }
+    },
+    
+    // Action pour la connexion via SSO
+    loginWithSSO: () => {
+      try {
+        const { loginWithSSO: loginWithSSOApi } = require('../api/authService');
+        loginWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] loginWithSSO:', error);
+      }
+    },
+    
+    // Action pour l'inscription via SSO
+    registerWithSSO: () => {
+      try {
+        const { registerWithSSO: registerWithSSOApi } = require('../api/authService');
+        registerWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] registerWithSSO:', error);
+      }
     }
   };
 }

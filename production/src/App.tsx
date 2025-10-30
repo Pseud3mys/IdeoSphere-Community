@@ -59,10 +59,8 @@ function AppWithStore() {
     getSelectedPost
   } = useEntityStoreSimple();
 
-  // Récupérer l'utilisateur actuel
+  // Récupérer l'utilisateur actuel (null si non connecté)
   const currentUserData = getCurrentUser();
-  
-  // Le store est maintenant toujours initialisé avec un utilisateur par défaut
 
   // Handler spécial pour naviguer vers les contributions
   const handleMyContributionsClick = () => {
@@ -87,7 +85,9 @@ function AppWithStore() {
     handleLogin,
     handleSocialLogin,
     handleSignup,
-    handleNewsletterSubscribe
+    handleNewsletterSubscribe,
+    handleLoginSSO,
+    handleRegisterSSO
   } = useAuthHandlers(
     (userData) => {
       // Vérifier si l'utilisateur existe déjà dans le store local
@@ -107,8 +107,13 @@ function AppWithStore() {
     actions.checkEmailExists,
     actions.loginWithSocialProvider,
     actions.signupUser,
-    actions.subscribeToNewsletter
+    actions.subscribeToNewsletter,
+    actions.loginWithSSO,
+    actions.registerWithSSO
   );
+  
+  // Vérifier si l'utilisateur est authentifié (non temporaire)
+  const isAuthenticated = currentUserData?.isRegistered ?? false;
   
   // Handlers simplifiés utilisant les actions du store
   const handleProfileClick = () => actions.fetchMyProfile();
@@ -184,8 +189,9 @@ function AppWithStore() {
     );
   }
 
-  // Si on est sur la page d'accueil, ne pas afficher le header et la navigation
-  if (store.activeTab === 'welcome' && !store.hasEnteredPlatform) {
+  // Si on est sur la page d'accueil ET que l'utilisateur n'est pas authentifié
+  // Ne pas afficher le header et la navigation
+  if (store.activeTab === 'welcome' && !store.hasEnteredPlatform && !isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col">
         <URLStateSync />
@@ -195,6 +201,8 @@ function AppWithStore() {
             onSocialLogin={handleSocialLogin}
             onSignup={handleSignup}
             onNewsletterSubscribe={handleNewsletterSubscribe}
+            onLoginSSO={handleLoginSSO}
+            onRegisterSSO={handleRegisterSSO}
           />
         </main>
         <Footer onNavigate={handleFooterNavigation} />
@@ -226,6 +234,8 @@ function AppWithStore() {
           onSocialLogin={handleSocialLogin}
           onSignup={handleSignup}
           onNewsletterSubscribe={handleNewsletterSubscribe}
+          onLoginSSO={handleLoginSSO}
+          onRegisterSSO={handleRegisterSSO}
         />
       </main>
 
