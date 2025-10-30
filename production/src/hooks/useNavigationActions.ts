@@ -129,5 +129,6 @@ export function useNavigationActions() {
     goToProfile: () => navigate('/profile'),
     goToCommunities: () => navigate('/communities'),
     goToHome: () => navigate('/'),
+    goToSignup: () => navigate('/signup'),
   };
 }

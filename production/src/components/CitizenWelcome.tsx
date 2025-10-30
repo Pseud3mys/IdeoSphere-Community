@@ -94,8 +94,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     if (action === 'login') {
       setShowLoginDialog(true);
     } else {
-      // Rediriger vers la page d'inscription au lieu du dialog
-      actions.goToSignup();
+      // Rediriger vers la page d'inscription
+      navigation.goToSignup();
     }
   };
 
@@ -537,7 +537,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         onEnterPlatform={onEnterPlatform}
         onSwitchToSignup={() => {
           setShowLoginDialog(false);
-          actions.goToSignup();
+          navigation.goToSignup();
         }}
         onLoginSSO={onLoginSSO}
       />

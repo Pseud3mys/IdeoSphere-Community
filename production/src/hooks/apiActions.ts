@@ -136,6 +136,14 @@ export function createApiActions(
           feedPostIds.push(minimalPost.id);
         });
         
+        // Ajouter les utilisateurs au store
+        if (feedData.users && feedData.users.length > 0) {
+          feedData.users.forEach((user: any) => {
+            actions.addUser(user);
+          });
+          console.log(`✅ [apiActions] fetchFeed: Ajouté ${feedData.users.length} utilisateurs au store`);
+        }
+        
         // Stocker les IDs des items du feed et mettre à jour le timestamp du cache
         actions.setFeedIdeaIds(feedIdeaIds);
         actions.setFeedPostIds(feedPostIds);

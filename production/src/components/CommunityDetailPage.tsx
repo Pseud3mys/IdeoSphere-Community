@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { IdeaCard } from './IdeaCard';
 import { PostCard } from './PostCard';
 
@@ -55,6 +56,7 @@ export function CommunityDetailPage({ communityId, onBack }: CommunityDetailPage
     getAllPosts,
     actions
   } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   const [activeTab, setActiveTab] = useState('feed');
   
@@ -101,7 +103,7 @@ export function CommunityDetailPage({ communityId, onBack }: CommunityDetailPage
     if (currentUser?.isRegistered) {
       actions.joinCommunity(community.id);
     } else {
-      actions.goToSignup();
+      navigation.goToSignup();
     }
   };
 

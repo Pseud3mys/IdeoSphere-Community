@@ -164,7 +164,7 @@ Je propose de développer cette idée...` : '';
     // Vérifier si l'utilisateur peut créer des idées
     if (!actions.canCreateIdea()) {
       toast.error('Vous devez créer un compte pour publier une idée');
-      actions.goToSignup();
+      navigation.goToSignup();
       return;
     }
     

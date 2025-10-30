@@ -32,6 +32,7 @@ Tous les documents du projet organisés par catégorie.
 | `/MIGRATION_REACT_ROUTER_SUMMARY.md` | Vue d'ensemble complète | ✅ Final |
 | `/MIGRATION_AUDIT_FINAL.md` | Audit de complétion | ✅ Final |
 | `/PLAN_MIGRATION_REACT_ROUTER.md` | Plan détaillé (7 phases) | ✅ Complété |
+| `/MIGRATION_NAVIGATION_FIXES.md` | Correctifs navigation (goToSignup) | ✅ Complété |
 
 ### Phases Complétées (historique)
 | Document | Phase | Description |
