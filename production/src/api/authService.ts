@@ -116,10 +116,6 @@ export function isAuthenticated(): boolean {
 }
 
 
-/**
- * Tente de connecter un utilisateur via son email.
- * Corresponds à POST /users/login
- */
 export async function loginWithEmail(email: string): Promise<User | null> {
   console.log('🔄 [AUTH] Tentative de connexion API avec email:', email);
   try {
@@ -140,31 +136,6 @@ export async function loginWithEmail(email: string): Promise<User | null> {
 }
 
 /**
- * Gère la connexion ou l'inscription via un fournisseur social.
- */
-export async function loginWithSocialProvider(
-  provider: string, 
-  userData: { email: string; name: string; avatar?: string; }
-): Promise<User | null> {
-  console.log('🔄 [AUTH] Connexion sociale API avec:', provider, userData.email);
-  
-  try {
-    const existingUser = await loginWithEmail(userData.email);
-    if (existingUser) {
-      console.log('✅ [AUTH] Utilisateur social existant trouvé:', existingUser.name);
-      return existingUser;
-    }
-    
-    console.log('✨ [AUTH] Création d\'un nouvel utilisateur social...');
-    return await createUserAccount({ ...userData, isRegistered: true });
-
-  } catch (error) {
-    console.error('❌ [AUTH] Erreur lors de la connexion sociale:', error);
-    return null;
-  }
-}
-
-/**
  * Crée un nouveau compte utilisateur.
  * Corresponds à POST /users
  */
@@ -179,6 +150,17 @@ export async function createUserAccount(userData: Partial<User>): Promise<User |
     console.error('❌ [AUTH] Erreur lors de la création du compte:', error);
     return null;
   }
+}
+
+/**
+ * Gère la connexion ou l'inscription via un fournisseur social.
+ */
+export async function loginWithSocialProvider(
+  provider: string, 
+  userData: { email: string; name: string; avatar?: string; }
+): Promise<User | null> {
+  console.log("🔄 [AUTH] Connexion via fournisseur social appelée mais non implémentée");
+  return null;
 }
 
 // la suite des fonction doit encore être migré pour utiliser Keycloak
