@@ -173,11 +173,14 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   // Transformer les données de l'API en format d'affichage (idées et posts)
   const recentPropositions = homeData ? homeData.recentSharedPropositions.slice(0, 5).map(item => {
     if (item.type === 'idea') {
+      // Résoudre le premier créateur depuis l'ID
+      const firstCreator = item.creatorIds?.[0] ? getUserById(item.creatorIds[0]) : null;
+      
       return {
         id: item.id,
         title: item.title,
         content: item.summary, // Pour les idées, utiliser le summary comme contenu
-        location: item.location || item.creators[0]?.name + " (créateur)" || "Localisation non précisée",
+        location: item.location || (firstCreator?.name + " (créateur)") || "Localisation non précisée",
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         category: item.tags?.[0] || "Idée citoyenne",

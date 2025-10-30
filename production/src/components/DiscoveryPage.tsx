@@ -440,9 +440,9 @@ export function DiscoveryPage({
                   if ('authorId' in item) {
                     // C'est un Post
                     author = getUserById(item.authorId);
-                  } else if ('creators' in item && item.creators && item.creators.length > 0) {
-                    // C'est une Idea - ✅ Passer l'ID et non l'objet complet
-                    author = getUserById(item.creators[0].id);
+                  } else if ('creatorIds' in item && item.creatorIds && item.creatorIds.length > 0) {
+                    // C'est une Idea - résoudre depuis les IDs
+                    author = getUserById(item.creatorIds[0]);
                   }
                   
                   if (!author) return null;

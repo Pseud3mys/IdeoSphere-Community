@@ -77,8 +77,8 @@ Tous les documents du projet organisés par catégorie.
 | Document | Description | Statut |
 |----------|-------------|--------|
 | `/PLAN_MIGRATION_REACT_ROUTER.md` | Migration React Router (7 phases) | ✅ Complété |
+| `/MIGRATION_AUTHOR_IDS_COMPLETE.md` | Migration Idea.creators → creatorIds | ✅ Complété |
 | `/PLAN_MIGRATION_REFACTORING.md` | Migration Refactoring & Standardisation ⭐ | 📋 À valider |
-| `/PLAN_MIGRATION_AUTHOR_IDS.md` | Migration author → authorId | ✅ Complété |
 
 ### Tests et Validation
 | Document | Description |

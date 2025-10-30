@@ -173,7 +173,5 @@ Cette documentation reflète **l'état actuel du code** :
 - `Post.authorId: string`
 - `PostReply.authorId: string`
 
-**Idea → IDs simples** : ⏳ En cours
-- `Idea.creators: User[]` → `creatorIds: string[]` (prochaine étape)
-
-Voir `/PLAN_MIGRATION_AUTHOR_IDS.md` pour les détails.
+**Idea → IDs simples** : ✅ Terminé
+- `Idea.creatorIds: string[]` (migration complétée)

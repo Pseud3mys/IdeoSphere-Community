@@ -136,8 +136,8 @@ isValidUser(user: any): user is User
 
 **Utilisation** :
 ```typescript
-// Protection contre les tableaux vides
-const creator = getFirstCreator(idea.creators);
+// Protection contre les tableaux vides avec résolution d'IDs
+const creator = getFirstCreator(idea.creatorIds, getUserById);
 if (creator) {
   return <CreatorAvatar user={creator} />;
 }

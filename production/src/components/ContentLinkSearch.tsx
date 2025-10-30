@@ -55,18 +55,23 @@ export function ContentLinkSearch({
 
     // Filtrer par auteur si "Mes contenus" est activé
     if (showOnlyMine) {
-      filteredIdeas = ideas.filter(idea => idea.creators?.some(c => c.id === currentUser.id));
+      filteredIdeas = ideas.filter(idea => idea.creatorIds?.includes(currentUser.id));
       filteredPosts = posts.filter(post => post.authorId === currentUser.id);
     }
 
     // Filtrer par recherche
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filteredIdeas = filteredIdeas.filter(idea => 
-        idea.title.toLowerCase().includes(query) ||
-        idea.summary.toLowerCase().includes(query) ||
-        idea.creators?.some(c => c.name.toLowerCase().includes(query))
-      );
+      filteredIdeas = filteredIdeas.filter(idea => {
+        // Résoudre les créateurs pour la recherche
+        const creators = (idea.creatorIds || [])
+          .map(id => getUserById(id))
+          .filter(Boolean);
+        
+        return idea.title.toLowerCase().includes(query) ||
+          idea.summary.toLowerCase().includes(query) ||
+          creators.some(c => c.name.toLowerCase().includes(query));
+      });
       filteredPosts = filteredPosts.filter(post => {
         const author = getUserById(post.authorId);
         return post.content.toLowerCase().includes(query) ||
@@ -108,9 +113,9 @@ export function ContentLinkSearch({
 
   const getContentAuthor = (content: any) => {
     if (content.type === 'idea') {
-      // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
-      if (content.creators && content.creators.length > 0) {
-        const firstCreator = getUserById(content.creators[0].id);
+      // ✅ Résoudre le créateur depuis les IDs
+      if (content.creatorIds && content.creatorIds.length > 0) {
+        const firstCreator = getUserById(content.creatorIds[0]);
         return firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
       }
       return { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };

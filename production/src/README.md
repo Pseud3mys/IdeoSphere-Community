@@ -169,14 +169,14 @@ function MyComponent() {
 ### Protection des Propriétés Optionnelles
 
 ```tsx
-// ✅ Correct
+// ✅ Correct - Utiliser les IDs
 const userIdeas = ideas.filter(idea => 
-  idea.creators?.some(c => c.id === userId)
+  idea.creatorIds?.includes(userId)
 );
 
 // ❌ Incorrect (peut crasher)
 const userIdeas = ideas.filter(idea => 
-  idea.creators.some(c => c.id === userId)
+  idea.creatorIds.includes(userId)
 );
 ```
 

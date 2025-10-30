@@ -125,10 +125,15 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
 
   // Générer le QR code quand le dialog s'ouvre
   useEffect(() => {
-    if (isOpen && canvasRef.current) {
+    // ✅ FIX: Ne vérifier canvasRef.current QUE dans le setTimeout
+    // pour laisser le temps au DOM de connecter la ref
+    if (isOpen) {
+      console.log('🔄 [ShareDialog] Dialog ouvert, tentative de génération du QR code...');
+      
       // Petit délai pour s'assurer que le canvas est bien rendu dans le DOM
       const timer = setTimeout(() => {
         if (canvasRef.current) {
+          console.log('✅ [ShareDialog] Canvas trouvé, génération du QR code pour:', contentUrl);
           QRCode.toCanvas(canvasRef.current, contentUrl, {
             width: 200,
             margin: 2,
@@ -136,9 +141,13 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
               dark: '#000000',
               light: '#FFFFFF',
             },
+          }).then(() => {
+            console.log('✅ [ShareDialog] QR code généré avec succès');
           }).catch(err => {
-            console.error('Erreur lors de la génération du QR code:', err);
+            console.error('❌ [ShareDialog] Erreur lors de la génération du QR code:', err);
           });
+        } else {
+          console.warn('⚠️ [ShareDialog] Canvas toujours null après le délai');
         }
       }, 50);
       

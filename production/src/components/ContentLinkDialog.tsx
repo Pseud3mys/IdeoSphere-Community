@@ -46,8 +46,8 @@ export function ContentLinkDialog({
 
     if (contentFilter === 'all' || contentFilter === 'ideas') {
       ideas.forEach(idea => {
-        // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
-        const firstCreator = idea.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+        // ✅ Résoudre le créateur depuis le store avec les IDs
+        const firstCreator = idea.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
         const author = firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } };
         
         combinedContent.push({

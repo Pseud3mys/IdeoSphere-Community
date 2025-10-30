@@ -84,8 +84,8 @@ export function CollaborationForm({
       const post = posts.find(p => p.id === id);
       
       if (idea) {
-        // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
-        const firstCreator = idea.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+        // ✅ Résoudre le créateur depuis les IDs
+        const firstCreator = idea.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
         const author = firstCreator || { 
           id: 'unknown', 
           name: 'Créateur inconnu', 

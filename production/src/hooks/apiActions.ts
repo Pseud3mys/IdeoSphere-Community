@@ -239,14 +239,14 @@ export function createApiActions(
         const participationIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
-          .filter(idea => idea.creators?.includes(currentUser.id));
+          .filter(idea => idea.creatorIds?.includes(currentUser.id));
           
         const supportIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
           .filter(idea => 
-            idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
-            !idea.creators?.includes(currentUser.id)
+            idea.supporters?.includes(currentUser.id) &&
+            !idea.creatorIds?.includes(currentUser.id)
           );
           
         const participationPosts = allPostIds
@@ -359,7 +359,7 @@ export function createApiActions(
                 title: parentItem.title || '',
                 summary: parentItem.summary || '',
                 description: '',
-                creators: parentItem.creators || [], // ✅ Ideas: utiliser creators (User[])
+                creatorIds: parentItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
                 createdAt: parentItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -401,7 +401,7 @@ export function createApiActions(
                 title: childItem.title || '',
                 summary: childItem.summary || '',
                 description: '',
-                creators: childItem.creators || [], // ✅ Ideas: utiliser creators (User[])
+                creatorIds: childItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
                 createdAt: childItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -703,12 +703,17 @@ export function createApiActions(
           const parentsFromStore = lineageData.parents.map(parent => {
             if (parent.type === 'idea') {
               const idea = boundSelectors.getIdeaById(parent.id);
+              // Résoudre les créateurs depuis les IDs
+              const authors = (idea.creatorIds || [])
+                .map(id => boundSelectors.getUserById(id))
+                .filter(Boolean) as User[];
+              
               return idea ? {
                 id: idea.id,
                 type: 'idea' as const,
                 title: idea.title,
                 summary: idea.summary,
-                authors: idea.creators,
+                authors: authors,
                 createdAt: idea.createdAt,
                 level: -1,
                 relationshipType: 'parent' as const
@@ -730,12 +735,17 @@ export function createApiActions(
           const childrenFromStore = lineageData.children.map(child => {
             if (child.type === 'idea') {
               const idea = boundSelectors.getIdeaById(child.id);
+              // Résoudre les créateurs depuis les IDs
+              const authors = (idea.creatorIds || [])
+                .map(id => boundSelectors.getUserById(id))
+                .filter(Boolean) as User[];
+              
               return idea ? {
                 id: idea.id,
                 type: 'idea' as const,
                 title: idea.title,
                 summary: idea.summary,
-                authors: idea.creators,
+                authors: authors,
                 createdAt: idea.createdAt,
                 level: 1,
                 relationshipType: 'child' as const
@@ -746,6 +756,11 @@ export function createApiActions(
           
           console.log(`✅ [apiActions] Construit lineage depuis le store: ${parentsFromStore.length} parents, ${childrenFromStore.length} enfants`);
           
+          // Résoudre les créateurs de l'idée actuelle depuis les IDs
+          const currentAuthors = (currentIdea.creatorIds || [])
+            .map(id => boundSelectors.getUserById(id))
+            .filter(Boolean) as User[];
+          
           // Retourner un objet compatible avec LineageResult
           return {
             currentItem: {
@@ -753,7 +768,7 @@ export function createApiActions(
               type: 'idea' as const,
               title: currentIdea.title,
               summary: currentIdea.summary,
-              authors: currentIdea.creators,
+              authors: currentAuthors,
               createdAt: currentIdea.createdAt,
               level: 0,
               relationshipType: 'current' as const

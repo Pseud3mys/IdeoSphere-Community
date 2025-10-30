@@ -73,7 +73,7 @@ export function getMockIdeas(): Idea[] {
 - **Juin** : évaluation et éventuels ajustements
 
 Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
-      creators: [users[0], users[3]], // Marie et Emma
+      creatorIds: [users[0].id, users[3].id], // Marie et Emma
       supporters: [users[0].id, users[1].id, users[2].id, users[3].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
@@ -162,7 +162,7 @@ J'ai encore jeté mon grille-pain ce matin... 😔 Ça m'embête de jeter alors 
 Ce qui me plaît dans cette idée, c'est qu'on arrête ce réflexe de "c'est cassé = poubelle". On redonne une chance aux objets, on apprend ensemble, et surtout on passe un bon moment !
 
 Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix ! 🔧✨`,
-      creators: [users[1], users[4]], // Pierre + Thomas
+      creatorIds: [users[1].id, users[4].id], // Pierre + Thomas
       supporters: [users[1].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
@@ -264,7 +264,7 @@ Hier j'avais des courses lourdes et j'aurais bien eu besoin d'un coup de main...
 Je pense qu'on a tous quelque chose à offrir et quelque chose à demander. L'entraide, c'est ce qui fait la vraie richesse d'un village ! 🤝
 
 Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arrangerait bien ! 😅`,
-      creators: [users[2], users[3]], // Sophie + Emma
+      creatorIds: [users[2].id, users[3].id], // Sophie + Emma
       supporters: [users[0].id, users[2].id, users[3].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
@@ -369,7 +369,7 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
 - **Mai-Juin** : travaux espérés (selon planning municipal)
 
 Cette idée peut paraître basique, mais c'est exactement le genre de problème concret qu'on peut résoudre en s'y mettant tous ensemble ! Et franchement, ne plus esquiver les trous comme des slalomeurs, ça serait le bonheur ! 🚗`,
-      creators: [users[1], users[4]], // Pierre + Thomas
+      creatorIds: [users[1].id, users[4].id], // Pierre + Thomas
       supporters: [users[0].id, users[1].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
@@ -488,7 +488,7 @@ Tous les matins et le soir, c'est la même galère ! Les voitures garées n'impo
 - **Exemple** : solution qui peut inspirer d'autres villages
 
 Cette problématique, on la vit tous ! Avec un peu d'organisation et de bonne volonté, on peut transformer ce moment de stress quotidien en quelque chose qui marche pour tout le monde ! 🚸`,
-      creators: [users[0], users[3]], // Marie + Emma
+      creatorIds: [users[0].id, users[3].id], // Marie + Emma
       supporters: [users[0].id, users[1].id, users[3].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
@@ -586,7 +586,7 @@ Après avoir lu l'excellente proposition de Marie sur les bancs publics, je pens
 L'idée de Marie était excellente pour créer du lien social. Cette version garde tout cela ET attire une nouvelle population (jeunes, familles connectées, touristes) tout en projetant le village vers l'avenir.
 
 C'est un investissement plus important mais qui transforme vraiment l'espace public ! 📱⚡️🔗`,
-      creators: [users[4]], // Thomas (qui aime la tech)
+      creatorIds: [users[4].id], // Thomas (qui aime la tech)
       supporters: [users[0].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs - Marie soutient sa version améliorée
       status: 'published',
       sourceIdeas: ['ideas/1'], // Basée sur l'idée des bancs de Marie
@@ -689,7 +689,7 @@ L'idée de Pierre sur l'éclairage LED était très pertinente ! Je propose de l
 L'idée de Pierre était excellente pour l'efficacité énergétique. Cette version ajoute l'intelligence collective et fait des habitants de vrais acteurs de leur environnement lumineux.
 
 Un petit village qui innove et implique ses citoyens ! 💡📱🌙`,
-      creators: [users[2]], // Sophie (enseignante, aime l'innovation participative)
+      creatorIds: [users[2].id], // Sophie (enseignante, aime l'innovation participative)
       supporters: [users[1].id, users[2].id, users[3].id, currentUser.id], // ✅ IDs - Pierre soutient l'évolution de son idée
       status: 'published',
       sourceIdeas: ['ideas/2'], // Basée sur l'idée d'éclairage de Pierre

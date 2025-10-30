@@ -143,20 +143,11 @@ const createInitialStore = (): SimpleEntityStore => ({
 
 // Fonctions helper pour extraire les utilisateurs des idées et posts
 const extractUsersFromIdea = (idea: Idea): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter les créateurs
-  if (idea.creators && Array.isArray(idea.creators)) {
-    idea.creators.forEach(creator => {
-      if (creator && typeof creator === 'object' && 'id' in creator) {
-        users.push(creator);
-      }
-    });
-  }
-  
-  // ✅ Les supporters sont maintenant des IDs (string[]) - pas d'extraction nécessaire
-  
-  return users;
+  // ✅ MIGRATION TERMINÉE: Plus besoin d'extraire les utilisateurs
+  // - creatorIds est maintenant string[] (IDs)
+  // - supporters est déjà string[] (IDs)
+  // Les utilisateurs sont déjà dans le store
+  return [];
 };
 
 const extractUsersFromPost = (post: Post): User[] => {

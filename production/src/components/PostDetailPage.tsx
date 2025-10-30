@@ -379,8 +379,8 @@ export function PostDetailPage({
           <div className="space-y-4">
             {/* Projets dérivés */}
             {derivedIdeas.map(idea => {
-              // ✅ Résoudre le créateur depuis le store pour avoir les données complètes
-              const firstCreator = idea?.creators?.[0] ? getUserById(idea.creators[0].id) : null;
+              // ✅ Résoudre le créateur depuis les IDs
+              const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
               
               return (
               <Card 

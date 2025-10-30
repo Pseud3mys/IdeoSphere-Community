@@ -105,7 +105,7 @@ export interface Post {
  * Idée - Structure complète avec chargement progressif
  * 
  * Champs TOUJOURS présents (depuis le feed) :
- * - id, title, summary, description, creators, status, createdAt, tags, location
+ * - id, title, summary, description, creatorIds, status, createdAt, tags, location
  * 
  * Champs CALCULÉS dynamiquement :
  * - supportCount: calculé depuis supporters.length (ne pas stocker!)
@@ -121,7 +121,7 @@ export interface Idea {
   title: string;
   summary: string;
   description: string;
-  creators: User[];
+  creatorIds: string[];
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   status: IdeaStatus;
   createdAt: Date;

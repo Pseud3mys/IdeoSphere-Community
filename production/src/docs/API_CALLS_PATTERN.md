@@ -95,7 +95,7 @@ loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
       actions.addIdea({
         id: parentItem.id,
         title: parentItem.title || '',
-        creators: parentItem.creators || [],
+        creatorIds: parentItem.creatorIds || [],
         // ... autres champs
       });
     } else {

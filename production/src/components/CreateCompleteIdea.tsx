@@ -100,6 +100,10 @@ export function CreateCompleteIdea({
       return loadedDraft.description || '';
     }
     if (sourceIdea) {
+      const sourceCreatorName = sourceIdea.creatorIds?.[0] 
+        ? (getUserById(sourceIdea.creatorIds[0])?.name || 'l\'équipe')
+        : 'l\'équipe';
+      
       return `[À modifier] ${sourceIdea.description}
 
 ---
@@ -111,7 +115,7 @@ export function CreateCompleteIdea({
 - Adapter aux contraintes locales mentionnées
 - Enrichir avec de nouvelles fonctionnalités suggérées
 
-*Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceIdea.creators[0]?.name || 'l\'équipe'}.*`;
+*Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceCreatorName}.*`;
     }
     return derivedSourcePost && derivedSourcePostAuthor ? `En me basant sur le post de ${derivedSourcePostAuthor.name}:
 

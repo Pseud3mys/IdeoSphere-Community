@@ -158,7 +158,8 @@ export function MyIdeasPage({
           const postAuthor = getUserById(item.authorId);
           author = postAuthor?.name || '';
         } else {
-          author = item.creators?.[0]?.name || '';
+          const firstCreator = item.creatorIds?.[0] ? getUserById(item.creatorIds[0]) : null;
+          author = firstCreator?.name || '';
         }
         return (content + tags + author).toLowerCase().includes(searchQuery.toLowerCase());
       });

@@ -60,10 +60,10 @@ export function UserProfilePage({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Statistiques élogieuses de l'utilisateur
-  const userIdeas = ideas.filter(i => i.creators?.some(c => c.id === user.id));
-  const supportedIdeas = ideas.filter(i => i.supporters?.some(s => s.id === user.id));
+  const userIdeas = ideas.filter(i => i.creatorIds?.includes(user.id));
+  const supportedIdeas = ideas.filter(i => i.supporters?.includes(user.id));
   const collaboratedIdeas = ideas.filter(i => 
-    i.creators?.some(c => c.id === user.id) || 
+    i.creatorIds?.includes(user.id) || 
     i.ratings?.some(r => r.userId === user.id)
   );
   

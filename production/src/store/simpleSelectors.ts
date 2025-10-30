@@ -54,7 +54,7 @@ export const getPublishedIdeas = (store: SimpleEntityStore): Idea[] => {
 
 export const getUserIdeas = (store: SimpleEntityStore) => (userId: string): Idea[] => {
   return Object.values(store.ideas).filter(idea => 
-    idea.creators?.includes(userId)
+    idea.creatorIds?.includes(userId)
   );
 };
 
@@ -64,7 +64,7 @@ export const getDraftIdeas = (store: SimpleEntityStore): Idea[] => {
   
   return Object.values(store.ideas).filter(idea => 
     idea.status === 'draft' && 
-    idea.creators?.includes(currentUser.id)
+    idea.creatorIds?.includes(currentUser.id)
   );
 };
 

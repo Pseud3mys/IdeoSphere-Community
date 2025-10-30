@@ -159,7 +159,7 @@ Calculent des valeurs à partir des données du store.
 ```typescript
 export const getUserIdeas = (store: SimpleEntityStore) => (userId: string) => {
   return Object.values(store.ideas).filter(idea => 
-    idea.creators?.some(creator => creator.id === userId)
+    idea.creatorIds?.includes(userId)
   );
 };
 ```

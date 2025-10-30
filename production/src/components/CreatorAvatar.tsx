@@ -3,16 +3,17 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { getFirstCreator } from '../utils/userValidation';
 
 interface CreatorAvatarProps {
-  creators: User[];
+  creatorIds: string[];
+  getUserById: (id: string) => User | undefined;
   className?: string;
 }
 
 /**
  * Composant robuste pour afficher l'avatar du premier créateur
- * Gère les cas où creators est vide ou contient des données invalides
+ * Gère les cas où creatorIds est vide ou contient des données invalides
  */
-export function CreatorAvatar({ creators, className = 'w-5 h-5' }: CreatorAvatarProps) {
-  const creator = getFirstCreator(creators);
+export function CreatorAvatar({ creatorIds, getUserById, className = 'w-5 h-5' }: CreatorAvatarProps) {
+  const creator = getFirstCreator(creatorIds, getUserById);
 
   if (!creator) {
     return (

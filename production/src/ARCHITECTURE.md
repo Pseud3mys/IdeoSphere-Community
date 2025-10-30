@@ -256,15 +256,13 @@ function MyComponent() {
 - ✅ `DiscussionTopic.authorId: string`
 - ✅ `DiscussionPost.authorId: string`
 
-**Idées** : Migration en cours
-- ⏳ `Idea.creators: User[]` → migration vers `creatorIds: string[]` prévue
+**Idées** : ✅ Migration terminée
+- ✅ `Idea.creatorIds: string[]` (migration complétée)
 - ✅ `Idea.supporters: string[]` (déjà IDs)
 
 **Support unifié** : ✅ Terminé
 - `toggleSupportOnApi(entityId, userId, entityType, isCurrentlySupporting)`
 - Fonctionne pour idées ET posts
-
-Voir `/PLAN_MIGRATION_AUTHOR_IDS.md` pour les détails.
 
 ## Avantages
 

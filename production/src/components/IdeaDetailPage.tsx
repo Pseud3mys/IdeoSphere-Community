@@ -54,12 +54,12 @@ export function IdeaDetailPage({
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
 
-  // ✅ Résoudre les créateurs depuis le store pour avoir les données complètes
+  // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 
-    latestIdea.creators
-      .map(c => getUserById(c.id))
+    (latestIdea.creatorIds || [])
+      .map(id => getUserById(id))
       .filter(Boolean) as User[]
-  , [latestIdea.creators, getUserById]);
+  , [latestIdea.creatorIds, getUserById]);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {

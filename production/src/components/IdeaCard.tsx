@@ -64,7 +64,7 @@ export function IdeaCard({
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Utiliser l'Entity Store pour les actions optimisées et récupérer les données les plus récentes
-  const { actions, getCurrentUser, getIdeaById } = useEntityStoreSimple();
+  const { actions, getCurrentUser, getIdeaById, getUserById } = useEntityStoreSimple();
   
   // Utiliser le currentUser du store si pas fourni en props
   const user = currentUser || getCurrentUser();
@@ -171,7 +171,7 @@ export function IdeaCard({
           {/* Localisation avec badge Projet et badge de chaîne */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
             {(() => {
-              const firstCreator = getFirstCreator(latestIdea.creators);
+              const firstCreator = getFirstCreator(latestIdea.creatorIds, getUserById);
               return firstCreator?.location ? (
                 <>
                   <MapPin className="w-4 h-4" />
@@ -261,8 +261,8 @@ export function IdeaCard({
 
       {/* Auteur - après la description */}
       <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-        <CreatorAvatar creators={latestIdea.creators} />
-        <CreatorNames creators={latestIdea.creators} />
+        <CreatorAvatar creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
+        <CreatorNames creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
         <span>•</span>
         <span>{timeAgo}</span>
       </div>
