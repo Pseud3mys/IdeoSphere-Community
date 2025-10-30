@@ -5,7 +5,6 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { LoginDialog } from './auth/LoginDialog';
-import { SignupDialog } from './auth/SignupDialog';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { fetchHomePageStats, HomePageData } from '../api/feedService';
@@ -48,7 +47,6 @@ interface CitizenWelcomeProps {
 
 export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName }: CitizenWelcomeProps) {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
   const [guestName, setGuestName] = useState('');
@@ -527,22 +525,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         onEnterPlatform={onEnterPlatform}
         onSwitchToSignup={() => {
           setShowLoginDialog(false);
-          setShowSignupDialog(true);
-        }}
-      />
-
-      <SignupDialog
-        isOpen={showSignupDialog}
-        onClose={() => setShowSignupDialog(false)}
-        onSignup={onSignup}
-        onSocialLogin={onSocialLogin}
-        onSwitchToLogin={() => {
-          setShowSignupDialog(false);
-          setShowLoginDialog(true);
-        }}
-        onDemoAccess={() => {
-          setShowSignupDialog(false);
-          onEnterPlatformWithTempUser();
+          actions.goToSignup();
         }}
       />
     </div>

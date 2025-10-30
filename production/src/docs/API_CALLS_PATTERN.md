@@ -1,12 +1,8 @@
-# Pattern d'Appel aux Services API
+# Pattern d'Appel API - Référence Rapide
 
-## Principe Fondamental
+## Pattern en 3 Étapes (Obligatoire)
 
-**Les services API retournent UNIQUEMENT les données mockées. Pour obtenir TOUTES les données (mockées + dynamiques), il faut passer par le store.**
-
-## Le Pattern en 3 Étapes
-
-Chaque fois qu'un hook appelle un service API, il doit suivre ce pattern :
+Toute fonction qui appelle un service API **DOIT** suivre ce pattern :
 
 ```typescript
 async function loadData(id: string) {
@@ -20,268 +16,248 @@ async function loadData(id: string) {
   }
   
   // 3️⃣ LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
-  const completeData = boundSelectors.getSomethingById(id);
-  
-  return completeData;
+  return boundSelectors.getSomethingById(id);
 }
 ```
 
 ## Pourquoi Ce Pattern ?
 
-### ❌ Problème : Appeler l'API sans passer par le store
+Les services API ne connaissent **QUE** les données mockées. Les entités créées dynamiquement (posts/idées créés par l'utilisateur) existent **UNIQUEMENT** dans le store.
+
+### ❌ Sans le Pattern
 
 ```typescript
-// Hook
 const { fetchIdea } = await import('../api/contentService');
 const idea = await fetchIdea('idea-created-by-user');
-
-// Résultat: null ❌
-// L'idée créée dynamiquement n'est PAS dans les données mockées !
+// Résultat: null ❌ (créée dynamiquement, pas dans les mockées)
 ```
 
-### ✅ Solution : Pattern en 3 étapes
+### ✅ Avec le Pattern
 
 ```typescript
-// 1. Appeler l'API
-const { fetchIdea } = await import('../api/contentService');
+// 1. API (peut retourner null si pas dans mockées)
 const apiIdea = await fetchIdea('idea-123');
+if (apiIdea) actions.addIdea(apiIdea);
 
-// 2. Ajouter au store
-if (apiIdea) {
-  actions.addIdea(apiIdea);
-}
-
-// 3. Lire depuis le store
+// 2. Store (trouve mockées ET dynamiques)
 const idea = boundSelectors.getIdeaById('idea-created-by-user');
-
-// Résultat: { id: '...', title: '...', ... } ✅
-// Trouve les idées mockées ET dynamiques !
+// Résultat: { id, title, ... } ✅
 ```
 
-## Exemples Concrets
+## Exemples par Cas d'Usage
 
-### Exemple 1 : Charger une Idée
+### Cas 1 : Charger une Entité Simple
 
 ```typescript
-// Dans /hooks/apiActions.ts
-
-loadIdea: async (ideaId: string) => {
-  try {
-    // 1. APPELER L'API
-    const { fetchIdeaDetails } = await import('../api/contentService');
-    const apiIdea = await fetchIdeaDetails(ideaId);
+// Dans /hooks/navigationActions.ts
+goToIdea: async (ideaId: string, initialTab = 'description') => {
+  const { fetchIdeaDetails } = await import('../api/contentService');
+  const { fetchDiscussions } = await import('../api/detailsService');
+  
+  // 1. APPELER L'API
+  const apiIdeaDetails = await fetchIdeaDetails(ideaId);
+  
+  // 2. AJOUTER AU STORE
+  if (apiIdeaDetails) {
+    actions.addIdea(apiIdeaDetails);
     
-    // 2. AJOUTER AU STORE
-    if (apiIdea) {
-      actions.addIdea(apiIdea);
-    }
-    
-    // 3. LIRE DEPUIS LE STORE
-    const completeIdea = boundSelectors.getIdeaById(ideaId);
-    
-    return completeIdea;
-  } catch (error) {
-    console.error('❌ Error:', error);
-    return null;
+    // Charger aussi les discussions immédiatement
+    const { discussions, users } = await fetchDiscussions(ideaId, 'idea');
+    discussions.forEach(d => actions.addDiscussionTopic(d));
+    users.forEach(u => actions.addUser(u));
   }
+  
+  // 3. LIRE DEPUIS LE STORE
+  const ideaFromStore = boundSelectors.getIdeaById(ideaId);
+  console.log(`✅ Chargé idée "${ideaFromStore.title}" depuis le store`);
+  
+  // Navigation
+  actions.setSelectedIdeaId(ideaId);
+  actions.setActiveTab('idea-detail');
 }
 ```
 
-### Exemple 2 : Charger le Lineage (Avec Relations)
+### Cas 2 : Charger des Relations (Lineage)
 
 ```typescript
 // Dans /hooks/apiActions.ts
-
-loadIdeaTabData: async (ideaId: string, tabType: 'versions') => {
-  try {
-    // 1. APPELER L'API
-    const { fetchLineage } = await import('../api/lineageService');
-    const lineageData = await fetchLineage(ideaId, 'idea');
-    
-    if (!lineageData) return null;
-    
-    // 2. AJOUTER TOUTES LES ENTITÉS AU STORE
-    // Ajouter les parents
-    lineageData.parents.forEach(parent => {
-      if (parent.type === 'idea') {
-        const existing = boundSelectors.getIdeaById(parent.id);
-        if (!existing) {
-          actions.addIdea(convertToIdea(parent));
-        }
-      } else if (parent.type === 'post') {
-        const existing = boundSelectors.getPostById(parent.id);
-        if (!existing) {
-          actions.addPost(convertToPost(parent));
-        }
-      }
-    });
-    
-    // Ajouter les enfants
-    lineageData.children.forEach(child => {
-      if (child.type === 'idea') {
-        const existing = boundSelectors.getIdeaById(child.id);
-        if (!existing) {
-          actions.addIdea(convertToIdea(child));
-        }
-      }
-    });
-    
-    // 3. LIRE DEPUIS LE STORE
-    const currentIdea = boundSelectors.getIdeaById(ideaId);
-    
-    const parents = lineageData.parents.map(p => {
-      return p.type === 'idea'
-        ? boundSelectors.getIdeaById(p.id)
-        : boundSelectors.getPostById(p.id);
-    }).filter(Boolean);
-    
-    const children = lineageData.children.map(c => 
-      boundSelectors.getIdeaById(c.id)
-    ).filter(Boolean);
-    
-    return {
-      currentItem: currentIdea,
-      parents,
-      children
-    };
-  } catch (error) {
-    console.error('❌ Error:', error);
-    return null;
-  }
-}
-```
-
-### Exemple 3 : Charger les Discussions
-
-```typescript
-// Dans /hooks/apiActions.ts
-
-loadDiscussions: async (entityId: string, entityType: 'idea' | 'post') => {
-  try {
-    // 1. APPELER L'API
-    const { fetchDiscussions } = await import('../api/detailsService');
-    const apiDiscussions = await fetchDiscussions(entityId, entityType);
-    
-    // 2. AJOUTER AU STORE
-    if (apiDiscussions && apiDiscussions.length > 0) {
-      apiDiscussions.forEach(discussion => {
-        actions.addDiscussionTopic(discussion);
+loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
+  const { fetchLineage } = await import('../api/lineageService');
+  
+  // 1. APPELER L'API
+  const lineageResult = await fetchLineage(itemId, itemType);
+  if (!lineageResult) return null;
+  
+  // 2. AJOUTER TOUTES les entités au store
+  const parentIds: string[] = [];
+  lineageResult.parents.forEach((parentItem: any) => {
+    if (parentItem.type === 'idea') {
+      actions.addIdea({
+        id: parentItem.id,
+        title: parentItem.title || '',
+        creators: parentItem.creators || [],
+        // ... autres champs
+      });
+    } else {
+      actions.addPost({
+        id: parentItem.id,
+        content: parentItem.content || '',
+        authorId: parentItem.authorId || 'unknown',
+        // ... autres champs
       });
     }
+    parentIds.push(parentItem.id);
+  });
+  
+  // Mettre à jour l'item avec les IDs des relations
+  if (itemType === 'idea') {
+    const parentIdeaIds = parentIds.filter(id => {
+      const item = lineageResult.parents.find((p: any) => p.id === id);
+      return item?.type === 'idea';
+    });
+    const parentPostIds = parentIds.filter(id => {
+      const item = lineageResult.parents.find((p: any) => p.id === id);
+      return item?.type === 'post';
+    });
     
-    // 3. LIRE DEPUIS LE STORE
-    // Récupérer l'entité mise à jour avec les discussionIds
-    const entity = entityType === 'idea'
-      ? boundSelectors.getIdeaById(entityId)
-      : boundSelectors.getPostById(entityId);
-    
-    if (!entity) return [];
-    
-    // Récupérer toutes les discussions depuis le store
-    const discussions = entity.discussionIds?.map(id =>
-      boundSelectors.getDiscussionTopicById(id)
-    ).filter(Boolean) || [];
-    
-    return discussions;
-  } catch (error) {
-    console.error('❌ Error:', error);
-    return [];
+    actions.updateIdea(itemId, {
+      sourceIdeas: parentIdeaIds,
+      sourcePosts: parentPostIds,
+      derivedIdeas: childIdeaIds
+    });
   }
+  
+  // 3. LIRE DEPUIS LE STORE
+  const parents = parentIds.map(id => 
+    lineageResult.parents.find((p: any) => p.id === id)?.type === 'idea'
+      ? boundSelectors.getIdeaById(id)
+      : boundSelectors.getPostById(id)
+  ).filter(Boolean);
+  
+  return { currentItem, parents, children };
 }
 ```
 
-## Cas Particuliers
-
-### Cas 1 : Entité Déjà dans le Store
-
-Si l'entité est déjà dans le store, l'étape 1 (appel API) peut être évitée :
+### Cas 3 : Créer une Entité
 
 ```typescript
-loadIdea: async (ideaId: string) => {
-  // Vérifier si l'idée est déjà dans le store
-  const existingIdea = boundSelectors.getIdeaById(ideaId);
+// Dans /hooks/apiActions.ts
+publishIdea: async (payload: IdeaData) => {
+  const { createIdeaOnApi } = await import('../api/contentService');
   
-  if (existingIdea && existingIdea.description) {
-    // L'idée complète est déjà là, pas besoin d'appeler l'API
-    console.log('✅ Idée déjà dans le store');
-    return existingIdea;
-  }
+  // 1. APPELER L'API (génère l'entité avec ID)
+  const newIdea = await createIdeaOnApi(payload);
   
-  // Sinon, appeler l'API + ajouter au store
-  const { fetchIdeaDetails } = await import('../api/contentService');
-  const apiIdea = await fetchIdeaDetails(ideaId);
-  
-  if (apiIdea) {
-    actions.addIdea(apiIdea);
-  }
-  
-  return boundSelectors.getIdeaById(ideaId);
-}
-```
-
-### Cas 2 : Création d'Entité (Pas d'Appel API Nécessaire)
-
-Lors de la création, on génère l'entité localement puis on l'ajoute au store :
-
-```typescript
-publishIdea: async (data: IdeaData) => {
-  // 1. CRÉER l'entité localement (pas d'appel API)
-  const newIdea = {
-    id: `idea-${Date.now()}`,
-    ...data,
-    createdAt: new Date(),
-    supportCount: 0,
-    supporters: [],
-    // ...
-  };
-  
-  // 2. AJOUTER AU STORE directement
+  // 2. AJOUTER AU STORE
   actions.addIdea(newIdea);
   
   // 3. LIRE DEPUIS LE STORE
-  const createdIdea = boundSelectors.getIdeaById(newIdea.id);
+  const ideaFromStore = boundSelectors.getIdeaById(newIdea.id);
+  console.log(`✅ Idée "${ideaFromStore.title}" créée et ajoutée au store`);
   
-  return createdIdea;
+  return ideaFromStore;
 }
 ```
 
-## Tous les Endroits où on Appelle les Services API
+### Cas 4 : Optimisation (Cache)
 
-### Dans `/hooks/apiActions.ts`
+```typescript
+// Dans /hooks/apiActions.ts
+fetchFeed: async (forceRefresh = false) => {
+  const currentUser = boundSelectors.getCurrentUser();
+  
+  // Système de cache (5 minutes)
+  const CACHE_DURATION = 5 * 60 * 1000;
+  const now = Date.now();
+  const isCacheValid = store.feedLastFetched && 
+    (now - store.feedLastFetched) < CACHE_DURATION;
+  
+  if (!forceRefresh && isCacheValid && store.feedIdeaIds.length > 0) {
+    // Utiliser le cache - lire directement depuis le store
+    const ideasFromStore = store.feedIdeaIds
+      .map(id => boundSelectors.getIdeaById(id))
+      .filter(Boolean);
+    const postsFromStore = store.feedPostIds
+      .map(id => boundSelectors.getPostById(id))
+      .filter(Boolean);
+    
+    return { ideas: ideasFromStore, posts: postsFromStore };
+  }
+  
+  // Sinon, pattern normal 1-2-3
+  const { fetchFeed } = await import('../api/feedService');
+  const feedData = await fetchFeed(currentUser?.id);
+  
+  // ... ajouter au store + lire depuis store
+}
+```
 
-| Fonction | Service API | Pattern à appliquer |
-|----------|-------------|---------------------|
-| `loadInitialData` | `dataService.loadMockDataSet()` | ✅ Cas unique (chargement initial) |
-| `fetchHomePageStats` | `feedService.fetchHomePageStats()` | ⚠️ À vérifier |
-| `fetchFeed` | `feedService.fetchFeed()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `fetchMyContributions` | `feedService.fetchMyContributions()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `fetchMyProfile` | `contentService.fetchUserProfileFromApi()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `loadDiscussions` | `detailsService.fetchDiscussions()` | ✅ Pattern correct |
-| `loadIdeaRatings` | `detailsService.fetchIdeaRatings()` | ✅ Pattern correct |
-| `loadIdeaTabData('versions')` | `lineageService.fetchLineage()` | ✅ Pattern en 3 étapes |
-| `publishIdea` | `contentService.createIdeaOnApi()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `publishPost` | `contentService.createPostOnApi()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
+## Pattern storeUpdater (Éviter Stale Closures)
 
-### Dans `/hooks/navigationActions.ts`
+Pour les modifications du store, utiliser `storeUpdater` au lieu de lire avant :
 
-| Fonction | Service API | Pattern à appliquer |
-|----------|-------------|---------------------|
-| `goToIdea` | `contentService.fetchIdeaDetails()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `goToIdea` | `detailsService.fetchDiscussions()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `goToPost` | `contentService.fetchPostDetails()` | ✅ **CORRIGÉ** - Pattern en 3 étapes |
-| `goToUser` | Aucun (déjà dans le store) | ✅ Correct (pas d'API)
+### ❌ Stale Closure
 
-## Checklist pour Chaque Appel API
+```typescript
+toggleSupport: async (ideaId: string) => {
+  const idea = boundSelectors.getIdeaById(ideaId); // ❌ Closure périmée
+  const currentUser = boundSelectors.getCurrentUser(); // ❌ Closure périmée
+  
+  // Plus tard, ces valeurs peuvent être obsolètes
+}
+```
 
-- [ ] 1. Appeler le service API
-- [ ] 2. Vérifier le résultat (null check)
-- [ ] 3. Ajouter TOUTES les entités au store via `actions.addXxx()`
-- [ ] 4. Relire depuis le store via `boundSelectors.getXxxById()`
-- [ ] 5. Retourner les données du store (pas celles de l'API)
+### ✅ storeUpdater
 
-## Résumé
+```typescript
+// Dans /hooks/contentActions.ts
+toggleIdeaSupport: async (ideaId: string) => {
+  const { toggleSupportOnApi } = await import('../api/interactionService');
+  
+  storeUpdater(prevStore => {
+    // ✅ Lire l'état FRAIS depuis prevStore
+    const idea = selectors.getIdeaById(prevStore)(ideaId);
+    const currentUser = selectors.getCurrentUser(prevStore);
+    
+    if (!idea || !currentUser) return {};
+    
+    const isSupporting = idea.supporters.includes(currentUser.id);
+    const newSupporters = isSupporting
+      ? idea.supporters.filter(id => id !== currentUser.id)
+      : [...idea.supporters, currentUser.id];
+    
+    // Appeler API en arrière-plan (ne pas attendre)
+    toggleSupportOnApi(ideaId, currentUser.id, 'idea', isSupporting);
+    
+    // Retourner uniquement les changements
+    return {
+      ideas: {
+        ...prevStore.ideas,
+        [ideaId]: {
+          ...idea,
+          supporters: newSupporters,
+          supportCount: newSupporters.length
+        }
+      }
+    };
+  });
+}
+```
 
-**Règle d'Or** : Ne JAMAIS retourner directement les données de l'API. Toujours les ajouter au store puis les relire depuis le store.
+## Checklist
+
+- [ ] Appelle le service API avec `await import('../api/...')`
+- [ ] Vérifie le résultat (`if (apiData)`)
+- [ ] Ajoute TOUTES les entités au store via `actions.addXxx()`
+- [ ] Relit depuis le store via `boundSelectors.getXxxById()`
+- [ ] Retourne les données du store (pas celles de l'API)
+- [ ] Gère les cas `null`/`undefined`
+- [ ] Logs de confirmation (`console.log('✅ ...')`)
+- [ ] Utilise `storeUpdater` pour les mutations
+
+## Règle d'Or
+
+**Ne JAMAIS retourner directement les données de l'API.**
 
 ```typescript
 // ❌ INCORRECT
@@ -290,8 +266,12 @@ return data; // Retourne QUE les données mockées
 
 // ✅ CORRECT
 const apiData = await fetchSomething(id);
-if (apiData) {
-  actions.addSomething(apiData);
-}
-return boundSelectors.getSomethingById(id); // Retourne mockées + dynamiques
+if (apiData) actions.addSomething(apiData);
+return boundSelectors.getSomethingById(id); // Trouve mockées + dynamiques
 ```
+
+## Voir Aussi
+
+- `/ARCHITECTURE.md` - Vue d'ensemble de l'architecture
+- `/docs/DATA_FLOW.md` - Flux de données et débogage
+- `/hooks/README.md` - Documentation des hooks

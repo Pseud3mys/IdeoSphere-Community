@@ -15,7 +15,7 @@ export function useAuthHandlers(
   setCurrentUserData: (user: User) => void,
   handleEnterPlatform: () => void,
   switchToUserByEmail: (email: string) => User | null,
-  checkEmailExists: (email: string) => Promise<User | null>,
+  checkEmailExists: (email: string, password?: string) => Promise<User | null>,
   loginWithSocialProvider: (provider: string, socialData: { email: string; name: string; avatar?: string }) => Promise<User | null>,
   signupUser: (userData: {
     name: string;
@@ -29,12 +29,12 @@ export function useAuthHandlers(
 ) {
   /**
    * Gère la connexion d'un utilisateur
-   * ✅ Utilise uniquement l'action checkEmailExists du store
+   * ✅ Utilise uniquement l'action checkEmailExists du store avec email + mot de passe
    */
   const handleLogin = async (email: string, password: string = ''): Promise<boolean> => {
     try {
-      // ✅ Appeler l'action du store qui vérifie l'email ET ajoute l'user au store
-      const existingUser = await checkEmailExists(email);
+      // ✅ Appeler l'action du store qui vérifie l'email + mot de passe ET ajoute l'user au store
+      const existingUser = await checkEmailExists(email, password);
       
       if (existingUser) {
         // ✅ L'utilisateur est maintenant dans le store grâce à checkEmailExists
@@ -56,7 +56,7 @@ export function useAuthHandlers(
           return true;
         }
       } else {
-        toast.error('Aucun compte trouvé avec cet email. Créez d\'abord un compte.');
+        toast.error('Email ou mot de passe incorrect.');
         return false;
       }
       

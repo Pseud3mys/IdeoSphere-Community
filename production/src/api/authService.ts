@@ -7,21 +7,47 @@ import { transformUser, RawUser } from './transformService';
 
 let initialized = false;
 
+/**
+ * Initialise le service d'authentification.
+ * C'est la fonction la plus importante. Elle est appelée au démarrage de l'application.
+ * Elle gère automatiquement le retour de l'utilisateur après une redirection depuis Keycloak.
+ */
 export const initAuth = async (): Promise<boolean> => {
   if (initialized) {
     return keycloak.authenticated || false;
   }
+  
   try {
+    // 'check-sso' vérifie si l'utilisateur est déjà connecté en silence.
+    // Si l'URL contient des tokens (après une redirection de login), 
+    // keycloak.init() les traitera et authentifiera l'utilisateur.
     const authenticated = await keycloak.init({
       onLoad: 'check-sso',
       silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html'
     });
+    
     initialized = true;
     console.log(`[AUTH] Keycloak initialisé. Authentifié: ${authenticated}`);
+
     if (authenticated) {
-      // Si l'utilisateur est authentifié, stocker le token pour les appels API
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${keycloak.token}`;
+      // Si l'authentification réussit, on met à jour le token pour les appels API.
+      // C'est ici que l'intercepteur de apiClient prendra le relais.
+      console.log("[AUTH] Utilisateur authentifié, le token est prêt.");
     }
+
+    // Mettre en place un rafraîchissement automatique du token
+    setInterval(() => {
+      if (keycloak.token) {
+        keycloak.updateToken(70).then(refreshed => {
+          if (refreshed) {
+            console.log('[AUTH] Token rafraîchi avec succès');
+          }
+        }).catch(() => {
+          console.error('[AUTH] Erreur lors du rafraîchissement du token');
+        });
+      }
+    }, 60000); // Toutes les 60 secondes
+
     return authenticated;
   } catch (error) {
     console.error("❌ [AUTH] Erreur d'initialisation de Keycloak:", error);
@@ -29,115 +55,50 @@ export const initAuth = async (): Promise<boolean> => {
   }
 };
 
+// --- NOUVELLES FONCTIONS D'ACTION ---
+
 /**
- * Connecte un utilisateur en appelant le backend pour obtenir un token Keycloak.
- * @returns {Promise<User | null>} Le profil de l'utilisateur si la connexion réussit.
+ * Redirige l'utilisateur vers la page de connexion de Keycloak.
  */
-export async function loginWithEmail(email: string, password: string): Promise<User | null> {
-  console.log('[AUTH] Tentative de connexion via le backend pour:', email);
-
-  if (!password) {
-    password="1234"
-  }
-  console.log('[AUTH] Mot de passe utilisé pour la connexion via le backend pour:', password);
-  try {
-    // 1. Appeler le backend pour échanger email/password contre un token
-    const response = await apiClient.post('/users/login', {
-      email,
-      password,
-    });
-
-    const tokenData = response.data;
-
-    if (tokenData && tokenData.access_token) {
-      // 2. Initialiser l'instance keycloak-js avec les tokens reçus
-      // Cela permet à l'application de savoir que l'utilisateur est authentifié
-      // sans avoir besoin de redirection.
-      await keycloak.init({
-        onLoad: 'check-sso',
-        token: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        idToken: tokenData.id_token,
-      });
-
-      // 3. Mettre à jour manuellement le header pour les futurs appels API
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${keycloak.token}`;
-      console.log('✅ [AUTH] Connexion réussie via le backend.');
-      
-      return getUserProfile();
-    }
-
-    return null;
-  } catch (error) {
-    console.error("❌ [AUTH] Échec de la connexion via le backend:", error);
-    return null;
-  }
+export function login(): void {
+  console.log('[AUTH] Redirection vers la page de connexion Keycloak...');
+  keycloak.login();
 }
 
 /**
- * Crée un compte utilisateur en deux étapes :
- * 1. Appelle le backend pour créer l'utilisateur dans ArangoDB ET dans Keycloak.
- * 2. Si réussi, connecte automatiquement l'utilisateur.
- * @returns {Promise<User | null>} Le profil de l'utilisateur si l'inscription et la connexion réussissent.
+ * Redirige l'utilisateur vers la page d'inscription de Keycloak.
  */
-export async function createUserAccount(userData: Partial<User> & { password?: string }): Promise<User | null> {
-  console.log('🔄 [AUTH] Inscription via le backend pour:', userData.email);
-  try {
-    // Étape 1: Appeler votre backend pour créer l'utilisateur dans les deux systèmes.
-    // Le payload contient maintenant toutes les données du formulaire d'inscription.
-    const response = await apiClient.post<RawUser>('/users/register', userData);
-    const newUser = transformUser(response.data);
-    console.log('✅ [AUTH] Utilisateur créé via le backend:', newUser?.name);
-
-    // Étape 2: Si la création a réussi, connecter automatiquement l'utilisateur.
-    if (newUser && userData.email && userData.password) {
-      console.log('🔄 [AUTH] Connexion automatique après inscription...');
-      return await loginWithEmail(userData.email, userData.password);
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('❌ [AUTH] Erreur lors de la création du compte via le backend:', error);
-    // On peut potentiellement extraire le message d'erreur du backend pour l'afficher
-    // à l'utilisateur (ex: "Cet email est déjà utilisé").
-    return null;
-  }
+export function register(): void {
+  console.log('[AUTH] Redirection vers la page d\'inscription Keycloak...');
+  keycloak.register();
 }
 
 /**
- * Déconnecte l'utilisateur.
+ * Déconnecte l'utilisateur et le redirige vers la page d'accueil.
  */
-export async function logoutUser(): Promise<void> {
-  await initAuth();
-  delete apiClient.defaults.headers.common['Authorization'];
-  await keycloak.logout({ redirectUri: window.location.origin });
+export function logout(): void {
+  console.log('[AUTH] Déconnexion de Keycloak...');
+  keycloak.logout({ redirectUri: window.location.origin });
 }
+
+// --- FONCTIONS UTILITAIRES (INCHANGÉES) ---
 
 /**
  * Récupère les informations du profil de l'utilisateur depuis le token Keycloak.
  */
-export async function getUserProfile(): Promise<User | null> {
-  await initAuth();
+export function getUserProfile(): User | null {
   if (keycloak.tokenParsed) {
     return {
       id: keycloak.tokenParsed.sub,
-      name: keycloak.tokenParsed.name || `${keycloak.tokenParsed.given_name} ${keycloak.tokenParsed.family_name}`,
+      name: keycloak.tokenParsed.preferred_username || keycloak.tokenParsed.name,
       email: keycloak.tokenParsed.email,
     } as User;
   }
   return null;
 }
 
-// Les fonctions de connexion sociale continuent d'utiliser la redirection
-export async function loginWithSocialProvider(provider: string): Promise<void> {
-  await initAuth();
-  await keycloak.login({ idpHint: provider });
-}
-// --- FONCTIONS UTILITAIRES ---
-
 /**
  * Récupère le token d'authentification de l'utilisateur.
- * C'est la fonction qui manquait.
  * @returns {string | undefined} Le token JWT.
  */
 export function getToken(): string | undefined {
@@ -149,6 +110,59 @@ export function getToken(): string | undefined {
  */
 export function isAuthenticated(): boolean {
   return !!keycloak.authenticated;
+}
+
+/**
+ * LANCE le processus de connexion en redirigeant l'utilisateur vers Keycloak.
+ * CETTE FONCTION NE RETOURNE PAS D'UTILISATEUR.
+ * La récupération de l'utilisateur se fait via getUserProfile() APRES le rechargement de la page.
+ * @param _email - Ignoré, présent pour la compatibilité
+ * @param _password - Ignoré, présent pour la compatibilité
+ * @returns {Promise<void>} Une promesse qui ne se résoudra jamais avec une valeur, car la page sera redirigée.
+ */
+export async function loginWithEmail(_email: string, _password: string): Promise<User | null> {
+  console.log('🔄 [AUTH] Lancement du processus de connexion via redirection...');
+  // On ne fait qu'appeler la fonction de redirection simple.
+  // Les arguments email/password ne sont plus utilisés.
+  keycloak.login();
+  
+  // NOTE IMPORTANTE :
+  // Le code ci-dessous ne sera jamais atteint car le navigateur redirige la page.
+  // Nous retournons null pour satisfaire le typage de la fonction, mais en pratique,
+  // le composant qui appelle cette fonction doit gérer l'état d'authentification
+  // de manière globale (via un Context, Redux, etc.) et non via la valeur de retour.
+  return null; 
+}
+
+
+/**
+ * LANCE le processus d'inscription en redirigeant l'utilisateur vers Keycloak.
+ * CETTE FONCTION NE RETOURNE PAS D'UTILISATEUR.
+ * @param _userData - Données ignorées, présentes pour la compatibilité.
+ * @returns {Promise<void>} Une promesse qui ne se résoudra jamais avec une valeur.
+ */
+export async function createUserAccount(_userData: Partial<User> & { password?: string }): Promise<User | null> {
+  console.log('🔄 [AUTH] Lancement du processus d\'inscription via redirection...');
+  // On appelle simplement la méthode register de keycloak-js.
+  keycloak.register();
+
+  // Mêmes remarques que pour loginWithEmail.
+  return null;
+}
+
+/**
+ * Déconnecte l'utilisateur.
+ */
+export async function logoutUser(): Promise<void> {
+  await initAuth();
+  delete apiClient.defaults.headers.common['Authorization'];
+  await keycloak.logout({ redirectUri: window.location.origin });
+}
+
+// Les fonctions de connexion sociale continuent d'utiliser la redirection
+export async function loginWithSocialProvider(provider: string): Promise<void> {
+  await initAuth();
+  await keycloak.login({ idpHint: provider });
 }
 
 // la suite des fonction doit encore être migré pour utiliser Keycloak

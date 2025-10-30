@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { User } from '../../types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { ArrowLeft, UserPlus, MapPin, Calendar } from 'lucide-react';
+import { Checkbox } from '../ui/checkbox';
+import { Alert, AlertDescription } from '../ui/alert';
+import { ArrowLeft, UserPlus, MapPin, Calendar, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Shield } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 // SVG Icons pour les connexions sociales
@@ -36,10 +37,11 @@ interface SignupPageProps {
   onSignup: (userData: {
     name: string;
     email: string;
+    password: string;
     address?: string;
     bio?: string;
     birthYear: number;
-  }) => void;
+  }) => Promise<boolean>;
   onSocialLogin?: (provider: string) => Promise<boolean>;
   prefilledData?: {
     name?: string;
@@ -51,52 +53,89 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
   const [formData, setFormData] = useState({
     name: prefilledData?.name || '',
     email: prefilledData?.email || '',
+    password: '',
+    confirmPassword: '',
     address: '',
     birthYear: '',
     bio: ''
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setError('');
+  };
 
   const handleSocialLogin = async (provider: string) => {
     if (!onSocialLogin) return;
     
     setIsLoading(true);
+    setError('');
     try {
-      await onSocialLogin(provider);
+      const success = await onSocialLogin(provider);
+      if (!success) {
+        setError(`Erreur de connexion avec ${provider}`);
+      }
     } catch (error) {
       console.error('Social login error:', error);
-      toast.error(`Erreur de connexion avec ${provider}`);
+      setError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = () => {
     if (!formData.name.trim()) {
-      toast.error('Le nom est requis');
-      return;
+      setError('Veuillez entrer votre nom');
+      return false;
     }
-    
     if (!formData.email.trim()) {
-      toast.error('L\'email est requis');
-      return;
+      setError('Veuillez entrer votre email');
+      return false;
     }
-    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Veuillez entrer un email valide');
+      return false;
+    }
+    if (!formData.password) {
+      setError('Le mot de passe est requis');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      return false;
+    }
     if (!formData.birthYear) {
-      toast.error('L\'année de naissance est requise');
-      return;
+      setError('L\'année de naissance est requise');
+      return false;
     }
-    
     const birthYear = parseInt(formData.birthYear);
     const currentYear = new Date().getFullYear();
-    
     if (birthYear < 1900 || birthYear > currentYear - 16) {
-      toast.error('Année de naissance invalide (vous devez avoir au moins 16 ans)');
-      return;
+      setError('Année de naissance invalide (vous devez avoir au moins 16 ans)');
+      return false;
     }
+    if (!acceptTerms) {
+      setError('Veuillez accepter les conditions d\'utilisation');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!validateForm()) return;
 
     setIsLoading(true);
     
@@ -104,23 +143,45 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
       const success = await onSignup({
         name: formData.name.trim(),
         email: formData.email.trim(),
+        password: formData.password,
         address: formData.address.trim() || undefined,
         bio: formData.bio.trim() || undefined,
-        birthYear: birthYear
+        birthYear: parseInt(formData.birthYear)
       });
       
       if (success) {
         toast.success('Compte créé avec succès ! Bienvenue sur IdeoSphere ! 🎉');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          address: '',
+          birthYear: '',
+          bio: ''
+        });
+        setAcceptTerms(false);
+      } else {
+        setError('Cette adresse email est déjà utilisée');
       }
-      // Les messages d'erreur sont déjà gérés dans AppContent.tsx
     } catch (error) {
-      // Les erreurs sont déjà gérées dans AppContent.tsx
+      setError('Une erreur est survenue. Veuillez réessayer.');
       console.error('Signup error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { strength: 0, label: '', color: '' };
+    if (password.length < 6) return { strength: 1, label: 'Trop court', color: 'text-red-500' };
+    if (password.length < 8) return { strength: 2, label: 'Faible', color: 'text-orange-500' };
+    if (password.length < 12) return { strength: 3, label: 'Correct', color: 'text-blue-500' };
+    return { strength: 4, label: 'Fort', color: 'text-green-500' };
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
   const currentYear = new Date().getFullYear();
 
   return (
@@ -141,10 +202,10 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-white mb-4">
               <UserPlus className="w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl mb-2">
               Rejoignez IdeoSphere
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Créez votre compte pour participer pleinement à la vie citoyenne de Le Blanc
             </p>
           </div>
@@ -153,13 +214,13 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
         {/* Formulaire */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Créer votre compte</CardTitle>
+            <CardTitle>Créer votre compte</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             {/* Connexions sociales */}
             {onSocialLogin && (
               <>
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3">
                   <Button
                     onClick={() => handleSocialLogin('google')}
                     disabled={isLoading}
@@ -193,21 +254,43 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                   </div>
                 </div>
 
-                <div className="relative mb-6">
+                <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <Separator className="w-full" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background px-2 text-muted-foreground">
-                      Ou avec email
+                      Ou créez un compte
                     </span>
                   </div>
                 </div>
               </>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informations de base */}
+            {/* Avantages */}
+            <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+              <div className="flex items-center mb-2">
+                <Shield className="w-4 h-4 text-primary mr-2" />
+                <span className="text-sm text-primary">Vos avantages</span>
+              </div>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Proposez et soutenez des idées</li>
+                <li>• Participez aux discussions</li>
+                <li>• Suivez l'évolution des projets</li>
+                <li>• Personnalisez votre expérience</li>
+              </ul>
+            </div>
+
+            {/* Formulaire */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Nom et Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Prénom *</Label>
@@ -215,10 +298,10 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                     id="name"
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Marie"
                     required
-                    className="w-full"
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground">
                     Votre prénom sera visible par les autres membres
@@ -231,11 +314,81 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="marie.dupont@email.com"
                     required
-                    className="w-full"
+                    disabled={isLoading}
                   />
+                </div>
+              </div>
+
+              {/* Mots de passe */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Minimum 6 caractères"
+                      required
+                      disabled={isLoading}
+                      className="pl-10 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {formData.password && (
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-200 h-1 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-300 ${
+                            passwordStrength.strength === 1 ? 'bg-red-500 w-1/4' :
+                            passwordStrength.strength === 2 ? 'bg-orange-500 w-2/4' :
+                            passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
+                            passwordStrength.strength === 4 ? 'bg-green-500 w-full' : 'w-0'
+                          }`}
+                        />
+                      </div>
+                      <span className={`text-xs ${passwordStrength.color}`}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      placeholder="Confirmez votre mot de passe"
+                      required
+                      disabled={isLoading}
+                      className="pl-10 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -251,9 +404,10 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                   min="1900"
                   max={currentYear - 16}
                   value={formData.birthYear}
-                  onChange={(e) => setFormData(prev => ({ ...prev, birthYear: e.target.value }))}
+                  onChange={(e) => handleInputChange('birthYear', e.target.value)}
                   placeholder="Ex: 1985"
-                  className="w-full"
+                  required
+                  disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
                   Cette information nous aide à mieux comprendre notre communauté
@@ -270,9 +424,9 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                   id="address"
                   type="text"
                   value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="123 rue de la République, Le Blanc"
-                  className="w-full"
+                  disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
                   Nous permet de vous proposer des projets près de chez vous
@@ -285,9 +439,10 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                 <Textarea
                   id="bio"
                   value={formData.bio}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Ex: Passionné(e) d'urbanisme et d'écologie, je souhaite contribuer à l'amélioration de notre ville..."
                   rows={3}
+                  disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
                   Cela aide les autres citoyens à mieux comprendre vos motivations
@@ -296,12 +451,34 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
 
               {/* Informations importantes */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-2">Pourquoi ces informations ?</h3>
+                <h3 className="text-blue-900 mb-2">Pourquoi ces informations ?</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• L'âge nous aide à comprendre les besoins de chaque génération</li>
                   <li>• L'adresse nous permet de vous proposer des projets près de chez vous</li>
+                  <li>• Le mot de passe sécurise votre compte</li>
                   <li>• Ces données restent privées et ne sont jamais partagées</li>
                 </ul>
+              </div>
+
+              {/* Checkbox conditions */}
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                  disabled={isLoading}
+                  className="mt-1"
+                />
+                <Label htmlFor="terms" className="text-sm leading-relaxed">
+                  J'accepte les{' '}
+                  <Button variant="link" className="p-0 h-auto text-primary">
+                    conditions d'utilisation
+                  </Button>{' '}
+                  et la{' '}
+                  <Button variant="link" className="p-0 h-auto text-primary">
+                    politique de confidentialité
+                  </Button>
+                </Label>
               </div>
 
               {/* Actions */}
@@ -311,13 +488,14 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, prefilledData }: S
                   variant="outline"
                   onClick={onBack}
                   className="flex-1"
+                  disabled={isLoading}
                 >
                   Annuler
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary-dark"
-                  disabled={isLoading}
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                  disabled={isLoading || !acceptTerms}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">

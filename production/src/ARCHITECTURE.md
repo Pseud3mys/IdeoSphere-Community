@@ -1,263 +1,284 @@
 # Architecture IdeoSphere
 
-## Principe Fondamental
+## Vue d'Ensemble
 
-**Toutes les données sont dans le store. Le store est la source de vérité unique.**
-
-## Flux de Données
+IdeoSphere utilise une **architecture store-centrée** où toutes les données passent par un store global unique (SimpleEntityStore). Les composants interagissent avec le store via le hook `useEntityStoreSimple`.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ 1. CHARGEMENT INITIAL (UNE SEULE FOIS)                      │
-└─────────────────────────────────────────────────────────────┘
-                         ↓
-          /data/*.ts (données mockées)
-                         ↓
-          loadMockDataSet() (dataService.ts)
-                         ↓
-          loadInitialData() (apiActions.ts)
-                         ↓
-          initializeStore() (SimpleEntityStore.tsx)
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 2. STORE (Source de vérité unique)                          │
-│                                                              │
-│  • Données mockées (chargées au démarrage)                  │
-│  • Données créées dynamiquement (posts, idées, etc.)        │
-└─────────────────────────────────────────────────────────────┘
-                         ↓
-          Selectors (simpleSelectors.ts)
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 3. COMPOSANTS                                                │
-│                                                              │
-│  • Lisent via selectors                                     │
-│  • Modifient via actions                                    │
-└─────────────────────────────────────────────────────────────┘
+Composants → useEntityStoreSimple → Actions → Services API → Données mockées
+                ↑                                                    ↓
+                └──────────────── STORE (source de vérité) ─────────┘
 ```
 
-## Règle d'Or
+## Principes Clés
 
-### ❌ INTERDIT
+### 1. Store = Source de Vérité Unique
 
-**Ne JAMAIS accéder directement à `dataService.ts` depuis les hooks ou composants !**
+Le store contient **TOUTES** les données (mockées + créées dynamiquement) :
 
 ```typescript
-// ❌ INTERDIT dans un hook !
+interface SimpleEntityStore {
+  // Données normalisées par ID
+  users: Record<string, User>;
+  ideas: Record<string, Idea>;
+  posts: Record<string, Post>;
+  discussionTopics: Record<string, DiscussionTopic>;
+  communities: Record<string, Community>;
+  communityMemberships: Record<string, CommunityMembership>;
+  
+  // États UI
+  activeTab: TabType;
+  currentUserId: string | null;
+  selectedIdeaId: string | null;
+  selectedPostId: string | null;
+  // ...
+}
+```
+
+**Pourquoi Record<string, Entity> ?**
+- Accès O(1) par ID : `store.ideas[ideaId]`
+- Pas de doublons
+- Fusion facile des données mockées + dynamiques
+
+### 2. Pattern en 3 Étapes (Obligatoire)
+
+**Toute fonction** qui appelle un service API doit suivre ce pattern :
+
+```typescript
+async function loadData(id: string) {
+  // 1️⃣ APPELER L'API (retourne données mockées)
+  const { fetchSomething } = await import('../api/someService');
+  const apiData = await fetchSomething(id);
+  
+  // 2️⃣ AJOUTER AU STORE (fusion avec données dynamiques)
+  if (apiData) {
+    actions.addSomething(apiData);
+  }
+  
+  // 3️⃣ LIRE DEPUIS LE STORE (trouve mockées + dynamiques)
+  const completeData = boundSelectors.getSomethingById(id);
+  return completeData; // ← TOUJOURS retourner depuis le store
+}
+```
+
+**Pourquoi ?** Les services API ne connaissent que les données mockées. Les entités créées dynamiquement existent uniquement dans le store.
+
+### 3. storeUpdater pour Mutations Optimistes
+
+Pour les modifications du store, utiliser `storeUpdater` pour éviter les stale closures :
+
+```typescript
+toggleIdeaSupport: async (ideaId: string) => {
+  storeUpdater(prevStore => {
+    // ✅ Lire l'état FRAIS depuis prevStore
+    const idea = selectors.getIdeaById(prevStore)(ideaId);
+    const currentUser = selectors.getCurrentUser(prevStore);
+    
+    if (!idea || !currentUser) return {};
+    
+    // Calculer le nouvel état
+    const isSupporting = idea.supporters.includes(currentUser.id);
+    const newSupporters = isSupporting
+      ? idea.supporters.filter(id => id !== currentUser.id)
+      : [...idea.supporters, currentUser.id];
+    
+    // Appel API en arrière-plan (ne pas attendre)
+    toggleSupportOnApi(ideaId, currentUser.id, 'idea', isSupporting);
+    
+    // Retourner uniquement les changements
+    return {
+      ideas: {
+        ...prevStore.ideas,
+        [ideaId]: {
+          ...idea,
+          supporters: newSupporters,
+          supportCount: newSupporters.length
+        }
+      }
+    };
+  });
+}
+```
+
+### 4. Zéro Accès Direct aux Données
+
+**Interdit** dans hooks et composants :
+
+```typescript
+// ❌ INTERDIT
+import { mockIdeas } from '../data/ideas';
 import { getIdeaById } from '../api/dataService';
-const idea = await getIdeaById(ideaId); // Ne trouve pas les entités créées dynamiquement
 ```
 
-**Pourquoi ?** Les données mockées ne contiennent QUE les données initiales. Les entités créées dynamiquement (posts, idées créés par l'utilisateur) ne sont QUE dans le store !
-
-### ✅ CORRECT
-
-**Toujours utiliser les selectors pour lire les données :**
+**Autorisé** uniquement :
 
 ```typescript
-// ✅ CORRECT dans un hook
-const idea = boundSelectors.getIdeaById(ideaId); // Trouve TOUTES les entités
+// ✅ Dans les hooks
+const idea = boundSelectors.getIdeaById(ideaId);
 
-// ✅ CORRECT dans un composant
+// ✅ Dans les composants
 const { getIdeaById } = useEntityStoreSimple();
 const idea = getIdeaById(ideaId);
 ```
 
-## Une Seule Exception
+**Exception** : Les services API (`/api/*.ts`) peuvent accéder à `dataService`.
 
-### Chargement Initial
+## Organisation des Fichiers
 
-**UNE SEULE fonction peut accéder à `dataService.ts` :**
+### `/data` - Données Mockées (Lecture Seule)
 
 ```typescript
-// Dans /hooks/apiActions.ts
+export const mockIdeas: Idea[] = [...];
+export const mockPosts: Post[] = [...];
+export const mockUsers: User[] = [...];
+```
 
-loadInitialData: async () => {
-  const { loadMockDataSet } = await import('../api/dataService');
-  const mockData = await loadMockDataSet();
-  
-  actions.initializeStore({
-    users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
-    ideas: mockData.ideas,
-    posts: mockData.posts,
-    discussionTopics: mockData.discussions,
-    communities: [],
-    communityMemberships: [],
-    currentUserId: mockData.currentUser.id
-  });
+**Rôle** : Données initiales chargées UNE fois au démarrage via `loadInitialData()`.
+
+### `/api` - Services API (Simulent Backend)
+
+```typescript
+export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
+  const { getIdeaById } = await import('./dataService');
+  return await getIdeaById(ideaId);
 }
 ```
 
-Cette fonction est appelée **UNE SEULE FOIS** au démarrage dans `/hooks/useEntityStoreSimple.ts`.
+**Rôle** : Simulent des appels API. Retournent les données mockées.  
+**Point clé** : Ne connaissent QUE les données mockées !
 
-## Architecture des Dossiers
-
-```
-/api               → Services API (simulent des appels backend)
-  dataService.ts   → ⚠️ SEUL point d'accès aux données mockées
-  *Service.ts      → Services métier (utilisent dataService pour les données mockées)
-
-/data              → Données mockées (lecture seule)
-  *.ts             → Données initiales (chargées UNE FOIS)
-
-/store             → Store global (source de vérité unique)
-  SimpleEntityStore.tsx  → Store et actions de base
-  simpleSelectors.ts     → Selectors pour lire le store
-
-/hooks             → Logique métier et interface avec le store
-  useEntityStoreSimple.ts → Hook principal (point d'entrée unique)
-  apiActions.ts          → Actions API (loadInitialData = SEUL accès à dataService)
-  contentActions.ts      → Actions de contenu (CRUD)
-  navigationActions.ts   → Actions de navigation
-  userActions.ts         → Actions utilisateur
-
-/components        → Composants React
-  *.tsx            → Utilisent useEntityStoreSimple() pour accéder au store
-```
-
-## Cycle de Vie des Données
-
-### 1. Au Démarrage
+### `/store` - Store Global (Source de Vérité)
 
 ```typescript
-// useEntityStoreSimple.ts
-useEffect(() => {
-  apiActions.loadInitialData(); // ← UNE SEULE FOIS
-}, []);
+interface SimpleEntityStore {
+  users: Record<string, User>;
+  ideas: Record<string, Idea>;
+  posts: Record<string, Post>;
+  // ...
+}
 ```
 
-### 2. Pendant l'Utilisation - Création
+**Rôle** : Contient TOUTES les données (mockées + dynamiques).
+
+### `/hooks` - Logique Métier
 
 ```typescript
-// L'utilisateur crée une idée
-actions.publishIdea({
-  title: "Mon idée",
-  summary: "Résumé",
-  description: "Description"
-});
-
-// L'API simulée crée l'idée
-const newIdea = await createIdeaOnApi(data);
-
-// L'idée est ajoutée au store
-actions.addIdea(newIdea);
-
-// Le composant affiche l'idée via les selectors
-const ideas = getAllIdeas(); // Contient les idées mockées + l'idée créée
-```
-
-### 3. Pendant l'Utilisation - Chargement de Relations
-
-```typescript
-// Hook charge les relations d'une idée (par ex. lineage/versions)
-loadIdeaTabData: async (ideaId: string, tabType: 'versions') => {
-  // 1. APPELER L'API pour obtenir les données (depuis données mockées)
-  const { fetchLineage } = await import('../api/lineageService');
-  const lineageData = await fetchLineage(ideaId, 'idea');
-  
-  // 2. AJOUTER toutes les entités au store
-  lineageData.parents.forEach(parent => {
-    if (parent.type === 'idea') {
-      actions.addIdea(convertToIdea(parent));
-    } else if (parent.type === 'post') {
-      actions.addPost(convertToPost(parent));
+export function createApiActions(store, actions, boundSelectors, storeUpdater) {
+  return {
+    loadIdea: async (ideaId) => {
+      // 1. API → 2. Store → 3. Relecture
     }
-  });
-  
-  // 3. RÉCUPÉRER depuis le store pour construire le résultat
-  const currentIdea = boundSelectors.getIdeaById(ideaId);
-  const parents = lineageData.parents.map(p => 
-    boundSelectors.getIdeaById(p.id) || boundSelectors.getPostById(p.id)
-  );
-  
-  return { currentItem: currentIdea, parents, children: [...] };
+  };
 }
 ```
 
-**Pattern en 3 étapes :**
-1. **Appeler l'API** (retourne données mockées)
-2. **Ajouter au store** via `actions.addIdea()`, `actions.addPost()`, etc.
-3. **Lire depuis le store** via `boundSelectors` pour obtenir TOUTES les données (mockées + dynamiques)
+**Rôle** : Orchestrent les appels API et le store.
 
-### 4. Affichage
+**Modules** :
+- `apiActions.ts` - Chargement de données
+- `contentActions.ts` - Interactions (like, support, etc.)
+- `navigationActions.ts` - Navigation et chargement de pages
+- `userActions.ts` - Gestion utilisateurs
+
+### `/components` - Composants React
 
 ```typescript
-// Le composant utilise UNIQUEMENT les selectors
-const { getAllIdeas, getIdeaById } = useEntityStoreSimple();
-
-const ideas = getAllIdeas(); // Toutes les idées (mockées + dynamiques)
-const idea = getIdeaById(ideaId); // N'importe quelle idée (mockée ou dynamique)
-```
-
-## Points Clés
-
-1. **Une seule source de vérité** : Le store contient TOUTES les données
-2. **Un seul point d'entrée** : `useEntityStoreSimple()` pour tous les composants
-3. **Un seul chargement** : `loadInitialData()` appelé UNE FOIS au démarrage
-4. **Zéro accès direct** : Les hooks/composants ne touchent JAMAIS à `dataService` ou `/data`
-5. **Données normalisées** : Stockées par ID (`Record<string, Entity>`)
-6. **Pas de duplication** : Les objets imbriqués sont remplacés par des tableaux d'IDs
-
-## Exemple Complet
-
-### ❌ Mauvaise Architecture (Ancienne)
-
-```typescript
-// Hook
-const loadIdea = async (ideaId: string) => {
-  const { getIdeaById } = await import('../api/dataService');
-  const idea = await getIdeaById(ideaId); // ❌ Cherche dans les données mockées
+function MyComponent() {
+  const { getIdeaById, actions } = useEntityStoreSimple();
+  const idea = getIdeaById(ideaId);
   
-  if (idea) {
-    actions.addIdea(idea);
-  }
-}
-
-// Problème : Si l'idée a été créée dynamiquement, elle n'est PAS dans dataService !
-```
-
-### ✅ Bonne Architecture (Actuelle)
-
-```typescript
-// Hook
-const loadIdea = async (ideaId: string) => {
-  // L'idée est déjà dans le store (chargée au démarrage ou créée dynamiquement)
-  const idea = boundSelectors.getIdeaById(ideaId); // ✅ Cherche dans le store
-  
-  if (!idea) {
-    console.error('Idée non trouvée:', ideaId);
-  }
-  
-  return idea;
-}
-
-// Avantage : Trouve TOUTES les idées (mockées + dynamiques)
-```
-
-## Migration vers API Réelle
-
-Quand vous passerez à une vraie API, seuls les fichiers `/api/*.ts` devront changer :
-
-```typescript
-// Avant (mocké)
-export async function fetchIdeaDetails(ideaId: string) {
-  const data = await loadMockDataSet();
-  return data.ideas.find(i => i.id === ideaId);
-}
-
-// Après (vraie API)
-export async function fetchIdeaDetails(ideaId: string) {
-  const response = await fetch(`${API_URL}/ideas/${ideaId}`);
-  return await response.json();
+  return <button onClick={() => actions.toggleIdeaSupport(ideaId)}>
+    Soutenir
+  </button>;
 }
 ```
 
-Les hooks et composants n'ont **aucune modification à faire** !
+**Rôle** : Affichage et interactions utilisateur.  
+**Règle** : JAMAIS d'import direct de `/data` ou `/api`.
 
-## Résumé en 3 Points
+## Flux de Données
 
-1. **Chargement initial** : `loadInitialData()` appelée UNE FOIS
-2. **Lecture** : TOUJOURS via selectors (`getIdeaById`, `getAllIdeas`, etc.)
-3. **Modification** : TOUJOURS via actions (`addIdea`, `updateIdea`, etc.)
+### Démarrage
 
-**Ne JAMAIS accéder directement à `dataService` ou `/data` depuis les hooks ou composants !**
+```
+1. App démarre
+   ↓
+2. useEntityStoreSimple (useEffect)
+   ↓
+3. apiActions.loadInitialData()
+   ↓
+4. dataService.loadMockDataSet()
+   ↓
+5. actions.initializeStore({ users, ideas, posts, ... })
+   ↓
+6. STORE rempli avec données mockées
+```
+
+### Création d'Entité
+
+```
+1. Utilisateur clique "Publier"
+   ↓
+2. actions.publishIdea(payload)
+   ↓
+3. createIdeaOnApi(payload) → retourne newIdea
+   ↓
+4. actions.addIdea(newIdea)
+   ↓
+5. boundSelectors.getIdeaById(newIdea.id)
+   ↓
+6. Composant reçoit idée depuis store
+```
+
+### Chargement de Relations
+
+```
+1. loadIdeaTabData(ideaId, 'versions')
+   ↓
+2. fetchLineage(ideaId) → { parents: [...], children: [...] }
+   ↓
+3. Ajouter toutes les entités au store
+   parents.forEach(p => actions.addIdea(p))
+   children.forEach(c => actions.addIdea(c))
+   ↓
+4. Lire depuis le store
+   parents.map(p => boundSelectors.getIdeaById(p.id))
+   ↓
+5. Retourner { currentItem, parents, children }
+```
+
+## Migration de Données
+
+### État Actuel (Octobre 2025)
+
+**Posts** : Migration terminée
+- ✅ `Post.authorId: string` (ID simple)
+- ✅ `PostReply.authorId: string`
+- ✅ `DiscussionTopic.authorId: string`
+- ✅ `DiscussionPost.authorId: string`
+
+**Idées** : Migration en cours
+- ⏳ `Idea.creators: User[]` → migration vers `creatorIds: string[]` prévue
+- ✅ `Idea.supporters: string[]` (déjà IDs)
+
+**Support unifié** : ✅ Terminé
+- `toggleSupportOnApi(entityId, userId, entityType, isCurrentlySupporting)`
+- Fonctionne pour idées ET posts
+
+Voir `/PLAN_MIGRATION_AUTHOR_IDS.md` pour les détails.
+
+## Avantages
+
+1. **Cohérence** : Pattern uniforme partout
+2. **Fiabilité** : Le store trouve TOUTES les entités
+3. **Maintenabilité** : Logique centralisée
+4. **Testabilité** : Selectors purs, store mockable
+5. **Migration facile** : Changer `/api` suffit pour passer à une vraie API
+
+## Voir Aussi
+
+- `/docs/API_CALLS_PATTERN.md` - Pattern en 3 étapes détaillé
+- `/docs/DATA_FLOW.md` - Flux de données avec débogage
+- `/hooks/README.md` - Documentation des hooks
+- `/api/README.md` - Documentation des services API
+- `/store/README.md` - Documentation du store

@@ -155,7 +155,7 @@ export function AppContent({
             const success = await actions.signupUser({
               name: userData.name,
               email: userData.email,
-              password: '', // Password généré automatiquement dans ce flow
+              password: userData.password,
               address: userData.address,
               bio: userData.bio,
               birthYear: userData.birthYear

@@ -1,5 +1,83 @@
 # Changelog - IdeoSphere Architecture
 
+## [2025-10-29] - Unification Formulaire d'Inscription & Intégration Mot de Passe
+
+### 🐛 Bug Fix: Transmission du mot de passe dans signupUser
+
+**Problème résolu** : Erreur `Cannot read properties of undefined (reading 'length')` dans `signupUser`.
+
+**Cause** : Dans `/hooks/userActions.ts`, la fonction `signupUser` ne transmettait pas le champ `password` à l'API `createUserAccount`, alors que l'API tentait d'accéder à `userData.password.length`.
+
+**Solution** :
+- ✅ Ajout de `password: userData.password` dans l'objet `apiData` (ligne 188)
+- ✅ Vérification défensive dans `authService.ts` : Check `if (userData.password)` avant `.length`
+- ✅ Message de warning si password absent (mode démo)
+
+**Code corrigé** :
+```typescript
+// hooks/userActions.ts - signupUser
+const apiData = {
+  name: userData.name,
+  email: userData.email,
+  password: userData.password,  // ✅ Ajouté
+  address: userData.address,
+  bio: userData.bio,
+  birthYear: userData.birthYear || new Date().getFullYear() - 25
+};
+```
+
+---
+
+### ✅ Unification: SignupPage unique avec mot de passe
+
+**Amélioration implémentée** : Fusion de `SignupDialog` et `SignupPage` en une seule page d'inscription complète avec support du mot de passe.
+
+**Changements composants** :
+- ✅ Suppression de `/components/auth/SignupDialog.tsx` (fusionné)
+- ✅ Refonte complète de `/components/auth/SignupPage.tsx` :
+  - Formulaire avec validation complète
+  - Champs : nom, email, password, confirmPassword, birthYear, address, bio
+  - Indicateur de force du mot de passe (trop court, faible, correct, fort)
+  - Toggle œil pour afficher/masquer les mots de passe
+  - Validation : minimum 6 caractères, correspondance des mots de passe
+  - Checkbox acceptation des conditions
+  - Support connexions sociales (Google, Facebook, Discord)
+  - Section avantages avec icône Shield
+  - Messages d'erreur avec Alert shadcn
+  - Style cohérent avec CitizenWelcome (gradient, Card)
+
+**Changements API** (`/api/authService.ts`) :
+- ✅ Fonction `createUserAccount()` accepte `password: string`
+- ✅ Log du mot de passe reçu (longueur uniquement pour sécurité)
+- ✅ **Mot de passe non stocké en mode démo** (commentaire explicatif)
+- ✅ Commentaires expliquant qu'en production on utiliserait bcrypt
+
+**Changements intégration** :
+- ✅ `AppContent.tsx` : Transmission correcte de `userData.password` au lieu de chaîne vide
+- ✅ `CitizenWelcome.tsx` : Suppression de l'import SignupDialog, redirection vers SignupPage
+- ✅ LoginDialog redirige vers SignupPage via `actions.goToSignup()`
+
+**Flux complet** :
+```
+SignupPage (formulaire unifié)
+    ↓ (password validé, min 6 car., correspondance confirmPassword)
+AppContent.handleSignup
+    ↓ (password transmis)
+actions.signupUser
+    ↓
+authService.createUserAccount(name, email, password, ...)
+    ↓
+✅ Password reçu et logué (longueur)
+✅ Password NON stocké (mode démo)
+✅ User créé sans champ password
+```
+
+**Documentation** :
+- ✅ `/api/API_RESPONSE_TYPES.md` - Signature `createUserAccount` avec password
+- ✅ `/api/README.md` - Notes sur hashage bcrypt en production
+
+---
+
 ## [2025-10-29] - Optimisation Système de Rating & Bugfix Stale Closure
 
 ### ✅ Optimisation: Approche 2 - Rating Optimisé

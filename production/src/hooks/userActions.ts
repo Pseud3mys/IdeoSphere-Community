@@ -118,10 +118,10 @@ export function createUserActions(
     },
     
     // Action pour vérifier l'existence d'un email via l'API d'authentification
-    checkEmailExists: async (email: string) => {
+    checkEmailExists: async (email: string, password: string = '') => {
       try {
         const { loginWithEmail } = await import('../api/authService');
-        const user = await loginWithEmail(email);
+        const user = await loginWithEmail(email, password);
         
         // ✅ Si l'utilisateur existe, l'ajouter au store immédiatement
         if (user) {
@@ -185,6 +185,7 @@ export function createUserActions(
         const apiData = {
           name: userData.name,
           email: userData.email,
+          password: userData.password,
           address: userData.address,
           bio: userData.bio,
           birthYear: userData.birthYear || new Date().getFullYear() - 25
