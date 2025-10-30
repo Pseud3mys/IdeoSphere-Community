@@ -277,9 +277,9 @@ export function createUserActions(
     },
     
     // Action pour la connexion via SSO
-    loginWithSSO: () => {
+    loginWithSSO: async () => {
       try {
-        const { loginWithSSO: loginWithSSOApi } = require('../api/authService');
+        const { loginWithSSO: loginWithSSOApi } = await import('../api/authService');
         loginWithSSOApi();
         // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
       } catch (error) {
@@ -288,9 +288,9 @@ export function createUserActions(
     },
     
     // Action pour l'inscription via SSO
-    registerWithSSO: () => {
+    registerWithSSO: async () => {
       try {
-        const { registerWithSSO: registerWithSSOApi } = require('../api/authService');
+        const { registerWithSSO: registerWithSSOApi } = await import('../api/authService');
         registerWithSSOApi();
         // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
       } catch (error) {
