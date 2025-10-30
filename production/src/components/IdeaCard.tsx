@@ -155,7 +155,7 @@ export function IdeaCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre */}
-          <Link to={`/idea/${latestIdea.id}`}>
+          <Link to={`/content/${latestIdea.id}`}>
             <h3 
               className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
             >
@@ -304,7 +304,7 @@ export function IdeaCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Link to={`/idea/${latestIdea.id}`}>
+            <Link to={`/content/${latestIdea.id}`}>
               <Button 
                 variant="outline"
                 size="sm"

@@ -3,11 +3,11 @@ import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 /**
  * Actions UI pour l'Entity Store
  * 
- * NOTE MIGRATION REACT ROUTER (Phase 5) :
+ * NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
  * Toutes les actions de navigation (goToTab, goToIdea, goToPost, etc.) ont été supprimées.
- * Utilisez maintenant useNavigationActions() qui utilise React Router.
+ * Utilisez maintenant useNavigationActions() qui utilise React Router avec useNavigate().
  * 
- * Ce fichier ne contient plus que les actions UI pures (onboarding, etc.)
+ * Ce fichier ne contient plus que les actions UI pures (onboarding, entrée plateforme).
  */
 export function createNavigationActions(
   store: SimpleEntityStore,
@@ -25,8 +25,7 @@ export function createNavigationActions(
       actions.setShowOnboarding(false);
     },
     
-    // Actions d'entrée de plateforme (pour compatibilité temporaire)
-    // TODO Phase 6: Migrer vers useNavigate() directement
+    // Actions d'entrée de plateforme
     enterPlatform: () => {
       actions.setHasEnteredPlatform(true);
     },

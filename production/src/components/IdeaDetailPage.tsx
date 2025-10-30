@@ -29,11 +29,13 @@ import { toast } from 'sonner@2.0.3';
 interface IdeaDetailPageProps {
   idea: Idea;
   onBack: () => void;
+  onPostClick?: (postId: string) => void;
 }
 
 export function IdeaDetailPage({ 
   idea, 
-  onBack
+  onBack,
+  onPostClick
 }: IdeaDetailPageProps) {
   // Récupération des données depuis l'Entity Store
   const {
@@ -243,11 +245,13 @@ export function IdeaDetailPage({
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {resolvedCreators.length === 1 
-                  ? resolvedCreators[0].name
-                  : resolvedCreators.length === 2
-                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
-                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 0
+                  ? 'Créateur inconnu'
+                  : resolvedCreators.length === 1 
+                    ? resolvedCreators[0].name
+                    : resolvedCreators.length === 2
+                      ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                      : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
@@ -398,6 +402,7 @@ export function IdeaDetailPage({
             currentUser={currentUser}
             allIdeas={allIdeas}
             isSupported={isSupported}
+            onPostClick={onPostClick}
           />
         </TabsContent>
       </Tabs>

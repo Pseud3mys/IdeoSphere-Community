@@ -57,8 +57,7 @@ export function useEntityStoreSimple() {
     // Idea selectors
     getAllIdeas: () => selectors.getAllIdeas(store),
     getIdeaById: (ideaId: string) => selectors.getIdeaById(store)(ideaId),
-    getSelectedIdea: () => selectors.getSelectedIdea(store),
-    getSelectedUser: () => selectors.getSelectedUser(store),
+    // NOTE PHASE 5: getSelectedIdea supprimé - utilisez getIdeaById(ideaId) avec useParams()
     getFeaturedIdeas: () => selectors.getFeaturedIdeas(store),
     getPublishedIdeas: () => selectors.getPublishedIdeas(store),
     getUserIdeas: (userId: string) => selectors.getUserIdeas(store)(userId),
@@ -67,7 +66,8 @@ export function useEntityStoreSimple() {
     // Post selectors
     getAllPosts: () => selectors.getAllPosts(store),
     getPostById: (postId: string) => selectors.getPostById(store)(postId),
-    getSelectedPost: () => selectors.getSelectedPost(store),
+    // NOTE PHASE 5: getSelectedPost supprimé - utilisez getPostById(postId) avec useParams()
+    // NOTE PHASE 5: getSelectedUser supprimé - utilisez getUserById(userId) avec useParams()
     getUserPosts: (userId: string) => selectors.getUserPosts(store)(userId),
     getPostsByIds: (postIds: string[]) => selectors.getPostsByIds(store)(postIds),
     
@@ -93,7 +93,7 @@ export function useEntityStoreSimple() {
     // Community selectors
     getAllCommunities: () => selectors.getAllCommunities(store),
     getCommunityById: (communityId: string) => selectors.getCommunityById(store)(communityId),
-    getSelectedCommunity: () => selectors.getSelectedCommunity(store),
+    // getSelectedCommunity: supprimée (Phase 6) - communityId passé via props/params
     getUserCommunities: (userId: string) => selectors.getUserCommunities(store)(userId),
     getCommunityMembership: (userId: string, communityId: string) => selectors.getCommunityMembership(store)(userId, communityId),
     isUserMemberOfCommunity: (userId: string, communityId: string) => selectors.isUserMemberOfCommunity(store)(userId, communityId),
@@ -192,6 +192,18 @@ export function useEntityStoreSimple() {
 
   // Actions simplifiées combinées
   const simpleActions = {
+    // Actions de base du store (pour manipulation directe)
+    addPost: actions.addPost,
+    setPost: actions.setPost,
+    addIdea: actions.addIdea,
+    setIdea: actions.setIdea,
+    addUser: actions.addUser,
+    updateIdea: actions.updateIdea,
+    updatePost: actions.updatePost,
+    updateUser: actions.updateUser,
+    addDiscussionTopic: actions.addDiscussionTopic,
+    setSelectedCommunityId: actions.setSelectedCommunityId,
+    
     // Actions de navigation
     ...navigationActions,
     
@@ -245,12 +257,7 @@ export function useEntityStoreSimple() {
       }
     },
     
-    /**
-     * Gère la navigation vers une version (utilise goToIdea en interne)
-     */
-    viewVersion: (versionId: string) => {
-      return navigationActions.goToIdea(versionId);
-    },
+    // NOTE: viewVersion() supprimée - utiliser useNavigationActions().goToIdea() directement
     
     /**
      * Action pour entrer dans la plateforme

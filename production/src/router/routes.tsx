@@ -9,8 +9,7 @@ import { SignupPageWrapper } from './SignupPageWrapper';
 import { DiscoveryPageWrapper } from './DiscoveryPageWrapper';
 import { MyIdeasPageWrapper } from './MyIdeasPageWrapper';
 import { CreateIdeaPageWrapper } from './CreateIdeaPageWrapper';
-import { IdeaDetailPageWrapper } from './IdeaDetailPageWrapper';
-import { PostDetailPageWrapper } from './PostDetailPageWrapper';
+import { ContentDetailPageWrapper } from './ContentDetailPageWrapper';
 import { UserProfilePageWrapper } from './UserProfilePageWrapper';
 import { UserProfilePagePublicWrapper } from './UserProfilePagePublicWrapper';
 import { CommunityDetailPageWrapper } from './CommunityDetailPageWrapper';
@@ -99,12 +98,8 @@ export const routes: RouteObject[] = [
         element: <CreateIdeaPageWrapper />,
       },
       {
-        path: 'idea/:ideaId',
-        element: <IdeaDetailPageWrapper />,
-      },
-      {
-        path: 'post/:postId',
-        element: <PostDetailPageWrapper />,
+        path: 'content/*',
+        element: <ContentDetailPageWrapper />,
       },
       {
         path: 'profile',

@@ -173,7 +173,6 @@ export function UserProfilePage({
     // Si c'est le compte actuel, déconnecter
     if (isOwnProfile) {
       actions.rawActions.setCurrentUserId(null);
-      actions.goToTab('welcome');
     }
     
     toast.success('Compte supprimé avec succès');

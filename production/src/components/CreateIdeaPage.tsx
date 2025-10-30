@@ -70,7 +70,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
       return 'idea';
     }
     // Si on a un post source prérempli, c'est qu'on veut créer un post de réponse
-    if (prefilledSourcePostId) {
+    if (sourcePost) {
       return 'post';
     }
     // Par défaut, commencer en mode post (plus simple)

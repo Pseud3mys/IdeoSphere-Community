@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Idea, Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
 import { SourceIndicatorBanner } from './create-idea/SourceIndicatorBanner';
 import { BasicIdeaForm } from './create-idea/BasicIdeaForm';
@@ -49,7 +50,8 @@ export function CreateCompleteIdea({
     getDiscussionTopicById,
     actions
   } = useEntityStoreSimple();
-
+  
+  const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
   const users = getAllUsers();
   const ideas = getAllIdeas();
@@ -192,7 +194,7 @@ Je propose de développer cette idée...` : '';
     publishIdea();
   };
 
-  const publishIdea = () => {
+  const publishIdea = async () => {
     // Séparer les sourceIdeas et sourcePosts depuis selectedParentIds
     const sourceIdeas: string[] = [];
     const sourcePosts: string[] = [];
@@ -213,7 +215,7 @@ Je propose de développer cette idée...` : '';
       sourceIdeas.push(prefilledSourceIdea);
     }
 
-    actions.publishIdea({
+    const newIdea = await actions.publishIdea({
       title: title.trim(),
       summary: summary.trim(),
       description: description.trim(),
@@ -224,6 +226,11 @@ Je propose de développer cette idée...` : '';
       sourceDiscussions: prefilledSelectedDiscussions || [], // Ajouter les discussions sources
       discussionIds: [] // Ne pas copier les discussions
     });
+    
+    // Navigate to the created idea
+    if (newIdea) {
+      navigation.goToIdea(newIdea.id);
+    }
     
     // Reset form
     setTitle('');

@@ -26,11 +26,10 @@ interface SimpleEntityStore {
   communities: Record<string, Community>;
   communityMemberships: Record<string, CommunityMembership>;
   
-  // États UI
-  activeTab: TabType;
+  // États UI (Phase 6: navigation supprimée - voir React Router)
   currentUserId: string | null;
-  selectedIdeaId: string | null;
-  selectedPostId: string | null;
+  hasEnteredPlatform: boolean;
+  showOnboarding: boolean;
   // ...
 }
 ```

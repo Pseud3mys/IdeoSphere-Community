@@ -5,14 +5,14 @@ import { users, currentUser, guestUser } from './users';
 export function getMockPosts(): Post[] {
   return [
     {
-      id: 'post-1',
+      id: 'posts/post-1',
       content: 'Il y a vraiment pas assez de bancs dans notre village... 😔 Hier ma voisine âgée a dû s\'appuyer contre un mur pour souffler en revenant des courses. On pourrait pas en installer quelques-uns ?',
       authorId: users[0].id, // Marie
       createdAt: new Date('2024-01-08T10:30:00'),
       supporters: ['1', '2', '3', 'current', 'guest'],
       tags: ['vie-de-quartier', 'vieillesse'],
-      derivedIdeas: ['1'], // L'idée des bancs vient de ce post
-      derivedPosts: ['post-2', 'post-3'], // Autres posts qui en parlent
+      derivedIdeas: ['ideas/1'], // L'idée des bancs vient de ce post
+      derivedPosts: ['posts/post-2', 'posts/post-3'], // Autres posts qui en parlent
       sourcePosts: [], // Aucun post source
       replies: [
         {
@@ -32,15 +32,15 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-2',
+      id: 'posts/post-2',
       content: 'En parlant de bancs... à l\'arrêt de bus aussi ce serait bien ! Surtout quand il pleut et qu\'on doit attendre debout 🚌☔',
       authorId: users[4].id, // Thomas
       createdAt: new Date('2024-01-09T16:45:00'),
       supporters: ['1', '2', '4', 'current'],
       tags: ['vie-de-quartier'],
-      derivedIdeas: ['1'], // Contribue à l'idée des bancs
+      derivedIdeas: ['ideas/1'], // Contribue à l'idée des bancs
       derivedPosts: [],
-      sourcePosts: ['post-1'], // Suite du post précédent
+      sourcePosts: ['posts/post-1'], // Suite du post précédent
       replies: [
         {
           id: 'reply-3',
@@ -59,15 +59,15 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-3',
+      id: 'posts/post-3',
       content: 'J\'ai repensé aux bancs... place du village aussi non ? Histoire que ce soit un vrai lieu de rencontre ! Les anciens pourraient s\'y retrouver ☕',
       authorId: users[3].id, // Emma
       createdAt: new Date('2024-01-10T19:00:00'),
       supporters: ['1', '3', '4', 'current'],
       tags: ['vie-de-quartier'],
-      derivedIdeas: ['1'], // Contribue à l'idée des bancs
+      derivedIdeas: ['ideas/1'], // Contribue à l'idée des bancs
       derivedPosts: [],
-      sourcePosts: ['post-1'], // Suite de la discussion sur les bancs
+      sourcePosts: ['posts/post-1'], // Suite de la discussion sur les bancs
       replies: [
         {
           id: 'reply-5',
@@ -86,14 +86,14 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-4',
+      id: 'posts/post-4',
       content: 'J\'ai encore jeté mon grille-pain ce matin... 😔 Ça m\'embête de jeter alors que Pierre pourrait sûrement le réparer ! On devrait organiser des moments pour bricoler ensemble non ?',
       authorId: users[4].id, // Thomas
       createdAt: new Date('2024-01-12T16:45:00'),
       supporters: ['1', '2', '4', 'current'],
       tags: ['solidarité'],
-      derivedIdeas: ['2'], // L'idée du café-réparation vient de ce post
-      derivedPosts: ['post-9'],
+      derivedIdeas: ['ideas/2'], // L'idée du café-réparation vient de ce post
+      derivedPosts: ['posts/post-9'],
       sourcePosts: [], // Aucun post source
       replies: [
         {
@@ -113,14 +113,14 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-5',
+      id: 'posts/post-5',
       content: 'Hier j\'avais des courses lourdes et j\'aurais bien eu besoin d\'un coup de main... 🛒 En même temps, moi je peux aider avec l\'informatique ! On pourrait pas s\'organiser pour s\'entraider ?',
       authorId: users[2].id, // Sophie
       createdAt: new Date('2024-01-18T19:00:00'),
       supporters: ['1', '3', '4', 'current'],
       tags: ['solidarité'],
-      derivedIdeas: ['3'], // L'idée d'échange de services vient de ce post
-      derivedPosts: ['post-10'],
+      derivedIdeas: ['ideas/3'], // L'idée d'échange de services vient de ce post
+      derivedPosts: ['posts/post-10'],
       sourcePosts: [], // Aucun post source
       replies: [
         {
@@ -140,14 +140,14 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-6',
+      id: 'posts/post-6',
       content: 'Sérieusement, les nids de poule rue des Écoles... 🕳️ J\'ai failli perdre une jante ce matin ! Et celui devant l\'école qui fait une mare à chaque pluie, c\'est dangereux pour les gamins !',
       authorId: users[1].id, // Pierre
       createdAt: new Date('2024-01-16T08:15:00'),
       supporters: ['1', '2', 'current'],
       tags: ['vie-de-quartier'],
-      derivedIdeas: ['4'], // L'idée sur les nids de poule vient de ce post
-      derivedPosts: ['post-11'],
+      derivedIdeas: ['ideas/4'], // L'idée sur les nids de poule vient de ce post
+      derivedPosts: ['posts/post-11'],
       sourcePosts: [], // Aucun post source
       replies: [
         {
@@ -167,14 +167,14 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-7',
+      id: 'posts/post-7',
       content: 'Le stationnement devant l\'école le matin... 😩 C\'est l\'anarchie totale ! Les gamins qui courent entre les voitures, les parents qui s\'engueulent... Il faut qu\'on s\'organise !',
       authorId: users[3].id, // Emma
       createdAt: new Date('2024-01-22T08:45:00'),
       supporters: ['2', '3', 'current'],
       tags: ['jeunesse'],
-      derivedIdeas: ['5'], // L'idée sur le stationnement école vient de ce post
-      derivedPosts: ['post-8'],
+      derivedIdeas: ['ideas/5'], // L'idée sur le stationnement école vient de ce post
+      derivedPosts: ['posts/post-8'],
       sourcePosts: [], // Aucun post source
       replies: [
         {
@@ -194,15 +194,15 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-8',
+      id: 'posts/post-8',
       content: 'Suite au post d\'Emma sur l\'école... On pourrait pas faire des places marquées au sol ? Et peut-être du covoiturage organisé entre parents du même quartier ? 🚸',
       authorId: users[0].id, // Marie
       createdAt: new Date('2024-01-23T17:30:00'),
       supporters: ['1', '3', '4', 'current'],
       tags: ['jeunesse'],
-      derivedIdeas: ['5'], // Contribue à l'idée sur le stationnement école
+      derivedIdeas: ['ideas/5'], // Contribue à l'idée sur le stationnement école
       derivedPosts: [],
-      sourcePosts: ['post-7'], // Suite du post d'Emma
+      sourcePosts: ['posts/post-7'], // Suite du post d'Emma
       replies: [
         {
           id: 'reply-15',
@@ -214,7 +214,7 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-9',
+      id: 'posts/post-9',
       content: 'Suite à l\'idée de Thomas pour le repair café : qui a des compétences particulières à partager ? 🛠️ Histoire qu\'on s\'organise par domaines !',
       authorId: users[1].id, // Pierre
       createdAt: new Date('2024-01-28T15:45:00'),
@@ -222,7 +222,7 @@ export function getMockPosts(): Post[] {
       tags: ['associatif'],
       derivedIdeas: [],
       derivedPosts: [],
-      sourcePosts: ['post-4'],
+      sourcePosts: ['posts/post-4'],
       replies: [
         {
           id: 'reply-16',
@@ -234,7 +234,7 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-10',
+      id: 'posts/post-10',
       content: 'J\'adore l\'idée d\'entraide de Sophie ! 🤝 Moi je peux aider pour le jardinage, et Pierre pourrait faire de l\'aide informatique... enfin l\'inverse ! 😅',
       authorId: users[0].id, // Marie
       createdAt: new Date('2024-02-01T09:20:00'),
@@ -242,7 +242,7 @@ export function getMockPosts(): Post[] {
       tags: ['solidarité'],
       derivedIdeas: [],
       derivedPosts: [],
-      sourcePosts: ['post-5'],
+      sourcePosts: ['posts/post-5'],
       replies: [
         {
           id: 'reply-17',
@@ -254,7 +254,7 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-11',
+      id: 'posts/post-11',
       content: 'Les nids de poule c\'est vraiment un fléau... Mais en plus celui devant chez Pierre fait un bruit terrible quand les voitures le contournent ! Les voisins n\'en peuvent plus 😬',
       authorId: users[0].id, // Marie
       createdAt: new Date('2024-01-30T13:10:00'),
@@ -262,7 +262,7 @@ export function getMockPosts(): Post[] {
       tags: ['vie-de-quartier'],
       derivedIdeas: [],
       derivedPosts: [],
-      sourcePosts: ['post-6'],
+      sourcePosts: ['posts/post-6'],
       replies: [
         {
           id: 'reply-18',
@@ -274,7 +274,7 @@ export function getMockPosts(): Post[] {
       ]
     },
     {
-      id: 'post-12',
+      id: 'posts/post-12',
       content: 'Toutes ces idées d\'amélioration du village me donnent envie ! 😊 On sent qu\'il y a une vraie dynamique qui se crée. Vivement qu\'on concrétise tout ça !',
       authorId: users[3].id, // Emma
       createdAt: new Date('2024-02-03T17:30:00'),

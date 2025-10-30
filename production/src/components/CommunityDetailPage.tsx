@@ -40,12 +40,13 @@ const RoleLabels = {
 };
 
 interface CommunityDetailPageProps {
+  communityId?: string;  // ID de la communauté à afficher
   onBack?: () => void;
 }
 
-export function CommunityDetailPage({ onBack }: CommunityDetailPageProps = {}) {
+export function CommunityDetailPage({ communityId, onBack }: CommunityDetailPageProps = {}) {
   const {
-    getSelectedCommunity,
+    getCommunityById,
     getCommunityMembers,
     getCurrentUser,
     isUserMemberOfCommunity,
@@ -57,7 +58,7 @@ export function CommunityDetailPage({ onBack }: CommunityDetailPageProps = {}) {
   
   const [activeTab, setActiveTab] = useState('feed');
   
-  const community = getSelectedCommunity();
+  const community = communityId ? getCommunityById(communityId) : null;
   const currentUser = getCurrentUser();
   
   if (!community) {

@@ -7,6 +7,9 @@ import { useEntityStoreSimple } from './useEntityStoreSimple';
  * 
  * Phase 3: Ce hook fournit des fonctions de navigation qui utilisent React Router
  * au lieu du système activeTab
+ * 
+ * Note : Utilise maintenant le format d'URL unifié /content/:id
+ * où l'ID contient le préfixe (ideas/123, posts/456)
  */
 export function useNavigationActions() {
   const navigate = useNavigate();
@@ -63,7 +66,8 @@ export function useNavigationActions() {
         console.log(`✅ Idée ${ideaId} chargée avec succès`);
         
         // 5. Naviguer vers la page de détail avec React Router
-        navigate(`/idea/${ideaId}`);
+        // Utiliser le format unifié /content/:id avec l'ID préfixé
+        navigate(`/content/${ideaId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
       }
@@ -89,7 +93,8 @@ export function useNavigationActions() {
         console.log(`✅ Post ${postId} chargé avec succès`);
         
         // 3. Naviguer vers la page de détail avec React Router
-        navigate(`/post/${postId}`);
+        // Utiliser le format unifié /content/:id avec l'ID préfixé
+        navigate(`/content/${postId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
       }

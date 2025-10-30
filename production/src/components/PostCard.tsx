@@ -158,7 +158,7 @@ export function PostCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre généré à partir du contenu */}
-          <Link to={`/post/${latestPost.id}`}>
+          <Link to={`/content/${latestPost.id}`}>
             <h3 
               className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
             >
@@ -309,7 +309,7 @@ export function PostCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Link to={`/post/${latestPost.id}`}>
+            <Link to={`/content/${latestPost.id}`}>
               <Button 
                 variant="outline"
                 size="sm"

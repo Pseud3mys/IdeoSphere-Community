@@ -9,9 +9,15 @@ import { Post } from '../types';
  * PostDetailPageWrapper
  * Wrapper pour PostDetailPage qui utilise useParams() pour récupérer l'ID depuis l'URL
  * et charge les données du post depuis le store/API
+ * 
+ * Note : Supporte plusieurs formats pour la transition :
+ * - /content/posts/123 (format unifié avec splat *)
+ * - /post/posts/123 (ancien format avec contentId)
  */
 export function PostDetailPageWrapper() {
-  const { postId } = useParams<{ postId: string }>();
+  // Récupérer l'ID depuis * (splat), contentId ou postId (pour supporter tous les formats)
+  const params = useParams<{ postId?: string; contentId?: string; '*'?: string }>();
+  const postId = params['*'] || params.contentId || params.postId;
   const navigate = useNavigate();
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
@@ -29,12 +35,13 @@ export function PostDetailPageWrapper() {
       setIsLoading(true);
 
       try {
+        const { fetchPostDetails } = await import('../api/contentService');
+        
         // 1. Vérifier si le post est déjà dans le store
         let postData = getPostById(postId);
 
         // 2. Si pas dans le store, charger depuis l'API
         if (!postData) {
-          const { fetchPostDetails } = await import('../api/contentService');
           const apiPostDetails = await fetchPostDetails(postId);
 
           if (!apiPostDetails) {
@@ -44,12 +51,22 @@ export function PostDetailPageWrapper() {
           }
 
           // Ajouter au store
-          actions.addPost(apiPostDetails);
-
-          // Récupérer le post depuis le store
+          actions.setPost(apiPostDetails);
           postData = getPostById(postId);
         }
 
+        // 3. Charger les posts référencés (sourcePosts) - toujours
+        if (postData && postData.sourcePostIds && postData.sourcePostIds.length > 0) {
+          for (const sourcePostId of postData.sourcePostIds) {
+            const sourcePost = await fetchPostDetails(sourcePostId);
+            if (sourcePost) {
+              actions.setPost(sourcePost);
+            }
+          }
+        }
+
+        // 4. Récupérer le post final depuis le store
+        postData = getPostById(postId);
         setPost(postData || null);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);

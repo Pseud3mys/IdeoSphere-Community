@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Idea, User } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -45,6 +46,7 @@ export function IdeaVersionsTab({
 }: IdeaVersionsTabProps) {
   // Utilisation du store pour les actions
   const { actions, getUserById, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   const allPosts = getAllPosts();
   const allDiscussions = getAllDiscussionTopics();
 
@@ -119,7 +121,7 @@ export function IdeaVersionsTab({
               if (!parentIdea) return null;
               
               return (
-                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.viewVersion(parentId)}>
+                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => navigation.goToIdea(parentId)}>
                   <div className="flex-shrink-0">
                     <GitBranch className="w-4 h-4 text-purple-600" />
                   </div>
@@ -232,7 +234,7 @@ export function IdeaVersionsTab({
                       <h4 
                         className="font-medium hover:text-primary cursor-pointer"
                         onClick={() => {
-                          actions.viewVersion(versionIdea.id);
+                          navigation.goToIdea(versionIdea.id);
                         }}
                       >
                         {versionIdea.title}
@@ -319,7 +321,7 @@ export function IdeaVersionsTab({
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        actions.viewVersion(versionIdea.id);
+                        navigation.goToIdea(versionIdea.id);
                       }}
                       className="flex items-center space-x-1"
                     >

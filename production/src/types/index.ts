@@ -190,4 +190,5 @@ export interface CommunityMembership {
   isActive: boolean;
 }
 
-export type TabType = 'welcome' | 'discovery' | 'my-ideas' | 'create-idea' | 'create-post' | 'drafts' | 'communities' | 'profile' | 'idea-detail' | 'post-detail' | 'user-profile' | 'community-detail' | 'signup' | 'about' | 'how-it-works' | 'faq' | 'privacy' | 'terms';
+// NOTE MIGRATION REACT ROUTER (Phase 6) :
+// TabType supprimé - navigation maintenant gérée par React Router avec URLs

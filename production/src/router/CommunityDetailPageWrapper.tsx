@@ -1,34 +1,20 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { CommunityDetailPage } from '../components/CommunityDetailPage';
-import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 /**
  * CommunityDetailPageWrapper
  * Wrapper pour CommunityDetailPage qui utilise useParams() pour récupérer l'ID depuis l'URL
- * et met à jour le store pour que CommunityDetailPage fonctionne correctement
+ * et le passe directement en prop au composant
  * 
- * Note: CommunityDetailPage utilise getSelectedCommunity() qui lit store.selectedCommunityId
- * Ce wrapper met à jour ce state pour assurer la compatibilité
+ * Phase 6 : Plus besoin de store.selectedCommunityId - l'ID est passé directement via props
  */
 export function CommunityDetailPageWrapper() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
-  const { actions } = useEntityStoreSimple();
 
-  // Mettre à jour selectedCommunityId dans le store
-  useEffect(() => {
-    if (!communityId) {
-      navigate('/communities');
-      return;
-    }
-
-    // Mettre à jour le store pour que CommunityDetailPage puisse fonctionner
-    actions.setSelectedCommunityId(communityId);
-  }, [communityId, navigate, actions]);
-
-  // Si pas de communityId, ne rien afficher (la redirection se fera dans useEffect)
+  // Si pas de communityId, rediriger
   if (!communityId) {
+    navigate('/communities');
     return null;
   }
 
@@ -37,5 +23,5 @@ export function CommunityDetailPageWrapper() {
     navigate('/communities');
   };
 
-  return <CommunityDetailPage onBack={handleBack} />;
+  return <CommunityDetailPage communityId={communityId} onBack={handleBack} />;
 }

@@ -2,14 +2,16 @@
 
 Application web collaborative pour la collecte et discussion d'idées, fonctionnant comme un "système nerveux" permettant aux meilleures idées d'émerger naturellement grâce à l'intelligence collective.
 
+---
+
 ## Architecture Générale
 
-IdeoSphere suit une **architecture unidirectionnelle stricte** :
+IdeoSphere suit une **architecture unidirectionnelle stricte** basée sur React Router v6 :
 
 ```
 Composants React
     ↓
-useEntityStoreSimple (Hook)
+React Router (Navigation) + useEntityStoreSimple (Données)
     ↓
 API Services
     ↓
@@ -18,10 +20,13 @@ Données Mockées
 
 ### Principes Fondamentaux
 
-1. **Source Unique de Vérité** : Le `SimpleEntityStore` est l'unique source de données
+1. **Source Unique de Vérité** : 
+   - **Navigation** : URLs (React Router)
+   - **Données** : SimpleEntityStore
 2. **Communication Stricte** : Aucune communication directe entre composants et données mockées
 3. **Chargement Progressif** : Les données sont chargées selon les besoins (feed minimal, puis détails à la demande)
 4. **Mutations Contrôlées** : Toutes les modifications passent par des actions du store
+5. **Deep Linking** : Toutes les pages sont accessibles via URL directe
 
 ### Distinction Posts vs Projets
 
@@ -70,13 +75,13 @@ actions.enterPlatform() charge le feed minimal
 
 ### 2. Navigation vers une Idée
 ```
-Utilisateur clique sur une carte
+Utilisateur clique sur une carte (<Link to={`/content/${ideaId}`}>)
     ↓
-actions.goToIdea(ideaId)
+React Router navigue vers /content/ideas/123
     ↓
-fetchIdeaDetails() charge les détails complets
+IdeaDetailPageWrapper charge les détails
     ↓
-fetchDiscussions() charge les discussions
+fetchIdeaDetails() + fetchDiscussions()
     ↓
 Store mis à jour → Composant re-rendu
 ```
@@ -94,15 +99,17 @@ Appel API en arrière-plan
 Confirmation ou rollback
 ```
 
-### 4. Changement d'Onglet
+### 4. Navigation entre pages
 ```
-Utilisateur change d'onglet
+Utilisateur clique sur un onglet (<Link to="/my-ideas">)
     ↓
-loadTabData() vérifie si déjà chargé
+React Router navigue vers /my-ideas
+    ↓
+MyIdeasPageWrapper vérifie si données chargées
     ↓
 Si non chargé : appel API pour données manquantes
     ↓
-Store mis à jour → Onglet affiche les données
+Store mis à jour → Page affiche les données
 ```
 
 ## Règles de Développement
@@ -176,20 +183,46 @@ const userIdeas = ideas.filter(idea =>
 ## Technologies
 
 - **React** : Framework UI
+- **React Router v6** : Navigation et routing
 - **TypeScript** : Typage statique
 - **Tailwind CSS v4** : Styles
-- **Zustand** (via SimpleEntityStore) : Gestion d'état
+- **Context API** (via SimpleEntityStore) : Gestion d'état
 - **shadcn/ui** : Composants UI
 
 ## Démarrage
 
 ```bash
+# Installation des dépendances
 npm install
+
+# Lancer le serveur de développement
 npm run dev
+```
+
+**Note importante** : React Router doit être installé :
+```bash
+npm install react-router-dom
 ```
 
 ## Documentation Détaillée
 
-- [Architecture du Store](./store/README.md)
-- [Guide des Hooks](./hooks/README.md)
-- [Services API](./api/README.md)
+### Architecture
+- [Architecture Générale](./ARCHITECTURE.md) - Vue d'ensemble complète
+- [Architecture du Store](./store/README.md) - Gestion de l'état
+- [Guide des Hooks](./hooks/README.md) - Interface avec le store
+- [Services API](./api/README.md) - Couche de services
+
+### Routing et Navigation
+- [Guide du Routing](./docs/ROUTING.md) ⭐ - Guide complet React Router
+- [Migration React Router](./MIGRATION_REACT_ROUTER_SUMMARY.md) - Récapitulatif de la migration
+- [Plan de Migration](./PLAN_MIGRATION_REACT_ROUTER.md) - Détails techniques
+
+### Fonctionnalités
+- [Feed Intelligent](./docs/INTELLIGENT_FEED.md) - Algorithme du fil d'actualité
+- [Flux de Données](./docs/DATA_FLOW.md) - Circulation des données
+- [Patterns API](./docs/API_CALLS_PATTERN.md) - Conventions d'appel
+
+### Autres
+- [Guide Rapide](./QUICKSTART.md) - Démarrage rapide
+- [Changelog](./CHANGELOG.md) - Historique des modifications
+- [Index Documentation](./DOCUMENTATION_INDEX.md) - Vue d'ensemble des docs

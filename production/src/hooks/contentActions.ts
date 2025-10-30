@@ -362,6 +362,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'post'
       });
+      // Naviguer vers la page de création de post
+      navigationActions.goToCreatePost();
     },
     
     // Promouvoir un post en idée
@@ -372,6 +374,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'idea'
       });
+      // Naviguer vers la page de création d'idée
+      navigationActions.goToCreateIdea();
     },
     
     // Actions d'onboarding

@@ -228,8 +228,8 @@ export const transformComment = (raw: RawComment, usersMap: Map<string, User>): 
 export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post => {
 
   return {
-    id: raw._id,
-    type: 'post', // Ajoutez cette ligne
+    id: raw._id, // sinon url bug...
+    type: 'post',
     content: raw.content || raw.title || '',
     authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),
@@ -251,8 +251,8 @@ export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea =
   const creators = (raw.creators || []).map(id => usersMap.get(id) || { ...unknownUser, id });
 
   return {
-    id: raw._id,
-    type: 'idea', // Ajoutez cette ligne
+    id: raw._id, // sinon url bug...
+    type: 'idea',
     title: raw.title || 'Sans titre',
     summary: raw.summary || (raw.description || '').slice(0, 150),
     description: raw.description || '',

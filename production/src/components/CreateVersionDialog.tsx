@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, DiscussionTopic } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -34,7 +35,8 @@ export function CreateVersionDialog({
     getUserById,
     actions 
   } = useEntityStoreSimple();
-
+  
+  const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
   // Récupérer seulement les discussions liées à cette idée
   const availableDiscussions = idea ? getDiscussionsForIdea(idea.id) : [];
@@ -64,7 +66,11 @@ export function CreateVersionDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Préparer les données pré-remplies
     actions.createVersionFromIdea(idea.id, selectedDiscussions);
+    
+    // Naviguer vers la page de création d'idée
+    navigation.goToCreateIdea();
     
     // Reset form
     setSelectedDiscussions([]);

@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { LoginDialog } from './auth/LoginDialog';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { fetchHomePageStats, HomePageData } from '../api/feedService';
 import logoImage from '../assets/logo.png';
 import { 
@@ -62,6 +63,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
   // Utiliser l'Entity Store uniquement pour les actions (pas pour les données)
   const { actions, getUserById } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   // Charger les données de manière autonome
   useEffect(() => {
@@ -125,12 +127,16 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     
     // 3. Publier le post avec l'utilisateur temporaire
     // ✅ IMPORTANT: Passer explicitement l'ID de l'utilisateur temporaire
-    // publishPost navigue automatiquement vers la page de détail du post
-    await actions.publishPost({
+    const newPost = await actions.publishPost({
       content: quickIdea,
       location: guestLocation.trim() || undefined,
       authorId: tempUser.id // ✅ Utiliser l'utilisateur temporaire qu'on vient de créer
     });
+    
+    // Navigate to the created post
+    if (newPost) {
+      navigation.goToPost(newPost.id);
+    }
   };
 
   const handleAddLocation = () => {
