@@ -78,7 +78,8 @@ export function MyIdeasPage({
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
-    getMyContributions
+    getMyContributions,
+    getUserById
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();

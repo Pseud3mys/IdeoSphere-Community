@@ -76,7 +76,8 @@ Tous les documents du projet organisés par catégorie.
 ### Plans Globaux
 | Document | Description | Statut |
 |----------|-------------|--------|
-| `/PLAN_MIGRATION_REACT_ROUTER.md` | Migration React Router (7 phases) | 5/7 ✅ |
+| `/PLAN_MIGRATION_REACT_ROUTER.md` | Migration React Router (7 phases) | ✅ Complété |
+| `/PLAN_MIGRATION_REFACTORING.md` | Migration Refactoring & Standardisation ⭐ | 📋 À valider |
 | `/PLAN_MIGRATION_AUTHOR_IDS.md` | Migration author → authorId | ✅ Complété |
 
 ### Tests et Validation
@@ -198,6 +199,7 @@ Directives et guidelines du projet
 ### Par mot-clé
 
 **Migration** → STATUS_MIGRATION.md, PLAN_MIGRATION_REACT_ROUTER.md  
+**Refactoring** → PLAN_MIGRATION_REFACTORING.md ⭐  
 **Bugs** → HOTFIX_PHASE_5.md, RESUME_HOTFIX.md  
 **Architecture** → ARCHITECTURE.md, store/README.md  
 **API** → api/README.md, API_RESPONSE_TYPES.md  
@@ -206,6 +208,8 @@ Directives et guidelines du projet
 **Tests** → TESTS_POST_HOTFIX.md, PHASE_4_TESTS.md  
 **Phase 6** → PHASE_6_READY.md  
 **idUtils** → utils/README.md, HOTFIX_PHASE_5.md  
+**Cache** → PLAN_MIGRATION_REFACTORING.md (Phase 3)  
+**Navigation** → PLAN_MIGRATION_REFACTORING.md (Phase 4)  
 
 ---
 
@@ -220,18 +224,22 @@ Ces documents sont conservés pour référence historique mais ne doivent plus �
 
 ## 🆕 Documents Récents (30 oct 2025)
 
+### Refactoring & Standardisation (30 oct 2025)
+
+1. `/PLAN_MIGRATION_REFACTORING.md` ⭐⭐⭐ - Plan de refactoring en 7 phases
+
 ### Phase 7 - Finalisation (30 oct 2025)
 
-1. `/MIGRATION_COMPLETE.md` ⭐ - Récapitulatif final migration
-2. `/MIGRATION_INDEX.md` ⭐ - Index complet migration
-3. `/MIGRATION_AUDIT_FINAL.md` - Audit de complétion
-4. `/MIGRATION_REACT_ROUTER_SUMMARY.md` - Vue d'ensemble
-5. `/docs/ROUTING.md` ⭐ - Guide complet routing
-6. `/MIGRATION_PHASE_7_TESTS.md` - 20 tests exhaustifs
-7. `/MIGRATION_PHASE_6_COMPLETE.md` - Phase 6 complétée
-8. `/MIGRATION_PHASE_7_COMPLETE.md` - Phase 7 complétée
-9. `/README.md` - Mis à jour pour React Router
-10. `/CHANGELOG.md` - Mis à jour Phases 6 & 7
+2. `/MIGRATION_COMPLETE.md` ⭐ - Récapitulatif final migration
+3. `/MIGRATION_INDEX.md` ⭐ - Index complet migration
+4. `/MIGRATION_AUDIT_FINAL.md` - Audit de complétion
+5. `/MIGRATION_REACT_ROUTER_SUMMARY.md` - Vue d'ensemble
+6. `/docs/ROUTING.md` ⭐ - Guide complet routing
+7. `/MIGRATION_PHASE_7_TESTS.md` - 20 tests exhaustifs
+8. `/MIGRATION_PHASE_6_COMPLETE.md` - Phase 6 complétée
+9. `/MIGRATION_PHASE_7_COMPLETE.md` - Phase 7 complétée
+10. `/README.md` - Mis à jour pour React Router
+11. `/CHANGELOG.md` - Mis à jour Phases 6 & 7
 
 ### Phases précédentes
 

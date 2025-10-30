@@ -126,28 +126,31 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
   // Générer le QR code quand le dialog s'ouvre
   useEffect(() => {
     if (isOpen && canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, contentUrl, {
-        width: 200,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
-        },
-      }).catch(err => {
-        console.error('Erreur lors de la génération du QR code:', err);
-      });
+      // Petit délai pour s'assurer que le canvas est bien rendu dans le DOM
+      const timer = setTimeout(() => {
+        if (canvasRef.current) {
+          QRCode.toCanvas(canvasRef.current, contentUrl, {
+            width: 200,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            },
+          }).catch(err => {
+            console.error('Erreur lors de la génération du QR code:', err);
+          });
+        }
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
   }, [isOpen, contentUrl]);
 
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div onClick={handleOpen}>
+      <DialogTrigger asChild>
         {children}
-      </div>
+      </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -162,10 +165,12 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
         <div className="space-y-6">
           {/* QR Code */}
           <div className="text-center space-y-4">
-            <div className="mx-auto w-52 h-52 bg-white p-3 rounded-lg border-2 border-gray-200 shadow-sm">
+            <div className="mx-auto w-52 h-52 bg-white p-3 rounded-lg border-2 border-gray-200 shadow-sm flex items-center justify-center">
               <canvas 
                 ref={canvasRef} 
-                className="w-full h-full"
+                width={200}
+                height={200}
+                className="max-w-full max-h-full"
                 style={{ imageRendering: 'pixelated' }}
               />
             </div>
