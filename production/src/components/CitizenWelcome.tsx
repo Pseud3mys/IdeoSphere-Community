@@ -26,8 +26,9 @@ import {
 
 interface CitizenWelcomeProps {
   onEnterPlatform: () => void;
-  onEnterPlatformWithTempUser: () => Promise<void>; // Nouvelle fonction pour entrer avec utilisateur temporaire
-  onNavigateToCreateIdea: () => void; // Nouvelle action pour diriger vers la création d'idée
+  onEnterPlatformWithTempUser: () => Promise<void>;
+  onNavigateToCreateIdea: () => void;
+  onNavigateToHowItWorks?: () => void; // Navigation vers la page "Comment ça marche"
   onLogin: (email: string, password: string) => Promise<boolean>;
   onSocialLogin: (provider: string) => Promise<boolean>;
   onSignup: (userData: {
@@ -47,7 +48,7 @@ interface CitizenWelcomeProps {
   onRegisterSSO?: () => void;
 }
 
-export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
+export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onNavigateToHowItWorks, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
@@ -213,7 +214,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Button 
                 variant="ghost" 
-                onClick={() => actions.goToTab('how-it-works')}
+                onClick={onNavigateToHowItWorks}
                 className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
               >
                 Comment ça marche ?

@@ -31,7 +31,7 @@ interface DiscoveryPageProps {
   onLike: (postId: string) => void;
   onSupport: (ideaId: string) => void;
   onPromoteToIdea: (postId: string) => void;
-  // Removed unused prop: showNewUserTips
+  onCreateContent?: () => void; // Navigation vers la création de contenu
   onIgnoreIdea?: (ideaId: string) => void;
   onReportIdea?: (ideaId: string) => void;
   onIgnorePost?: (postId: string) => void;
@@ -47,7 +47,7 @@ export function DiscoveryPage({
   onLike,
   onSupport,
   onPromoteToIdea,
-  // Removed unused param: showNewUserTips
+  onCreateContent,
   onIgnoreIdea,
   onReportIdea,
   onIgnorePost,
@@ -469,14 +469,14 @@ export function DiscoveryPage({
               <Button 
                 variant="outline"
                 className="rounded-full flex items-center space-x-1"
-                onClick={() => actions.goToTab('create')}
+                onClick={onCreateContent}
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Poster</span>
               </Button>
               <Button 
                 className="rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                onClick={() => actions.goToTab('create')}
+                onClick={onCreateContent}
               >
                 <Lightbulb className="w-4 h-4 mr-2" />
                 Créer une idée

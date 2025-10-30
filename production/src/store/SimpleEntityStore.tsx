@@ -13,13 +13,12 @@ interface SimpleEntityStore {
   communityMemberships: Record<string, CommunityMembership>;
   
   // États UI
-  activeTab: TabType;
+  // NOTE MIGRATION REACT ROUTER (Phase 5) :
+  // - activeTab, selectedIdeaId, selectedPostId, selectedUserId supprimés (maintenant dans l'URL)
+  // - Seuls les états UI purs sont conservés
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
-  selectedIdeaId: string | null;
-  selectedPostId: string | null;
-  selectedUserId: string | null;
-  selectedCommunityId: string | null;
+  selectedCommunityId: string | null; // Temporaire - sera migré en Phase 6
   currentUserId: string | null;
   
   // États temporaires
@@ -72,13 +71,11 @@ interface SimpleEntityActions {
   updateCommunityMembership: (membershipId: string, updates: Partial<CommunityMembership>) => void;
   
   // Actions UI
-  setActiveTab: (tab: TabType) => void;
+  // NOTE MIGRATION REACT ROUTER (Phase 5) :
+  // Actions supprimées : setActiveTab, setSelectedIdeaId, setSelectedPostId, setSelectedUserId
   setHasEnteredPlatform: (entered: boolean) => void;
   setShowOnboarding: (show: boolean) => void;
-  setSelectedIdeaId: (id: string | null) => void;
-  setSelectedPostId: (id: string | null) => void;
-  setSelectedUserId: (id: string | null) => void;
-  setSelectedCommunityId: (id: string | null) => void;
+  setSelectedCommunityId: (id: string | null) => void; // Temporaire
   setCurrentUserId: (id: string | null) => void;
   
   // Actions temporaires
@@ -130,12 +127,8 @@ const createInitialStore = (): SimpleEntityStore => ({
   discussionTopics: {},
   communities: {},
   communityMemberships: {},
-  activeTab: 'welcome',
   hasEnteredPlatform: false,
   showOnboarding: false,
-  selectedIdeaId: null,
-  selectedPostId: null,
-  selectedUserId: null,
   selectedCommunityId: null,
   currentUserId: null,
   discussionPosts: {},
@@ -421,12 +414,9 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // UI Actions
-    setActiveTab: (tab) => setStore(prev => ({ ...prev, activeTab: tab })),
+    // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
     setHasEnteredPlatform: (entered) => setStore(prev => ({ ...prev, hasEnteredPlatform: entered })),
     setShowOnboarding: (show) => setStore(prev => ({ ...prev, showOnboarding: show })),
-    setSelectedIdeaId: (id) => setStore(prev => ({ ...prev, selectedIdeaId: id })),
-    setSelectedPostId: (id) => setStore(prev => ({ ...prev, selectedPostId: id })),
-    setSelectedUserId: (id) => setStore(prev => ({ ...prev, selectedUserId: id })),
     setSelectedCommunityId: (id) => setStore(prev => ({ ...prev, selectedCommunityId: id })),
     setCurrentUserId: (id) => setStore(prev => ({ ...prev, currentUserId: id })),
 

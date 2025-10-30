@@ -39,7 +39,11 @@ const RoleLabels = {
   member: 'Membre'
 };
 
-export function CommunityDetailPage() {
+interface CommunityDetailPageProps {
+  onBack?: () => void;
+}
+
+export function CommunityDetailPage({ onBack }: CommunityDetailPageProps = {}) {
   const {
     getSelectedCommunity,
     getCommunityMembers,
@@ -61,14 +65,16 @@ export function CommunityDetailPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-muted-foreground">Communauté non trouvée.</p>
-          <Button 
-            variant="outline" 
-            onClick={() => actions.goToTab('communities')}
-            className="mt-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux communautés
-          </Button>
+          {onBack && (
+            <Button 
+              variant="outline" 
+              onClick={onBack}
+              className="mt-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour aux communautés
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -113,16 +119,18 @@ export function CommunityDetailPage() {
           />
         )}
         
-        <div className="absolute top-4 left-4">
-          <Button 
-            variant="secondary" 
-            size="sm"
-            onClick={() => actions.goToTab('communities')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
-        </div>
+        {onBack && (
+          <div className="absolute top-4 left-4">
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={onBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Informations principales */}

@@ -18,7 +18,7 @@ export function createUserActions(
       if (prefilledData) {
         actions.setPrefilledSignupData(prefilledData);
       }
-      actions.setActiveTab('signup');
+      // Note: Navigation is now handled by the caller using useNavigate()
     },
     
     createUserAccount: async (userData: {

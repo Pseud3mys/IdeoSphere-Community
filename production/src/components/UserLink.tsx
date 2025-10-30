@@ -1,5 +1,5 @@
+import { Link } from 'react-router-dom';
 import { User } from '../types';
-import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { validateUser } from '../utils/userValidation';
 
 interface UserLinkProps {
@@ -9,8 +9,6 @@ interface UserLinkProps {
 }
 
 export function UserLink({ user, className = '', children }: UserLinkProps) {
-  const { actions } = useEntityStoreSimple();
-
   // Validation de l'utilisateur
   const validUser = validateUser(user as User);
 
@@ -19,18 +17,13 @@ export function UserLink({ user, className = '', children }: UserLinkProps) {
     return <span className={className}>{children || 'Utilisateur inconnu'}</span>;
   }
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    actions.goToUser(validUser.id);
-  };
-
   return (
-    <button 
-      onClick={handleClick}
-      className={`text-left hover:text-primary transition-colors cursor-pointer ${className}`}
+    <Link
+      to={`/user/${validUser.id}`}
+      className={`hover:text-primary transition-colors ${className}`}
+      onClick={(e) => e.stopPropagation()}
     >
       {children || validUser.name}
-    </button>
+    </Link>
   );
 }

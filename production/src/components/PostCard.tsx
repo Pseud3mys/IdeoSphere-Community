@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Post, User } from '../types';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -157,12 +158,13 @@ export function PostCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre généré à partir du contenu */}
-          <h3 
-            className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
-            onClick={handlePostClick}
-          >
-            {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
-          </h3>
+          <Link to={`/post/${latestPost.id}`}>
+            <h3 
+              className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
+            >
+              {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
+            </h3>
+          </Link>
           
           {/* Localisation avec badge Post et badge de chaîne */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
@@ -307,15 +309,16 @@ export function PostCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handlePostClick}
-              className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-            >
-              <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Voir détails</span>
-            </Button>
+            <Link to={`/post/${latestPost.id}`}>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
+              >
+                <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Voir détails</span>
+              </Button>
+            </Link>
             
             <Button 
               size="sm"

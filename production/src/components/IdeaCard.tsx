@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -154,12 +155,13 @@ export function IdeaCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre */}
-          <h3 
-            className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
-            onClick={handleIdeaClick}
-          >
-            {latestIdea.title}
-          </h3>
+          <Link to={`/idea/${latestIdea.id}`}>
+            <h3 
+              className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
+            >
+              {latestIdea.title}
+            </h3>
+          </Link>
           
           {/* Localisation avec badge Projet et badge de chaîne */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
@@ -302,15 +304,16 @@ export function IdeaCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleIdeaClick}
-              className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-            >
-              <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Voir détails</span>
-            </Button>
+            <Link to={`/idea/${latestIdea.id}`}>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
+              >
+                <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Voir détails</span>
+              </Button>
+            </Link>
             
             <Button 
               size="sm"

@@ -1,17 +1,15 @@
+import { Link } from 'react-router-dom';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
 import { Mail, MessageCircle, Github } from 'lucide-react';
 
 interface FooterProps {
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: string) => void; // Conservé pour compatibilité, mais sera ignoré
 }
 
 export function Footer({ onNavigate }: FooterProps) {
-  const handleNavigation = (page: string) => {
-    if (onNavigate) {
-      onNavigate(page);
-    }
-  };
+  // Note : onNavigate n'est plus utilisé avec React Router
+  // La navigation se fait automatiquement via les <Link>
 
   return (
     <footer className="bg-white border-t">
@@ -34,24 +32,24 @@ export function Footer({ onNavigate }: FooterProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-900 mb-3">En savoir plus</h4>
             <div className="space-y-2">
-              <button 
-                onClick={() => handleNavigation('about')} 
+              <Link 
+                to="/about" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 À propos
-              </button>
-              <button 
-                onClick={() => handleNavigation('how-it-works')} 
+              </Link>
+              <Link 
+                to="/how-it-works" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Comment ça marche
-              </button>
-              <button 
-                onClick={() => handleNavigation('faq')} 
+              </Link>
+              <Link 
+                to="/faq" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 FAQ
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -96,18 +94,18 @@ export function Footer({ onNavigate }: FooterProps) {
             </div>
             
             <div className="flex flex-wrap items-center gap-4 text-xs">
-              <button 
-                onClick={() => handleNavigation('privacy')} 
+              <Link 
+                to="/privacy" 
                 className="text-gray-500 hover:text-gray-900 transition-colors"
               >
                 Confidentialité
-              </button>
-              <button 
-                onClick={() => handleNavigation('terms')} 
+              </Link>
+              <Link 
+                to="/terms" 
                 className="text-gray-500 hover:text-gray-900 transition-colors"
               >
                 CGU
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -33,6 +33,7 @@ interface IdeaVersionsTabProps {
   currentUser: User;
   allIdeas: Idea[]; // Toutes les idées pour trouver les versions
   isSupported: boolean;
+  onPostClick?: (postId: string) => void; // Navigation vers un post
 }
 
 export function IdeaVersionsTab({
@@ -40,6 +41,7 @@ export function IdeaVersionsTab({
   currentUser,
   allIdeas,
   isSupported,
+  onPostClick,
 }: IdeaVersionsTabProps) {
   // Utilisation du store pour les actions
   const { actions, getUserById, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
@@ -152,7 +154,7 @@ export function IdeaVersionsTab({
               if (!parentPostAuthor || parentPostAuthor.id === 'unknown') return null;
               
               return (
-                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.goToPost(parentId)}>
+                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => onPostClick && onPostClick(parentId)}>
                   <div className="flex-shrink-0">
                     <MessageSquare className="w-4 h-4 text-purple-600" />
                   </div>

@@ -14,13 +14,16 @@ interface NavigationLinkProps {
 }
 
 /**
- * Composant de lien pour la navigation interne
- * Utilise le système de navigation de l'application au lieu de recharger la page
+ * @deprecated Phase 5 : Ce composant est obsolète
+ * Utilisez <Link> de react-router-dom à la place
  * 
- * @example
- * <NavigationLink tab="discovery">Fil d'actualité</NavigationLink>
- * <NavigationLink ideaId="idea-123">Voir l'idée</NavigationLink>
- * <NavigationLink href="?tab=discovery&ideaId=idea-123">Lien personnalisé</NavigationLink>
+ * AVANT:
+ * <NavigationLink ideaId="123">Voir l'idée</NavigationLink>
+ * 
+ * APRÈS:
+ * <Link to="/idea/123">Voir l'idée</Link>
+ * 
+ * Ce composant n'est conservé que pour compatibilité temporaire
  */
 export function NavigationLink({
   href,

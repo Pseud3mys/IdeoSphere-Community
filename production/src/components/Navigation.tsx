@@ -1,49 +1,50 @@
-import { TabType } from '../types';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Home, User, Plus, Users2 } from 'lucide-react';
-import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
-interface NavigationProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-}
-
-export function Navigation({ activeTab, onTabChange }: NavigationProps) {
-  const { actions } = useEntityStoreSimple();
+/**
+ * Navigation
+ * Composant de navigation principal utilisant React Router
+ * Détecte automatiquement la page active via useLocation()
+ */
+export function Navigation() {
+  const location = useLocation();
   
-  const handleCreateClick = () => {
-    // Les invités peuvent créer des posts, mais la page create-idea les bloquera pour les idées
-    onTabChange('create');
+  // Déterminer la page active depuis l'URL
+  const getActivePath = () => {
+    const path = location.pathname;
+    if (path.startsWith('/my-ideas')) return '/my-ideas';
+    if (path.startsWith('/create-idea')) return '/create-idea';
+    if (path.startsWith('/communities')) return '/communities';
+    return '/discovery'; // Par défaut
   };
+
+  const activePath = getActivePath();
 
   const tabs = [
     {
-      id: 'discovery' as TabType,
+      path: '/discovery',
       label: 'Fil d\'idées',
       icon: Home,
       description: 'Découvrir les idées de la communauté',
-      onClick: () => onTabChange('discovery')
     },
     {
-      id: 'my-ideas' as TabType,
+      path: '/my-ideas',
       label: 'Mes contributions',
       icon: User,
       description: 'Gérer vos idées et collaborations',
-      onClick: () => onTabChange('my-ideas')
     },
     {
-      id: 'create' as TabType,
+      path: '/create-idea',
       label: 'Partager une idée',
       icon: Plus,
       description: 'Créer et publier une nouvelle idée',
-      onClick: handleCreateClick
     },
     {
-      id: 'communities' as TabType,
+      path: '/communities',
       label: 'Groupes de travail',
       icon: Users2,
       description: 'Rejoindre les groupes de travail thématiques internes',
-      onClick: () => onTabChange('communities')
     }
   ];
 
@@ -55,22 +56,22 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
           <div className="flex space-x-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = activePath === tab.path;
               
               return (
-                <Button
-                  key={tab.id}
-                  variant="ghost"
-                  onClick={tab.onClick}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-none border-b-2 transition-all duration-200 ${
-                    isActive 
-                      ? 'border-[#4f75ff] text-[#4f75ff] bg-[#e8f0ff]/50' 
-                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </Button>
+                <Link key={tab.path} to={tab.path}>
+                  <Button
+                    variant="ghost"
+                    className={`flex items-center space-x-2 px-4 py-3 rounded-none border-b-2 transition-all duration-200 ${
+                      isActive 
+                        ? 'border-[#4f75ff] text-[#4f75ff] bg-[#e8f0ff]/50' 
+                        : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                  </Button>
+                </Link>
               );
             })}
           </div>
@@ -82,7 +83,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
         <div className="flex items-center justify-around px-2 py-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = activePath === tab.path;
             
             // Fonction pour raccourcir les labels sur mobile
             const getMobileLabel = (label: string) => {
@@ -94,21 +95,21 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
             };
             
             return (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                onClick={tab.onClick}
-                className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px] ${
-                  isActive 
-                    ? 'text-[#4f75ff] bg-[#e8f0ff]/70' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className={`w-6 h-6 mb-1 ${isActive ? 'text-[#4f75ff]' : ''}`} />
-                <span className={`text-xs leading-tight text-center ${isActive ? 'font-medium text-[#4f75ff]' : ''}`}>
-                  {getMobileLabel(tab.label)}
-                </span>
-              </Button>
+              <Link key={tab.path} to={tab.path} className="flex-1 max-w-[80px]">
+                <Button
+                  variant="ghost"
+                  className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 min-w-0 w-full ${
+                    isActive 
+                      ? 'text-[#4f75ff] bg-[#e8f0ff]/70' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className={`w-6 h-6 mb-1 ${isActive ? 'text-[#4f75ff]' : ''}`} />
+                  <span className={`text-xs leading-tight text-center ${isActive ? 'font-medium text-[#4f75ff]' : ''}`}>
+                    {getMobileLabel(tab.label)}
+                  </span>
+                </Button>
+              </Link>
             );
           })}
         </div>

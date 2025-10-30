@@ -104,9 +104,6 @@ export function createApiActions(
           const ideasFromStore = store.feedIdeaIds.map(id => boundSelectors.getIdeaById(id)).filter(Boolean);
           const postsFromStore = store.feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
           
-          // Naviguer vers la page discovery
-          actions.setActiveTab('discovery');
-          
           return {
             posts: postsFromStore,
             ideas: ideasFromStore,
@@ -150,9 +147,6 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] fetchFeed: Chargé ${ideasFromStore.length} idées et ${postsFromStore.length} posts depuis l'API`);
         
-        // Naviguer vers la page discovery
-        actions.setActiveTab('discovery');
-        
         return {
           posts: postsFromStore,
           ideas: ideasFromStore,
@@ -168,8 +162,6 @@ export function createApiActions(
         const allIdeas = boundSelectors.getPublishedIdeas();
         const allPosts = boundSelectors.getAllPosts();
         const limitedPosts = allPosts.slice(0, 5);
-        
-        actions.setActiveTab('discovery');
         
         return {
           posts: limitedPosts,
@@ -206,9 +198,6 @@ export function createApiActions(
           const contributions = boundSelectors.getMyContributions();
           
           if (contributions) {
-            // Naviguer vers mes idées
-            actions.setActiveTab('my-ideas');
-            
             return {
               participationIdeas: contributions.participationIdeas,
               supportIdeas: contributions.supportIdeas,
@@ -226,7 +215,6 @@ export function createApiActions(
         
         if (!apiContributionsData) {
           console.error('❌ [apiActions] fetchMyContributions: Pas de données de contributions');
-          actions.setActiveTab('my-ideas');
           return null;
         }
         
@@ -283,14 +271,10 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] fetchMyContributions: Chargé ${participationIdeas.length} idées participation et ${supportIdeas.length} idées soutien depuis l'API`);
         
-        // Naviguer vers mes idées
-        actions.setActiveTab('my-ideas');
-        
         return contributionsFromStore;
         
       } catch (error) {
         console.error('❌ [hook/apiActions] fetchMyContributions:', error);
-        actions.setActiveTab('my-ideas');
         return null;
       }
     },
@@ -322,22 +306,15 @@ export function createApiActions(
         
         if (!userFromStore) {
           console.error('❌ [apiActions] fetchMyProfile: Utilisateur non trouvé dans le store après mise à jour');
-          actions.setActiveTab('profile');
           return null;
         }
         
         console.log(`✅ [apiActions] fetchMyProfile: Chargé profil de ${userFromStore.name} depuis le store`);
         
-        // Naviguer vers le profil
-        actions.setActiveTab('profile');
-        
         return userFromStore;
         
       } catch (error) {
         console.error('❌ [apiActions] fetchMyProfile:', error);
-        
-        // En cas d'erreur, naviguer quand même vers le profil
-        actions.setActiveTab('profile');
         
         // Retourner l'utilisateur depuis le store
         return boundSelectors.getUserById(currentUser.id) || currentUser;
@@ -890,10 +867,7 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] publishIdea: Idée "${newIdea.title}" créée et ajoutée au store`);
         
-        // Naviguer vers la page de détail de l'idée
-        actions.setSelectedIdeaId(newIdea.id);
-        actions.setActiveTab('idea-detail');
-        
+        // Note: Navigation is now handled by the caller using useNavigate()
         toast.success('Votre idée a été publiée avec succès !');
         return newIdea;
       } catch (error) {
@@ -964,10 +938,7 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] publishPost: Post créé et ajouté au store`);
         
-        // Naviguer vers la page de détail du post
-        actions.setSelectedPostId(newPost.id);
-        actions.setActiveTab('post-detail');
-        
+        // Note: Navigation is now handled by the caller using useNavigate()
         toast.success('Votre post a été publié avec succès !');
         return newPost;
       } catch (error) {

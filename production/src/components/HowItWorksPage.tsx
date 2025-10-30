@@ -1,13 +1,23 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Star, Zap, TrendingUp, Users, MessageSquare, Vote } from 'lucide-react';
 
 interface HowItWorksPageProps {
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void; // Optionnel pour compatibilité
 }
 
 export function HowItWorksPage({ onNavigateBack }: HowItWorksPageProps) {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-4xl mx-auto px-6">
@@ -15,7 +25,7 @@ export function HowItWorksPage({ onNavigateBack }: HowItWorksPageProps) {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={onNavigateBack}
+            onClick={handleBack}
             className="mb-4 text-gray-600 hover:text-primary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
