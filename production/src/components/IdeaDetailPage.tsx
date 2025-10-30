@@ -8,7 +8,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { RatingSection } from './RatingSection';
-import { ShareIdeaDialog } from './ShareIdeaDialog';
+import { ShareDialog } from './ShareDialog';
 import { IdeaDescriptionTab } from './IdeaDescriptionTab';
 import { IdeaDiscussionsTab } from './IdeaDiscussionsTab';
 import { IdeaVersionsTab } from './IdeaVersionsTab';
@@ -183,12 +183,12 @@ export function IdeaDetailPage({
           </Button>
           
           {/* Bouton partager mobile */}
-          <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+          <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
             <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2">
               <Share className="w-4 h-4" />
               <span>Partager</span>
             </Button>
-          </ShareIdeaDialog>
+          </ShareDialog>
         </div>
 
         {/* Version desktop */}
@@ -226,12 +226,12 @@ export function IdeaDetailPage({
                 )}
               </Button>
               
-              <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+              <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
                 <Button variant="outline" className="flex items-center space-x-2">
                   <Share className="w-4 h-4" />
                   <span>Partager</span>
                 </Button>
-              </ShareIdeaDialog>
+              </ShareDialog>
             </div>
           </div>
         </div>

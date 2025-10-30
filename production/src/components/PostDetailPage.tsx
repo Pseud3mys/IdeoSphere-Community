@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Post, User, Idea } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
@@ -22,7 +22,7 @@ import {
   Share
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { SharePostDialog } from './SharePostDialog';
+import { ShareDialog } from './ShareDialog';
 import { getValidAvatar } from '../api/avatarService';
 
 interface PostDetailPageProps {
@@ -87,13 +87,21 @@ export function PostDetailPage({
   const isSupporting = latestPost.supporters?.includes(currentUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
+  // Tracker les chargements déjà effectués pour éviter les boucles infinies
+  const loadedLineageRef = useRef(new Set<string>());
+
   // Chargement progressif des données supplémentaires
   useEffect(() => {
     const loadAdditionalData = async () => {
+      // Ne charger le lineage qu'une seule fois par post
+      if (loadedLineageRef.current.has(post.id)) {
+        return;
+      }
       
       // Charger le lineage (parents/enfants)
       try {
-        await actions.loadLineage(latestPost.id, 'post');
+        await actions.loadLineage(post.id, 'post');
+        loadedLineageRef.current.add(post.id);
       } catch (error) {
         console.error('❌ Erreur lors du chargement du lineage:', error);
       }
@@ -105,7 +113,8 @@ export function PostDetailPage({
     const timeoutId = setTimeout(loadAdditionalData, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [latestPost.id]); // Retirer 'actions' des dépendances pour éviter les appels multiples
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.id]); // Seulement post.id (prop initiale), pas latestPost
   
   // Trouver les posts sources de ce post
   const sourcePosts = latestPost.sourcePosts
@@ -264,7 +273,7 @@ export function PostDetailPage({
                 <span className="hidden sm:inline">Soutenir</span>
               </Button>
               
-              <SharePostDialog postId={latestPost.id} postContent={latestPost.content}>
+              <ShareDialog contentId={latestPost.id} contentTitle={latestPost.content} contentType="post">
                 <Button 
                   variant="ghost"
                   size="sm"
@@ -273,7 +282,7 @@ export function PostDetailPage({
                   <Share className="w-4 h-4" />
                   <span className="hidden sm:inline">Partager</span>
                 </Button>
-              </SharePostDialog>
+              </ShareDialog>
             </div>
 
             <Button 

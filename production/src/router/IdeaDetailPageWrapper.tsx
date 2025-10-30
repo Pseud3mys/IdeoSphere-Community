@@ -121,7 +121,8 @@ export function IdeaDetailPageWrapper() {
     };
 
     loadIdea();
-  }, [ideaId, navigate, getIdeaById, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ideaId]); // Uniquement ideaId pour éviter les boucles infinies
 
   // Handler pour retourner en arrière
   const handleBack = () => {

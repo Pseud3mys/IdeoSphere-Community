@@ -77,7 +77,8 @@ export function PostDetailPageWrapper() {
     };
 
     loadPost();
-  }, [postId, navigate, getPostById, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId]); // Uniquement postId pour éviter les boucles infinies
 
   // Handler pour retourner en arrière
   const handleBack = () => {

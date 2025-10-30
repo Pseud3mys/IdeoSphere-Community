@@ -13,7 +13,7 @@ import { useEntityStoreSimple } from './useEntityStoreSimple';
  */
 export function useNavigationActions() {
   const navigate = useNavigate();
-  const { actions, boundSelectors } = useEntityStoreSimple();
+  const { actions, getIdeaById, getUserById } = useEntityStoreSimple();
 
   return {
     /**
@@ -52,7 +52,7 @@ export function useNavigationActions() {
         if (discussions && discussions.length > 0) {
           discussions.forEach(discussion => actions.addDiscussionTopic(discussion));
           
-          const currentIdea = boundSelectors.getIdeaById(ideaId);
+          const currentIdea = getIdeaById(ideaId);
           if (currentIdea) {
             const discussionIds = discussions.map(d => d.id);
             const newDiscussionIds = [
@@ -104,7 +104,7 @@ export function useNavigationActions() {
      * Navigation vers un profil utilisateur
      */
     goToUser: (userId: string) => {
-      const user = boundSelectors.getUserById(userId);
+      const user = getUserById(userId);
       
       if (!user) {
         console.warn(`⚠️ Utilisateur ${userId} non trouvé dans le store`);
