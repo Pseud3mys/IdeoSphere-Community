@@ -44,7 +44,7 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
 
   // Calculer les statistiques avec protections
   const userIdeas = (ideas || []).filter(idea => 
-    idea?.creators?.some(creator => creator.id === userId)
+    idea?.creatorIds?.includes(userId)
   );
   const userPosts = (posts || []).filter(post => post?.authorId === userId);
   const totalSupports = userIdeas.reduce((sum, idea) => sum + (idea.supporters?.length || 0), 0);

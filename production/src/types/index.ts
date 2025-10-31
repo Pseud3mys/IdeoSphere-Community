@@ -105,7 +105,7 @@ export interface Post {
  * Idée - Structure complète avec chargement progressif
  * 
  * Champs TOUJOURS présents (depuis le feed) :
- * - id, title, summary, description, creators, status, createdAt, tags, location
+ * - id, title, summary, description, creatorIds, status, createdAt, tags, location
  * 
  * Champs CALCULÉS dynamiquement :
  * - supportCount: calculé depuis supporters.length (ne pas stocker!)
@@ -121,7 +121,7 @@ export interface Idea {
   title: string;
   summary: string;
   description: string;
-  creators: User[];
+  creatorIds: string[];
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   status: IdeaStatus;
   createdAt: Date;
@@ -190,4 +190,5 @@ export interface CommunityMembership {
   isActive: boolean;
 }
 
-export type TabType = 'welcome' | 'discovery' | 'my-ideas' | 'create-idea' | 'create-post' | 'drafts' | 'communities' | 'profile' | 'idea-detail' | 'post-detail' | 'user-profile' | 'community-detail' | 'signup' | 'about' | 'how-it-works' | 'faq' | 'privacy' | 'terms';
+// NOTE MIGRATION REACT ROUTER (Phase 6) :
+// TabType supprimé - navigation maintenant gérée par React Router avec URLs

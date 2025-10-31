@@ -1,12 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft } from 'lucide-react';
 
 interface PrivacyPolicyPageProps {
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void; // Optionnel pour compatibilité
 }
 
 export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-4xl mx-auto px-6">
@@ -14,7 +24,7 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={onNavigateBack}
+            onClick={handleBack}
             className="mb-4 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

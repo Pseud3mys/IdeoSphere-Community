@@ -44,9 +44,10 @@ interface LoginDialogProps {
   onSocialLogin: (provider: string) => Promise<boolean>;
   onSwitchToSignup: () => void;
   onEnterPlatform: () => void;
+  onLoginSSO?: () => void;
 }
 
-export function LoginDialog({ isOpen, onClose, onLogin, onSocialLogin, onSwitchToSignup, onEnterPlatform }: LoginDialogProps) {
+export function LoginDialog({ isOpen, onClose, onLogin, onSocialLogin, onSwitchToSignup, onEnterPlatform, onLoginSSO }: LoginDialogProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -242,6 +243,27 @@ export function LoginDialog({ isOpen, onClose, onLogin, onSocialLogin, onSwitchT
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
+
+          {/* Bouton SSO */}
+          {onLoginSSO && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
+                  Vous avez un compte officiel ?
+                </p>
+                <Button
+                  onClick={onLoginSSO}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-white"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  S'identifier avec SSO
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Liens vers inscription */}
           <div className="text-center space-y-2">

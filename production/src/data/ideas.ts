@@ -7,7 +7,7 @@ import { getVersionsForIdea } from './versions';
 export function getMockIdeas(): Idea[] {
   return [
     {
-      id: '1',
+      id: 'ideas/1',
       title: 'Des bancs dans nos rues pour pouvoir se reposer',
       summary: 'Installer des bancs publics aux endroits stratégiques du village pour que chacun puisse s\'arrêter, se reposer et discuter avec les voisins',
       description: `## Le manque de bancs dans notre village
@@ -73,13 +73,13 @@ export function getMockIdeas(): Idea[] {
 - **Juin** : évaluation et éventuels ajustements
 
 Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
-      creators: [users[0], users[3]], // Marie et Emma
+      creatorIds: [users[0].id, users[3].id], // Marie et Emma
       supporters: [users[0].id, users[1].id, users[2].id, users[3].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
-      sourcePosts: ['post-1', 'post-2', 'post-3'], // Vient de plusieurs posts sur les bancs
+      sourcePosts: ['posts/post-1', 'posts/post-2', 'posts/post-3'], // Vient de plusieurs posts sur les bancs
       sourceDiscussions: [],
-      derivedIdeas: ['idea-version-1'], // Version améliorée avec tech
+      derivedIdeas: ['ideas/idea-version-1'], // Version améliorée avec tech
       discussionIds: ['dt11', 'dt12', 'dt13'], // Discussions sur les emplacements, financement, modèles
       ratingCriteria: defaultRatingCriteria,
       ratings: [
@@ -97,7 +97,7 @@ Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
       tags: ['vie-de-quartier', 'vieillesse']
     },
     {
-      id: '2',
+      id: 'ideas/2',
       title: 'Café-réparation tous les premiers samedis',
       summary: 'Organiser un atelier mensuel où chacun apporte ses objets cassés pour les réparer ensemble, dans l\'esprit du partage et de l\'anti-gaspillage',
       description: `## L'idée du café-réparation
@@ -162,11 +162,11 @@ J'ai encore jeté mon grille-pain ce matin... 😔 Ça m'embête de jeter alors 
 Ce qui me plaît dans cette idée, c'est qu'on arrête ce réflexe de "c'est cassé = poubelle". On redonne une chance aux objets, on apprend ensemble, et surtout on passe un bon moment !
 
 Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix ! 🔧✨`,
-      creators: [users[1], users[4]], // Pierre + Thomas
+      creatorIds: [users[1].id, users[4].id], // Pierre + Thomas
       supporters: [users[1].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
-      sourcePosts: ['post-4'], // Vient du post sur le grille-pain cassé
+      sourcePosts: ['posts/post-4'], // Vient du post sur le grille-pain cassé
       sourceDiscussions: [], // Discussions qui ont inspiré cette idée
       derivedIdeas: [], // Aucune version pour le moment
       discussionIds: ['dt4', 'dt5', 'dt6'], // Discussions sur le matériel, le lieu, l'organisation
@@ -186,7 +186,7 @@ Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix
       tags: ['solidarité', 'associatif']
     },
     {
-      id: '3',
+      id: 'ideas/3',
       title: 'Système d\'échange de services entre voisins',
       summary: 'Créer un réseau local d\'entraide où chacun propose ses compétences et peut demander de l\'aide à ses voisins',
       description: `## L'idée d'un réseau d'entraide local
@@ -264,11 +264,11 @@ Hier j'avais des courses lourdes et j'aurais bien eu besoin d'un coup de main...
 Je pense qu'on a tous quelque chose à offrir et quelque chose à demander. L'entraide, c'est ce qui fait la vraie richesse d'un village ! 🤝
 
 Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arrangerait bien ! 😅`,
-      creators: [users[2], users[3]], // Sophie + Emma
+      creatorIds: [users[2].id, users[3].id], // Sophie + Emma
       supporters: [users[0].id, users[2].id, users[3].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
-      sourcePosts: ['post-5'], // Vient du post sur l'aide pour les courses
+      sourcePosts: ['posts/post-5'], // Vient du post sur l'aide pour les courses
       derivedIdeas: [],
       discussionIds: ['dt7', 'dt8'], // Discussions sur l'organisation et les règles
       ratingCriteria: defaultRatingCriteria,
@@ -287,7 +287,7 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
       tags: ['solidarité', 'vie-de-quartier']
     },
     {
-      id: '4',
+      id: 'ideas/4',
       title: 'Réparer les nids de poule rue des Écoles',
       summary: 'Signaler et organiser la réparation des trous dans la chaussée qui abîment les voitures et sont dangereux pour les piétons',
       description: `## Le problème des nids de poule rue des Écoles
@@ -369,11 +369,11 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
 - **Mai-Juin** : travaux espérés (selon planning municipal)
 
 Cette idée peut paraître basique, mais c'est exactement le genre de problème concret qu'on peut résoudre en s'y mettant tous ensemble ! Et franchement, ne plus esquiver les trous comme des slalomeurs, ça serait le bonheur ! 🚗`,
-      creators: [users[1], users[4]], // Pierre + Thomas
+      creatorIds: [users[1].id, users[4].id], // Pierre + Thomas
       supporters: [users[0].id, users[1].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
-      sourcePosts: ['post-6'], // Vient du post sur les nids de poule
+      sourcePosts: ['posts/post-6'], // Vient du post sur les nids de poule
       sourceDiscussions: [],
       derivedIdeas: [],
       discussionIds: ['dt14', 'dt15', 'dt16'], // Discussions sur signalement, procédures, solutions temporaires
@@ -393,7 +393,7 @@ Cette idée peut paraître basique, mais c'est exactement le genre de problème 
       tags: ['vie-de-quartier']
     },
     {
-      id: '5',
+      id: 'ideas/5',
       title: 'Solution pour le stationnement devant l\'école',
       summary: 'Organiser le stationnement chaotique aux heures d\'entrée et sortie d\'école qui bloque la circulation et met les enfants en danger',
       description: `## Le bazar du stationnement devant l'école
@@ -488,11 +488,11 @@ Tous les matins et le soir, c'est la même galère ! Les voitures garées n'impo
 - **Exemple** : solution qui peut inspirer d'autres villages
 
 Cette problématique, on la vit tous ! Avec un peu d'organisation et de bonne volonté, on peut transformer ce moment de stress quotidien en quelque chose qui marche pour tout le monde ! 🚸`,
-      creators: [users[0], users[3]], // Marie + Emma
+      creatorIds: [users[0].id, users[3].id], // Marie + Emma
       supporters: [users[0].id, users[1].id, users[3].id, users[4].id, currentUser.id], // ✅ IDs
       status: 'published',
       sourceIdeas: [],
-      sourcePosts: ['post-7', 'post-8'], // Vient des posts sur le stationnement école
+      sourcePosts: ['posts/post-7', 'posts/post-8'], // Vient des posts sur le stationnement école
       sourceDiscussions: [],
       derivedIdeas: [],
       discussionIds: ['dt17', 'dt18', 'dt19'], // Discussions sur organisation bénévoles, règles, alternatives
@@ -514,7 +514,7 @@ Cette problématique, on la vit tous ! Avec un peu d'organisation et de bonne vo
     
     // Version améliorée de l'idée des bancs (basée sur l'idée '1')
     {
-      id: 'idea-version-1',
+      id: 'ideas/idea-version-1',
       title: 'Bancs intelligents avec recharge solaire et WiFi',
       summary: 'Une version évoluée des bancs publics incluant des ports USB solaires et des zones WiFi gratuit pour moderniser l\'espace public',
       description: `## Évolution de l'idée originale des bancs
@@ -586,10 +586,10 @@ Après avoir lu l'excellente proposition de Marie sur les bancs publics, je pens
 L'idée de Marie était excellente pour créer du lien social. Cette version garde tout cela ET attire une nouvelle population (jeunes, familles connectées, touristes) tout en projetant le village vers l'avenir.
 
 C'est un investissement plus important mais qui transforme vraiment l'espace public ! 📱⚡️🔗`,
-      creators: [users[4]], // Thomas (qui aime la tech)
+      creatorIds: [users[4].id], // Thomas (qui aime la tech)
       supporters: [users[0].id, users[2].id, users[4].id, currentUser.id], // ✅ IDs - Marie soutient sa version améliorée
       status: 'published',
-      sourceIdeas: ['1'], // Basée sur l'idée des bancs de Marie
+      sourceIdeas: ['ideas/1'], // Basée sur l'idée des bancs de Marie
       sourcePosts: [],
       sourceDiscussions: [],
       derivedIdeas: [],
@@ -609,7 +609,7 @@ C'est un investissement plus important mais qui transforme vraiment l'espace pub
 
     // Version améliorée de l'idée d'éclairage (basée sur l'idée '2')  
     {
-      id: 'idea-version-2',
+      id: 'ideas/idea-version-2',
       title: 'Éclairage participatif avec application mobile',
       summary: 'Extension de l\'idée d\'éclairage avec une app pour signaler les problèmes et adapter l\'intensité selon les besoins des habitants',
       description: `## Faire évoluer l'idée d'éclairage de Pierre
@@ -689,10 +689,10 @@ L'idée de Pierre sur l'éclairage LED était très pertinente ! Je propose de l
 L'idée de Pierre était excellente pour l'efficacité énergétique. Cette version ajoute l'intelligence collective et fait des habitants de vrais acteurs de leur environnement lumineux.
 
 Un petit village qui innove et implique ses citoyens ! 💡📱🌙`,
-      creators: [users[2]], // Sophie (enseignante, aime l'innovation participative)
+      creatorIds: [users[2].id], // Sophie (enseignante, aime l'innovation participative)
       supporters: [users[1].id, users[2].id, users[3].id, currentUser.id], // ✅ IDs - Pierre soutient l'évolution de son idée
       status: 'published',
-      sourceIdeas: ['2'], // Basée sur l'idée d'éclairage de Pierre
+      sourceIdeas: ['ideas/2'], // Basée sur l'idée d'éclairage de Pierre
       sourcePosts: [],
       sourceDiscussions: [],
       derivedIdeas: [],

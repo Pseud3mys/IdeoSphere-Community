@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -18,6 +19,7 @@ interface CreateQuickPostProps {
 export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
   const { store, getCurrentUser, getUserById, actions } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
 
   // Si currentUser est null, ne pas afficher le composant
@@ -48,11 +50,16 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     e.preventDefault();
     
     if (content.trim()) {
-      await actions.publishPost({
+      const newPost = await actions.publishPost({
         content: content.trim(),
         location: location.trim() || undefined,
         sourcePostIds: sourcePost ? [sourcePost.id] : []
       });
+      
+      // Navigate to the created post
+      if (newPost) {
+        navigation.goToPost(newPost.id);
+      }
       
       // Reset form
       setTitle('');

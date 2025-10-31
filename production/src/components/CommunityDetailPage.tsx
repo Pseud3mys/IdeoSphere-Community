@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { IdeaCard } from './IdeaCard';
 import { PostCard } from './PostCard';
 
@@ -39,9 +40,14 @@ const RoleLabels = {
   member: 'Membre'
 };
 
-export function CommunityDetailPage() {
+interface CommunityDetailPageProps {
+  communityId?: string;  // ID de la communauté à afficher
+  onBack?: () => void;
+}
+
+export function CommunityDetailPage({ communityId, onBack }: CommunityDetailPageProps = {}) {
   const {
-    getSelectedCommunity,
+    getCommunityById,
     getCommunityMembers,
     getCurrentUser,
     isUserMemberOfCommunity,
@@ -50,10 +56,11 @@ export function CommunityDetailPage() {
     getAllPosts,
     actions
   } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   const [activeTab, setActiveTab] = useState('feed');
   
-  const community = getSelectedCommunity();
+  const community = communityId ? getCommunityById(communityId) : null;
   const currentUser = getCurrentUser();
   
   if (!community) {
@@ -61,14 +68,16 @@ export function CommunityDetailPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-muted-foreground">Communauté non trouvée.</p>
-          <Button 
-            variant="outline" 
-            onClick={() => actions.goToTab('communities')}
-            className="mt-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux communautés
-          </Button>
+          {onBack && (
+            <Button 
+              variant="outline" 
+              onClick={onBack}
+              className="mt-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour aux communautés
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -94,7 +103,7 @@ export function CommunityDetailPage() {
     if (currentUser?.isRegistered) {
       actions.joinCommunity(community.id);
     } else {
-      actions.goToSignup();
+      navigation.goToSignup();
     }
   };
 
@@ -113,16 +122,18 @@ export function CommunityDetailPage() {
           />
         )}
         
-        <div className="absolute top-4 left-4">
-          <Button 
-            variant="secondary" 
-            size="sm"
-            onClick={() => actions.goToTab('communities')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
-        </div>
+        {onBack && (
+          <div className="absolute top-4 left-4">
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={onBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Informations principales */}

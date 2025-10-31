@@ -8,7 +8,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { RatingSection } from './RatingSection';
-import { ShareIdeaDialog } from './ShareIdeaDialog';
+import { ShareDialog } from './ShareDialog';
 import { IdeaDescriptionTab } from './IdeaDescriptionTab';
 import { IdeaDiscussionsTab } from './IdeaDiscussionsTab';
 import { IdeaVersionsTab } from './IdeaVersionsTab';
@@ -29,11 +29,13 @@ import { toast } from 'sonner@2.0.3';
 interface IdeaDetailPageProps {
   idea: Idea;
   onBack: () => void;
+  onPostClick?: (postId: string) => void;
 }
 
 export function IdeaDetailPage({ 
   idea, 
-  onBack
+  onBack,
+  onPostClick
 }: IdeaDetailPageProps) {
   // Récupération des données depuis l'Entity Store
   const {
@@ -52,12 +54,12 @@ export function IdeaDetailPage({
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
 
-  // ✅ Résoudre les créateurs depuis le store pour avoir les données complètes
+  // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 
-    latestIdea.creators
-      .map(c => getUserById(c.id))
+    (latestIdea.creatorIds || [])
+      .map(id => getUserById(id))
       .filter(Boolean) as User[]
-  , [latestIdea.creators, getUserById]);
+  , [latestIdea.creatorIds, getUserById]);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {
@@ -181,12 +183,12 @@ export function IdeaDetailPage({
           </Button>
           
           {/* Bouton partager mobile */}
-          <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+          <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
             <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2">
               <Share className="w-4 h-4" />
               <span>Partager</span>
             </Button>
-          </ShareIdeaDialog>
+          </ShareDialog>
         </div>
 
         {/* Version desktop */}
@@ -224,12 +226,12 @@ export function IdeaDetailPage({
                 )}
               </Button>
               
-              <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+              <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
                 <Button variant="outline" className="flex items-center space-x-2">
                   <Share className="w-4 h-4" />
                   <span>Partager</span>
                 </Button>
-              </ShareIdeaDialog>
+              </ShareDialog>
             </div>
           </div>
         </div>
@@ -243,11 +245,13 @@ export function IdeaDetailPage({
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {resolvedCreators.length === 1 
-                  ? resolvedCreators[0].name
-                  : resolvedCreators.length === 2
-                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
-                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 0
+                  ? 'Créateur inconnu'
+                  : resolvedCreators.length === 1 
+                    ? resolvedCreators[0].name
+                    : resolvedCreators.length === 2
+                      ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                      : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
@@ -398,6 +402,7 @@ export function IdeaDetailPage({
             currentUser={currentUser}
             allIdeas={allIdeas}
             isSupported={isSupported}
+            onPostClick={onPostClick}
           />
         </TabsContent>
       </Tabs>

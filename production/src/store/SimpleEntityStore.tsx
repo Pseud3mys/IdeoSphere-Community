@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Idea, Post, DiscussionTopic, TabType, PrefilledContent, Community, CommunityMembership } from '../types';
+import { User, Idea, Post, DiscussionTopic, PrefilledContent, Community, CommunityMembership } from '../types';
 import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
@@ -13,13 +13,11 @@ interface SimpleEntityStore {
   communityMemberships: Record<string, CommunityMembership>;
   
   // États UI
-  activeTab: TabType;
+  // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
+  // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedCommunityId supprimés (maintenant dans l'URL)
+  // - Seuls les états UI purs sont conservés
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
-  selectedIdeaId: string | null;
-  selectedPostId: string | null;
-  selectedUserId: string | null;
-  selectedCommunityId: string | null;
   currentUserId: string | null;
   
   // États temporaires
@@ -72,13 +70,10 @@ interface SimpleEntityActions {
   updateCommunityMembership: (membershipId: string, updates: Partial<CommunityMembership>) => void;
   
   // Actions UI
-  setActiveTab: (tab: TabType) => void;
+  // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
+  // Actions supprimées : setActiveTab, setSelectedIdeaId, setSelectedPostId, setSelectedUserId, setSelectedCommunityId
   setHasEnteredPlatform: (entered: boolean) => void;
   setShowOnboarding: (show: boolean) => void;
-  setSelectedIdeaId: (id: string | null) => void;
-  setSelectedPostId: (id: string | null) => void;
-  setSelectedUserId: (id: string | null) => void;
-  setSelectedCommunityId: (id: string | null) => void;
   setCurrentUserId: (id: string | null) => void;
   
   // Actions temporaires
@@ -130,13 +125,8 @@ const createInitialStore = (): SimpleEntityStore => ({
   discussionTopics: {},
   communities: {},
   communityMemberships: {},
-  activeTab: 'welcome',
   hasEnteredPlatform: false,
   showOnboarding: false,
-  selectedIdeaId: null,
-  selectedPostId: null,
-  selectedUserId: null,
-  selectedCommunityId: null,
   currentUserId: null,
   discussionPosts: {},
   prefilledSourceIdea: null,
@@ -153,20 +143,11 @@ const createInitialStore = (): SimpleEntityStore => ({
 
 // Fonctions helper pour extraire les utilisateurs des idées et posts
 const extractUsersFromIdea = (idea: Idea): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter les créateurs
-  if (idea.creators && Array.isArray(idea.creators)) {
-    idea.creators.forEach(creator => {
-      if (creator && typeof creator === 'object' && 'id' in creator) {
-        users.push(creator);
-      }
-    });
-  }
-  
-  // ✅ Les supporters sont maintenant des IDs (string[]) - pas d'extraction nécessaire
-  
-  return users;
+  // ✅ MIGRATION TERMINÉE: Plus besoin d'extraire les utilisateurs
+  // - creatorIds est maintenant string[] (IDs)
+  // - supporters est déjà string[] (IDs)
+  // Les utilisateurs sont déjà dans le store
+  return [];
 };
 
 const extractUsersFromPost = (post: Post): User[] => {
@@ -421,13 +402,9 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // UI Actions
-    setActiveTab: (tab) => setStore(prev => ({ ...prev, activeTab: tab })),
+    // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
     setHasEnteredPlatform: (entered) => setStore(prev => ({ ...prev, hasEnteredPlatform: entered })),
     setShowOnboarding: (show) => setStore(prev => ({ ...prev, showOnboarding: show })),
-    setSelectedIdeaId: (id) => setStore(prev => ({ ...prev, selectedIdeaId: id })),
-    setSelectedPostId: (id) => setStore(prev => ({ ...prev, selectedPostId: id })),
-    setSelectedUserId: (id) => setStore(prev => ({ ...prev, selectedUserId: id })),
-    setSelectedCommunityId: (id) => setStore(prev => ({ ...prev, selectedCommunityId: id })),
     setCurrentUserId: (id) => setStore(prev => ({ ...prev, currentUserId: id })),
 
     // Temporary Actions
@@ -467,7 +444,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
             communities: normalizeCommunities(initialData.communities || []),
             communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
-            currentUserId: initialData.currentUserId || ''
+            currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
           };
         });
       } catch (error) {

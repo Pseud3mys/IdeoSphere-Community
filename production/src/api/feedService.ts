@@ -1,6 +1,6 @@
 // src/services/feedService.ts
 
-import { Idea, Post, Community } from '../types';
+import { Idea, Post, Community, User } from '../types';
 // Import des dépendances nécessaires pour les appels directs et la transformation
 import apiClient from './apiClient';
 import {
@@ -36,7 +36,7 @@ export interface FeedIdeaCard {
   title: string;
   summary: string;
   location?: string;
-  creators: Array<{ id: string; name: string; avatar: string }>;
+  creatorIds: string[];
   status: string;
   createdAt: Date;
   supporters: string[]; // ✅ AJOUTER CETTE LIGNE
@@ -124,11 +124,12 @@ export async function fetchFeed(userId: string): Promise<{
   ideas: FeedIdeaCard[];
   posts: FeedPostCard[];
   communities: Community[];
+  users: User[];
 }> {
   console.log(`[API] fetchFeed (neighbors activity) pour l'utilisateur ${userId}`);
   if (!userId) {
     console.error('[API] fetchFeed - Erreur: userId est requis.');
-    return { ideas: [], posts: [], communities: [] };
+    return { ideas: [], posts: [], communities: [], users: [] };
   }
   
   try {
@@ -139,7 +140,8 @@ export async function fetchFeed(userId: string): Promise<{
     const rawData = response.data;
 
     // 2. Transformation des données brutes en objets complets
-    const usersMap = new Map(rawData.users.map(rawUser => [rawUser._id, transformUser(rawUser)]));
+    const users = rawData.users.map(transformUser);
+    const usersMap = new Map(users.map(u => [u.id, u]));
     const ideas: Idea[] = [];
     const posts: Post[] = [];
 
@@ -171,11 +173,12 @@ export async function fetchFeed(userId: string): Promise<{
     return {
       ideas: ideaCards,
       posts: postCards,
-      communities: [] // L'API ne fournit pas cette donnée pour le moment
+      communities: [], // L'API ne fournit pas cette donnée pour le moment
+      users: users
     };
   } catch (error) {
     console.error(`[API] fetchFeed (neighbors) - Erreur:`, error);
-    return { ideas: [], posts: [], communities: [] };
+    return { ideas: [], posts: [], communities: [], users: [] };
   }
 }
 
@@ -244,7 +247,7 @@ const transformIdeaToCard = (idea: Idea): FeedIdeaCard => ({
     title: idea.title,
     summary: idea.summary,
     location: idea.location,
-    creators: idea.creators.map(c => ({ id: c.id, name: c.name, avatar: c.avatar })),
+    creatorIds: idea.creatorIds,
     status: idea.status,
     createdAt: idea.createdAt,
     supporters: idea.supporters || [],

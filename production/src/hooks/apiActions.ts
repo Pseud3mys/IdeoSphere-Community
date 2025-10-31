@@ -32,7 +32,8 @@ export function createApiActions(
           discussions: mockData.discussions.length
         });
         
-        // Initialiser le store avec toutes les données
+        // Initialiser le store avec toutes les données SANS utilisateur connecté
+        // Les boutons de connexion définiront le currentUserId
         actions.initializeStore({
           users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
           ideas: mockData.ideas,
@@ -40,10 +41,10 @@ export function createApiActions(
           discussionTopics: mockData.discussions,
           communities: [],
           communityMemberships: [],
-          currentUserId: mockData.currentUser.id
+          currentUserId: null // ✅ Pas d'utilisateur connecté par défaut
         });
         
-        console.log('✅ [apiActions] Store initialisé avec toutes les données');
+        console.log('✅ [apiActions] Store initialisé avec toutes les données (currentUserId: null)');
         
         return true;
       } catch (error) {
@@ -103,9 +104,6 @@ export function createApiActions(
           const ideasFromStore = store.feedIdeaIds.map(id => boundSelectors.getIdeaById(id)).filter(Boolean);
           const postsFromStore = store.feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
           
-          // Naviguer vers la page discovery
-          actions.setActiveTab('discovery');
-          
           return {
             posts: postsFromStore,
             ideas: ideasFromStore,
@@ -138,6 +136,14 @@ export function createApiActions(
           feedPostIds.push(minimalPost.id);
         });
         
+        // Ajouter les utilisateurs au store
+        if (feedData.users && feedData.users.length > 0) {
+          feedData.users.forEach((user: any) => {
+            actions.addUser(user);
+          });
+          console.log(`✅ [apiActions] fetchFeed: Ajouté ${feedData.users.length} utilisateurs au store`);
+        }
+        
         // Stocker les IDs des items du feed et mettre à jour le timestamp du cache
         actions.setFeedIdeaIds(feedIdeaIds);
         actions.setFeedPostIds(feedPostIds);
@@ -148,9 +154,6 @@ export function createApiActions(
         const postsFromStore = feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
         
         console.log(`✅ [apiActions] fetchFeed: Chargé ${ideasFromStore.length} idées et ${postsFromStore.length} posts depuis l'API`);
-        
-        // Naviguer vers la page discovery
-        actions.setActiveTab('discovery');
         
         return {
           posts: postsFromStore,
@@ -167,8 +170,6 @@ export function createApiActions(
         const allIdeas = boundSelectors.getPublishedIdeas();
         const allPosts = boundSelectors.getAllPosts();
         const limitedPosts = allPosts.slice(0, 5);
-        
-        actions.setActiveTab('discovery');
         
         return {
           posts: limitedPosts,
@@ -205,9 +206,6 @@ export function createApiActions(
           const contributions = boundSelectors.getMyContributions();
           
           if (contributions) {
-            // Naviguer vers mes idées
-            actions.setActiveTab('my-ideas');
-            
             return {
               participationIdeas: contributions.participationIdeas,
               supportIdeas: contributions.supportIdeas,
@@ -225,7 +223,6 @@ export function createApiActions(
         
         if (!apiContributionsData) {
           console.error('❌ [apiActions] fetchMyContributions: Pas de données de contributions');
-          actions.setActiveTab('my-ideas');
           return null;
         }
         
@@ -250,14 +247,14 @@ export function createApiActions(
         const participationIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
-          .filter(idea => idea.creators?.includes(currentUser.id));
+          .filter(idea => idea.creatorIds?.includes(currentUser.id));
           
         const supportIdeas = allIdeaIds
           .map(id => boundSelectors.getIdeaById(id))
           .filter(Boolean)
           .filter(idea => 
-            idea.supporters?.includes(currentUser.id) && // ✅ supporters est maintenant string[]
-            !idea.creators?.includes(currentUser.id)
+            idea.supporters?.includes(currentUser.id) &&
+            !idea.creatorIds?.includes(currentUser.id)
           );
           
         const participationPosts = allPostIds
@@ -282,14 +279,10 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] fetchMyContributions: Chargé ${participationIdeas.length} idées participation et ${supportIdeas.length} idées soutien depuis l'API`);
         
-        // Naviguer vers mes idées
-        actions.setActiveTab('my-ideas');
-        
         return contributionsFromStore;
         
       } catch (error) {
         console.error('❌ [hook/apiActions] fetchMyContributions:', error);
-        actions.setActiveTab('my-ideas');
         return null;
       }
     },
@@ -321,22 +314,15 @@ export function createApiActions(
         
         if (!userFromStore) {
           console.error('❌ [apiActions] fetchMyProfile: Utilisateur non trouvé dans le store après mise à jour');
-          actions.setActiveTab('profile');
           return null;
         }
         
         console.log(`✅ [apiActions] fetchMyProfile: Chargé profil de ${userFromStore.name} depuis le store`);
         
-        // Naviguer vers le profil
-        actions.setActiveTab('profile');
-        
         return userFromStore;
         
       } catch (error) {
         console.error('❌ [apiActions] fetchMyProfile:', error);
-        
-        // En cas d'erreur, naviguer quand même vers le profil
-        actions.setActiveTab('profile');
         
         // Retourner l'utilisateur depuis le store
         return boundSelectors.getUserById(currentUser.id) || currentUser;
@@ -381,7 +367,7 @@ export function createApiActions(
                 title: parentItem.title || '',
                 summary: parentItem.summary || '',
                 description: '',
-                creators: parentItem.creators || [], // ✅ Ideas: utiliser creators (User[])
+                creatorIds: parentItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
                 createdAt: parentItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -423,7 +409,7 @@ export function createApiActions(
                 title: childItem.title || '',
                 summary: childItem.summary || '',
                 description: '',
-                creators: childItem.creators || [], // ✅ Ideas: utiliser creators (User[])
+                creatorIds: childItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
                 createdAt: childItem.createdAt,
                 supportCount: 0,
                 supporters: [],
@@ -725,12 +711,17 @@ export function createApiActions(
           const parentsFromStore = lineageData.parents.map(parent => {
             if (parent.type === 'idea') {
               const idea = boundSelectors.getIdeaById(parent.id);
+              // Résoudre les créateurs depuis les IDs
+              const authors = (idea.creatorIds || [])
+                .map(id => boundSelectors.getUserById(id))
+                .filter(Boolean) as User[];
+              
               return idea ? {
                 id: idea.id,
                 type: 'idea' as const,
                 title: idea.title,
                 summary: idea.summary,
-                authors: idea.creators,
+                authors: authors,
                 createdAt: idea.createdAt,
                 level: -1,
                 relationshipType: 'parent' as const
@@ -752,12 +743,17 @@ export function createApiActions(
           const childrenFromStore = lineageData.children.map(child => {
             if (child.type === 'idea') {
               const idea = boundSelectors.getIdeaById(child.id);
+              // Résoudre les créateurs depuis les IDs
+              const authors = (idea.creatorIds || [])
+                .map(id => boundSelectors.getUserById(id))
+                .filter(Boolean) as User[];
+              
               return idea ? {
                 id: idea.id,
                 type: 'idea' as const,
                 title: idea.title,
                 summary: idea.summary,
-                authors: idea.creators,
+                authors: authors,
                 createdAt: idea.createdAt,
                 level: 1,
                 relationshipType: 'child' as const
@@ -768,6 +764,11 @@ export function createApiActions(
           
           console.log(`✅ [apiActions] Construit lineage depuis le store: ${parentsFromStore.length} parents, ${childrenFromStore.length} enfants`);
           
+          // Résoudre les créateurs de l'idée actuelle depuis les IDs
+          const currentAuthors = (currentIdea.creatorIds || [])
+            .map(id => boundSelectors.getUserById(id))
+            .filter(Boolean) as User[];
+          
           // Retourner un objet compatible avec LineageResult
           return {
             currentItem: {
@@ -775,7 +776,7 @@ export function createApiActions(
               type: 'idea' as const,
               title: currentIdea.title,
               summary: currentIdea.summary,
-              authors: currentIdea.creators,
+              authors: currentAuthors,
               createdAt: currentIdea.createdAt,
               level: 0,
               relationshipType: 'current' as const
@@ -889,10 +890,7 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] publishIdea: Idée "${newIdea.title}" créée et ajoutée au store`);
         
-        // Naviguer vers la page de détail de l'idée
-        actions.setSelectedIdeaId(newIdea.id);
-        actions.setActiveTab('idea-detail');
-        
+        // Note: Navigation is now handled by the caller using useNavigate()
         toast.success('Votre idée a été publiée avec succès !');
         return newIdea;
       } catch (error) {
@@ -963,10 +961,7 @@ export function createApiActions(
         
         console.log(`✅ [apiActions] publishPost: Post créé et ajouté au store`);
         
-        // Naviguer vers la page de détail du post
-        actions.setSelectedPostId(newPost.id);
-        actions.setActiveTab('post-detail');
-        
+        // Note: Navigation is now handled by the caller using useNavigate()
         toast.success('Votre post a été publié avec succès !');
         return newPost;
       } catch (error) {

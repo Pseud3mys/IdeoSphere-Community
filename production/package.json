@@ -35,9 +35,11 @@
             "cmdk": "^1.1.1",
             "embla-carousel-react": "^8.6.0",
             "input-otp": "^1.4.2",
+            "keycloak-js": "^26.2.1",
             "lucide-react": "^0.487.0",
             "motion": "*",
             "next-themes": "^0.4.6",
+            "qrcode": "^1.5.4",
             "react": "^18.3.1",
             "react-day-picker": "^8.10.1",
             "react-dom": "^18.3.1",
@@ -45,6 +47,7 @@
             "react-hook-form": "^7.55.0",
             "react-markdown": "^10.1.0",
             "react-resizable-panels": "^2.1.7",
+            "react-router-dom": "^6.23.1",
             "recharts": "^2.15.2",
             "sonner": "^2.0.3",
             "tailwind-merge": "*",
@@ -52,6 +55,7 @@
       },
       "devDependencies": {
             "@types/node": "^20.19.23",
+            "@types/qrcode": "^1.5.6",
             "@types/react": "^19.1.13",
             "@vitejs/plugin-react-swc": "^3.10.2",
             "vite": "^6.3.6"

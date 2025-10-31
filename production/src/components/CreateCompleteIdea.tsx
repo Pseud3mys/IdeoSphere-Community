@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Idea, Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
 import { SourceIndicatorBanner } from './create-idea/SourceIndicatorBanner';
 import { BasicIdeaForm } from './create-idea/BasicIdeaForm';
@@ -49,7 +50,8 @@ export function CreateCompleteIdea({
     getDiscussionTopicById,
     actions
   } = useEntityStoreSimple();
-
+  
+  const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
   const users = getAllUsers();
   const ideas = getAllIdeas();
@@ -98,6 +100,10 @@ export function CreateCompleteIdea({
       return loadedDraft.description || '';
     }
     if (sourceIdea) {
+      const sourceCreatorName = sourceIdea.creatorIds?.[0] 
+        ? (getUserById(sourceIdea.creatorIds[0])?.name || 'l\'équipe')
+        : 'l\'équipe';
+      
       return `[À modifier] ${sourceIdea.description}
 
 ---
@@ -109,7 +115,7 @@ export function CreateCompleteIdea({
 - Adapter aux contraintes locales mentionnées
 - Enrichir avec de nouvelles fonctionnalités suggérées
 
-*Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceIdea.creators[0]?.name || 'l\'équipe'}.*`;
+*Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceCreatorName}.*`;
     }
     return derivedSourcePost && derivedSourcePostAuthor ? `En me basant sur le post de ${derivedSourcePostAuthor.name}:
 
@@ -158,7 +164,7 @@ Je propose de développer cette idée...` : '';
     // Vérifier si l'utilisateur peut créer des idées
     if (!actions.canCreateIdea()) {
       toast.error('Vous devez créer un compte pour publier une idée');
-      actions.goToSignup();
+      navigation.goToSignup();
       return;
     }
     
@@ -192,7 +198,7 @@ Je propose de développer cette idée...` : '';
     publishIdea();
   };
 
-  const publishIdea = () => {
+  const publishIdea = async () => {
     // Séparer les sourceIdeas et sourcePosts depuis selectedParentIds
     const sourceIdeas: string[] = [];
     const sourcePosts: string[] = [];
@@ -213,7 +219,7 @@ Je propose de développer cette idée...` : '';
       sourceIdeas.push(prefilledSourceIdea);
     }
 
-    actions.publishIdea({
+    const newIdea = await actions.publishIdea({
       title: title.trim(),
       summary: summary.trim(),
       description: description.trim(),
@@ -224,6 +230,11 @@ Je propose de développer cette idée...` : '';
       sourceDiscussions: prefilledSelectedDiscussions || [], // Ajouter les discussions sources
       discussionIds: [] // Ne pas copier les discussions
     });
+    
+    // Navigate to the created idea
+    if (newIdea) {
+      navigation.goToIdea(newIdea.id);
+    }
     
     // Reset form
     setTitle('');

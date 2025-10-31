@@ -18,7 +18,7 @@ export function createUserActions(
       if (prefilledData) {
         actions.setPrefilledSignupData(prefilledData);
       }
-      actions.setActiveTab('signup');
+      // Note: Navigation is now handled by the caller using useNavigate()
     },
     
     createUserAccount: async (userData: {
@@ -118,10 +118,10 @@ export function createUserActions(
     },
     
     // Action pour vérifier l'existence d'un email via l'API d'authentification
-    checkEmailExists: async (email: string) => {
+    checkEmailExists: async (email: string, password: string = '') => {
       try {
         const { loginWithEmail } = await import('../api/authService');
-        const user = await loginWithEmail(email);
+        const user = await loginWithEmail(email, password);
         
         // ✅ Si l'utilisateur existe, l'ajouter au store immédiatement
         if (user) {
@@ -185,6 +185,7 @@ export function createUserActions(
         const apiData = {
           name: userData.name,
           email: userData.email,
+          password: userData.password,
           address: userData.address,
           bio: userData.bio,
           birthYear: userData.birthYear || new Date().getFullYear() - 25
@@ -272,6 +273,28 @@ export function createUserActions(
       } catch (error) {
         console.error('❌ [hook/userActions] addUserAndSetAsCurrent:', error);
         return null;
+      }
+    },
+    
+    // Action pour la connexion via SSO
+    loginWithSSO: async () => {
+      try {
+        const { loginWithSSO: loginWithSSOApi } = await import('../api/authService');
+        loginWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] loginWithSSO:', error);
+      }
+    },
+    
+    // Action pour l'inscription via SSO
+    registerWithSSO: async () => {
+      try {
+        const { registerWithSSO: registerWithSSOApi } = await import('../api/authService');
+        registerWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] registerWithSSO:', error);
       }
     }
   };

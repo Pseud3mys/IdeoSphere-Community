@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Idea, User } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -33,6 +34,7 @@ interface IdeaVersionsTabProps {
   currentUser: User;
   allIdeas: Idea[]; // Toutes les idées pour trouver les versions
   isSupported: boolean;
+  onPostClick?: (postId: string) => void; // Navigation vers un post
 }
 
 export function IdeaVersionsTab({
@@ -40,9 +42,11 @@ export function IdeaVersionsTab({
   currentUser,
   allIdeas,
   isSupported,
+  onPostClick,
 }: IdeaVersionsTabProps) {
   // Utilisation du store pour les actions
   const { actions, getUserById, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   const allPosts = getAllPosts();
   const allDiscussions = getAllDiscussionTopics();
 
@@ -66,7 +70,7 @@ export function IdeaVersionsTab({
     actions.toggleIdeaSupport(versionId);
   };
 
-  const isCreator = idea.creators?.some(c => c.id === currentUser.id) || false;
+  const isCreator = idea.creatorIds?.includes(currentUser.id) || false;
 
   // Récupérer les discussions pour cette idée depuis le store
   const discussionTopics = allDiscussions.filter(topic => 
@@ -117,7 +121,7 @@ export function IdeaVersionsTab({
               if (!parentIdea) return null;
               
               return (
-                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.viewVersion(parentId)}>
+                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => navigation.goToIdea(parentId)}>
                   <div className="flex-shrink-0">
                     <GitBranch className="w-4 h-4 text-purple-600" />
                   </div>
@@ -152,7 +156,7 @@ export function IdeaVersionsTab({
               if (!parentPostAuthor || parentPostAuthor.id === 'unknown') return null;
               
               return (
-                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.goToPost(parentId)}>
+                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => onPostClick && onPostClick(parentId)}>
                   <div className="flex-shrink-0">
                     <MessageSquare className="w-4 h-4 text-purple-600" />
                   </div>
@@ -214,7 +218,7 @@ export function IdeaVersionsTab({
       {/* Versions List - maintenant ce sont des idées normales */}
       <div className="space-y-4">
         {versionIdeas.map(versionIdea => {
-          const isAuthor = versionIdea.creators?.some(c => c.id === currentUser.id) || false;
+          const isAuthor = versionIdea.creatorIds?.includes(currentUser.id) || false;
           const hasSupported = versionSupports[versionIdea.id] || false;
 
           return (
@@ -230,7 +234,7 @@ export function IdeaVersionsTab({
                       <h4 
                         className="font-medium hover:text-primary cursor-pointer"
                         onClick={() => {
-                          actions.viewVersion(versionIdea.id);
+                          navigation.goToIdea(versionIdea.id);
                         }}
                       >
                         {versionIdea.title}
@@ -242,9 +246,9 @@ export function IdeaVersionsTab({
                     
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
                       {(() => {
-                        // ✅ Résoudre les créateurs depuis le store pour avoir les données complètes
-                        const resolvedCreators = versionIdea.creators
-                          .map(c => getUserById(c.id))
+                        // ✅ Résoudre les créateurs depuis les IDs
+                        const resolvedCreators = (versionIdea.creatorIds || [])
+                          .map(id => getUserById(id))
                           .filter(Boolean) as User[];
                         
                         if (resolvedCreators.length === 0) return null;
@@ -317,7 +321,7 @@ export function IdeaVersionsTab({
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        actions.viewVersion(versionIdea.id);
+                        navigation.goToIdea(versionIdea.id);
                       }}
                       className="flex items-center space-x-1"
                     >

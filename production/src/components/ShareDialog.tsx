@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Copy, Check, Share, Smartphone } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import QRCode from 'qrcode';
 
 interface ShareDialogProps {
   contentId: string;
@@ -13,29 +14,62 @@ interface ShareDialogProps {
 }
 
 /**
- * Composant générique de partage de contenu
- * Remplace ShareIdeaDialog et SharePostDialog
+ * Configuration du domaine de base pour les liens de partage
+ * Peut être modifié selon l'environnement (dev/prod)
+ */
+const BASE_URL_OVERRIDE: string | null = null; // Mettre votre domaine personnalisé ici, ou null pour auto-détection
+
+/**
+ * Obtient l'URL de base pour les liens de partage
+ * - Si BASE_URL_OVERRIDE est défini, utilise cette valeur
+ * - Sinon, détecte automatiquement depuis window.location.origin
+ * - Fallback sur http://localhost:3000 en mode SSR
+ */
+const getBaseUrl = (): string => {
+  if (BASE_URL_OVERRIDE) {
+    return BASE_URL_OVERRIDE;
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'http://localhost:3000';
+};
+
+/**
+ * Composant générique de partage de contenu avec QR code
+ * 
+ * Fonctionnalités :
+ * - Génère un QR code scannable vers le contenu
+ * - Détecte automatiquement le domaine (window.location.origin) ou utilise BASE_URL_OVERRIDE
+ * - Supporte le partage natif (mobile) et par copie de lien
+ * - Partage par email et WhatsApp
+ * - Utilise les IDs préfixés (ideas/12345 ou posts/12346)
+ * 
+ * @example
+ * // Pour une idée
+ * <ShareDialog contentId="ideas/12345" contentTitle="Mon idée" contentType="idea">
+ *   <Button>Partager</Button>
+ * </ShareDialog>
+ * 
+ * // Pour un post
+ * <ShareDialog contentId="posts/67890" contentTitle="Mon post" contentType="post">
+ *   <Button>Partager</Button>
+ * </ShareDialog>
+ * 
+ * Remplace les anciens composants ShareIdeaDialog et SharePostDialog
  */
 export function ShareDialog({ contentId, contentTitle, contentType, children }: ShareDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // Generate a simple QR code pattern using CSS
-  const qrCodePattern = Array.from({ length: 21 }, (_, i) => 
-    Array.from({ length: 21 }, (_, j) => {
-      // Create a deterministic pattern based on content ID
-      const hash = (contentId + i.toString() + j.toString()).split('').reduce((a, b) => {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0);
-      return Math.abs(hash) % 3 === 0;
-    })
-  );
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Générer l'URL et le texte en fonction du type
-  const contentUrl = contentType === 'idea' 
-    ? `https://ideosphere.fr/idees/${contentId}`
-    : `https://ideosphere.fr/posts/${contentId}`;
+  const baseUrl = getBaseUrl();
+  
+  // Générer l'URL avec le format préfixé
+  // contentId est déjà au format "ideas/12345" ou "posts/12346"
+  // L'URL finale sera : http://localhost:3000/content/ideas/12345
+  const contentUrl = `${baseUrl}/content/${contentId}`;
   
   const previewText = contentType === 'idea' 
     ? contentTitle
@@ -89,15 +123,43 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
     }
   };
 
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
+  // Générer le QR code quand le dialog s'ouvre
+  useEffect(() => {
+    // ✅ FIX: Ne vérifier canvasRef.current QUE dans le setTimeout
+    // pour laisser le temps au DOM de connecter la ref
+    if (isOpen) {
+      console.log('🔄 [ShareDialog] Dialog ouvert, tentative de génération du QR code...');
+      
+      // Petit délai pour s'assurer que le canvas est bien rendu dans le DOM
+      const timer = setTimeout(() => {
+        if (canvasRef.current) {
+          console.log('✅ [ShareDialog] Canvas trouvé, génération du QR code pour:', contentUrl);
+          QRCode.toCanvas(canvasRef.current, contentUrl, {
+            width: 200,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            },
+          }).then(() => {
+            console.log('✅ [ShareDialog] QR code généré avec succès');
+          }).catch(err => {
+            console.error('❌ [ShareDialog] Erreur lors de la génération du QR code:', err);
+          });
+        } else {
+          console.warn('⚠️ [ShareDialog] Canvas toujours null après le délai');
+        }
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, contentUrl]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div onClick={handleOpen}>
+      <DialogTrigger asChild>
         {children}
-      </div>
+      </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -112,20 +174,17 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
         <div className="space-y-6">
           {/* QR Code */}
           <div className="text-center space-y-4">
-            <div className="mx-auto w-48 h-48 bg-white p-4 rounded-lg border-2 border-border">
-              <div className="w-full h-full grid grid-cols-21 gap-0">
-                {qrCodePattern.map((row, i) =>
-                  row.map((cell, j) => (
-                    <div
-                      key={`${i}-${j}`}
-                      className={`w-full h-full ${cell ? 'bg-black' : 'bg-white'}`}
-                    />
-                  ))
-                )}
-              </div>
+            <div className="mx-auto w-52 h-52 bg-white p-3 rounded-lg border-2 border-gray-200 shadow-sm flex items-center justify-center">
+              <canvas 
+                ref={canvasRef} 
+                width={200}
+                height={200}
+                className="max-w-full max-h-full"
+                style={{ imageRendering: 'pixelated' }}
+              />
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium">{previewText}</p>
+              <p className="text-sm font-medium line-clamp-2">{previewText}</p>
               <div className="flex items-center justify-center space-x-2">
                 <Smartphone className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">

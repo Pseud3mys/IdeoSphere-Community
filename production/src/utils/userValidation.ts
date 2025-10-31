@@ -27,16 +27,22 @@ export function validateUser(user: User | string | undefined | null): User | nul
 }
 
 /**
- * Retourne le premier créateur valide d'une liste de créateurs
+ * Retourne le premier créateur valide d'une liste d'IDs de créateurs
  * Retourne null si aucun créateur valide n'est trouvé
+ * @param creatorIds - Tableau d'IDs de créateurs
+ * @param getUserById - Fonction pour résoudre un ID en User
  */
-export function getFirstCreator(creators: User[] | undefined): User | null {
-  if (!creators || creators.length === 0) {
-    console.warn('⚠️ getFirstCreator: creators array is empty or undefined');
+export function getFirstCreator(
+  creatorIds: string[] | undefined, 
+  getUserById: (id: string) => User | undefined
+): User | null {
+  if (!creatorIds || creatorIds.length === 0) {
+    console.warn('⚠️ getFirstCreator: creatorIds array is empty or undefined');
     return null;
   }
 
-  return validateUser(creators[0]);
+  const firstCreator = getUserById(creatorIds[0]);
+  return validateUser(firstCreator || null);
 }
 
 /**

@@ -118,13 +118,14 @@ export interface RawFeedback {
  * @returns Objet Idea pour le store (avec champs non chargés vides)
  */
 export function transformIdeaCardToIdea(ideaCard: any): Idea {
+  console.log(ideaCard.creatorIds);
   return {
     id: ideaCard.id,
     title: ideaCard.title,
     summary: ideaCard.summary,
     description: ideaCard.description || '', // Peut être vide, chargé dans onglet description
     location: ideaCard.location,
-    creators: ideaCard.creators.map((creator: any) => transformCreatorToUser(creator)),
+    creatorIds: ideaCard.creatorIds || [],
     status: ideaCard.status,
     createdAt: new Date(ideaCard.createdAt),
     tags: ideaCard.tags || [],
@@ -163,29 +164,9 @@ export function transformPostCardToPost(postCard: any): Post {
   };
 }
 
-/**
- * Convertit les données minimales d'un créateur en objet User
- * @param creator - Données minimales du créateur
- * @returns Objet User complet
- */
-function transformCreatorToUser(creator: any): User {
-  return {
-    id: creator.id,
-    name: creator.name,
-    avatar: creator.avatar || '',
-    email: creator.email || '',
-    bio: creator.bio || '',
-    location: creator.location || '',
-    birthYear: creator.birthYear,
-    createdAt: creator.createdAt ? new Date(creator.createdAt) : new Date(),
-    isRegistered: creator.isRegistered !== undefined ? creator.isRegistered : true
-  };
-}
-
-
 const unknownUser: User = {
   id: 'unknown',
-  name: 'Utilisateur Inconnu',
+  name: 'Utilisateur Inconnu apitransform',
   email: '',
   avatar: '/assets/images/avatars/default.png',
   bio: '',
@@ -228,8 +209,8 @@ export const transformComment = (raw: RawComment, usersMap: Map<string, User>): 
 export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post => {
 
   return {
-    id: raw._id,
-    type: 'post', // Ajoutez cette ligne
+    id: raw._id, // c'est le trucentier posts/123345
+    type: 'post',
     content: raw.content || raw.title || '',
     authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),
@@ -248,16 +229,15 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
  * Transforms a RawIdea into the frontend Idea type.
  */
 export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea => {
-  const creators = (raw.creators || []).map(id => usersMap.get(id) || { ...unknownUser, id });
 
   return {
     id: raw._id,
-    type: 'idea', // Ajoutez cette ligne
+    type: 'idea',
     title: raw.title || 'Sans titre',
     summary: raw.summary || (raw.description || '').slice(0, 150),
     description: raw.description || '',
     createdAt: new Date(raw.createdAt),
-    creators,
+    creatorIds: raw.creators,
     supporters: raw.supporters || [],
     status: 'published' as IdeaStatus, // Default status
     tags: raw.tags || [],

@@ -15,7 +15,7 @@ export function useAuthHandlers(
   setCurrentUserData: (user: User) => void,
   handleEnterPlatform: () => void,
   switchToUserByEmail: (email: string) => User | null,
-  checkEmailExists: (email: string) => Promise<User | null>,
+  checkEmailExists: (email: string, password?: string) => Promise<User | null>,
   loginWithSocialProvider: (provider: string, socialData: { email: string; name: string; avatar?: string }) => Promise<User | null>,
   signupUser: (userData: {
     name: string;
@@ -25,16 +25,18 @@ export function useAuthHandlers(
     bio?: string;
     birthYear?: number;
   }) => Promise<User | null>,
-  subscribeToNewsletter: (email: string) => Promise<boolean>
+  subscribeToNewsletter: (email: string) => Promise<boolean>,
+  loginWithSSO?: () => void,
+  registerWithSSO?: () => void
 ) {
   /**
    * Gère la connexion d'un utilisateur
-   * ✅ Utilise uniquement l'action checkEmailExists du store
+   * ✅ Utilise uniquement l'action checkEmailExists du store avec email + mot de passe
    */
   const handleLogin = async (email: string, password: string = ''): Promise<boolean> => {
     try {
-      // ✅ Appeler l'action du store qui vérifie l'email ET ajoute l'user au store
-      const existingUser = await checkEmailExists(email);
+      // ✅ Appeler l'action du store qui vérifie l'email + mot de passe ET ajoute l'user au store
+      const existingUser = await checkEmailExists(email, password);
       
       if (existingUser) {
         // ✅ L'utilisateur est maintenant dans le store grâce à checkEmailExists
@@ -56,7 +58,7 @@ export function useAuthHandlers(
           return true;
         }
       } else {
-        toast.error('Aucun compte trouvé avec cet email. Créez d\'abord un compte.');
+        toast.error('Email ou mot de passe incorrect.');
         return false;
       }
       
@@ -178,10 +180,48 @@ export function useAuthHandlers(
     }
   };
 
+  /**
+   * Gère la connexion via SSO (Single Sign-On)
+   * ✅ Utilise l'action loginWithSSO du store
+   */
+  const handleLoginSSO = () => {
+    try {
+      if (loginWithSSO) {
+        loginWithSSO();
+        // Note: la fonction SSO provoque une redirection, le code suivant ne sera pas exécuté
+      } else {
+        toast.error('La connexion SSO n\'est pas disponible');
+      }
+    } catch (error) {
+      console.error('❌ [hook/useAuthHandlers] handleLoginSSO:', error);
+      toast.error('Erreur lors de la connexion SSO. Veuillez réessayer.');
+    }
+  };
+
+  /**
+   * Gère l'inscription via SSO (Single Sign-On)
+   * ✅ Utilise l'action registerWithSSO du store
+   */
+  const handleRegisterSSO = () => {
+    try {
+      if (registerWithSSO) {
+        registerWithSSO();
+        // Note: la fonction SSO provoque une redirection, le code suivant ne sera pas exécuté
+      } else {
+        toast.error('L\'inscription SSO n\'est pas disponible');
+      }
+    } catch (error) {
+      console.error('❌ [hook/useAuthHandlers] handleRegisterSSO:', error);
+      toast.error('Erreur lors de l\'inscription SSO. Veuillez réessayer.');
+    }
+  };
+
   return {
     handleLogin,
     handleSocialLogin,
     handleSignup,
-    handleNewsletterSubscribe
+    handleNewsletterSubscribe,
+    handleLoginSSO,
+    handleRegisterSSO
   };
 }

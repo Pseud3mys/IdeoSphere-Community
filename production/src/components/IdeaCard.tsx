@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -26,9 +27,14 @@ interface IdeaCardProps {
 }
 
 // Simple function to format time distance
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Date | undefined): string {
+  if (!date) return 'Date inconnue';
+  
+  // S'assurer que date est bien un objet Date
+  const dateObj = date instanceof Date ? date : new Date(date);
+  
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) return 'À l\'instant';
   if (diffInSeconds < 3600) return `Il y a ${Math.floor(diffInSeconds / 60)} min`;
@@ -58,7 +64,7 @@ export function IdeaCard({
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Utiliser l'Entity Store pour les actions optimisées et récupérer les données les plus récentes
-  const { actions, getCurrentUser, getIdeaById } = useEntityStoreSimple();
+  const { actions, getCurrentUser, getIdeaById, getUserById } = useEntityStoreSimple();
   
   // Utiliser le currentUser du store si pas fourni en props
   const user = currentUser || getCurrentUser();
@@ -154,17 +160,18 @@ export function IdeaCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre */}
-          <h3 
-            className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
-            onClick={handleIdeaClick}
-          >
-            {latestIdea.title}
-          </h3>
+          <Link to={`/content/${latestIdea.id}`}>
+            <h3 
+              className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
+            >
+              {latestIdea.title}
+            </h3>
+          </Link>
           
           {/* Localisation avec badge Projet et badge de chaîne */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
             {(() => {
-              const firstCreator = getFirstCreator(latestIdea.creators);
+              const firstCreator = getFirstCreator(latestIdea.creatorIds, getUserById);
               return firstCreator?.location ? (
                 <>
                   <MapPin className="w-4 h-4" />
@@ -254,8 +261,8 @@ export function IdeaCard({
 
       {/* Auteur - après la description */}
       <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-        <CreatorAvatar creators={latestIdea.creators} />
-        <CreatorNames creators={latestIdea.creators} />
+        <CreatorAvatar creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
+        <CreatorNames creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
         <span>•</span>
         <span>{timeAgo}</span>
       </div>
@@ -302,15 +309,16 @@ export function IdeaCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleIdeaClick}
-              className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-            >
-              <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Voir détails</span>
-            </Button>
+            <Link to={`/content/${latestIdea.id}`}>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
+              >
+                <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Voir détails</span>
+              </Button>
+            </Link>
             
             <Button 
               size="sm"

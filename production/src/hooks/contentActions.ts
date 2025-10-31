@@ -43,14 +43,8 @@ export function createContentActions(
       }
     }
     
-    // Naviguer vers la page de création appropriée
-    if (params.targetType === 'idea') {
-      actions.setActiveTab('create-idea');
-    } else if (params.targetType === 'post') {
-      actions.setActiveTab('create-post');
-    }
-    
-    console.log(`✅ Navigation vers création de ${params.targetType}`);
+    // Note: Navigation is now handled by the caller using useNavigate()
+    console.log(`✅ Pré-remplissage pour création de ${params.targetType}`);
   };
   
   const contentActions = {
@@ -338,7 +332,6 @@ export function createContentActions(
       actions.setPrefilledSelectedDiscussions([]);
       actions.setPrefilledLocation(null); // Nettoyer la localisation pré-remplie
       actions.setPrefilledSourcePostId(null); // Nettoyer le post source pour la création
-      actions.setSelectedPostId(null); // Nettoyer aussi le post sélectionné
     },
     
     // Action pour créer une version depuis une idée
@@ -369,6 +362,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'post'
       });
+      // Naviguer vers la page de création de post
+      navigationActions.goToCreatePost();
     },
     
     // Promouvoir un post en idée
@@ -379,6 +374,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'idea'
       });
+      // Naviguer vers la page de création d'idée
+      navigationActions.goToCreateIdea();
     },
     
     // Actions d'onboarding
