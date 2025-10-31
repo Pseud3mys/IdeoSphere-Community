@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initAuth } from './api/authService';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/authContext';
 
 const container = document.getElementById('root')!;
 const root = createRoot(container);
