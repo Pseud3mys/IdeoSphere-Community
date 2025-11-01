@@ -138,7 +138,7 @@ export async function getPostById(postId: string): Promise<Post | null> {
 export async function getIdeasByUserId(userId: string): Promise<Idea[]> {
   const data = await loadMockDataSet();
   return data.ideas.filter(idea => 
-    idea.creators?.some(creator => creator.id === userId)
+    idea.creatorIds?.includes(userId)
   );
 }
 
@@ -149,7 +149,7 @@ export async function getIdeasByUserId(userId: string): Promise<Idea[]> {
  */
 export async function getPostsByUserId(userId: string): Promise<Post[]> {
   const data = await loadMockDataSet();
-  return data.posts.filter(post => post.author.id === userId);
+  return data.posts.filter(post => post.authorId === userId);
 }
 
 /**

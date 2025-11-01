@@ -12,6 +12,7 @@ const simulateApiDelay = (ms: number = 100) =>
 export interface IdeaDetailsResult {
   idea: Idea;
   discussions?: DiscussionTopic[];
+  users?: User[]; // ✅ Ajout des utilisateurs pour les discussions
   ratings?: any[];
   versions?: Idea[];
 }
@@ -19,16 +20,18 @@ export interface IdeaDetailsResult {
 export interface PostDetailsResult {
   post: Post;
   discussions?: DiscussionTopic[];
+  users?: User[]; // ✅ Ajout des utilisateurs pour les discussions
   replies?: any[];
 }
 
 /**
  * Récupère les discussions associées à une idée ou un post
+ * @returns { discussions: DiscussionTopic[], users: User[] } - Les discussions et les utilisateurs associés
  */
 export async function fetchDiscussions(
   itemId: string,
   itemType: 'idea' | 'post'
-): Promise<DiscussionTopic[]> {
+): Promise<{ discussions: DiscussionTopic[], users: User[] }> {
   await simulateApiDelay(120);
 
   try {
@@ -56,11 +59,39 @@ export async function fetchDiscussions(
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-    return relatedDiscussions;
+    // ✅ Extraire tous les IDs utilisateurs des discussions et posts de discussion
+    const userIds = new Set<string>();
+    relatedDiscussions.forEach(discussion => {
+      // Ajouter l'auteur du topic
+      userIds.add(discussion.authorId);
+      
+      // Ajouter les auteurs de tous les posts dans cette discussion
+      discussion.posts.forEach(post => {
+        userIds.add(post.authorId);
+      });
+      
+      // Ajouter les IDs des utilisateurs qui ont upvoté le topic
+      discussion.upvotes?.forEach(userId => userIds.add(userId));
+      
+      // Ajouter les IDs des utilisateurs qui ont upvoté les posts
+      discussion.posts.forEach(post => {
+        post.upvotes?.forEach(userId => userIds.add(userId));
+      });
+    });
+
+    // ✅ Récupérer les objets User correspondants
+    const users = data.users.filter(user => userIds.has(user.id));
+
+    console.log(`✅ [API] fetchDiscussions - ${relatedDiscussions.length} discussions, ${users.length} utilisateurs`);
+
+    return {
+      discussions: relatedDiscussions,
+      users: users
+    };
     
   } catch (error) {
     console.error(`❌ [API] fetchDiscussions - Erreur:`, error);
-    return [];
+    return { discussions: [], users: [] };
   }
 }
 
@@ -71,28 +102,22 @@ export async function fetchIdeaRatings(ideaId: string): Promise<any[]> {
   await simulateApiDelay(100);
 
   try {
-    const { defaultRatingCriteria } = await import('../data/ratings');
     const ideas = await getAllIdeas();
     const idea = ideas.find(i => i.id === ideaId);
     
     if (!idea) {
+      console.log(`⚠️ [API] fetchIdeaRatings - Idée ${ideaId} non trouvée`);
       return [];
     }
 
-    const ratings = defaultRatingCriteria.map(criterion => ({
-      id: criterion.id,
-      name: criterion.name,
-      description: criterion.description,
-      ideaId: ideaId,
-      averageScore: idea.ratings?.[criterion.id] || 0,
-      totalVotes: Math.floor(Math.random() * 50) + 10,
-      userScore: null
-    }));
-
+    // ✅ Retourner le tableau de ratings de l'idée (peut être undefined)
+    const ratings = idea.ratings || [];
+    console.log(`✅ [API] fetchIdeaRatings - ${ratings.length} évaluations trouvées pour idée ${ideaId}`);
+    
     return ratings;
     
   } catch (error) {
-    console.error(`[api] fetchIdeaRatings - Erreur:`, error);
+    console.error(`❌ [API] fetchIdeaRatings - Erreur:`, error);
     return [];
   }
 }
@@ -142,9 +167,12 @@ export async function fetchIdeaTabDetails(
     const result: IdeaDetailsResult = { idea };
 
     switch (tab) {
-      case 'discussions':
-        result.discussions = await fetchDiscussions(ideaId, 'idea');
+      case 'discussions': {
+        const { discussions, users } = await fetchDiscussions(ideaId, 'idea');
+        result.discussions = discussions;
+        result.users = users;
         break;
+      }
       case 'ratings':
         result.ratings = await fetchIdeaRatings(ideaId);
         break;
@@ -175,9 +203,12 @@ export async function fetchPostTabDetails(
     const result: PostDetailsResult = { post };
 
     switch (tab) {
-      case 'discussions':
-        result.discussions = await fetchDiscussions(postId, 'post');
+      case 'discussions': {
+        const { discussions, users } = await fetchDiscussions(postId, 'post');
+        result.discussions = discussions;
+        result.users = users;
         break;
+      }
       case 'content':
         result.replies = await fetchPostReplies(postId);
         break;

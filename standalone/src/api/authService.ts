@@ -1,5 +1,6 @@
 import { User } from '../types';
 import { loadMockDataSet, getUserByEmail } from './dataService';
+import { getValidAvatar } from './avatarService';
 
 // Simuler un délai d'API
 const simulateApiDelay = (ms: number = 100) => 
@@ -11,11 +12,12 @@ const simulateApiDelay = (ms: number = 100) =>
  */
 
 /**
- * Connexion avec email
+ * Connexion avec email et mot de passe
  * @param email - Email de l'utilisateur
- * @returns User complet ou null si non trouvé
+ * @param password - Mot de passe de l'utilisateur
+ * @returns User complet ou null si non trouvé/mot de passe incorrect
  */
-export async function loginWithEmail(email: string): Promise<User | null> {
+export async function loginWithEmail(email: string, password: string): Promise<User | null> {
   await simulateApiDelay(200);
   
   console.log('🔄 [AUTH] Tentative de connexion avec email:', email);
@@ -23,13 +25,21 @@ export async function loginWithEmail(email: string): Promise<User | null> {
   // Utiliser dataService pour récupérer l'utilisateur
   const user = await getUserByEmail(email);
   
-  if (user && user.isRegistered) {
-    console.log('✅ [AUTH] Utilisateur trouvé et connecté:', user.name);
-    return user;
+  if (!user || !user.isRegistered) {
+    console.log('❌ [AUTH] Utilisateur non trouvé ou non enregistré pour:', email);
+    return null;
   }
   
-  console.log('❌ [AUTH] Utilisateur non trouvé ou non enregistré pour:', email);
-  return null;
+  // ⚠️ EN MODE DÉMO : Accepter n'importe quel mot de passe (ou vide)
+  // Dans un vrai système, vérifier le hash du mot de passe ici
+  // const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  // if (!passwordMatch) {
+  //   console.log('❌ [AUTH] Mot de passe incorrect pour:', email);
+  //   return null;
+  // }
+  
+  console.log('✅ [AUTH] Utilisateur trouvé et connecté:', user.name);
+  return user;
 }
 
 /**
@@ -63,9 +73,9 @@ export async function loginWithSocialProvider(
     id: `user-social-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: userData.name,
     email: userData.email,
-    avatar: userData.avatar || '',
+    avatar: getValidAvatar(userData.name, userData.avatar),
     bio: `Membre de la communauté IdeoSphere connecté via ${provider}`,
-    location: '', // Sera demandé plus tard
+    address: '', // Sera demandé plus tard
     createdAt: new Date(),
     isRegistered: true
   };
@@ -82,13 +92,24 @@ export async function loginWithSocialProvider(
 export async function createUserAccount(userData: {
   name: string;
   email: string;
-  location: string;
-  preciseAddress?: string;
+  password: string;
+  address?: string;
+  bio?: string;
   birthYear: number;
 }): Promise<User | null> {
   await simulateApiDelay(250);
   
   console.log('🔄 [AUTH] Création de compte utilisateur:', userData.email);
+  
+  // ⚠️ EN MODE DÉMO : Le mot de passe est reçu mais pas stocké
+  // Dans un vrai système, on hasherait le mot de passe ici :
+  // const passwordHash = await bcrypt.hash(userData.password, 10);
+  // Et on le stockerait dans la base de données
+  if (userData.password) {
+    console.log('🔐 [AUTH] Mot de passe reçu (longueur:', userData.password.length, 'caractères) - Non stocké en mode démo');
+  } else {
+    console.warn('⚠️ [AUTH] Aucun mot de passe fourni - En mode démo, cela est accepté');
+  }
   
   // Vérifier si l'email est déjà utilisé via dataService
   const existingUser = await getUserByEmail(userData.email);
@@ -98,15 +119,14 @@ export async function createUserAccount(userData: {
     return null;
   }
   
-  // Créer le nouvel utilisateur
+  // Créer le nouvel utilisateur (sans le mot de passe)
   const newUser: User = {
     id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: userData.name,
     email: userData.email,
-    avatar: '', // Avatar par défaut
-    bio: 'Nouveau membre de la communauté IdeoSphere',
-    location: userData.location,
-    preciseAddress: userData.preciseAddress,
+    avatar: getValidAvatar(userData.name),
+    bio: userData.bio || 'Nouveau membre de la communauté IdeoSphere',
+    address: userData.address,
     birthYear: userData.birthYear,
     createdAt: new Date(),
     isRegistered: true
@@ -218,28 +238,75 @@ export async function subscribeToNewsletterOnApi(email: string): Promise<boolean
  * @returns User temporaire avec isRegistered: false
  */
 export async function createUnfinalizedAccountOnApi(guestData?: { 
-  name?: string; 
-  location?: string; 
-  preciseAddress?: string;
+  name?: string;
+  email?: string;
+  address?: string;
+  bio?: string;
 }): Promise<User> {
   await simulateApiDelay(150);
   
-  console.log('🔄 [AUTH] Création de compte non finalisé (temporaire)');
+  console.log('🔄 [AUTH] Création de compte non finalisé (temporaire)', {
+    name: guestData?.name,
+    email: guestData?.email,
+    address: guestData?.address
+  });
   
   const tempId = `temp-guest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
+  const userName = guestData?.name || `Invité ${Math.floor(Math.random() * 1000)}`;
+  const userEmail = guestData?.email || `${tempId}@temp.guest`;
+  
   const tempUser: User = {
     id: tempId,
-    name: guestData?.name || `Invité ${Math.floor(Math.random() * 1000)}`,
-    email: `${tempId}@temp.guest`,
-    bio: 'Compte temporaire non finalisé',
-    avatar: '',
-    location: guestData?.location || '',
-    preciseAddress: guestData?.preciseAddress,
+    name: userName,
+    email: userEmail,
+    bio: guestData?.bio || 'Compte temporaire non finalisé',
+    avatar: getValidAvatar(userName),
+    address: guestData?.address || '',
     createdAt: new Date(),
     isRegistered: false // ✅ Compte non finalisé
   };
   
-  console.log('✅ [AUTH] Compte non finalisé créé:', tempUser.name, '- ID:', tempUser.id);
+  console.log('✅ [AUTH] Compte non finalisé créé:', tempUser.name, tempUser.email, '- ID:', tempUser.id);
   return tempUser;
+}
+
+/**
+ * Connexion via SSO (Single Sign-On)
+ * Redirige vers le service d'authentification externe
+ * Cette fonction provoquera une redirection complète de la page
+ */
+export function loginWithSSO(): void {
+  console.log('🔄 [AUTH] Redirection vers SSO pour connexion');
+  
+  // ⚠️ EN MODE DÉMO : Simuler la redirection SSO
+  // Dans un vrai système, on redirigerait vers le provider SSO :
+  // window.location.href = `https://sso-provider.com/login?redirect_uri=${encodeURIComponent(window.location.origin)}/auth/callback`;
+  
+  // Pour la démo, on simule juste un log
+  console.log('🔐 [AUTH] Redirection SSO simulée - URL cible: /auth/sso/login');
+  
+  // Dans un système réel, cette ligne provoquerait la redirection :
+  // window.location.href = '/auth/sso/login';
+  alert('🔐 SSO Connexion : Redirection vers le service d\'authentification externe (simulé en mode démo)');
+}
+
+/**
+ * Inscription via SSO (Single Sign-On)
+ * Redirige vers le service d'inscription externe
+ * Cette fonction provoquera une redirection complète de la page
+ */
+export function registerWithSSO(): void {
+  console.log('🔄 [AUTH] Redirection vers SSO pour inscription');
+  
+  // ⚠️ EN MODE DÉMO : Simuler la redirection SSO
+  // Dans un vrai système, on redirigerait vers le provider SSO :
+  // window.location.href = `https://sso-provider.com/register?redirect_uri=${encodeURIComponent(window.location.origin)}/auth/callback`;
+  
+  // Pour la démo, on simule juste un log
+  console.log('🔐 [AUTH] Redirection SSO simulée - URL cible: /auth/sso/register');
+  
+  // Dans un système réel, cette ligne provoquerait la redirection :
+  // window.location.href = '/auth/sso/register';
+  alert('🔐 SSO Inscription : Redirection vers le service d\'authentification externe (simulé en mode démo)');
 }

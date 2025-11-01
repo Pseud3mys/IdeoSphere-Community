@@ -1,5 +1,6 @@
 import { Idea, Post, User, DiscussionTopic, Community, CommunityMembership } from '../types';
 import { loadMockDataSet } from './dataService';
+import { users } from '../data/users';
 
 // Types pour les données minimalistes du feed
 export interface FeedIdeaCard {
@@ -7,7 +8,7 @@ export interface FeedIdeaCard {
   title: string;
   summary: string;
   location?: string;
-  creators: Array<{ id: string; name: string; avatar: string }>;
+  creatorIds: string[]; // ✅ Migré de creators: object[] vers creatorIds: string[]
   status: string;
   createdAt: Date;
   supportCount: number;
@@ -19,7 +20,7 @@ export interface FeedPostCard {
   id: string;
   content: string;
   location?: string;
-  authorId: string;
+  authorId: string; // ✅ Migré de author: object vers authorId: string
   createdAt: Date;
   supportCount: number;
   replyCount: number;
@@ -38,6 +39,11 @@ export interface HomePageData {
 const simulateApiDelay = (ms: number = 100) => 
   new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper pour résoudre un userId en User
+const getUserById = (userId: string): User | undefined => {
+  return users.find(u => u.id === userId);
+};
+
 async function generateHomePageSampleData() {
   const sampleIdeas = [
     {
@@ -46,11 +52,7 @@ async function generateHomePageSampleData() {
       summary: 'Créer un espace plus convivial avec des bancs et de la végétation',
       description: '',
       location: 'Place du Marché',
-      creators: [{
-        id: 'sample-user-1',
-        name: 'Marie Dupont',
-        avatar: ''
-      }],
+      creatorIds: ['sample-user-1'], // ✅ Migré vers creatorIds
       status: 'published',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       supportCount: 12,
@@ -63,11 +65,7 @@ async function generateHomePageSampleData() {
       summary: 'Développer un réseau de pistes cyclables protégées',
       description: '',
       location: 'Centre-ville',
-      creators: [{
-        id: 'sample-user-2',
-        name: 'Jean Martin',
-        avatar: ''
-      }],
+      creatorIds: ['sample-user-2'], // ✅ Migré vers creatorIds
       status: 'published',
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       supportCount: 8,
@@ -108,53 +106,77 @@ export async function fetchFeed(userId?: string): Promise<{
   ideas: FeedIdeaCard[];
   posts: FeedPostCard[];
   communities: Community[];
+  users: User[];
 }> {
   console.log(`[api] fetchFeed${userId ? ` - User ${userId}` : ''}`);
   await simulateApiDelay(200);
 
   const data = await loadMockDataSet();
   
-  // Si un userId est fourni, on pourrait personnaliser le feed
-  // Pour l'instant, on retourne tout le contenu publié
-  // Dans une vraie API, on pourrait filtrer selon les préférences de l'utilisateur
+  // Filtrer le contenu pour le feed de découverte :
+  // - Idées publiées (status === 'published')
+  // - Exclure le contenu créé par l'utilisateur connecté (sera dans "Mes contributions")
+  // - Inclure tout le contenu public des autres utilisateurs
   
   const ideaCards: FeedIdeaCard[] = data.ideas
-    .filter(idea => idea.status === 'published')
-    .map(idea => ({
-      id: idea.id,
-      title: idea.title,
-      summary: idea.summary,
-      location: idea.location,
-      creators: idea.creators.map(c => ({
-        id: c.id,
-        name: c.name,
-        avatar: c.avatar
-      })),
-      status: idea.status,
-      createdAt: idea.createdAt,
-      supportCount: idea.supporters?.length || 0, // ✅ Calculer dynamiquement
-      tags: idea.tags || [],
-      type: 'idea' as const
-    }));
+    .filter(idea => {
+      // Seulement les idées publiées
+      if (idea.status !== 'published') return false;
+      
+      // Si un userId est fourni, exclure les idées créées par cet utilisateur
+      if (userId && idea.creatorIds?.includes(userId)) {
+        return false;
+      }
+      
+      return true;
+    })
+    .map(idea => {
+      // ✅ Garder les creatorIds tels quels (pas de résolution en objets)
+      return {
+        id: idea.id,
+        title: idea.title,
+        summary: idea.summary,
+        location: idea.location,
+        creatorIds: idea.creatorIds || [],
+        status: idea.status,
+        createdAt: idea.createdAt,
+        supportCount: idea.supporters?.length || 0,
+        tags: idea.tags || [],
+        type: 'idea' as const
+      };
+    });
 
-  const postCards: FeedPostCard[] = data.posts.map(post => ({
-    id: post.id,
-    content: post.content,
-    location: post.location,
-    authorId: post.author.id,
-    createdAt: post.createdAt,
-    supportCount: post.supporters?.length || 0, // ✅ Calculer dynamiquement
-    replyCount: post.replies?.length || 0,
-    tags: post.tags || [],
-    type: 'post' as const
-  }));
+  const postCards: FeedPostCard[] = data.posts
+    .filter(post => {
+      // Si un userId est fourni, exclure les posts créés par cet utilisateur
+      if (userId && post.authorId === userId) {
+        return false;
+      }
+      
+      return true;
+    })
+    .map(post => {
+      // ✅ Garder l'authorId tel quel (pas de résolution en objet)
+      return {
+        id: post.id,
+        content: post.content,
+        location: post.location,
+        authorId: post.authorId, // ✅ Migré : on garde l'ID au lieu de résoudre l'objet
+        createdAt: post.createdAt,
+        supportCount: post.supporters?.length || 0,
+        replyCount: post.replies?.length || 0,
+        tags: post.tags || [],
+        type: 'post' as const
+      };
+    });
 
-  console.log(`[api] fetchFeed - OK (${ideaCards.length} idées, ${postCards.length} posts)`);
+  console.log(`[api] fetchFeed - OK (${ideaCards.length} idées, ${postCards.length} posts, ${data.users.length} utilisateurs) - User content excluded: ${userId ? 'yes' : 'no'}`);
   
   return {
     ideas: ideaCards,
     posts: postCards,
-    communities: data.communities || []
+    communities: data.communities || [],
+    users: data.users || []
   };
 }
 
@@ -175,17 +197,17 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
     
     // Idées où l'utilisateur est créateur
     const participationIdeas = data.ideas.filter(idea => 
-      idea.creators?.some(c => c.id === userId)
+      idea.creatorIds?.includes(userId)
     );
 
-    // Idées où l'utilisateur est supporter
+    // Idées où l'utilisateur est supporter (supporters est maintenant string[])
     const supportIdeas = data.ideas.filter(idea => 
-      idea.supporters?.some(s => s.id === userId)
+      idea.supporters?.includes(userId)
     );
 
-    // Posts de l'utilisateur
+    // Posts de l'utilisateur (authorId est maintenant string)
     const participationPosts = data.posts.filter(post => 
-      post.author.id === userId
+      post.authorId === userId
     );
 
     // Posts likés par l'utilisateur

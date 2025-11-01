@@ -1,8 +1,12 @@
 import { User, Idea, Post } from '../types';
+import { getValidAvatar } from './avatarService';
 
 /**
  * Service de transformation pur
  * Convertit les données API en objets de domaine avec chargement progressif
+ * 
+ * Note : Les IDs préfixés (ideas/XXX, posts/XXX) sont maintenant conservés
+ * partout dans l'application pour supporter le format d'URL unifié /content/:id
  */
 
 /**
@@ -13,12 +17,13 @@ import { User, Idea, Post } from '../types';
  */
 export function transformIdeaCardToIdea(ideaCard: any): Idea {
   return {
-    id: ideaCard.id,
+    id: ideaCard.id, // Conserver l'ID préfixé (ideas/XXX)
     title: ideaCard.title,
     summary: ideaCard.summary,
     description: ideaCard.description || '', // Peut être vide, chargé dans onglet description
     location: ideaCard.location,
-    creators: ideaCard.creators.map((creator: any) => transformCreatorToUser(creator)),
+    // ✅ Garder les creatorIds tels quels (déjà des IDs dans ideaCard)
+    creatorIds: ideaCard.creatorIds || [],
     status: ideaCard.status,
     createdAt: new Date(ideaCard.createdAt),
     supportCount: ideaCard.supporters?.length || 0, // ✅ Calculer dynamiquement
@@ -42,10 +47,10 @@ export function transformIdeaCardToIdea(ideaCard: any): Idea {
  */
 export function transformPostCardToPost(postCard: any): Post {
   return {
-    id: postCard.id,
+    id: postCard.id, // Conserver l'ID préfixé (posts/XXX)
     content: postCard.content,
     location: postCard.location,
-    authorId: postCard.author.id,
+    authorId: postCard.authorId, // ✅ Migré de author: object vers authorId: string
     createdAt: new Date(postCard.createdAt),
     supportCount: postCard.supporters?.length || 0, // ✅ Calculer dynamiquement
     tags: postCard.tags || [],
@@ -67,11 +72,10 @@ function transformCreatorToUser(creator: any): User {
   return {
     id: creator.id,
     name: creator.name,
-    avatar: creator.avatar || '',
+    avatar: getValidAvatar(creator.name, creator.avatar),
     email: creator.email || '',
     bio: creator.bio || '',
-    location: creator.location || '',
-    preciseAddress: creator.preciseAddress,
+    address: creator.address,
     birthYear: creator.birthYear,
     createdAt: creator.createdAt ? new Date(creator.createdAt) : new Date(),
     isRegistered: creator.isRegistered !== undefined ? creator.isRegistered : true
@@ -91,7 +95,7 @@ export function transformLineageItemToEntity(lineageItem: any): Idea | Post {
       summary: lineageItem.summary || '',
       description: '',
       location: '',
-      creators: lineageItem.authors.map((author: any) => transformCreatorToUser(author)),
+      creatorIds: lineageItem.authors?.map((author: any) => author.id || author) || [], // ✅ Migré vers creatorIds
       status: 'published',
       createdAt: new Date(lineageItem.createdAt),
       supportCount: 0,
@@ -109,7 +113,7 @@ export function transformLineageItemToEntity(lineageItem: any): Idea | Post {
       id: lineageItem.id,
       content: lineageItem.content || '',
       location: '',
-      authorId: lineageItem.authors[0].id,
+      authorId: lineageItem.authors[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
       createdAt: new Date(lineageItem.createdAt),
       supporters: [],
       supportCount: 0,
@@ -133,9 +137,8 @@ export function createVisitorUser(visitorId: string): User {
     name: 'Visiteur',
     email: '',
     bio: 'Utilisateur visiteur',
-    avatar: '',
-    location: '',
-    preciseAddress: '',
+    avatar: getValidAvatar('Visiteur'),
+    address: '',
     birthYear: new Date().getFullYear() - 30,
     createdAt: new Date(),
     isRegistered: false

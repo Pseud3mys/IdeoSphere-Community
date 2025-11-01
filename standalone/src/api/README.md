@@ -1,595 +1,355 @@
-# API Services - Couche d'Accès aux Données
+# API Services - Référence
 
-Le dossier `/api` contient les services qui gèrent l'accès aux données. Ces services simulent une API backend en utilisant des données mockées, mais sont conçus pour être facilement remplaçables par de vraies API.
+## Vue d'Ensemble
 
-## Architecture
+Les services API simulent un backend en utilisant des données mockées. Ils sont conçus pour être facilement remplaçables par de vraies API.
 
 ```
-Hooks/Actions
-    ↓
-API Services (ce dossier)
-    ↓
-Data (données mockées)
+Hooks → API Services → dataService → Données mockées
+   ↑                                         ↓
+   └──────── STORE (source de vérité) ──────┘
 ```
 
-## Services Disponibles
+**Règle Clé** : Les services API ne connaissent QUE les données mockées. Les entités créées dynamiquement existent UNIQUEMENT dans le store.
 
-### authService.ts - Authentification
+## Services
 
-Gère l'authentification et l'inscription des utilisateurs.
+### authService.ts
 
-#### Fonctions
+**Authentification et inscription**
 
 ```typescript
-// Connexion classique
-loginUser(email: string, password: string): Promise<User | null>
-
-// Connexion sociale (Google, GitHub)
-loginWithSocialProvider(provider: string): Promise<User | null>
-
-// Inscription
-signupUser(userData: SignupData): Promise<User | null>
-
-// Vérifications
-checkEmailExists(email: string): Promise<boolean>
-
-// Newsletter
-subscribeToNewsletter(email: string): Promise<boolean>
+loginWithEmail(email: string, password: string): Promise<User | null>
+loginWithSocialProvider(provider: string, userData: {...}): Promise<User | null>
+createUserAccount(userData: { name, email, password, address?, bio?, birthYear }): Promise<User | null>
+createUnfinalizedAccountOnApi(guestData?: {...}): Promise<User>
+validateAuthToken(token: string): Promise<User | null>
+logoutUser(userId: string): Promise<boolean>
+resetPassword(email: string): Promise<boolean>
+subscribeToNewsletterOnApi(email: string): Promise<boolean>
 ```
 
-#### Utilisation
+**Notes** : 
+- `loginWithEmail` : Vérifie email + mot de passe. En mode démo, tout mot de passe est accepté.
+- `createUserAccount` : Reçoit le mot de passe mais ne le stocke pas (en mode démo). Dans un système réel, il serait hashé avec bcrypt avant stockage.
+
+### avatarService.ts
+
+**Génération et validation d'avatars**
 
 ```typescript
-import { loginUser } from '../api/authService';
-
-const user = await loginUser('email@example.com', 'password123');
-if (user) {
-  // Authentification réussie
-}
+generateDefaultAvatar(name: string, size?: number): string
+getValidAvatar(name: string, avatar?: string, size?: number): string
+isValidAvatar(avatar?: string): boolean
+validateImageFile(file: File): { valid: boolean; error?: string }
+resizeImageTo200x200(file: File): Promise<string>
+uploadUserAvatar(userId: string, imageDataUrl: string): Promise<string>
 ```
 
----
+### contentService.ts
 
-### contentService.ts - Création et Récupération de Contenu
-
-Gère la **création** de nouvelles entités et la **récupération** des détails complets.
-
-#### Fonctions
+**Création et récupération de contenu**
 
 ```typescript
-// Création d'idées et posts
-createIdeaOnApi(payload: CreateIdeaPayload): Promise<Idea>
-createPostOnApi(payload: CreatePostPayload): Promise<Post>
+// Création
+createIdeaOnApi(payload: {...}): Promise<Idea>
+createPostOnApi(payload: {...}): Promise<Post>
+createUserAccountOnApi(userData: {...}): Promise<User>
 
-// Détails d'une idée (version complète)
+// Récupération détaillée
 fetchIdeaDetails(ideaId: string): Promise<Idea | null>
-
-// Détails d'un post
 fetchPostDetails(postId: string): Promise<Post | null>
-
-// Profil utilisateur complet
 fetchUserProfileFromApi(userId: string): Promise<User | null>
+
+// Mise à jour
+updateUserProfileOnApi(userId: string, updates: Partial<User>): Promise<User | null>
 ```
 
-#### Distinction avec dataService
+### dataService.ts
 
-- **contentService** : Retourne des données **enrichies** (avec relations)
-- **dataService** : Retourne des données **brutes** (accès direct)
-
-```typescript
-// contentService : données enrichies
-const idea = await fetchIdeaDetails('idea-1');
-// idea.supporters contient les objets User complets
-
-// dataService : données brutes
-const idea = getIdeaById('idea-1');
-// idea.supporterIds contient uniquement les IDs
-```
-
----
-
-### dataService.ts - Accès Direct aux Données
-
-Accès **direct** aux données mockées. Utilisé par les autres services.
-
-#### Fonctions
+**Point d'accès unique aux données mockées**
 
 ```typescript
-// Récupération par ID
-getIdeaById(ideaId: string): Idea | undefined
-getPostById(postId: string): Post | undefined
-getUserById(userId: string): User | undefined
-getDiscussionTopicById(id: string): DiscussionTopic | undefined
+// Chargement initial (UNE SEULE fonction qui charge TOUT)
+loadMockDataSet(): Promise<MockDataSet>
+invalidateMockDataCache(): void
+
+// Recherche par ID
+getUserById(userId: string): Promise<User | null>
+getUserByEmail(email: string): Promise<User | null>
+getIdeaById(ideaId: string): Promise<Idea | null>
+getPostById(postId: string): Promise<Post | null>
 
 // Listes filtrées
 getIdeasByUserId(userId: string): Promise<Idea[]>
 getPostsByUserId(userId: string): Promise<Post[]>
 
 // Listes complètes
-getAllIdeas(): Idea[]
-getAllPosts(): Post[]
-getAllUsers(): User[]
-getAllDiscussions(): DiscussionTopic[]
-getAllCommunities(): Community[]
+getAllIdeas(): Promise<Idea[]>
+getAllPosts(): Promise<Post[]>
+getAllUsers(): Promise<User[]>
+getAllDiscussions(): Promise<DiscussionTopic[]>
 ```
 
-#### ⚠️ LIMITATION CRITIQUE
+**⚠️ LIMITATION CRITIQUE** : Ne retourne QUE les données mockées, pas les entités créées dynamiquement.
 
-**Les services API ne retournent QUE les données mockées !**
+**Usage :**
+- ✅ Chargement initial via `loadInitialData()` UNE fois
+- ✅ Dans les autres services API pour enrichir les données
+- ❌ Jamais dans les hooks pour chercher des entités (utiliser `boundSelectors` à la place)
 
-Les entités créées dynamiquement (idées/posts créés par l'utilisateur) ne sont **PAS** dans les données mockées, elles sont **UNIQUEMENT** dans le store.
+### detailsService.ts
 
-```typescript
-// ❌ PROBLÈME : Cette fonction ne trouve QUE les données mockées
-const idea = await getIdeaById('idea-dynamic-123'); // null (si créée dynamiquement)
-
-// ✅ SOLUTION : Utiliser le store dans les hooks
-const idea = boundSelectors.getIdeaById('idea-dynamic-123'); // Trouve tout !
-```
-
-**Règle** : 
-- `dataService` → Chargement initial UNE FOIS
-- `boundSelectors` → Lecture de TOUTES les données (mockées + dynamiques)
-
-#### ⚠️ Attention
-
-Ce service est un **layer d'abstraction**. Ne jamais importer directement depuis `/data` dans les hooks ou composants.
-
-**✅ Correct - LA SEULE fonction de chargement initial** :
-```typescript
-// Dans apiActions.ts - Chargement initial au démarrage
-// ⚠️ C'EST LA SEULE FONCTION qui peut accéder à dataService !
-loadInitialData: async () => {
-  const { loadMockDataSet } = await import('../api/dataService');
-  const mockData = await loadMockDataSet(); // ✅ Charge TOUTES les données en une fois
-  
-  // ⚠️ Ajouter au store immédiatement !
-  actions.initializeStore({
-    users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
-    ideas: mockData.ideas,
-    posts: mockData.posts,
-    discussionTopics: mockData.discussions,
-    communities: [],
-    communityMemberships: [],
-    currentUserId: mockData.currentUser.id
-  });
-}
-```
-
-**Cette fonction est appelée UNE SEULE FOIS au démarrage dans `useEntityStoreSimple.ts`.**
-
-**❌ Incorrect pour recherche** :
-```typescript
-// Dans un hook - Recherche d'une entité
-const { getIdeaById } = await import('../api/dataService');
-const idea = await getIdeaById(ideaId); // ❌ Ne trouve pas les entités dynamiques !
-
-// ✅ Utiliser boundSelectors à la place
-const idea = boundSelectors.getIdeaById(ideaId); // ✅ Trouve tout !
-```
-
-**❌ Toujours incorrect** :
-```typescript
-// Dans un composant
-import { ideas } from '../data/ideas';  // ❌ Ne jamais faire ça
-```
-
----
-
-### detailsService.ts - Données Détaillées
-
-Charge les **données supplémentaires** nécessaires pour les pages de détail.
-
-#### Fonctions
+**Chargement progressif selon l'onglet**
 
 ```typescript
-// Discussions liées à une entité
-fetchDiscussions(
-  entityId: string, 
-  entityType: 'idea' | 'post'
-): Promise<DiscussionTopic[]>
+fetchDiscussions(itemId: string, itemType: 'idea' | 'post'): 
+  Promise<{ discussions: DiscussionTopic[], users: User[] }>
 
-// Évaluations d'une idée
 fetchIdeaRatings(ideaId: string): Promise<Rating[]>
+fetchPostReplies(postId: string): Promise<PostReply[]>
 
-// Stats détaillées
-fetchDetailedStats(ideaId: string): Promise<DetailedStats>
+fetchIdeaTabDetails(ideaId: string, tab: 'description' | 'discussions' | 'ratings' | 'lineage'): 
+  Promise<IdeaDetailsResult | null>
+
+fetchPostTabDetails(postId: string, tab: 'content' | 'discussions' | 'lineage'): 
+  Promise<PostDetailsResult | null>
 ```
 
-#### Utilisation Typique
+**Principe** : Charger uniquement ce qui est nécessaire pour l'onglet actif.
+
+### feedService.ts
+
+**Données minimalistes pour les feeds**
 
 ```typescript
-// Dans navigationActions.goToIdea()
-const discussions = await fetchDiscussions(ideaId, 'idea');
-discussions.forEach(d => actions.addDiscussionTopic(d));
+fetchHomePageStats(): Promise<HomePageData>
+
+fetchFeed(userId?: string): Promise<{
+  ideas: FeedIdeaCard[];
+  posts: FeedPostCard[];
+  communities: Community[];
+}>
+
+fetchUserContributionsFromApi(userId: string): Promise<{
+  participationIdeas: Idea[];
+  supportIdeas: Idea[];
+  participationPosts: Post[];
+  supportPosts: Post[];
+} | null>
 ```
 
----
+**Principe** : Retourner des cartes légères (FeedIdeaCard, FeedPostCard) sans relations complètes.
 
-### feedService.ts - Feeds et Listes
+### interactionService.ts
 
-Génère les **feeds** (discovery, contributions) avec données minimales pour la performance.
-
-#### Fonctions
+**Interactions utilisateur**
 
 ```typescript
-// Feed principal (discovery)
-fetchFeed(filters?: FeedFilters): Promise<FeedData>
+// Soutien unifié (idées + posts)
+toggleSupportOnApi(contentId: string, userId: string, contentType: 'idea' | 'post', 
+  isCurrentlySupporting: boolean): Promise<SupportResult | null>
 
-// Contributions de l'utilisateur
-fetchMyContributions(userId: string): Promise<ContributionsData>
-
-// Stats page d'accueil
-fetchHomePageStats(): Promise<HomeStats>
-```
-
-#### Principe : Données Minimales
-
-Les feeds retournent uniquement les données nécessaires pour afficher les cartes :
-
-```typescript
-// Feed minimal
-{
-  ideas: [{
-    id: 'idea-1',
-    title: 'Titre',
-    summary: 'Résumé',
-    supportCount: 42,
-    // PAS de description complète
-    // PAS de discussions
-    // PAS d'évaluations détaillées
-  }]
-}
-
-// Les détails sont chargés à la demande via contentService
-```
-
----
-
-### interactionService.ts - Interactions Utilisateur
-
-Gère toutes les **interactions** de l'utilisateur (likes, supports, évaluations, réponses).
-
-#### Fonctions
-
-```typescript
-// Support/Like
-toggleIdeaSupportOnApi(
-  ideaId: string, 
-  userId: string
-): Promise<SupportResult | null>
-
-togglePostLikeOnApi(
-  postId: string, 
-  userId: string
-): Promise<LikeResult | null>
-
-togglePostReplyLikeOnApi(
-  postId: string,
-  replyId: string,
-  userId: string
-): Promise<boolean>
+// Évaluation
+rateIdeaOnApi(ideaId: string, userId: string, criterionId: string, value: number): 
+  Promise<RatingResult | null>
+getIdeaRatingsOnApi(ideaId: string): Promise<Rating[] | null>
 
 // Réponses aux posts
-addPostReplyOnApi(
-  postId: string,
-  userId: string,
-  content: string
-): Promise<PostReply | null>
-
-// Évaluations
-rateIdeaOnApi(
-  ideaId: string, 
-  userId: string, 
-  criterionId: string, 
-  value: number
-): Promise<boolean>
+addPostReplyOnApi(postId: string, userId: string, content: string): Promise<PostReply | null>
+togglePostReplyLikeOnApi(postId: string, replyId: string, userId: string): Promise<boolean>
 
 // Discussions
-createDiscussionTopicOnApi(
-  ideaId: string,
-  userId: string,
-  data: TopicData
-): Promise<string | null>
-
-createDiscussionPostOnApi(
-  topicId: string,
-  userId: string,
-  content: string
-): Promise<string | null>
-
-upvoteDiscussionTopicOnApi(
-  topicId: string,
-  userId: string
-): Promise<boolean>
-
-upvoteDiscussionPostOnApi(
-  topicId: string,
-  postId: string,
-  userId: string
-): Promise<boolean>
+createDiscussionTopicOnApi(ideaId: string, userId: string, data: {...}): 
+  Promise<DiscussionTopic | null>
+createDiscussionPostOnApi(topicId: string, userId: string, content: string): 
+  Promise<DiscussionPost | null>
+upvoteDiscussionTopicOnApi(topicId: string, userId: string): Promise<boolean>
+upvoteDiscussionPostOnApi(topicId: string, postId: string, userId: string): Promise<boolean>
+markDiscussionPostAsAnswerOnApi(topicId: string, postId: string, userId: string): Promise<boolean>
 
 // Modération et social
-reportContentOnApi(...): Promise<boolean>
-ignoreContentOnApi(...): Promise<boolean>
-shareContentOnApi(...): Promise<string | null>
-toggleUserFollowOnApi(...): Promise<boolean>
+reportContentOnApi(contentType, contentId, userId, reason): Promise<boolean>
+ignoreContentOnApi(contentType, contentId, userId): Promise<boolean>
+shareContentOnApi(contentType, contentId, userId): Promise<string | null>
+toggleUserFollowOnApi(targetUserId, currentUserId): Promise<boolean>
 ```
 
-#### Pattern Retourné
+### lineageService.ts
 
-Les fonctions d'interaction retournent soit :
-- Un **objet complet** (pour ajout de contenu)
-- Un **résultat structuré** (pour toggle)
-- Un **boolean** (pour succès/échec simple)
-- **null** en cas d'erreur
+**Relations entre entités (arbre généalogique)**
 
 ```typescript
-// Exemple 1 : Toggle retourne un résultat structuré
-const result = await toggleIdeaSupportOnApi(ideaId, userId);
-if (result) {
-  console.log('Nouveau count:', result.supportCount);
-  console.log('Soutenu?', result.isSupporting);
-}
-
-// Exemple 2 : Ajout retourne l'objet complet
-const newReply = await addPostReplyOnApi(postId, userId, content);
-if (newReply) {
-  console.log('Réponse créée:', newReply.id);
-  console.log('Auteur:', newReply.author.name);
-}
+fetchLineage(itemId: string, itemType: 'idea' | 'post', maxDepth?: number): 
+  Promise<{ lineage: LineageResult, users: User[] } | null>
 ```
 
----
+**Retours** :
+- `lineage.parents` : Sources (idées et posts parents)
+- `lineage.children` : Dérivées (idées et posts enfants)
+- `users` : Utilisateurs associés
 
-### lineageService.ts - Relations entre Entités
+### transformService.ts
 
-Gère les **relations** entre idées et posts (versions, sources, dérivées).
-
-#### Fonctions
+**Transformation de données API → Store**
 
 ```typescript
-// Structure d'un élément de lineage
-interface LineageItem {
-  id: string;
-  type: 'idea' | 'post';
-  title?: string;
-  content?: string;
-  summary?: string;
-  authors: User[];
-  createdAt: Date;
-  level: number;
-  relationshipType: 'parent' | 'child' | 'current';
-}
-
-// Résultat du lineage
-interface LineageResult {
-  currentItem: LineageItem;
-  parents: LineageItem[];      // Sources (idées et posts)
-  children: LineageItem[];     // Dérivées
-  totalLevels: number;
-}
-
-// Récupérer le lineage complet
-fetchLineage(
-  itemId: string, 
-  itemType: 'idea' | 'post',
-  maxDepth?: number
-): Promise<LineageResult | null>
+transformIdeaCardToIdea(ideaCard: any): Idea
+transformPostCardToPost(postCard: any): Post
+transformLineageItemToEntity(lineageItem: any): Idea | Post
+createVisitorUser(visitorId: string): User
 ```
 
-#### Utilisation
+**Principe** : Convertir les données minimales (feed) en objets complets avec champs progressifs initialisés vides.
+
+## Patterns Importants
+
+### 1. Chargement Initial (UNE SEULE FOIS)
 
 ```typescript
-// Dans loadIdeaTabData pour l'onglet versions
-const lineageData = await fetchLineage(ideaId, 'idea');
+// Dans apiActions.ts - loadInitialData()
+const { loadMockDataSet } = await import('../api/dataService');
+const mockData = await loadMockDataSet();
 
-// Accéder aux parents (sources)
-lineageData.parents.forEach(parent => {
-  if (parent.type === 'idea') {
-    // Charger l'idée source complète
-  } else if (parent.type === 'post') {
-    // Charger le post source complet
+actions.initializeStore({
+  users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
+  ideas: mockData.ideas,
+  posts: mockData.posts,
+  discussionTopics: mockData.discussions,
+  communities: [],
+  communityMemberships: [],
+  currentUserId: mockData.currentUser.id
+});
+```
+
+**Appelée UNE fois dans `useEntityStoreSimple.ts` au démarrage.**
+
+### 2. Pattern en 3 Étapes (Obligatoire)
+
+```typescript
+async function loadData(id: string) {
+  // 1. APPELER L'API
+  const { fetchSomething } = await import('../api/someService');
+  const apiData = await fetchSomething(id);
+  
+  // 2. AJOUTER AU STORE
+  if (apiData) {
+    actions.addSomething(apiData);
   }
-});
-
-// Accéder aux enfants (dérivées)
-lineageData.children.forEach(child => {
-  // Toujours des idées pour une idée source
-});
+  
+  // 3. LIRE DEPUIS LE STORE
+  return boundSelectors.getSomethingById(id);
+}
 ```
 
----
+**Pourquoi ?** L'API ne trouve que les données mockées. Le store contient mockées + dynamiques.
 
-### transformService.ts - Transformation de Données
-
-Transforme les données brutes en **formats enrichis** utilisables par l'UI.
-
-#### Fonctions
+### 3. Chargement Progressif
 
 ```typescript
-// Enrichir une idée avec les relations
-enrichIdeaWithRelations(idea: Idea): Promise<EnrichedIdea>
+// Feed : Données minimales
+const feed = await fetchFeed();
+feed.ideas.forEach(ideaCard => {
+  const idea = transformIdeaCardToIdea(ideaCard);
+  actions.addIdea(idea); // Champs progressifs vides
+});
 
-// Résoudre les références utilisateur
-resolveUserReferences(userIds: string[]): User[]
+// Onglet détails : Enrichir progressivement
+const discussions = await fetchDiscussions(ideaId, 'idea');
+discussions.forEach(d => actions.addDiscussionTopic(d));
 
-// Calculer des statistiques agrégées
-calculateIdeaStats(idea: Idea): IdeaStats
-
-// Formater les données pour le feed
-transformToFeedFormat(ideas: Idea[], posts: Post[]): FeedItem[]
+const ratings = await fetchIdeaRatings(ideaId);
+actions.updateIdea(ideaId, { ratings });
 ```
 
-#### Principe
+### 4. Données Minimalistes vs Complètes
 
-Sépare la **logique de transformation** de la logique métier.
+**Feed (légères)** :
+```typescript
+FeedIdeaCard { id, title, summary, creatorIds: string[], supportCount }
+FeedPostCard { id, content, authorId, supportCount, replyCount }
+```
+
+**Détails (complètes)** :
+```typescript
+Idea { id, title, summary, description, creatorIds, supporters, ratings, ... }
+Post { id, content, authorId, supporters, replies, ... }
+```
+
+## Migration en Cours
+
+**Posts** : ✅ Migration terminée
+```typescript
+Post.authorId: string           // ✅ ID simple
+PostReply.authorId: string      // ✅ ID simple
+FeedPostCard.authorId: string   // ✅ ID simple
+```
+
+**Idées** : ✅ Migration terminée
+```typescript
+Idea.creatorIds: string[]       // ✅ IDs des créateurs
+Idea.supporters: string[]       // ✅ IDs des supporters
+```
+
+## Bonnes Pratiques
+
+### ✅ À Faire
 
 ```typescript
-// Au lieu de transformer dans le composant
-const enrichedIdea = {
-  ...idea,
-  creatorDetails: users.find(u => u.id === idea.creatorId)
-};
+// 1. Simuler latence réseau
+await new Promise(resolve => setTimeout(resolve, 150));
 
-// Utiliser transformService
-const enrichedIdea = await enrichIdeaWithRelations(idea);
+// 2. Logs structurés
+console.log('✅ [API] Succès:', data);
+console.error('❌ [API] Échec:', error);
+
+// 3. Gestion d'erreurs
+try {
+  const data = await fetchData();
+  return data;
+} catch (error) {
+  console.error('❌ [API]:', error);
+  return null;
+}
+
+// 4. Données immuables
+return { ...item, ...updates }; // ✅ Nouveau objet
 ```
-
-## Règles de Conception
-
-### ✅ Bonnes Pratiques
-
-1. **Simuler la Latence** : Ajouter des delays pour simuler réseau
-   ```typescript
-   await new Promise(resolve => setTimeout(resolve, 300));
-   ```
-
-2. **Gestion d'Erreurs** : Toujours retourner des structures cohérentes
-   ```typescript
-   try {
-     const data = await fetch(...);
-     return data;
-   } catch (error) {
-     console.error('❌ API Error:', error);
-     return null;
-   }
-   ```
-
-3. **Données Immuables** : Ne jamais muter les données mockées
-   ```typescript
-   // ✅ Correct
-   return { ...idea, title: newTitle };
-   
-   // ❌ Incorrect
-   idea.title = newTitle;
-   return idea;
-   ```
-
-4. **Logs Structurés** : Utiliser des emojis pour la clarté
-   ```typescript
-   console.log('✅ [API] Support ajouté:', ideaId);
-   console.error('❌ [API] Échec:', error);
-   console.log('🔵 [API] Chargement:', ideaId);
-   ```
 
 ### ❌ À Éviter
 
-1. Accès direct aux données depuis les composants
-2. Mutations directes des données mockées
-3. Mélanger logique métier et transformation
-4. Retourner `undefined` au lieu de `null` (cohérence)
-5. Oublier la gestion d'erreurs
-
-## Patterns Communs
-
-### 1. Service Simple (Lecture)
-
 ```typescript
-export async function fetchSomething(id: string): Promise<Something | null> {
-  try {
-    // Simuler latence réseau
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Accès aux données
-    const item = dataService.getSomethingById(id);
-    
-    if (!item) {
-      console.error('❌ [API] Item non trouvé:', id);
-      return null;
-    }
-    
-    // Enrichir si nécessaire
-    const enriched = await enrichItem(item);
-    
-    console.log('✅ [API] Item chargé:', id);
-    return enriched;
-  } catch (error) {
-    console.error('❌ [API] Erreur:', error);
-    return null;
-  }
-}
+// ❌ Accès direct aux données depuis hooks/composants
+import { mockIdeas } from '../data/ideas';
+
+// ❌ Mutation directe
+item.title = newTitle; // Muter les données
+
+// ❌ Retourner undefined
+return undefined; // Utiliser null pour la cohérence
 ```
 
-### 2. Service avec Mutation
+## Règles Clés
 
-```typescript
-export async function updateSomething(
-  id: string, 
-  updates: Partial<Something>
-): Promise<{ success: boolean; item?: Something }> {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const item = dataService.getSomethingById(id);
-    if (!item) {
-      return { success: false };
-    }
-    
-    // Créer nouvelle instance (immuable)
-    const updated = { ...item, ...updates };
-    
-    // Dans un vrai système, envoyer à l'API ici
-    // await fetch(`/api/something/${id}`, { method: 'PATCH', body: updates });
-    
-    console.log('✅ [API] Item mis à jour:', id);
-    return { success: true, item: updated };
-  } catch (error) {
-    console.error('❌ [API] Erreur mise à jour:', error);
-    return { success: false };
-  }
-}
-```
+1. **dataService** = Données mockées uniquement
+2. **boundSelectors** = Toutes les données (mockées + dynamiques)
+3. **Pattern en 3 étapes** = Obligatoire pour les appels API
+4. **Chargement progressif** = Feed léger → Détails enrichis selon onglet
+5. **Transformation** = transformService pour convertir API → Store
 
-### 3. Service avec Agrégation
+## Migration vers API Réelle
 
-```typescript
-export async function fetchAggregatedData(
-  filters: Filters
-): Promise<AggregatedData> {
-  try {
-    const ideas = dataService.getAllIdeas();
-    const posts = dataService.getAllPosts();
-    
-    // Filtrer
-    const filteredIdeas = ideas.filter(idea => 
-      filters.tags?.some(tag => idea.tags?.includes(tag))
-    );
-    
-    // Agréger
-    const stats = {
-      totalIdeas: filteredIdeas.length,
-      totalSupports: filteredIdeas.reduce(
-        (sum, idea) => sum + idea.supportCount, 
-        0
-      )
-    };
-    
-    return {
-      ideas: filteredIdeas,
-      posts,
-      stats
-    };
-  } catch (error) {
-    console.error('❌ [API] Erreur agrégation:', error);
-    return { ideas: [], posts: [], stats: {} };
-  }
-}
-```
-
-## Migration vers une Vraie API
-
-Quand vous passerez à une vraie API, changez uniquement ce dossier :
+Remplacer uniquement les services API :
 
 ```typescript
 // Avant (mocké)
-export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
-  const idea = dataService.getIdeaById(ideaId);
+export async function fetchIdeaDetails(ideaId: string) {
+  const idea = await getIdeaById(ideaId);
   return idea || null;
 }
 
 // Après (vraie API)
-export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
+export async function fetchIdeaDetails(ideaId: string) {
   try {
     const response = await fetch(`${API_URL}/ideas/${ideaId}`);
     if (!response.ok) return null;
@@ -601,32 +361,11 @@ export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
 }
 ```
 
-Les hooks et composants n'ont **pas besoin de changer** !
+Les hooks et composants ne changent pas ! 🎯
 
-## Debugging
+## Voir Aussi
 
-### Tracer les Appels API
-
-```typescript
-// Ajouter au début de chaque fonction
-console.log('🔵 [API] Appel:', functionName, params);
-
-// À la fin
-console.log('✅ [API] Succès:', result);
-// ou
-console.error('❌ [API] Échec:', error);
-```
-
-### Simuler des Erreurs
-
-```typescript
-// Pour tester la gestion d'erreurs
-export async function fetchSomething(id: string) {
-  // Simuler erreur 30% du temps
-  if (Math.random() < 0.3) {
-    throw new Error('Network error');
-  }
-  
-  // Reste du code...
-}
-```
+- **[API_RESPONSE_TYPES.md](./API_RESPONSE_TYPES.md)** - Types et signatures détaillés
+- **[/ARCHITECTURE.md](/ARCHITECTURE.md)** - Architecture globale
+- **[/docs/API_CALLS_PATTERN.md](/docs/API_CALLS_PATTERN.md)** - Pattern en 3 étapes
+- **[/hooks/README.md](/hooks/README.md)** - Documentation des hooks

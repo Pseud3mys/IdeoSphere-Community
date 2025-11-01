@@ -1,4 +1,4 @@
-import { loadMockDataSet, getUserById, getIdeaById, getPostById } from './dataService';
+import { getUserById, getIdeaById, getPostById } from './dataService';
 
 // Simuler un délai d'API
 const simulateApiDelay = (ms: number = 100) => 
@@ -54,15 +54,15 @@ export async function toggleSupportOnApi(
       return null;
     }
     
-    let newSupporters: any[];
+    let newSupporters: string[]; // ✅ Maintenant c'est un tableau d'IDs
     let newIsSupporting: boolean;
     
     if (isCurrentlySupporting) {
-      newSupporters = (idea.supporters || []).filter(s => s.id !== userId);
+      newSupporters = (idea.supporters || []).filter(id => id !== userId);
       newIsSupporting = false;
       console.log('✅ [API] Soutien retiré pour idée:', idea.title);
     } else {
-      newSupporters = [...(idea.supporters || []), user];
+      newSupporters = [...(idea.supporters || []), userId]; // ✅ Ajouter l'ID, pas l'objet User
       newIsSupporting = true;
       console.log('✅ [API] Soutien ajouté pour idée:', idea.title);
     }
@@ -120,29 +120,12 @@ export async function toggleSupportOnApi(
 }
 
 /**
- * @deprecated Utilisez toggleSupportOnApi avec contentType: 'idea' et isCurrentlySupporting
+ * Interface pour le résultat de l'évaluation d'une idée
+ * Approche optimisée : on retourne uniquement le rating modifié
  */
-export async function toggleIdeaSupportOnApi(
-  ideaId: string, 
-  userId: string
-): Promise<SupportResult | null> {
-  // Pour la rétrocompatibilité, calculer isCurrentlySupporting ici
-  const idea = await getIdeaById(ideaId);
-  const isCurrentlySupporting = idea?.supporters?.some(s => s.id === userId) || false;
-  return toggleSupportOnApi(ideaId, userId, 'idea', isCurrentlySupporting);
-}
-
-/**
- * @deprecated Utilisez toggleSupportOnApi avec contentType: 'post' et isCurrentlySupporting
- */
-export async function togglePostLikeOnApi(
-  postId: string, 
-  userId: string
-): Promise<SupportResult | null> {
-  // Pour la rétrocompatibilité, calculer isCurrentlySupporting ici
-  const post = await getPostById(postId);
-  const isCurrentlySupporting = post?.supporters?.includes(userId) || false;
-  return toggleSupportOnApi(postId, userId, 'post', isCurrentlySupporting);
+export interface RatingResult {
+  success: boolean;
+  rating: import('../types').Rating; // ✅ Un seul rating (celui qui a été créé/modifié)
 }
 
 /**
@@ -151,20 +134,22 @@ export async function togglePostLikeOnApi(
  * @param userId - ID de l'utilisateur
  * @param criterionId - ID du critère d'évaluation
  * @param value - Note donnée (1-5)
- * @returns true si succès, false sinon
+ * @returns Uniquement le rating modifié/créé (approche optimisée) ou null si erreur
  */
 export async function rateIdeaOnApi(
   ideaId: string,
   userId: string,
   criterionId: string,
   value: number
-): Promise<boolean> {
+): Promise<RatingResult | null> {
   await simulateApiDelay(120);
+  
+  console.log('🔄 [API] Évaluation idée:', ideaId, 'critère:', criterionId, 'note:', value, 'par:', userId);
   
   // Validation de la note
   if (value < 1 || value > 5) {
     console.log('❌ [API] Note invalide:', value);
-    return false;
+    return null;
   }
   
   // Vérifier que l'idée et l'utilisateur existent
@@ -175,23 +160,68 @@ export async function rateIdeaOnApi(
   
   if (!idea) {
     console.log('❌ [API] Idée non trouvée:', ideaId);
-    return false;
+    return null;
   }
   
   if (!user) {
     console.log('❌ [API] Utilisateur non trouvé:', userId);
-    return false;
+    return null;
   }
   
   // Vérifier que le critère existe
   const criterion = idea.ratingCriteria.find(c => c.id === criterionId);
   if (!criterion) {
     console.log('❌ [API] Critère non trouvé:', criterionId);
-    return false;
+    return null;
   }
   
-  // Dans un vrai système, on mettrait à jour la BD ici
-  return true;
+  // Créer le rating (nouveau ou mise à jour)
+  const newRating: import('../types').Rating = {
+    criterionId,
+    value,
+    userId
+  };
+  
+  // Vérifier si un rating existait déjà (pour le log uniquement)
+  const existingRating = (idea.ratings || []).find(
+    r => r.criterionId === criterionId && r.userId === userId
+  );
+  
+  if (existingRating) {
+    console.log('✅ [API] Rating mis à jour pour:', criterion.name, '(ancienne valeur:', existingRating.value, '→ nouvelle:', value, ')');
+  } else {
+    console.log('✅ [API] Nouveau rating ajouté pour:', criterion.name);
+  }
+  
+  // ✅ Approche optimisée : retourner UNIQUEMENT le rating modifié
+  // Le front-end se chargera de l'intégrer dans son tableau
+  return {
+    success: true,
+    rating: newRating
+  };
+}
+
+/**
+ * Récupérer les ratings d'une idée
+ * @param ideaId - ID de l'idée
+ * @returns Tableau des ratings ou null si erreur
+ */
+export async function getIdeaRatingsOnApi(
+  ideaId: string
+): Promise<import('../types').Rating[] | null> {
+  await simulateApiDelay(80);
+  
+  console.log('🔄 [API] Récupération ratings pour idée:', ideaId);
+  
+  const idea = await getIdeaById(ideaId);
+  
+  if (!idea) {
+    console.log('❌ [API] Idée non trouvée:', ideaId);
+    return null;
+  }
+  
+  console.log('✅ [API] Ratings récupérés:', idea.ratings.length, 'évaluations');
+  return idea.ratings || [];
 }
 
 /**
@@ -421,7 +451,7 @@ export async function addPostReplyOnApi(
   // Créer l'objet PostReply complet
   const newReply: import('../types').PostReply = {
     id: `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    authorId: user.id,
+    authorId: userId, // ✅ Utilise l'ID au lieu de l'objet user
     content: content.trim(),
     createdAt: new Date(),
     likes: [],
@@ -492,7 +522,7 @@ export async function upvoteDiscussionPostOnApi(
  * @param ideaId - ID de l'idée
  * @param userId - ID de l'utilisateur
  * @param data - Données du topic (title, content, type)
- * @returns ID du nouveau topic ou null si erreur
+ * @returns Objet DiscussionTopic complet ou null si erreur
  */
 export async function createDiscussionTopicOnApi(
   ideaId: string,
@@ -502,7 +532,7 @@ export async function createDiscussionTopicOnApi(
     content: string;
     type: 'general' | 'question' | 'suggestion' | 'technical';
   }
-): Promise<string | null> {
+): Promise<import('../types').DiscussionTopic | null> {
   await simulateApiDelay(200);
   
   console.log('🔄 [API] Création topic de discussion pour idée:', ideaId, 'par:', userId);
@@ -533,12 +563,24 @@ export async function createDiscussionTopicOnApi(
     return null;
   }
   
-  // Générer un ID pour le nouveau topic
-  const topicId = `dt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Créer l'objet DiscussionTopic complet
+  const newTopic: import('../types').DiscussionTopic = {
+    id: `dt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    title: data.title.trim(),
+    type: data.type,
+    authorId: userId, // ✅ Utilise l'ID au lieu de l'objet user
+    content: data.content.trim(),
+    timestamp: new Date(),
+    upvotes: [],
+    isPinned: false,
+    posts: [],
+    relatedPostIds: [],
+    createdAt: new Date()
+  };
   
-  console.log('✅ [API] Topic de discussion créé avec ID:', topicId);
+  console.log('✅ [API] Topic de discussion créé avec ID:', newTopic.id);
   // Dans un vrai système, on ajouterait le topic en BD
-  return topicId;
+  return newTopic;
 }
 
 /**
@@ -546,13 +588,13 @@ export async function createDiscussionTopicOnApi(
  * @param topicId - ID du topic
  * @param userId - ID de l'utilisateur
  * @param content - Contenu du post
- * @returns ID du nouveau post ou null si erreur
+ * @returns Objet DiscussionPost complet ou null si erreur
  */
 export async function createDiscussionPostOnApi(
   topicId: string,
   userId: string,
   content: string
-): Promise<string | null> {
+): Promise<import('../types').DiscussionPost | null> {
   await simulateApiDelay(150);
   
   console.log('🔄 [API] Création post de discussion dans topic:', topicId, 'par:', userId);
@@ -569,12 +611,19 @@ export async function createDiscussionPostOnApi(
     return null;
   }
   
-  // Générer un ID pour le nouveau post
-  const postId = `dp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Créer l'objet DiscussionPost complet
+  const newPost: import('../types').DiscussionPost = {
+    id: `dp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    authorId: userId, // ✅ Utilise l'ID au lieu de l'objet user
+    content: content.trim(),
+    timestamp: new Date(),
+    upvotes: [],
+    isAnswer: false
+  };
   
-  console.log('✅ [API] Post de discussion créé avec ID:', postId);
+  console.log('✅ [API] Post de discussion créé avec ID:', newPost.id);
   // Dans un vrai système, on ajouterait le post en BD
-  return postId;
+  return newPost;
 }
 
 /**

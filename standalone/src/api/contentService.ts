@@ -1,6 +1,7 @@
 import { Idea, Post, User } from '../types';
 import { extractHashtagsFromMultipleTexts } from '../utils/hashtagUtils';
 import { loadMockDataSet, getUserById, getIdeaById, getPostById } from './dataService';
+import { getValidAvatar } from './avatarService';
 
 // Simuler un délai d'API
 const simulateApiDelay = (ms: number = 100) => 
@@ -76,15 +77,21 @@ export async function createPostOnApi(payload: {
   content: string;
   location?: string;
   authorId: string;
+  author?: User; // ✅ Objet author optionnel pour éviter de chercher dans les données mockées
   sourcePostIds?: string[];
   tags?: string[]; // Tags fournis par l'appelant (incluant les hashtags extraits)
 }): Promise<Post> {
   console.log(`[api] createPostOnApi - Auteur: ${payload.authorId}`);
   await simulateApiDelay(200);
   
-  const author = await getUserById(payload.authorId);
+  // ✅ Utiliser l'auteur fourni ou le chercher par ID
+  let author: User | null = payload.author || null;
   if (!author) {
-    throw new Error('Auteur non trouvé');
+    author = await getUserById(payload.authorId);
+  }
+  
+  if (!author) {
+    throw new Error(`L'auteur '${payload.authorId}' n'existe pas.`);
   }
   
   // Utiliser les tags fournis, sinon extraire du contenu (fallback)
@@ -96,13 +103,12 @@ export async function createPostOnApi(payload: {
     id: `post-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     content: payload.content,
     location: payload.location,
-    author: author,
+    authorId: payload.authorId,
     createdAt: new Date(),
     supporters: [],
     supportCount: 0,
     replies: [],
     tags: finalTags,
-    linkedContent: [],
     derivedIdeas: [],
     derivedPosts: [],
     sourcePosts: payload.sourcePostIds || []
@@ -164,4 +170,66 @@ export async function fetchUserProfileFromApi(userId: string): Promise<User | nu
   
   console.log(`[api] fetchUserProfileFromApi - Non trouvé: ${userId}`);
   return null;
+}
+
+/**
+ * Création d'un compte utilisateur
+ */
+export async function createUserAccountOnApi(userData: {
+  name: string;
+  email: string;
+  address?: string;
+  bio?: string;
+  birthYear?: number;
+}): Promise<User> {
+  console.log(`[api] createUserAccountOnApi - ${userData.email}`);
+  await simulateApiDelay(250);
+  
+  const newUser: User = {
+    id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name: userData.name,
+    email: userData.email,
+    avatar: getValidAvatar(userData.name),
+    bio: userData.bio || 'Nouveau membre de la communauté IdeoSphere',
+    address: userData.address,
+    birthYear: userData.birthYear || new Date().getFullYear() - 25,
+    createdAt: new Date(),
+    isRegistered: true
+  };
+  
+  console.log(`[api] createUserAccountOnApi - Créé: ${newUser.name}`);
+  return newUser;
+}
+
+/**
+ * Mise à jour du profil utilisateur
+ */
+export async function updateUserProfileOnApi(userId: string, updates: Partial<User>): Promise<User | null> {
+  console.log(`[api] updateUserProfileOnApi - ${userId}`, updates);
+  await simulateApiDelay(200);
+  
+  // Récupérer l'utilisateur actuel
+  const user = await getUserById(userId);
+  
+  if (!user) {
+    console.error(`[api] updateUserProfileOnApi - Utilisateur non trouvé: ${userId}`);
+    return null;
+  }
+  
+  // Fusionner les mises à jour avec l'utilisateur existant
+  const updatedUser: User = {
+    ...user,
+    ...updates,
+    // S'assurer que l'ID et createdAt ne sont pas modifiés
+    id: user.id,
+    createdAt: user.createdAt
+  };
+  
+  // Si le nom a changé et qu'il n'y a pas de nouvel avatar, générer un nouvel avatar par défaut
+  if (updates.name && updates.name !== user.name && !updates.avatar) {
+    updatedUser.avatar = getValidAvatar(updates.name, user.avatar);
+  }
+  
+  console.log(`[api] updateUserProfileOnApi - Mis à jour: ${updatedUser.name}`);
+  return updatedUser;
 }
