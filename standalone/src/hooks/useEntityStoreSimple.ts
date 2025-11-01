@@ -51,13 +51,13 @@ export function useEntityStoreSimple() {
     // User selectors
     getCurrentUser: () => selectors.getCurrentUser(store),
     getUserById: (userId: string) => selectors.getUserById(store)(userId),
+    userExists: (userId: string) => selectors.userExists(store)(userId),
     getAllUsers: () => selectors.getAllUsers(store),
     
     // Idea selectors
     getAllIdeas: () => selectors.getAllIdeas(store),
     getIdeaById: (ideaId: string) => selectors.getIdeaById(store)(ideaId),
-    getSelectedIdea: () => selectors.getSelectedIdea(store),
-    getSelectedUser: () => selectors.getSelectedUser(store),
+    // NOTE PHASE 5: getSelectedIdea supprimé - utilisez getIdeaById(ideaId) avec useParams()
     getFeaturedIdeas: () => selectors.getFeaturedIdeas(store),
     getPublishedIdeas: () => selectors.getPublishedIdeas(store),
     getUserIdeas: (userId: string) => selectors.getUserIdeas(store)(userId),
@@ -66,7 +66,8 @@ export function useEntityStoreSimple() {
     // Post selectors
     getAllPosts: () => selectors.getAllPosts(store),
     getPostById: (postId: string) => selectors.getPostById(store)(postId),
-    getSelectedPost: () => selectors.getSelectedPost(store),
+    // NOTE PHASE 5: getSelectedPost supprimé - utilisez getPostById(postId) avec useParams()
+    // NOTE PHASE 5: getSelectedUser supprimé - utilisez getUserById(userId) avec useParams()
     getUserPosts: (userId: string) => selectors.getUserPosts(store)(userId),
     getPostsByIds: (postIds: string[]) => selectors.getPostsByIds(store)(postIds),
     
@@ -92,7 +93,7 @@ export function useEntityStoreSimple() {
     // Community selectors
     getAllCommunities: () => selectors.getAllCommunities(store),
     getCommunityById: (communityId: string) => selectors.getCommunityById(store)(communityId),
-    getSelectedCommunity: () => selectors.getSelectedCommunity(store),
+    // getSelectedCommunity: supprimée (Phase 6) - communityId passé via props/params
     getUserCommunities: (userId: string) => selectors.getUserCommunities(store)(userId),
     getCommunityMembership: (userId: string, communityId: string) => selectors.getCommunityMembership(store)(userId, communityId),
     isUserMemberOfCommunity: (userId: string, communityId: string) => selectors.isUserMemberOfCommunity(store)(userId, communityId),
@@ -120,26 +121,26 @@ export function useEntityStoreSimple() {
       }
       
       // PARTICIPATIONS (créé ou commenté/noté)
-      const myPosts = allPosts.filter(post => post.author?.id === currentUser.id);
-      const myIdeas = allIdeas.filter(idea => idea.creators?.some(c => c.id === currentUser.id));
+      const myPosts = allPosts.filter(post => post.authorId === currentUser.id);
+      const myIdeas = allIdeas.filter(idea => idea.creatorIds?.includes(currentUser.id));
       const commentedPosts = allPosts.filter(post => 
-        post.author?.id !== currentUser.id &&
-        post.replies?.some(reply => reply.author?.id === currentUser.id)
+        post.authorId !== currentUser.id &&
+        post.replies?.some(reply => reply.authorId === currentUser.id)
       );
       const ratedIdeas = allIdeas.filter(idea => 
-        !idea.creators?.some(c => c.id === currentUser.id) && 
+        !idea.creatorIds?.includes(currentUser.id) && 
         idea.ratings?.some(rating => rating.userId === currentUser.id)
       );
 
       // SOUTIENS UNIQUEMENT (likes/soutiens sans participation active)
       const likedPosts = allPosts.filter(post => 
         post.supporters?.includes(currentUser.id) && 
-        post.author?.id !== currentUser.id &&
-        !post.replies?.some(reply => reply.author?.id === currentUser.id) // Pas commenté
+        post.authorId !== currentUser.id &&
+        !post.replies?.some(reply => reply.authorId === currentUser.id) // Pas commenté
       );
       const supportedIdeas = allIdeas.filter(idea => 
-        idea.supporters?.some(supporter => supporter.id === currentUser.id) &&
-        !idea.creators?.some(c => c.id === currentUser.id) && // Pas créé
+        idea.supporters?.includes(currentUser.id) &&
+        !idea.creatorIds?.includes(currentUser.id) &&
         !idea.ratings?.some(rating => rating.userId === currentUser.id) // Pas noté
       );
 
@@ -190,6 +191,18 @@ export function useEntityStoreSimple() {
 
   // Actions simplifiées combinées
   const simpleActions = {
+    // Actions de base du store (pour manipulation directe)
+    addPost: actions.addPost,
+    setPost: actions.setPost,
+    addIdea: actions.addIdea,
+    setIdea: actions.setIdea,
+    addUser: actions.addUser,
+    updateIdea: actions.updateIdea,
+    updatePost: actions.updatePost,
+    updateUser: actions.updateUser,
+    addDiscussionTopic: actions.addDiscussionTopic,
+    setSelectedCommunityId: actions.setSelectedCommunityId,
+    
     // Actions de navigation
     ...navigationActions,
     
@@ -243,12 +256,7 @@ export function useEntityStoreSimple() {
       }
     },
     
-    /**
-     * Gère la navigation vers une version (utilise goToIdea en interne)
-     */
-    viewVersion: (versionId: string) => {
-      return navigationActions.goToIdea(versionId);
-    },
+    // NOTE: viewVersion() supprimée - utiliser useNavigationActions().goToIdea() directement
     
     /**
      * Action pour entrer dans la plateforme

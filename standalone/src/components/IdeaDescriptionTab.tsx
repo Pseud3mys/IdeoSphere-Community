@@ -20,7 +20,7 @@ export function IdeaDescriptionTab({
   onSwitchToDiscussions 
 }: IdeaDescriptionTabProps) {
   // Récupérer les discussions depuis le store
-  const { getAllDiscussionTopics } = useEntityStoreSimple();
+  const { getAllDiscussionTopics, getUserById } = useEntityStoreSimple();
   const discussions = getAllDiscussionTopics();
   
   // Récupérer les discussions liées à cette idée
@@ -109,6 +109,13 @@ export function IdeaDescriptionTab({
                 // Trouver la réponse marquée comme correcte
                 const resolvedAnswer = question.posts.find(post => post.isAnswer === true);
                 
+                // Résoudre les IDs des auteurs
+                const questionAuthor = getUserById(question.authorId);
+                const answerAuthor = resolvedAnswer ? getUserById(resolvedAnswer.authorId) : null;
+                
+                // Si l'auteur de la question n'est pas trouvé, ne pas afficher cette question
+                if (!questionAuthor) return null;
+                
                 return (
                   <div key={question.id}>
                     {index > 0 && <Separator className="mb-6" />}
@@ -131,10 +138,10 @@ export function IdeaDescriptionTab({
                           </div>
                           <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
                             <Avatar className="w-4 h-4">
-                              <AvatarImage src={question.author.avatar} alt={question.author.name} />
-                              <AvatarFallback className="text-[10px]">{question.author.name.slice(0, 2)}</AvatarFallback>
+                              <AvatarImage src={questionAuthor.avatar} alt={questionAuthor.name} />
+                              <AvatarFallback className="text-[10px]">{questionAuthor.name.slice(0, 2)}</AvatarFallback>
                             </Avatar>
-                            <span>{question.author.name}</span>
+                            <span>{questionAuthor.name}</span>
                             <span>•</span>
                             <span>{formatTimeAgo(question.timestamp)}</span>
                           </div>
@@ -142,7 +149,7 @@ export function IdeaDescriptionTab({
                       </div>
                       
                       {/* Réponse résolue */}
-                      {resolvedAnswer && (
+                      {resolvedAnswer && answerAuthor && (
                         <div className="ml-11 border-l-2 border-green-200 pl-4">
                           <div className="bg-green-50 rounded-lg p-4">
                             <div className="flex items-center space-x-2 mb-2">
@@ -154,10 +161,10 @@ export function IdeaDescriptionTab({
                             </div>
                             <div className="flex items-center space-x-2 mt-3 text-xs text-muted-foreground">
                               <Avatar className="w-4 h-4">
-                                <AvatarImage src={resolvedAnswer.author.avatar} alt={resolvedAnswer.author.name} />
-                                <AvatarFallback className="text-[10px]">{resolvedAnswer.author.name.slice(0, 2)}</AvatarFallback>
+                                <AvatarImage src={answerAuthor.avatar} alt={answerAuthor.name} />
+                                <AvatarFallback className="text-[10px]">{answerAuthor.name.slice(0, 2)}</AvatarFallback>
                               </Avatar>
-                              <span>{resolvedAnswer.author.name}</span>
+                              <span>{answerAuthor.name}</span>
                               <span>•</span>
                               <span>{formatTimeAgo(resolvedAnswer.timestamp)}</span>
                             </div>

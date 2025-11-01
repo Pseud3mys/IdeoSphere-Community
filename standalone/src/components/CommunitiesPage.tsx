@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Community } from '../types';
 
 const CommunityTypeIcons = {
@@ -122,6 +123,7 @@ export function CommunitiesPage() {
     isUserMemberOfCommunity,
     actions
   } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<Community['type'] | 'all'>('all');
@@ -152,7 +154,7 @@ export function CommunitiesPage() {
     if (currentUser?.isRegistered) {
       actions.joinCommunity(communityId);
     } else {
-      actions.goToSignup();
+      navigation.goToSignup();
     }
   };
 
@@ -161,7 +163,7 @@ export function CommunitiesPage() {
   };
 
   const handleViewDetails = (communityId: string) => {
-    actions.goToCommunity(communityId);
+    navigation.goToCommunity(communityId);
   };
 
   return (

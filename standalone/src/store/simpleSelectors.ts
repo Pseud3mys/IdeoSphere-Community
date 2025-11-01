@@ -1,5 +1,6 @@
 import { SimpleEntityStore } from './SimpleEntityStore';
 import { User, Idea, Post, DiscussionTopic, Community, CommunityMembership } from '../types';
+import { unknownUser } from '../data/users';
 
 /**
  * Selectors simples pour extraire des données du store
@@ -11,8 +12,20 @@ export const getCurrentUser = (store: SimpleEntityStore): User | null => {
   return store.users[store.currentUserId] || null;
 };
 
-export const getUserById = (store: SimpleEntityStore) => (userId: string): User | null => {
-  return store.users[userId] || null;
+/**
+ * ✅ Récupère un utilisateur par ID avec fallback automatique
+ * @returns L'utilisateur trouvé, ou unknownUser si non trouvé (jamais null)
+ */
+export const getUserById = (store: SimpleEntityStore) => (userId: string): User => {
+  return store.users[userId] || unknownUser;
+};
+
+/**
+ * ✅ Vérifie si un utilisateur existe réellement dans le store
+ * @returns true si l'utilisateur existe, false sinon
+ */
+export const userExists = (store: SimpleEntityStore) => (userId: string): boolean => {
+  return userId in store.users;
 };
 
 export const getAllUsers = (store: SimpleEntityStore): User[] => {
@@ -28,10 +41,8 @@ export const getIdeaById = (store: SimpleEntityStore) => (ideaId: string): Idea 
   return store.ideas[ideaId] || null;
 };
 
-export const getSelectedIdea = (store: SimpleEntityStore): Idea | null => {
-  if (!store.selectedIdeaId) return null;
-  return store.ideas[store.selectedIdeaId] || null;
-};
+// NOTE MIGRATION PHASE 5: getSelectedIdea supprimé (selectedIdeaId n'existe plus)
+// Utilisez getIdeaById() avec l'ID depuis useParams() à la place
 
 export const getFeaturedIdeas = (store: SimpleEntityStore): Idea[] => {
   return Object.values(store.ideas).filter(idea => idea.status === 'featured');
@@ -43,7 +54,7 @@ export const getPublishedIdeas = (store: SimpleEntityStore): Idea[] => {
 
 export const getUserIdeas = (store: SimpleEntityStore) => (userId: string): Idea[] => {
   return Object.values(store.ideas).filter(idea => 
-    idea.creators?.some(creator => creator.id === userId)
+    idea.creatorIds?.includes(userId)
   );
 };
 
@@ -53,7 +64,7 @@ export const getDraftIdeas = (store: SimpleEntityStore): Idea[] => {
   
   return Object.values(store.ideas).filter(idea => 
     idea.status === 'draft' && 
-    idea.creators?.some(creator => creator.id === currentUser.id)
+    idea.creatorIds?.includes(currentUser.id)
   );
 };
 
@@ -66,18 +77,14 @@ export const getPostById = (store: SimpleEntityStore) => (postId: string): Post 
   return store.posts[postId] || null;
 };
 
-export const getSelectedPost = (store: SimpleEntityStore): Post | null => {
-  if (!store.selectedPostId) return null;
-  return store.posts[store.selectedPostId] || null;
-};
+// NOTE MIGRATION PHASE 5: getSelectedPost supprimé (selectedPostId n'existe plus)
+// Utilisez getPostById() avec l'ID depuis useParams() à la place
 
-export const getSelectedUser = (store: SimpleEntityStore): User | null => {
-  if (!store.selectedUserId) return null;
-  return store.users[store.selectedUserId] || null;
-};
+// NOTE MIGRATION PHASE 5: getSelectedUser supprimé (selectedUserId n'existe plus)
+// Utilisez getUserById() avec l'ID depuis useParams() à la place
 
 export const getUserPosts = (store: SimpleEntityStore) => (userId: string): Post[] => {
-  return Object.values(store.posts).filter(post => post.author.id === userId);
+  return Object.values(store.posts).filter(post => post.authorId === userId);
 };
 
 export const getPostsByIds = (store: SimpleEntityStore) => (postIds: string[]): Post[] => {
@@ -195,7 +202,7 @@ export const getUserStats = (store: SimpleEntityStore) => (userId: string) => {
   const userPosts = getUserPosts(store)(userId);
   
   const supportedIdeas = Object.values(store.ideas).filter(idea =>
-    idea.supporters?.some(supporter => supporter.id === userId)
+    idea.supporters?.includes(userId) // ✅ supporters est maintenant string[]
   );
   
   const totalPostSupports = userPosts.reduce((sum, post) => sum + (post.supporters?.length || 0), 0);
@@ -219,10 +226,8 @@ export const getCommunityById = (store: SimpleEntityStore) => (communityId: stri
   return store.communities[communityId] || null;
 };
 
-export const getSelectedCommunity = (store: SimpleEntityStore): Community | null => {
-  if (!store.selectedCommunityId) return null;
-  return store.communities[store.selectedCommunityId] || null;
-};
+// NOTE MIGRATION REACT ROUTER (Phase 6) :
+// getSelectedCommunity() supprimée - communityId maintenant passé via props/params
 
 export const getUserCommunities = (store: SimpleEntityStore) => (userId: string): Community[] => {
   const userMemberships = Object.values(store.communityMemberships)

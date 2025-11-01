@@ -1,14 +1,17 @@
+import { Link } from 'react-router-dom';
 import { Post, User } from '../types';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
-import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, MoreHorizontal, ExternalLink, Quote, Eye, MapPin, Flag } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { UserLink } from './UserLink';
 import { ContentActionDialogs } from './ContentActionDialogs';
-import { SharePostDialog } from './SharePostDialog';
+import { ChainBadge } from './ChainBadge';
+import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
+import { getValidAvatar } from '../api/avatarService';
 
 interface PostCardProps {
   post: Post;
@@ -18,12 +21,20 @@ interface PostCardProps {
   showInteractions?: boolean;
   onIgnore?: (postId: string) => void;
   onReport?: (postId: string) => void;
+  chainContext?: ItemChainContext; // Nouveau : contexte de chaîne
+  onIdeaClick?: (ideaId: string) => void; // Pour naviguer vers les idées dans la chaîne
+  onSupport?: (ideaId: string) => void; // Pour supporter les idées dans la chaîne
 }
 
 // Simple function to format time distance
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Date | undefined): string {
+  if (!date) return 'Date inconnue';
+  
+  // S'assurer que date est bien un objet Date
+  const dateObj = date instanceof Date ? date : new Date(date);
+  
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) return 'À l\'instant';
   if (diffInSeconds < 3600) return `Il y a ${Math.floor(diffInSeconds / 60)} min`;
@@ -43,20 +54,26 @@ export function PostCard({
   currentUser, 
   showInteractions = true,
   onIgnore,
-  onReport
+  onReport,
+  chainContext,
+  onIdeaClick,
+  onSupport
 }: PostCardProps) {
   // États pour les dialogues de confirmation
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Utiliser l'Entity Store pour les actions optimisées et récupérer les données les plus récentes
-  const { actions, getCurrentUser, getPostById } = useEntityStoreSimple();
+  const { actions, getCurrentUser, getPostById, getUserById } = useEntityStoreSimple();
   
   // Utiliser le currentUser du store si pas fourni en props
   const user = currentUser || getCurrentUser();
   
   // Récupérer le post le plus récent depuis le store
   const latestPost = getPostById(post.id) || post;
+  
+  // ✅ Résoudre l'auteur du post
+  const postAuthor = getUserById(latestPost.authorId);
   
   const isSupporting = user && (latestPost.supporters?.includes(user.id) || false);
   const supportCount = latestPost.supporters?.length || 0;
@@ -146,25 +163,35 @@ export function PostCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           {/* Titre généré à partir du contenu */}
-          <h3 
-            className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
-            onClick={handlePostClick}
-          >
-            {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
-          </h3>
+          <Link to={`/content/${latestPost.id}`}>
+            <h3 
+              className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
+            >
+              {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
+            </h3>
+          </Link>
           
-          {/* Localisation avec badge Post */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-            {latestPost.author.location && (
+          {/* Localisation avec badge Post et badge de chaîne */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
+            {postAuthor?.location && (
               <>
                 <MapPin className="w-4 h-4" />
-                <span>{latestPost.author.location}</span>
+                <span>{postAuthor.location}</span>
                 <span>•</span>
               </>
             )}
             <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20">
               Post
             </Badge>
+            {chainContext && chainContext.isInChain && (
+              <>
+                <span>•</span>
+                <ChainBadge 
+                  context={chainContext} 
+                  itemType="post"
+                />
+              </>
+            )}
           </div>
         </div>
         
@@ -233,15 +260,17 @@ export function PostCard({
       </div>
 
       {/* Auteur - après la description */}
-      <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-        <Avatar className="w-5 h-5">
-          <AvatarImage src={latestPost.author.avatar} alt={latestPost.author.name} />
-          <AvatarFallback className="text-xs">{latestPost.author.name.slice(0, 2)}</AvatarFallback>
-        </Avatar>
-        <span>{latestPost.author.name}</span>
-        <span>•</span>
-        <span>{timeAgo}</span>
-      </div>
+      {postAuthor && (
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
+          <Avatar className="w-5 h-5">
+            <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+            <AvatarFallback className="text-xs">{postAuthor.name.slice(0, 2)}</AvatarFallback>
+          </Avatar>
+          <span>{postAuthor.name}</span>
+          <span>•</span>
+          <span>{timeAgo}</span>
+        </div>
+      )}
 
       {/* Actions */}
       {showInteractions && (
@@ -285,27 +314,16 @@ export function PostCard({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handlePostClick}
-              className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
-            >
-              <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Voir détails</span>
-            </Button>
-            
-            <SharePostDialog postId={latestPost.id} postContent={latestPost.content}>
+            <Link to={`/content/${latestPost.id}`}>
               <Button 
                 variant="outline"
                 size="sm"
-                onClick={(e) => e.stopPropagation()}
                 className="flex items-center space-x-1 h-10 px-4 sm:h-9 sm:px-3"
               >
-                <Share2 className="w-5 h-5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Partager</span>
+                <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Voir détails</span>
               </Button>
-            </SharePostDialog>
+            </Link>
             
             <Button 
               size="sm"

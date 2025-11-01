@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Post, User, Idea } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
@@ -22,7 +22,8 @@ import {
   Share
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { SharePostDialog } from './SharePostDialog';
+import { ShareDialog } from './ShareDialog';
+import { getValidAvatar } from '../api/avatarService';
 
 interface PostDetailPageProps {
   post: Post;
@@ -33,16 +34,21 @@ interface PostDetailPageProps {
   onPostClick: (postId: string) => void;
 }
 
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Date | undefined): string {
+  if (!date) return 'Date inconnue';
+  
+  // S'assurer que date est bien un objet Date
+  const dateObj = date instanceof Date ? date : new Date(date);
+  
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) return 'À l\'instant';
   if (diffInSeconds < 3600) return `Il y a ${Math.floor(diffInSeconds / 60)}min`;
   if (diffInSeconds < 86400) return `Il y a ${Math.floor(diffInSeconds / 3600)}h`;
   if (diffInSeconds < 604800) return `Il y a ${Math.floor(diffInSeconds / 86400)}j`;
   
-  return date.toLocaleDateString('fr-FR', { 
+  return dateObj.toLocaleDateString('fr-FR', { 
     day: 'numeric', 
     month: 'short'
   });
@@ -51,7 +57,6 @@ function formatTimeAgo(date: Date): string {
 export function PostDetailPage({ 
   post, 
   onBack, 
-  onLike, 
   onPromoteToIdea,
   onCreateResponsePost,
   onIdeaClick,
@@ -60,6 +65,7 @@ export function PostDetailPage({
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
+    getUserById,
     getAllIdeas,
     getAllPosts,
     getPostById,
@@ -72,6 +78,9 @@ export function PostDetailPage({
   
   // Récupérer le post le plus récent depuis le store
   const latestPost = getPostById(post.id) || post;
+  
+  // ✅ Résoudre l'auteur du post
+  const postAuthor = getUserById(latestPost.authorId);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {
@@ -83,13 +92,21 @@ export function PostDetailPage({
   const isSupporting = latestPost.supporters?.includes(currentUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
+  // Tracker les chargements déjà effectués pour éviter les boucles infinies
+  const loadedLineageRef = useRef(new Set<string>());
+
   // Chargement progressif des données supplémentaires
   useEffect(() => {
     const loadAdditionalData = async () => {
+      // Ne charger le lineage qu'une seule fois par post
+      if (loadedLineageRef.current.has(post.id)) {
+        return;
+      }
       
       // Charger le lineage (parents/enfants)
       try {
-        await actions.loadLineage(latestPost.id, 'post');
+        await actions.loadLineage(post.id, 'post');
+        loadedLineageRef.current.add(post.id);
       } catch (error) {
         console.error('❌ Erreur lors du chargement du lineage:', error);
       }
@@ -101,7 +118,8 @@ export function PostDetailPage({
     const timeoutId = setTimeout(loadAdditionalData, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [latestPost.id]); // Retirer 'actions' des dépendances pour éviter les appels multiples
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.id]); // Seulement post.id (prop initiale), pas latestPost
   
   // Trouver les posts sources de ce post
   const sourcePosts = latestPost.sourcePosts
@@ -159,27 +177,33 @@ export function PostDetailPage({
             <span>En réponse à {sourcePosts.length > 1 ? `${sourcePosts.length} posts` : 'ce post'}</span>
           </div>
           <div className="space-y-2">
-            {sourcePosts.map((sourcePost, index) => (
-              <div 
-                key={sourcePost?.id}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => sourcePost && onPostClick(sourcePost.id)}
-              >
-                <div className="flex items-start space-x-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={sourcePost?.author.avatar} alt={sourcePost?.author.name} />
-                    <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
-                      {sourcePost?.author.name.slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-gray-900">{sourcePost?.author.name}</span>
-                    <p className="text-sm text-gray-600 line-clamp-2 mt-1">{sourcePost?.content}</p>
+            {sourcePosts.map((sourcePost, index) => {
+              const sourceAuthor = getUserById(sourcePost?.authorId);
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!sourceAuthor || sourceAuthor.id === 'unknown') return null;
+              
+              return (
+                <div 
+                  key={sourcePost?.id}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => sourcePost && onPostClick(sourcePost.id)}
+                >
+                  <div className="flex items-start space-x-2">
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={getValidAvatar(sourceAuthor.name, sourceAuthor.avatar)} alt={sourceAuthor.name} />
+                      <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
+                        {sourceAuthor.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-gray-900">{sourceAuthor.name}</span>
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{sourcePost?.content}</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-gray-400" />
                   </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -187,25 +211,27 @@ export function PostDetailPage({
       {/* Post principal - Style Reddit/Twitter */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Header utilisateur */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-start space-x-3">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={latestPost.author.avatar} alt={latestPost.author.name} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {latestPost.author.name.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <UserLink user={latestPost.author} className="font-semibold text-gray-900" />
-                <span className="text-gray-500">•</span>
-                <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+        {postAuthor && (
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-start space-x-3">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {postAuthor.name.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <UserLink user={postAuthor} className="font-semibold text-gray-900" />
+                  <span className="text-gray-500">•</span>
+                  <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                </div>
+                <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
               </div>
-              <p className="text-sm text-gray-500">{latestPost.author.location || 'Membre de la communauté'}</p>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Contenu */}
         <div className="p-4">
@@ -252,7 +278,7 @@ export function PostDetailPage({
                 <span className="hidden sm:inline">Soutenir</span>
               </Button>
               
-              <SharePostDialog postId={latestPost.id} postContent={latestPost.content}>
+              <ShareDialog contentId={latestPost.id} contentTitle={latestPost.content} contentType="post">
                 <Button 
                   variant="ghost"
                   size="sm"
@@ -261,7 +287,7 @@ export function PostDetailPage({
                   <Share className="w-4 h-4" />
                   <span className="hidden sm:inline">Partager</span>
                 </Button>
-              </SharePostDialog>
+              </ShareDialog>
             </div>
 
             <Button 
@@ -352,7 +378,11 @@ export function PostDetailPage({
           
           <div className="space-y-4">
             {/* Projets dérivés */}
-            {derivedIdeas.map(idea => (
+            {derivedIdeas.map(idea => {
+              // ✅ Résoudre le créateur depuis les IDs
+              const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+              
+              return (
               <Card 
                 key={idea?.id}
                 className="border-purple-200 bg-purple-50/30 cursor-pointer hover:bg-purple-50/50 transition-colors"
@@ -368,7 +398,7 @@ export function PostDetailPage({
                         <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
                           💡 Idée créée
                         </Badge>
-                        <span className="text-xs text-gray-500">par <UserLink user={idea?.creators[0]} className="text-gray-700 hover:text-primary" /></span>
+                        <span className="text-xs text-gray-500">par <UserLink user={firstCreator} className="text-gray-700 hover:text-primary" /></span>
                       </div>
                       <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
                       <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
@@ -381,42 +411,49 @@ export function PostDetailPage({
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
 
             {/* Posts dérivés */}
-            {derivedPosts.map(derivedPost => (
-              <Card 
-                key={derivedPost?.id}
-                className="border-blue-200 bg-blue-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
-                onClick={() => derivedPost && onPostClick(derivedPost.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={derivedPost?.author.avatar} alt={derivedPost?.author.name} />
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                        {derivedPost?.author.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                          💬 Post de réponse
-                        </Badge>
-                        <span className="text-xs text-gray-500">par <UserLink user={derivedPost?.author} className="text-gray-700 hover:text-primary" /></span>
-                        <span className="text-xs text-gray-500">{derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+            {derivedPosts.map(derivedPost => {
+              const derivedAuthor = getUserById(derivedPost?.authorId);
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!derivedAuthor || derivedAuthor.id === 'unknown') return null;
+              
+              return (
+                <Card 
+                  key={derivedPost?.id}
+                  className="border-blue-200 bg-blue-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
+                  onClick={() => derivedPost && onPostClick(derivedPost.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={getValidAvatar(derivedAuthor.name, derivedAuthor.avatar)} alt={derivedAuthor.name} />
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {derivedAuthor.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                            💬 Post de réponse
+                          </Badge>
+                          <span className="text-xs text-gray-500">par <UserLink user={derivedAuthor} className="text-gray-700 hover:text-primary" /></span>
+                          <span className="text-xs text-gray-500">{derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+                        </div>
+                        <p className="text-sm text-gray-800 line-clamp-3">{derivedPost?.content}</p>
+                        <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
+                          <span>{derivedPost?.supporters?.length || 0} soutiens</span>
+                          <span>{derivedPost?.replies.length} réponses</span>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-800 line-clamp-3">{derivedPost?.content}</p>
-                      <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
-                        <span>{derivedPost?.supporters?.length || 0} soutiens</span>
-                        <span>{derivedPost?.replies.length} réponses</span>
-                      </div>
+                      <ExternalLink className="w-4 h-4 text-gray-400" />
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
@@ -435,7 +472,7 @@ export function PostDetailPage({
           <div className="p-4 border-b border-gray-100">
             <div className="flex space-x-3">
               <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
                   {currentUser.name.slice(0, 2)}
                 </AvatarFallback>
@@ -465,52 +502,58 @@ export function PostDetailPage({
 
           {/* Liste des commentaires */}
           <div className="divide-y divide-gray-100">
-            {latestPost.replies.map(reply => (
-              <div key={reply.id} className="p-4 hover:bg-gray-50/50 transition-colors">
-                <div className="flex space-x-3">
-                  <div className="flex flex-col items-center space-y-1">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={reply.author.avatar} alt={reply.author.name} />
-                      <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
-                        {reply.author.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+            {latestPost.replies.map(reply => {
+              // ✅ Résoudre l'authorId en objet User
+              const replyAuthor = getUserById(reply.authorId);
+              if (!replyAuthor) return null; // Skip si l'utilisateur n'existe pas
+              
+              return (
+                <div key={reply.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                  <div className="flex space-x-3">
                     <div className="flex flex-col items-center space-y-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
-                        onClick={() => handleLikeReply(reply.id)}
-                      >
-                        <ArrowUp className="w-3 h-3" />
-                      </Button>
-                      <span className="text-xs font-medium text-gray-600">
-                        {reply.likes?.length || 0}
-                      </span>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={getValidAvatar(replyAuthor.name, replyAuthor.avatar)} alt={replyAuthor.name} />
+                        <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
+                          {replyAuthor.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-center space-y-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
+                          onClick={() => handleLikeReply(reply.id)}
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </Button>
+                        <span className="text-xs font-medium text-gray-600">
+                          {reply.likes?.length || 0}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <UserLink user={reply.author} className="font-medium text-gray-900 text-sm" />
-                      <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
-                    </div>
-                    <p className="text-gray-800 leading-relaxed text-sm">{reply.content}</p>
                     
-                    <div className="flex items-center space-x-3 mt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
-                      >
-                        <Reply className="w-3 h-3 mr-1" />
-                        Répondre
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <UserLink user={replyAuthor} className="font-medium text-gray-900 text-sm" />
+                        <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
+                      </div>
+                      <p className="text-gray-800 leading-relaxed text-sm">{reply.content}</p>
+                      
+                      <div className="flex items-center space-x-3 mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                        >
+                          <Reply className="w-3 h-3 mr-1" />
+                          Répondre
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {latestPost.replies.length === 0 && (
               <div className="p-8 text-center text-gray-500">

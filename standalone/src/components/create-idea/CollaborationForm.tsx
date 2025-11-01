@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ContentLinkSearch } from '../ContentLinkSearch';
 import { User, Idea, Post } from '../../types';
 import { discussionTopics } from '../../data/discussions';
+import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -42,6 +43,7 @@ export function CollaborationForm({
   ideas,
   posts
 }: CollaborationFormProps) {
+  const { getUserById } = useEntityStoreSimple();
   const [coCreatorSearch, setCoCreatorSearch] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(true);
 
@@ -82,26 +84,33 @@ export function CollaborationForm({
       const post = posts.find(p => p.id === id);
       
       if (idea) {
+        // ✅ Résoudre le créateur depuis les IDs
+        const firstCreator = idea.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+        const author = firstCreator || { 
+          id: 'unknown', 
+          name: 'Créateur inconnu', 
+          email: '', 
+          avatar: '', 
+          createdAt: new Date(),
+          isRegistered: false
+        };
+        
         selectedContent.push({
           id: idea.id,
           type: 'idea',
           title: idea.title,
-          author: idea.creators[0] || { 
-            id: 'unknown', 
-            name: 'Créateur inconnu', 
-            email: '', 
-            avatar: '', 
-            createdAt: new Date(),
-            isRegistered: false
-          }
+          author: author
         });
       } else if (post) {
-        selectedContent.push({
-          id: post.id,
-          type: 'post',
-          title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
-          author: post.author
-        });
+        const author = getUserById(post.authorId);
+        if (author) {
+          selectedContent.push({
+            id: post.id,
+            type: 'post',
+            title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
+            author: author
+          });
+        }
       }
     });
 
@@ -261,22 +270,27 @@ export function CollaborationForm({
                 <h4 className="text-sm text-muted-foreground">
                   Discussions liées ({selectedDiscussions.length})
                 </h4>
-                {selectedDiscussions.map((discussion) => (
-                  <div key={discussion.id} className="flex items-center space-x-3 p-3 bg-blue-50/50 rounded-lg border border-blue-200">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="w-3 h-3 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{discussion.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        par {discussion.author.name} • Discussion {discussion.type}
+                {selectedDiscussions.map((discussion) => {
+                  const discussionAuthor = getUserById(discussion.authorId);
+                  if (!discussionAuthor) return null;
+                  
+                  return (
+                    <div key={discussion.id} className="flex items-center space-x-3 p-3 bg-blue-50/50 rounded-lg border border-blue-200">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="w-3 h-3 text-blue-600" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{discussion.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          par {discussionAuthor.name} • Discussion {discussion.type}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
+                        {discussion.type}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
-                      {discussion.type}
-                    </Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             

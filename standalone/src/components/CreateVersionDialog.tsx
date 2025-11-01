@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, DiscussionTopic } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -31,9 +32,11 @@ export function CreateVersionDialog({
     getCurrentUser, 
     getDiscussionsForIdea,
     getIdeaById,
+    getUserById,
     actions 
   } = useEntityStoreSimple();
-
+  
+  const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
   // Récupérer seulement les discussions liées à cette idée
   const availableDiscussions = idea ? getDiscussionsForIdea(idea.id) : [];
@@ -63,7 +66,11 @@ export function CreateVersionDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Préparer les données pré-remplies
     actions.createVersionFromIdea(idea.id, selectedDiscussions);
+    
+    // Naviguer vers la page de création d'idée
+    navigation.goToCreateIdea();
     
     // Reset form
     setSelectedDiscussions([]);
@@ -81,10 +88,14 @@ export function CreateVersionDialog({
 
   // Filtrer les discussions par recherche et type
   const filteredDiscussions = availableDiscussions.filter(discussion => {
+    // ✅ Résoudre l'authorId en objet User pour la recherche
+    const discussionAuthor = getUserById(discussion.authorId);
+    const authorName = discussionAuthor?.name || '';
+    
     const matchesSearch = searchQuery === '' || 
       discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       discussion.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      discussion.author.name.toLowerCase().includes(searchQuery.toLowerCase());
+      authorName.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = typeFilter === 'all' || discussion.type === typeFilter;
     
@@ -192,7 +203,12 @@ export function CreateVersionDialog({
                 {filteredDiscussions.length > 0 ? (
                   <ScrollArea className="max-h-80">
                     <div className="space-y-2 pr-4">
-                      {filteredDiscussions.map(discussion => (
+                      {filteredDiscussions.map(discussion => {
+                        // ✅ Résoudre l'authorId en objet User pour l'affichage
+                        const discussionAuthor = getUserById(discussion.authorId);
+                        if (!discussionAuthor) return null; // Skip si l'utilisateur n'existe pas
+                        
+                        return (
                         <div
                           key={discussion.id}
                           className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/20 transition-colors"
@@ -214,10 +230,10 @@ export function CreateVersionDialog({
                             </p>
                             <div className="flex items-center space-x-2 mt-2">
                               <Avatar className="w-4 h-4">
-                                <AvatarImage src={discussion.author.avatar} alt={discussion.author.name} />
-                                <AvatarFallback className="text-xs">{discussion.author.name.slice(0, 1)}</AvatarFallback>
+                                <AvatarImage src={discussionAuthor.avatar} alt={discussionAuthor.name} />
+                                <AvatarFallback className="text-xs">{discussionAuthor.name.slice(0, 1)}</AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-muted-foreground">{discussion.author.name}</span>
+                              <span className="text-xs text-muted-foreground">{discussionAuthor.name}</span>
                               <Badge variant="outline" className="text-xs">
                                 {discussion.type}
                               </Badge>
@@ -227,7 +243,7 @@ export function CreateVersionDialog({
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );})}
                     </div>
                   </ScrollArea>
                 ) : (

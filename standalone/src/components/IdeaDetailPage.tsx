@@ -8,10 +8,11 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { RatingSection } from './RatingSection';
-import { ShareIdeaDialog } from './ShareIdeaDialog';
+import { ShareDialog } from './ShareDialog';
 import { IdeaDescriptionTab } from './IdeaDescriptionTab';
 import { IdeaDiscussionsTab } from './IdeaDiscussionsTab';
 import { IdeaVersionsTab } from './IdeaVersionsTab';
+import { getValidAvatar } from '../api/avatarService';
 
 import { 
   ArrowLeft, 
@@ -28,15 +29,18 @@ import { toast } from 'sonner@2.0.3';
 interface IdeaDetailPageProps {
   idea: Idea;
   onBack: () => void;
+  onPostClick?: (postId: string) => void;
 }
 
 export function IdeaDetailPage({ 
   idea, 
-  onBack
+  onBack,
+  onPostClick
 }: IdeaDetailPageProps) {
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
+    getUserById,
     getAllIdeas,
     getAllDiscussionTopics,
     getIdeaById,
@@ -49,6 +53,13 @@ export function IdeaDetailPage({
   
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
+
+  // ✅ Résoudre les créateurs depuis les IDs
+  const resolvedCreators = useMemo(() => 
+    (latestIdea.creatorIds || [])
+      .map(id => getUserById(id))
+      .filter(Boolean) as User[]
+  , [latestIdea.creatorIds, getUserById]);
 
   // Si currentUser est null, ne pas afficher le composant
   if (!currentUser) {
@@ -96,7 +107,7 @@ export function IdeaDetailPage({
   }, [activeTab, latestIdea.id]); // Retirer loadTabData des dépendances car elle ne change pas vraiment
 
   const isSupported = useMemo(() => {
-    return latestIdea.supporters?.some(s => s.id === currentUser.id) || false;
+    return latestIdea.supporters?.includes(currentUser.id) || false; // ✅ supporters est maintenant string[]
   }, [latestIdea.supporters, currentUser.id]);
   
   const supportCount = useMemo(() => {
@@ -172,12 +183,12 @@ export function IdeaDetailPage({
           </Button>
           
           {/* Bouton partager mobile */}
-          <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+          <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
             <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2">
               <Share className="w-4 h-4" />
               <span>Partager</span>
             </Button>
-          </ShareIdeaDialog>
+          </ShareDialog>
         </div>
 
         {/* Version desktop */}
@@ -215,12 +226,12 @@ export function IdeaDetailPage({
                 )}
               </Button>
               
-              <ShareIdeaDialog ideaId={latestIdea.id} ideaTitle={latestIdea.title}>
+              <ShareDialog contentId={latestIdea.id} contentTitle={latestIdea.title} contentType="idea">
                 <Button variant="outline" className="flex items-center space-x-2">
                   <Share className="w-4 h-4" />
                   <span>Partager</span>
                 </Button>
-              </ShareIdeaDialog>
+              </ShareDialog>
             </div>
           </div>
         </div>
@@ -229,20 +240,22 @@ export function IdeaDetailPage({
         <div className="block md:hidden mb-6">
           <div className="flex items-center space-x-3 mb-3">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={latestIdea.creators[0]?.avatar} alt={latestIdea.creators[0]?.name} />
-              <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
+              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
+              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {latestIdea.creators.length === 1 
-                  ? latestIdea.creators[0].name
-                  : latestIdea.creators.length === 2
-                    ? `${latestIdea.creators[0].name} et ${latestIdea.creators[1].name}`
-                    : `${latestIdea.creators[0].name} et ${latestIdea.creators.length - 1} autre${latestIdea.creators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 0
+                  ? 'Créateur inconnu'
+                  : resolvedCreators.length === 1 
+                    ? resolvedCreators[0].name
+                    : resolvedCreators.length === 2
+                      ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                      : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                {latestIdea.creators.length === 1 ? 'Créateur' : 'Créateurs'}
+                {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}
               </p>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -255,20 +268,20 @@ export function IdeaDetailPage({
         <div className="hidden md:flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={latestIdea.creators[0]?.avatar} alt={latestIdea.creators[0]?.name} />
-              <AvatarFallback>{latestIdea.creators[0]?.name.slice(0, 2)}</AvatarFallback>
+              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
+              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm">
-                {latestIdea.creators.length === 1 
-                  ? latestIdea.creators[0].name
-                  : latestIdea.creators.length === 2
-                    ? `${latestIdea.creators[0].name} et ${latestIdea.creators[1].name}`
-                    : `${latestIdea.creators[0].name} et ${latestIdea.creators.length - 1} autre${latestIdea.creators.length > 2 ? 's' : ''}`
+                {resolvedCreators.length === 1 
+                  ? resolvedCreators[0].name
+                  : resolvedCreators.length === 2
+                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
+                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                {latestIdea.creators.length === 1 ? 'Créateur' : 'Créateurs'}
+                {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}
               </p>
             </div>
           </div>
@@ -389,6 +402,7 @@ export function IdeaDetailPage({
             currentUser={currentUser}
             allIdeas={allIdeas}
             isSupported={isSupported}
+            onPostClick={onPostClick}
           />
         </TabsContent>
       </Tabs>

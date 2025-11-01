@@ -28,7 +28,8 @@ export function ContentLinkSearch({
 }: ContentLinkSearchProps) {
   // Récupérer les données directement depuis l'Entity Store
   const { 
-    getCurrentUser, 
+    getCurrentUser,
+    getUserById,
     getAllIdeas, 
     getAllPosts 
   } = useEntityStoreSimple();
@@ -54,22 +55,28 @@ export function ContentLinkSearch({
 
     // Filtrer par auteur si "Mes contenus" est activé
     if (showOnlyMine) {
-      filteredIdeas = ideas.filter(idea => idea.creators?.some(c => c.id === currentUser.id));
-      filteredPosts = posts.filter(post => post.author?.id === currentUser.id);
+      filteredIdeas = ideas.filter(idea => idea.creatorIds?.includes(currentUser.id));
+      filteredPosts = posts.filter(post => post.authorId === currentUser.id);
     }
 
     // Filtrer par recherche
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filteredIdeas = filteredIdeas.filter(idea => 
-        idea.title.toLowerCase().includes(query) ||
-        idea.summary.toLowerCase().includes(query) ||
-        idea.creators?.some(c => c.name.toLowerCase().includes(query))
-      );
-      filteredPosts = filteredPosts.filter(post => 
-        post.content.toLowerCase().includes(query) ||
-        post.author.name.toLowerCase().includes(query)
-      );
+      filteredIdeas = filteredIdeas.filter(idea => {
+        // Résoudre les créateurs pour la recherche
+        const creators = (idea.creatorIds || [])
+          .map(id => getUserById(id))
+          .filter(Boolean);
+        
+        return idea.title.toLowerCase().includes(query) ||
+          idea.summary.toLowerCase().includes(query) ||
+          creators.some(c => c.name.toLowerCase().includes(query));
+      });
+      filteredPosts = filteredPosts.filter(post => {
+        const author = getUserById(post.authorId);
+        return post.content.toLowerCase().includes(query) ||
+          (author && author.name.toLowerCase().includes(query));
+      });
     }
 
     // Trier par date (plus récent en premier)
@@ -106,11 +113,16 @@ export function ContentLinkSearch({
 
   const getContentAuthor = (content: any) => {
     if (content.type === 'idea') {
-      return content.creators && content.creators.length > 0 
-        ? content.creators[0] 
-        : { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
+      // ✅ Résoudre le créateur depuis les IDs
+      if (content.creatorIds && content.creatorIds.length > 0) {
+        const firstCreator = getUserById(content.creatorIds[0]);
+        return firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
+      }
+      return { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
     }
-    return content.author;
+    // Pour les posts, récupérer l'auteur depuis l'ID
+    const author = getUserById(content.authorId);
+    return author || { id: 'unknown', name: 'Auteur inconnu', email: '', avatar: '', bio: '', createdAt: new Date(), isRegistered: false };
   };
 
   const renderContentItem = (content: any) => {

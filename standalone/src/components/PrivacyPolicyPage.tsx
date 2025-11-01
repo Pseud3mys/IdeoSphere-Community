@@ -1,12 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft } from 'lucide-react';
 
 interface PrivacyPolicyPageProps {
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void; // Optionnel pour compatibilité
 }
 
 export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-4xl mx-auto px-6">
@@ -14,7 +24,7 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={onNavigateBack}
+            onClick={handleBack}
             className="mb-4 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -192,7 +202,7 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
               <h4 className="font-medium text-gray-900 mb-2">Comment exercer vos droits :</h4>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>Paramètres de votre compte pour les modifications de base</li>
-                <li>Contact à <a href="mailto:contact@ideosphere.org" className="text-gray-600 underline hover:text-gray-900">contact@ideosphere.org</a> pour les demandes spécifiques</li>
+                <li>Contact à <a href="mailto:contact@holonsystems.org" className="text-gray-600 underline hover:text-gray-900">contact@holonsystems.org</a> pour les demandes spécifiques</li>
                 <li>Réponse garantie sous 30 jours maximum</li>
               </ul>
             </div>
@@ -211,12 +221,12 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" asChild>
-                <a href="mailto:contact@ideosphere.org">
+                <a href="mailto:contact@holonsystems.org">
                   Nous écrire
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                   Discord
                 </a>
               </Button>

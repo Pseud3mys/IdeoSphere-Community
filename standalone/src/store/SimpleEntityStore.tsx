@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Idea, Post, DiscussionTopic, TabType, PrefilledContent, Community, CommunityMembership } from '../types';
+import { User, Idea, Post, DiscussionTopic, PrefilledContent, Community, CommunityMembership } from '../types';
+import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
 interface SimpleEntityStore {
@@ -12,13 +13,11 @@ interface SimpleEntityStore {
   communityMemberships: Record<string, CommunityMembership>;
   
   // États UI
-  activeTab: TabType;
+  // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
+  // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedCommunityId supprimés (maintenant dans l'URL)
+  // - Seuls les états UI purs sont conservés
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
-  selectedIdeaId: string | null;
-  selectedPostId: string | null;
-  selectedUserId: string | null;
-  selectedCommunityId: string | null;
   currentUserId: string | null;
   
   // États temporaires
@@ -36,6 +35,10 @@ interface SimpleEntityStore {
   // IDs des items du feed (pour filtrer ce qui doit être affiché dans Discovery)
   feedIdeaIds: string[];
   feedPostIds: string[];
+  
+  // Cache management
+  feedLastFetched: number | null;
+  contributionsLastFetched: number | null;
 }
 
 // Actions pour modifier le store
@@ -67,13 +70,10 @@ interface SimpleEntityActions {
   updateCommunityMembership: (membershipId: string, updates: Partial<CommunityMembership>) => void;
   
   // Actions UI
-  setActiveTab: (tab: TabType) => void;
+  // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
+  // Actions supprimées : setActiveTab, setSelectedIdeaId, setSelectedPostId, setSelectedUserId, setSelectedCommunityId
   setHasEnteredPlatform: (entered: boolean) => void;
   setShowOnboarding: (show: boolean) => void;
-  setSelectedIdeaId: (id: string | null) => void;
-  setSelectedPostId: (id: string | null) => void;
-  setSelectedUserId: (id: string | null) => void;
-  setSelectedCommunityId: (id: string | null) => void;
   setCurrentUserId: (id: string | null) => void;
   
   // Actions temporaires
@@ -88,6 +88,12 @@ interface SimpleEntityActions {
   // Actions pour les IDs du feed
   setFeedIdeaIds: (ids: string[]) => void;
   setFeedPostIds: (ids: string[]) => void;
+  
+  // Actions pour le cache
+  setFeedLastFetched: (timestamp: number | null) => void;
+  setContributionsLastFetched: (timestamp: number | null) => void;
+  invalidateFeedCache: () => void;
+  invalidateContributionsCache: () => void;
   
   // Actions combinées
   initializeStore: (initialData: {
@@ -119,13 +125,8 @@ const createInitialStore = (): SimpleEntityStore => ({
   discussionTopics: {},
   communities: {},
   communityMemberships: {},
-  activeTab: 'welcome',
   hasEnteredPlatform: false,
   showOnboarding: false,
-  selectedIdeaId: null,
-  selectedPostId: null,
-  selectedUserId: null,
-  selectedCommunityId: null,
   currentUserId: null,
   discussionPosts: {},
   prefilledSourceIdea: null,
@@ -135,72 +136,26 @@ const createInitialStore = (): SimpleEntityStore => ({
   prefilledSourcePostId: null,
   prefilledSignupData: null,
   feedIdeaIds: [],
-  feedPostIds: []
+  feedPostIds: [],
+  feedLastFetched: null,
+  contributionsLastFetched: null
 });
 
 // Fonctions helper pour extraire les utilisateurs des idées et posts
 const extractUsersFromIdea = (idea: Idea): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter les créateurs
-  if (idea.creators && Array.isArray(idea.creators)) {
-    idea.creators.forEach(creator => {
-      if (creator && typeof creator === 'object' && 'id' in creator) {
-        users.push(creator);
-      }
-    });
-  }
-  
-  // Ajouter les supporters
-  if (idea.supporters && Array.isArray(idea.supporters)) {
-    idea.supporters.forEach(supporter => {
-      if (supporter && typeof supporter === 'object' && 'id' in supporter) {
-        users.push(supporter);
-      }
-    });
-  }
-  
-  return users;
+  // ✅ MIGRATION TERMINÉE: Plus besoin d'extraire les utilisateurs
+  // - creatorIds est maintenant string[] (IDs)
+  // - supporters est déjà string[] (IDs)
+  // Les utilisateurs sont déjà dans le store
+  return [];
 };
 
 const extractUsersFromPost = (post: Post): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter l'auteur
-  if (post.author && typeof post.author === 'object' && 'id' in post.author) {
-    users.push(post.author);
-  }
-  
-  // Ajouter les utilisateurs dans les réponses
-  if (post.replies && Array.isArray(post.replies)) {
-    post.replies.forEach(reply => {
-      if (reply.author && typeof reply.author === 'object' && 'id' in reply.author) {
-        users.push(reply.author);
-      }
-    });
-  }
-  
-  return users;
-};
-
-const extractUsersFromDiscussionTopic = (topic: DiscussionTopic): User[] => {
-  const users: User[] = [];
-  
-  // Ajouter l'auteur
-  if (topic.author && typeof topic.author === 'object' && 'id' in topic.author) {
-    users.push(topic.author);
-  }
-  
-  // Ajouter les utilisateurs dans les posts
-  if (topic.posts && Array.isArray(topic.posts)) {
-    topic.posts.forEach(post => {
-      if (post.author && typeof post.author === 'object' && 'id' in post.author) {
-        users.push(post.author);
-      }
-    });
-  }
-  
-  return users;
+  // ✅ Cette fonction n'est plus nécessaire car :
+  // - Post.authorId est maintenant un string (ID)
+  // - Reply.authorId est maintenant un string (ID)
+  // Les utilisateurs sont déjà dans le store via extractUsersFromData
+  return [];
 };
 
 // Fonctions helper pour normaliser les données
@@ -399,37 +354,14 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // Discussion Topics
-    setDiscussionTopics: (topics) => setStore(prev => {
-      // Extraire tous les utilisateurs de tous les topics
-      const allUsers = { ...prev.users };
-      Object.values(topics).forEach(topic => {
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        usersFromTopic.forEach(user => {
-          if (!allUsers[user.id]) {
-            allUsers[user.id] = user;
-          }
-        });
-      });
-      return { ...prev, users: allUsers, discussionTopics: topics };
-    }),
-    addDiscussionTopic: (topic) => {
-      setStore(prev => {
-        // Extraire et ajouter les utilisateurs du topic au store
-        const usersFromTopic = extractUsersFromDiscussionTopic(topic);
-        const newUsers = { ...prev.users };
-        usersFromTopic.forEach(user => {
-          if (!newUsers[user.id]) {
-            newUsers[user.id] = user;
-          }
-        });
-        
-        return { 
-          ...prev,
-          users: newUsers,
-          discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
-        };
-      });
-    },
+    setDiscussionTopics: (topics) => setStore(prev => ({
+      ...prev,
+      discussionTopics: topics
+    })),
+    addDiscussionTopic: (topic) => setStore(prev => ({
+      ...prev,
+      discussionTopics: { ...prev.discussionTopics, [topic.id]: topic }
+    })),
     updateDiscussionTopic: (topicId, updates) => setStore(prev => ({
       ...prev,
       discussionTopics: {
@@ -470,13 +402,9 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     })),
 
     // UI Actions
-    setActiveTab: (tab) => setStore(prev => ({ ...prev, activeTab: tab })),
+    // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
     setHasEnteredPlatform: (entered) => setStore(prev => ({ ...prev, hasEnteredPlatform: entered })),
     setShowOnboarding: (show) => setStore(prev => ({ ...prev, showOnboarding: show })),
-    setSelectedIdeaId: (id) => setStore(prev => ({ ...prev, selectedIdeaId: id })),
-    setSelectedPostId: (id) => setStore(prev => ({ ...prev, selectedPostId: id })),
-    setSelectedUserId: (id) => setStore(prev => ({ ...prev, selectedUserId: id })),
-    setSelectedCommunityId: (id) => setStore(prev => ({ ...prev, selectedCommunityId: id })),
     setCurrentUserId: (id) => setStore(prev => ({ ...prev, currentUserId: id })),
 
     // Temporary Actions
@@ -491,20 +419,34 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),
     setFeedPostIds: (ids) => setStore(prev => ({ ...prev, feedPostIds: ids })),
     setPrefilledSignupData: (data) => setStore(prev => ({ ...prev, prefilledSignupData: data })),
+    
+    // Cache Actions
+    setFeedLastFetched: (timestamp) => setStore(prev => ({ ...prev, feedLastFetched: timestamp })),
+    setContributionsLastFetched: (timestamp) => setStore(prev => ({ ...prev, contributionsLastFetched: timestamp })),
+    invalidateFeedCache: () => setStore(prev => ({ ...prev, feedLastFetched: null })),
+    invalidateContributionsCache: () => setStore(prev => ({ ...prev, contributionsLastFetched: null })),
 
     // Initialize store
     initializeStore: (initialData) => {
       try {
-        setStore(prev => ({
-          ...prev,
-          users: normalizeUsers(initialData.users || []),
-          ideas: normalizeIdeas(initialData.ideas || []),
-          posts: normalizePosts(initialData.posts || []),
-          discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
-          communities: normalizeCommunities(initialData.communities || []),
-          communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
-          currentUserId: initialData.currentUserId || ''
-        }));
+        setStore(prev => {
+          const normalizedUsers = normalizeUsers(initialData.users || []);
+          // ✅ S'assurer que unknownUser est toujours dans le store
+          normalizedUsers[unknownUser.id] = unknownUser;
+          
+          console.log('✅ [Store] Utilisateur inconnu ajouté au store:', unknownUser.name);
+          
+          return {
+            ...prev,
+            users: normalizedUsers,
+            ideas: normalizeIdeas(initialData.ideas || []),
+            posts: normalizePosts(initialData.posts || []),
+            discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
+            communities: normalizeCommunities(initialData.communities || []),
+            communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
+            currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
+          };
+        });
       } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation du store:', error);
       }

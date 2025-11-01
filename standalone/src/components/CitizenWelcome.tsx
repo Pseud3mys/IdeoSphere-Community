@@ -5,9 +5,9 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { LoginDialog } from './auth/LoginDialog';
-import { SignupDialog } from './auth/SignupDialog';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { fetchHomePageStats, HomePageData } from '../api/feedService';
 import logoImage from 'figma:asset/f40f0fed92c1933fc6e0d4bd7aad22c5b11f342d.png';
 import { 
@@ -27,8 +27,9 @@ import {
 
 interface CitizenWelcomeProps {
   onEnterPlatform: () => void;
-  onEnterPlatformWithTempUser: () => Promise<void>; // Nouvelle fonction pour entrer avec utilisateur temporaire
-  onNavigateToCreateIdea: () => void; // Nouvelle action pour diriger vers la création d'idée
+  onEnterPlatformWithTempUser: () => Promise<void>;
+  onNavigateToCreateIdea: () => void;
+  onNavigateToHowItWorks?: () => void; // Navigation vers la page "Comment ça marche"
   onLogin: (email: string, password: string) => Promise<boolean>;
   onSocialLogin: (provider: string) => Promise<boolean>;
   onSignup: (userData: {
@@ -36,6 +37,7 @@ interface CitizenWelcomeProps {
     email: string;
     password: string;
     location?: string;
+    bio?: string;
   }) => Promise<boolean>;
   onNewsletterSubscribe: (data: {
     email: string;
@@ -43,20 +45,25 @@ interface CitizenWelcomeProps {
     frequency: string;
   }) => Promise<boolean>;
   cityName: string;
+  onLoginSSO?: () => void;
+  onRegisterSSO?: () => void;
 }
 
-export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName }: CitizenWelcomeProps) {
+export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onNavigateToHowItWorks, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestLocation, setGuestLocation] = useState('');
   
   // État pour les données autonomes
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser l'Entity Store uniquement pour les actions (pas pour les données)
-  const { actions } = useEntityStoreSimple();
+  const { actions, getUserById } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   // Charger les données de manière autonome
   useEffect(() => {
@@ -87,8 +94,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     if (action === 'login') {
       setShowLoginDialog(true);
     } else {
-      // Rediriger vers la page d'inscription au lieu du dialog
-      actions.goToSignup();
+      // Rediriger vers la page d'inscription
+      navigation.goToSignup();
     }
   };
 
@@ -99,27 +106,41 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   };
 
   const handleSkipLocation = async () => {
-    // 1. Créer un utilisateur temporaire via le service API
-    const tempUser = await actions.createTemporaryGuest();
+    // 1. Créer un utilisateur temporaire via le service API avec les données saisies
+    const guestData = {
+      name: guestName.trim() || undefined,
+      email: guestEmail.trim() || undefined,
+      address: guestLocation.trim() || undefined
+    };
+    
+    const tempUser = await actions.createTemporaryGuest(guestData);
     
     if (!tempUser) {
       console.error('❌ Impossible de créer un utilisateur temporaire');
       return;
     }
     
+    console.log('✅ [CitizenWelcome] Utilisateur temporaire créé:', tempUser.id, tempUser.name);
+    
     // 2. Entrer dans la plateforme
     actions.enterPlatform();
     
     // 3. Publier le post avec l'utilisateur temporaire
-    // publishPost navigue automatiquement vers la page de détail du post
-    await actions.publishPost({
-      content: quickIdea
+    // ✅ IMPORTANT: Passer explicitement l'ID de l'utilisateur temporaire
+    const newPost = await actions.publishPost({
+      content: quickIdea,
+      location: guestLocation.trim() || undefined,
+      authorId: tempUser.id // ✅ Utiliser l'utilisateur temporaire qu'on vient de créer
     });
+    
+    // Navigate to the created post
+    if (newPost) {
+      navigation.goToPost(newPost.id);
+    }
   };
 
   const handleAddLocation = () => {
-    // Pour l'instant, même comportement que skip location
-    // Dans une version plus avancée, on pourrait capturer les données du formulaire
+    // Même comportement que skip location mais avec capture des données
     handleSkipLocation();
   };
 
@@ -152,11 +173,14 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   // Transformer les données de l'API en format d'affichage (idées et posts)
   const recentPropositions = homeData ? homeData.recentSharedPropositions.slice(0, 5).map(item => {
     if (item.type === 'idea') {
+      // Résoudre le premier créateur depuis l'ID
+      const firstCreator = item.creatorIds?.[0] ? getUserById(item.creatorIds[0]) : null;
+      
       return {
         id: item.id,
         title: item.title,
         content: item.summary, // Pour les idées, utiliser le summary comme contenu
-        location: item.location || item.creators[0]?.name + " (créateur)" || "Localisation non précisée",
+        location: item.location || (firstCreator?.name + " (créateur)") || "Localisation non précisée",
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         category: item.tags?.[0] || "Idée citoyenne",
@@ -165,11 +189,12 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       };
     } else {
       // C'est un post
+      const author = getUserById(item.authorId);
       return {
         id: item.id,
         title: item.content.length > 60 ? item.content.substring(0, 60) + '...' : item.content,
         content: item.content,
-        location: item.location || item.author?.name + " (auteur)" || "Localisation non précisée",
+        location: item.location || (author ? author.name + " (auteur)" : "Localisation non précisée"),
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         category: item.tags?.[0] || "Discussion citoyenne",
@@ -196,6 +221,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-3">
+              <Button 
+                variant="ghost" 
+                onClick={onNavigateToHowItWorks}
+                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
+              >
+                Comment ça marche ?
+              </Button>
               <Button 
                 variant="ghost" 
                 onClick={() => handleAuthAction('login')}
@@ -300,6 +332,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                       <Input
                         placeholder="Ex: Place de la République, Le Blanc"
                         className="text-base"
+                        value={guestLocation}
+                        onChange={(e) => setGuestLocation(e.target.value)}
                       />
                     </div>
                     
@@ -311,11 +345,15 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                         <Input
                           placeholder="Votre nom"
                           className="text-base"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
                         />
                         <Input
                           type="email"
                           placeholder="Votre email"
                           className="text-base"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
                         />
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -499,23 +537,9 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         onEnterPlatform={onEnterPlatform}
         onSwitchToSignup={() => {
           setShowLoginDialog(false);
-          setShowSignupDialog(true);
+          navigation.goToSignup();
         }}
-      />
-
-      <SignupDialog
-        isOpen={showSignupDialog}
-        onClose={() => setShowSignupDialog(false)}
-        onSignup={onSignup}
-        onSocialLogin={onSocialLogin}
-        onSwitchToLogin={() => {
-          setShowSignupDialog(false);
-          setShowLoginDialog(true);
-        }}
-        onDemoAccess={() => {
-          setShowSignupDialog(false);
-          onEnterPlatformWithTempUser();
-        }}
+        onLoginSSO={onLoginSSO}
       />
     </div>
   );

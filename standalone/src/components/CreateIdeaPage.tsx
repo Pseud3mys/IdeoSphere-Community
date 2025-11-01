@@ -55,20 +55,25 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
     return <div>Loading...</div>;
   }
 
-  // Mode création : déterminer selon l'action déclenchée et les données préremplies
+  // Mode création : déterminer selon les données préremplies
   const [creationMode, setCreationMode] = useState<'post' | 'idea'>(() => {
-    // Si on arrive depuis promotePostToIdea (via store.activeTab === 'create-idea')
-    if (store.activeTab === 'create-idea') {
+    // Si on a une idée source préremplie, c'est qu'on veut créer une idée
+    if (prefilledSourceIdea) {
       return 'idea';
     }
-    // Si on arrive depuis createResponsePost (via store.activeTab === 'create-post')
-    if (store.activeTab === 'create-post') {
+    // Si on a du contenu lié prérempli, c'est qu'on veut créer une idée
+    if (prefilledLinkedContent && prefilledLinkedContent.length > 0) {
+      return 'idea';
+    }
+    // Si on a des discussions sélectionnées, c'est qu'on veut créer une idée
+    if (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0) {
+      return 'idea';
+    }
+    // Si on a un post source prérempli, c'est qu'on veut créer un post de réponse
+    if (sourcePost) {
       return 'post';
     }
-    // Si on a des données préremplies pour une idée, commencer directement en mode idée
-    if (prefilledSourceIdea || (prefilledLinkedContent && prefilledLinkedContent.length > 0) || (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0)) {
-      return 'idea';
-    }
+    // Par défaut, commencer en mode post (plus simple)
     return 'post';
   });
 

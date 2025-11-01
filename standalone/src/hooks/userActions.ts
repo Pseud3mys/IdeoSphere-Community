@@ -18,14 +18,13 @@ export function createUserActions(
       if (prefilledData) {
         actions.setPrefilledSignupData(prefilledData);
       }
-      actions.setActiveTab('signup');
+      // Note: Navigation is now handled by the caller using useNavigate()
     },
     
     createUserAccount: async (userData: {
       name: string;
       email: string;
-      location: string;
-      preciseAddress?: string;
+      address?: string;
       bio?: string;
       birthYear?: number;
     }) => {
@@ -50,7 +49,7 @@ export function createUserActions(
       }
     },
     
-    createTemporaryGuest: async (guestData?: { name?: string; location?: string; preciseAddress?: string }) => {
+    createTemporaryGuest: async (guestData?: { name?: string; email?: string; address?: string }) => {
       try {
         // ✅ Appeler le service API pour créer un compte non finalisé
         const { createUnfinalizedAccountOnApi } = await import('../api/authService');
@@ -60,7 +59,7 @@ export function createUserActions(
         actions.addUser(tempUser);
         actions.setCurrentUserId(tempUser.id);
         
-        console.log('✅ [hook/userActions] Utilisateur temporaire créé via API:', tempUser.id);
+        console.log('✅ [hook/userActions] Utilisateur temporaire créé via API:', tempUser.id, tempUser.name, tempUser.email);
         return tempUser;
         
       } catch (error) {
@@ -70,17 +69,15 @@ export function createUserActions(
     },
     
     switchToVisitor: () => {
-      // Vérifier si l'utilisateur visiteur existe déjà
-      const visitorUser = boundSelectors.getUserById('visitor');
-      if (!visitorUser) {
+      // ✅ Vérifier si l'utilisateur visiteur existe vraiment dans le store
+      if (!boundSelectors.userExists('visitor')) {
         const visitorUser: User = {
           id: 'visitor',
           name: 'Visiteur',
           email: '',
           bio: 'Utilisateur visiteur non enregistré',
           avatar: '',
-          location: '',
-          preciseAddress: '',
+          address: '',
           birthYear: new Date().getFullYear() - 30,
           createdAt: new Date(),
           isRegistered: false
@@ -91,17 +88,15 @@ export function createUserActions(
     },
     
     switchToTestUser: () => {
-      // Vérifier si l'utilisateur de test existe déjà
-      const testUser = boundSelectors.getUserById('test-user');
-      if (!testUser) {
+      // ✅ Vérifier si l'utilisateur de test existe vraiment dans le store
+      if (!boundSelectors.userExists('test-user')) {
         const testUser: User = {
           id: 'test-user',
           name: 'Test User',
           email: 'test@example.com',
           bio: 'Utilisateur de test pour le développement',
           avatar: '',
-          location: 'Paris',
-          preciseAddress: '123 Rue de Test, 75001 Paris',
+          address: '123 Rue de Test, 75001 Paris',
           birthYear: 1990,
           createdAt: new Date(),
           isRegistered: true
@@ -123,10 +118,25 @@ export function createUserActions(
     },
     
     // Action pour vérifier l'existence d'un email via l'API d'authentification
-    checkEmailExists: async (email: string) => {
+    checkEmailExists: async (email: string, password: string = '') => {
       try {
         const { loginWithEmail } = await import('../api/authService');
-        return await loginWithEmail(email);
+        const user = await loginWithEmail(email, password);
+        
+        // ✅ Si l'utilisateur existe, l'ajouter au store immédiatement
+        if (user) {
+          // Vérifier si l'utilisateur n'est pas déjà dans le store
+          if (!boundSelectors.userExists(user.id)) {
+            actions.addUser(user);
+            console.log('✅ [hook/userActions] Utilisateur ajouté au store après login:', user.name);
+          } else {
+            // Mettre à jour l'utilisateur existant avec les données fraîches de l'API
+            actions.updateUser(user.id, user);
+            console.log('✅ [hook/userActions] Utilisateur mis à jour dans le store après login:', user.name);
+          }
+        }
+        
+        return user;
       } catch (error) {
         console.error('❌ [hook/userActions] checkEmailExists:', error);
         return null;
@@ -140,10 +150,14 @@ export function createUserActions(
         const user = await loginWithSocialProviderApi(provider, socialData);
         
         if (user) {
-          // Vérifier si l'utilisateur existe déjà dans le store local
-          const existingUser = boundSelectors.getUserById(user.id);
-          if (!existingUser) {
+          // ✅ Vérifier si l'utilisateur existe vraiment dans le store local
+          if (!boundSelectors.userExists(user.id)) {
             actions.addUser(user);
+            console.log('✅ [hook/userActions] Utilisateur social ajouté au store:', user.name);
+          } else {
+            // Mettre à jour l'utilisateur existant avec les données fraîches de l'API
+            actions.updateUser(user.id, user);
+            console.log('✅ [hook/userActions] Utilisateur social mis à jour dans le store:', user.name);
           }
           actions.setCurrentUserId(user.id);
         }
@@ -160,8 +174,8 @@ export function createUserActions(
       name: string;
       email: string;
       password: string;
-      location?: string;
-      preciseAddress?: string;
+      address?: string;
+      bio?: string;
       birthYear?: number;
     }) => {
       try {
@@ -171,8 +185,9 @@ export function createUserActions(
         const apiData = {
           name: userData.name,
           email: userData.email,
-          location: userData.location || '',
-          preciseAddress: userData.preciseAddress,
+          password: userData.password,
+          address: userData.address,
+          bio: userData.bio,
           birthYear: userData.birthYear || new Date().getFullYear() - 25
         };
         
@@ -182,12 +197,25 @@ export function createUserActions(
           actions.addUser(newUser);
           actions.setCurrentUserId(newUser.id);
           actions.setPrefilledSignupData(null);
+          return newUser;
         }
         
-        return newUser;
-      } catch (error) {
+        // Si l'API retourne null, c'est probablement que l'email existe déjà
+        throw new Error('EMAIL_EXISTS');
+      } catch (error: any) {
         console.error('❌ [hook/userActions] signupUser:', error);
-        return null;
+        
+        // Propager l'erreur avec un message compréhensible
+        if (error?.response?.status === 409 || error?.message === 'EMAIL_EXISTS') {
+          throw new Error('EMAIL_EXISTS');
+        }
+        
+        if (error?.response?.status === 400) {
+          throw new Error('INVALID_DATA');
+        }
+        
+        // Erreur générique
+        throw new Error('SIGNUP_FAILED');
       }
     },
     
@@ -230,9 +258,9 @@ export function createUserActions(
     // Action pour ajouter un utilisateur au store et le sélectionner
     addUserAndSetAsCurrent: (userData: User) => {
       try {
-        // Vérifier si l'utilisateur existe déjà
-        const existingUser = boundSelectors.getUserById(userData.id);
-        if (existingUser) {
+        // ✅ Vérifier si l'utilisateur existe vraiment dans le store
+        if (boundSelectors.userExists(userData.id)) {
+          const existingUser = boundSelectors.getUserById(userData.id);
           actions.setCurrentUserId(userData.id);
           return existingUser;
         }
@@ -245,6 +273,28 @@ export function createUserActions(
       } catch (error) {
         console.error('❌ [hook/userActions] addUserAndSetAsCurrent:', error);
         return null;
+      }
+    },
+    
+    // Action pour la connexion via SSO
+    loginWithSSO: async () => {
+      try {
+        const { loginWithSSO: loginWithSSOApi } = await import('../api/authService');
+        loginWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] loginWithSSO:', error);
+      }
+    },
+    
+    // Action pour l'inscription via SSO
+    registerWithSSO: async () => {
+      try {
+        const { registerWithSSO: registerWithSSOApi } = await import('../api/authService');
+        registerWithSSOApi();
+        // Note: Cette fonction provoque une redirection, le code après ne sera pas exécuté
+      } catch (error) {
+        console.error('❌ [hook/userActions] registerWithSSO:', error);
       }
     }
   };

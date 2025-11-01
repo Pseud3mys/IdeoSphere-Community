@@ -1,5 +1,6 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
+import { toast } from 'sonner@2.0.3';
 
 /**
  * Actions de contenu pour l'Entity Store
@@ -42,14 +43,8 @@ export function createContentActions(
       }
     }
     
-    // Naviguer vers la page de création appropriée
-    if (params.targetType === 'idea') {
-      actions.setActiveTab('create-idea');
-    } else if (params.targetType === 'post') {
-      actions.setActiveTab('create-post');
-    }
-    
-    console.log(`✅ Navigation vers création de ${params.targetType}`);
+    // Note: Navigation is now handled by the caller using useNavigate()
+    console.log(`✅ Pré-remplissage pour création de ${params.targetType}`);
   };
   
   const contentActions = {
@@ -66,7 +61,7 @@ export function createContentActions(
 
           if (!idea || !currentUser) return {}; // Ne rien mettre à jour
 
-          const isSupporting = idea.supporters?.some(s => s.id === currentUser.id);
+          const isSupporting = idea.supporters?.includes(currentUser.id); // ✅ supporters est maintenant string[]
           const action = isSupporting ? 'unsupport' : 'support';
 
           // 2. Appeler l'API avec isCurrentlySupporting calculé ici dans le hook
@@ -81,8 +76,8 @@ export function createContentActions(
 
           // 3. Calculer le nouvel état à partir de prevStore
           const newSupporters = isSupporting
-            ? (idea.supporters || []).filter(s => s.id !== currentUser.id)
-            : [...(idea.supporters || []), currentUser];
+            ? (idea.supporters || []).filter(id => id !== currentUser.id) // ✅ Filtrer par ID
+            : [...(idea.supporters || []), currentUser.id]; // ✅ Ajouter l'ID
 
           const updatedIdea = {
             ...idea,
@@ -153,55 +148,97 @@ export function createContentActions(
     
     // Actions d'évaluation
     rateIdea: async (ideaId: string, criterionId: string, value: number) => {
+      // ✅ Récupérer l'utilisateur pour l'appel API initial
+      const currentUser = boundSelectors.getCurrentUser();
+      if (!currentUser) return;
+      
       try {
         const { rateIdeaOnApi } = await import('../api/interactionService');
         
-        // Utiliser storeUpdater avec une fonction pour éviter les stale closures
+        // 1. Appeler l'API pour enregistrer l'évaluation
+        const result = await rateIdeaOnApi(ideaId, currentUser.id, criterionId, value);
+        
+        if (!result || !result.success) {
+          console.error('❌ Échec de l\'évaluation via l\'API');
+          toast.error('Erreur lors de l\'enregistrement de votre évaluation');
+          return;
+        }
+        
+        // 2. ✅ Approche optimisée : mettre à jour intelligemment le tableau de ratings
+        // L'API ne renvoie que le rating modifié, on l'intègre dans le tableau existant
         storeUpdater(prevStore => {
-          // 1. Lire l'état le plus récent
           const idea = selectors.getIdeaById(prevStore)(ideaId);
-          const currentUser = selectors.getCurrentUser(prevStore);
+          if (!idea) return {};
 
-          if (!idea || !currentUser) return {}; // Ne rien mettre à jour
-
-          // 2. Appeler l'API de manière asynchrone
-          rateIdeaOnApi(ideaId, currentUser.id, criterionId, value).then(success => {
-            if (!success) {
-              console.error('❌ Échec de l\'évaluation via l\'API');
-            }
-          }).catch(error => {
-            console.error('❌ Erreur API lors de l\'évaluation:', error);
-          });
-
-          // 3. Calculer le nouvel état à partir de prevStore
-          const existingRatingIndex = idea.ratings.findIndex(
-            r => r.userId === currentUser.id && r.criterionId === criterionId
+          // Copier le tableau de ratings existant
+          const currentRatings = [...(idea.ratings || [])];
+          
+          // ✅ BUGFIX: Utiliser result.rating.userId (du rating retourné par l'API)
+          // au lieu de currentUser.id (stale closure)
+          // Cela garantit qu'on cherche avec le bon userId qui correspond au rating reçu
+          const existingRatingIndex = currentRatings.findIndex(
+            r => r.criterionId === result.rating.criterionId && r.userId === result.rating.userId
           );
-
-          let newRatings;
+          
+          // Créer le nouveau tableau de ratings
+          let updatedRatings: typeof currentRatings;
+          
           if (existingRatingIndex >= 0) {
-            // Mise à jour d'une évaluation existante
-            newRatings = [...idea.ratings];
-            newRatings[existingRatingIndex] = {
-              criterionId,
-              value,
-              userId: currentUser.id
-            };
+            // Remplacer le rating existant
+            updatedRatings = [...currentRatings];
+            updatedRatings[existingRatingIndex] = result.rating;
+            console.log('✅ [Hook] Rating mis à jour dans le store pour critère:', criterionId, 'userId:', result.rating.userId);
           } else {
-            // Nouvelle évaluation
-            newRatings = [...idea.ratings, {
-              criterionId,
-              value,
-              userId: currentUser.id
-            }];
+            // Ajouter le nouveau rating
+            updatedRatings = [...currentRatings, result.rating];
+            console.log('✅ [Hook] Nouveau rating ajouté au store pour critère:', criterionId, 'userId:', result.rating.userId);
           }
 
           const updatedIdea = {
             ...idea,
-            ratings: newRatings
+            ratings: updatedRatings
           };
 
-          // 4. Retourner uniquement les parties du store qui ont changé
+          return {
+            ideas: {
+              ...prevStore.ideas,
+              [ideaId]: updatedIdea
+            }
+          };
+        });
+        
+        toast.success('Évaluation enregistrée');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'évaluation:', error);
+        toast.error('Erreur lors de l\'évaluation');
+      }
+    },
+    
+    // Charger les ratings d'une idée
+    loadIdeaRatings: async (ideaId: string) => {
+      try {
+        const { getIdeaRatingsOnApi } = await import('../api/interactionService');
+        
+        // 1. Récupérer les ratings depuis l'API
+        const ratings = await getIdeaRatingsOnApi(ideaId);
+        
+        if (!ratings) {
+          console.error('❌ Échec du chargement des ratings');
+          return;
+        }
+        
+        console.log('✅ [contentActions] Ratings chargés pour idée:', ideaId, ':', ratings.length, 'évaluations');
+        
+        // 2. Mettre à jour le store avec les ratings récupérés
+        storeUpdater(prevStore => {
+          const idea = selectors.getIdeaById(prevStore)(ideaId);
+          if (!idea) return {};
+
+          const updatedIdea = {
+            ...idea,
+            ratings
+          };
+
           return {
             ideas: {
               ...prevStore.ideas,
@@ -210,7 +247,7 @@ export function createContentActions(
           };
         });
       } catch (error) {
-        console.error('❌ Erreur lors de l\'évaluation:', error);
+        console.error('❌ Erreur lors du chargement des ratings:', error);
       }
     },
     
@@ -295,7 +332,6 @@ export function createContentActions(
       actions.setPrefilledSelectedDiscussions([]);
       actions.setPrefilledLocation(null); // Nettoyer la localisation pré-remplie
       actions.setPrefilledSourcePostId(null); // Nettoyer le post source pour la création
-      actions.setSelectedPostId(null); // Nettoyer aussi le post sélectionné
     },
     
     // Action pour créer une version depuis une idée
@@ -326,6 +362,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'post'
       });
+      // Naviguer vers la page de création de post
+      navigationActions.goToCreatePost();
     },
     
     // Promouvoir un post en idée
@@ -336,6 +374,8 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'idea'
       });
+      // Naviguer vers la page de création d'idée
+      navigationActions.goToCreateIdea();
     },
     
     // Actions d'onboarding
@@ -570,43 +610,33 @@ export function createContentActions(
           return null;
         }
         
-        // Appeler l'API
-        const topicId = await createDiscussionTopicOnApi(ideaId, currentUser.id, data);
+        // Appeler l'API - reçoit maintenant un objet DiscussionTopic complet
+        const newTopic = await createDiscussionTopicOnApi(ideaId, currentUser.id, data);
         
-        if (!topicId) {
+        if (!newTopic) {
           console.error('❌ Échec de la création du topic');
           return null;
         }
         
-        // Mettre à jour le store
+        // Mettre à jour le store avec l'objet DiscussionTopic reçu de l'API
         storeUpdater(prevStore => {
           const idea = selectors.getIdeaById(prevStore)(ideaId);
           if (!idea) return {};
           
-          const newTopic = {
-            id: topicId,
-            title: data.title,
-            content: data.content,
-            type: data.type,
-            author: currentUser,
-            timestamp: new Date(),
-            upvotes: [],
-            posts: []
-          };
-          
+          // ✅ Utiliser directement l'objet newTopic de l'API
           // Ajouter le topic au store
           const updatedDiscussionTopics = {
             ...prevStore.discussionTopics,
-            [topicId]: newTopic
+            [newTopic.id]: newTopic
           };
           
           // Ajouter l'ID du topic à l'idée
           const updatedIdea = {
             ...idea,
-            discussionIds: [...idea.discussionIds, topicId]
+            discussionIds: [...idea.discussionIds, newTopic.id]
           };
           
-          console.log('✅ Topic de discussion créé');
+          console.log('✅ Topic de discussion créé avec ID:', newTopic.id);
           
           return {
             discussionTopics: updatedDiscussionTopics,
@@ -617,7 +647,8 @@ export function createContentActions(
           };
         });
         
-        return topicId;
+        // Retourner l'ID du topic créé
+        return newTopic.id;
       } catch (error) {
         console.error('❌ Erreur lors de la création du topic:', error);
         return null;
@@ -640,34 +671,26 @@ export function createContentActions(
           return null;
         }
         
-        // Appeler l'API
-        const postId = await createDiscussionPostOnApi(topicId, currentUser.id, content);
+        // Appeler l'API - reçoit maintenant un objet DiscussionPost complet
+        const newPost = await createDiscussionPostOnApi(topicId, currentUser.id, content);
         
-        if (!postId) {
+        if (!newPost) {
           console.error('❌ Échec de la création du post');
           return null;
         }
         
-        // Mettre à jour le store
+        // Mettre à jour le store avec l'objet DiscussionPost reçu de l'API
         storeUpdater(prevStore => {
           const topic = selectors.getDiscussionTopicById(prevStore)(topicId);
           if (!topic) return {};
           
-          const newPost = {
-            id: postId,
-            author: currentUser,
-            content,
-            timestamp: new Date(),
-            upvotes: [],
-            isAnswer: false
-          };
-          
+          // ✅ Utiliser directement l'objet newPost de l'API
           const updatedTopic = {
             ...topic,
             posts: [...topic.posts, newPost]
           };
           
-          console.log('✅ Post de discussion créé');
+          console.log('✅ Post de discussion créé avec ID:', newPost.id);
           
           return {
             discussionTopics: {
@@ -677,7 +700,8 @@ export function createContentActions(
           };
         });
         
-        return postId;
+        // Retourner l'ID du post créé
+        return newPost.id;
       } catch (error) {
         console.error('❌ Erreur lors de la création du post:', error);
         return null;

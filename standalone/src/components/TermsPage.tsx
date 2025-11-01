@@ -1,12 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft } from 'lucide-react';
 
 interface TermsPageProps {
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void; // Optionnel pour compatibilité
 }
 
 export function TermsPage({ onNavigateBack }: TermsPageProps) {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-4xl mx-auto px-6">
@@ -14,7 +24,7 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={onNavigateBack}
+            onClick={handleBack}
             className="mb-4 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -240,12 +250,12 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" asChild>
-                <a href="mailto:contact@ideosphere.org">
+                <a href="mailto:contact@holonsystems.org">
                   Nous écrire
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                   Discord
                 </a>
               </Button>

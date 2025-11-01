@@ -7,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { RichTextEditor } from '../RichTextEditor';
 import { Lightbulb, FileText, MapPin } from 'lucide-react';
 import { Post } from '../../types';
+import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface BasicIdeaFormProps {
   title: string;
@@ -31,6 +32,9 @@ export function BasicIdeaForm({
   setLocation,
   sourcePost
 }: BasicIdeaFormProps) {
+  // ✅ Résoudre l'auteur du post source
+  const { getUserById } = useEntityStoreSimple();
+  const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
 
   const getWordCount = (text: string) => {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
@@ -120,7 +124,7 @@ export function BasicIdeaForm({
             onChange={setDescription}
             placeholder={`## Contexte et enjeu
 
-${sourcePost ? `Suite au post de ${sourcePost.author.name}, je pense que...` : 'Décrivez le problème ou l\'opportunité que vous avez identifié...'}
+${sourcePost && sourcePostAuthor ? `Suite au post de ${sourcePostAuthor.name}, je pense que...` : 'Décrivez le problème ou l\'opportunité que vous avez identifié...'}
 
 ## Solution proposée
 

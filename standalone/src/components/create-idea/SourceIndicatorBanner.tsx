@@ -2,6 +2,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { GitBranch, X, RefreshCw } from 'lucide-react';
 import { Post } from '../../types';
+import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface SourceIndicatorBannerProps {
   sourcePost?: Post;
@@ -20,6 +21,10 @@ export function SourceIndicatorBanner({
   onClearPrefilled,
   onStartFromScratch
 }: SourceIndicatorBannerProps) {
+  // ✅ Résoudre l'auteur du post source
+  const { getUserById } = useEntityStoreSimple();
+  const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
+  
   // Le bandeau ne s'affiche que s'il y a vraiment du contenu source
   const hasSourceContent = prefilledSourceIdea || 
                           (prefilledLinkedContent && prefilledLinkedContent.length > 0) || 
@@ -65,7 +70,7 @@ export function SourceIndicatorBanner({
           </div>
         </div>
         <div className="mt-2 text-xs text-purple-700">
-          {sourcePost && <div>• Inspirée du post de {sourcePost.author.name}</div>}
+          {sourcePost && sourcePostAuthor && <div>• Inspirée du post de {sourcePostAuthor.name}</div>}
           {prefilledSourceIdea && <div>• Basée sur l'idée source</div>}
           {prefilledLinkedContent && prefilledLinkedContent.length > 0 && (
             <div>• {prefilledLinkedContent.length} contenu{prefilledLinkedContent.length > 1 ? 's' : ''} lié{prefilledLinkedContent.length > 1 ? 's' : ''}</div>

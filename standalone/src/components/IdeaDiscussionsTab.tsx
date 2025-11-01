@@ -43,7 +43,7 @@ export function IdeaDiscussionsTab({
   onSwitchToVersions
 }: IdeaDiscussionsTabProps) {
   // Utilisation du store pour les actions et données
-  const { actions, getAllDiscussionTopics } = useEntityStoreSimple();
+  const { actions, getAllDiscussionTopics, getUserById } = useEntityStoreSimple();
   
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicContent, setNewTopicContent] = useState('');
@@ -308,6 +308,10 @@ export function IdeaDiscussionsTab({
           // Récupérer la version la plus récente du topic depuis le store pour les upvotes
           const latestTopic = allDiscussionTopicsFromStore.find(t => t.id === topic.id) || topic;
           
+          // ✅ Résoudre l'authorId en objet User
+          const topicAuthor = getUserById(latestTopic.authorId);
+          if (!topicAuthor) return null; // Skip si l'utilisateur n'existe pas
+          
           const hasAcceptedAnswer = latestTopic.type === 'question' && 
             latestTopic.posts?.some(post => post.isAnswer);
           
@@ -332,10 +336,10 @@ export function IdeaDiscussionsTab({
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
                     <Avatar className="w-6 h-6">
-                      <AvatarImage src={latestTopic.author.avatar} alt={latestTopic.author.name} />
-                      <AvatarFallback className="text-xs">{latestTopic.author.name.slice(0, 1)}</AvatarFallback>
+                      <AvatarImage src={topicAuthor.avatar} alt={topicAuthor.name} />
+                      <AvatarFallback className="text-xs">{topicAuthor.name.slice(0, 1)}</AvatarFallback>
                     </Avatar>
-                    <span>{latestTopic.author.name}</span>
+                    <span>{topicAuthor.name}</span>
                     <span>•</span>
                     <span>{latestTopic.timestamp.toLocaleDateString('fr-FR')}</span>
                   </div>
@@ -386,7 +390,11 @@ export function IdeaDiscussionsTab({
                   {expandedTopics[latestTopic.id] && (
                     <div className="space-y-3 mb-4 mt-3">
                       {latestTopic.posts.map((post, index) => {
-                        const isAuthorOfTopic = latestTopic.author.id === currentUser.id;
+                        // ✅ Résoudre l'authorId en objet User pour chaque post de discussion
+                        const postAuthor = getUserById(post.authorId);
+                        if (!postAuthor) return null; // Skip si l'utilisateur n'existe pas
+                        
+                        const isAuthorOfTopic = topicAuthor.id === currentUser.id;
                         const isQuestionTopic = latestTopic.type === 'question';
                         const canSelectAnswer = isAuthorOfTopic && isQuestionTopic;
                         const isSelectedAnswer = post.isAnswer;
@@ -402,10 +410,10 @@ export function IdeaDiscussionsTab({
                           >
                             <div className="flex items-center space-x-2 mb-2">
                               <Avatar className="w-5 h-5">
-                                <AvatarImage src={post.author.avatar} alt={post.author.name} />
-                                <AvatarFallback className="text-xs">{post.author.name.slice(0, 1)}</AvatarFallback>
+                                <AvatarImage src={postAuthor.avatar} alt={postAuthor.name} />
+                                <AvatarFallback className="text-xs">{postAuthor.name.slice(0, 1)}</AvatarFallback>
                               </Avatar>
-                              <span className="text-sm font-medium">{post.author.name}</span>
+                              <span className="text-sm font-medium">{postAuthor.name}</span>
                               <span className="text-xs text-muted-foreground">
                                 {post.timestamp.toLocaleDateString('fr-FR')}
                               </span>

@@ -1,13 +1,23 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, HelpCircle, MessageCircle, Mail } from 'lucide-react';
 
 interface FAQPageProps {
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void; // Optionnel pour compatibilité
 }
 
 export function FAQPage({ onNavigateBack }: FAQPageProps) {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-4xl mx-auto px-6">
@@ -15,7 +25,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={onNavigateBack}
+            onClick={handleBack}
             className="mb-4 text-gray-600 hover:text-primary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -229,7 +239,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                 <h4 className="font-medium text-gray-900">Discord</h4>
                 <p className="text-sm text-gray-600 mb-3">Discussions en temps réel avec la communauté</p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="https://discord.gg/ideosphere" target="_blank" rel="noopener noreferrer">
+                  <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
                     Rejoindre Discord
                   </a>
                 </Button>
@@ -242,7 +252,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                 <h4 className="font-medium text-gray-900">Email</h4>
                 <p className="text-sm text-gray-600 mb-3">Support direct pour vos questions</p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="mailto:contact@ideosphere.org">
+                  <a href="mailto:contact@holonsystems.org">
                     Nous écrire
                   </a>
                 </Button>

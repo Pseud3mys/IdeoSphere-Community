@@ -44,9 +44,9 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
 
   // Calculer les statistiques avec protections
   const userIdeas = (ideas || []).filter(idea => 
-    idea?.creators?.some(creator => creator.id === userId)
+    idea?.creatorIds?.includes(userId)
   );
-  const userPosts = (posts || []).filter(post => post?.author?.id === userId);
+  const userPosts = (posts || []).filter(post => post?.authorId === userId);
   const totalSupports = userIdeas.reduce((sum, idea) => sum + (idea.supporters?.length || 0), 0);
 
   // Format de date de création du compte
@@ -136,7 +136,7 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
                     <div className="flex items-center justify-center space-x-1 text-green-600 mb-1">
                       <MessageSquare className="w-4 h-4" />
                       <span className="text-xl font-semibold">
-                        {ideas.filter(idea => idea.supporters?.some(s => s.id === userId)).length}
+                        {ideas.filter(idea => idea.supporters?.includes(userId)).length} {/* ✅ supporters est maintenant string[] */}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">Idées soutenues</p>

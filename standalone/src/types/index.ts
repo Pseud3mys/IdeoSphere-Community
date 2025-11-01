@@ -4,8 +4,8 @@ export interface User {
   email: string;
   avatar: string;
   bio?: string;
-  location?: string;
-  preciseAddress?: string; // Adresse (optionnelle) - seule la localisation approximative nous intéresse
+  location?: string; // Localisation de l'utilisateur (ville, région)
+  address?: string; // Adresse complète de l'utilisateur (optionnelle)
   birthYear?: number; // Année de naissance (obligatoire pour les utilisateurs enregistrés)
   createdAt: Date;
   isRegistered: boolean; // true = utilisateur connecté, false = invité/anonyme
@@ -33,7 +33,7 @@ export interface DiscussionTopic {
   id: string;
   title: string;
   type: 'general' | 'question' | 'suggestion' | 'technical';
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   upvotes: string[]; // User IDs who upvoted
@@ -45,7 +45,7 @@ export interface DiscussionTopic {
 
 export interface DiscussionPost {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   upvotes: string[]; // User IDs who upvoted
@@ -54,7 +54,7 @@ export interface DiscussionPost {
 
 export interface Discussion {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   timestamp: Date;
   replies: Discussion[];
@@ -62,7 +62,7 @@ export interface Discussion {
 
 export interface PostReply {
   id: string;
-  author: User;
+  authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   createdAt: Date;
   likes: string[];
@@ -88,7 +88,7 @@ export type IdeaStatus = 'draft' | 'published' | 'featured' | 'archived';
 export interface Post {
   id: string;
   content: string;
-  author: User;
+  authorId: string;
   createdAt: Date;
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];
@@ -105,7 +105,7 @@ export interface Post {
  * Idée - Structure complète avec chargement progressif
  * 
  * Champs TOUJOURS présents (depuis le feed) :
- * - id, title, summary, description, creators, status, createdAt, tags, location
+ * - id, title, summary, description, creatorIds, status, createdAt, tags, location
  * 
  * Champs CALCULÉS dynamiquement :
  * - supportCount: calculé depuis supporters.length (ne pas stocker!)
@@ -121,17 +121,17 @@ export interface Idea {
   title: string;
   summary: string;
   description: string;
-  creators: User[];
+  creatorIds: string[];
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   status: IdeaStatus;
   createdAt: Date;
   tags?: string[];
   location?: string;
   // Champs chargés progressivement (peuvent être vides au début)
-  supporters: User[];
+  supporters: string[]; // ✅ IDs des utilisateurs (aligné avec Post.supporters)
   discussionIds: string[];
   ratingCriteria: RatingCriterion[];
-  ratings: Rating[];
+  ratings?: Rating[]; // ✅ Optionnel - chargé uniquement dans l'onglet évaluation
   sourceIdeas: string[];
   derivedIdeas: string[];
   sourcePosts: string[];
@@ -190,4 +190,5 @@ export interface CommunityMembership {
   isActive: boolean;
 }
 
-export type TabType = 'welcome' | 'discovery' | 'my-ideas' | 'create-idea' | 'create-post' | 'drafts' | 'communities' | 'profile' | 'idea-detail' | 'post-detail' | 'user-profile' | 'community-detail' | 'signup' | 'about' | 'how-it-works' | 'faq' | 'privacy' | 'terms';
+// NOTE MIGRATION REACT ROUTER (Phase 6) :
+// TabType supprimé - navigation maintenant gérée par React Router avec URLs

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Idea, User } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -33,6 +34,7 @@ interface IdeaVersionsTabProps {
   currentUser: User;
   allIdeas: Idea[]; // Toutes les idées pour trouver les versions
   isSupported: boolean;
+  onPostClick?: (postId: string) => void; // Navigation vers un post
 }
 
 export function IdeaVersionsTab({
@@ -40,9 +42,11 @@ export function IdeaVersionsTab({
   currentUser,
   allIdeas,
   isSupported,
+  onPostClick,
 }: IdeaVersionsTabProps) {
   // Utilisation du store pour les actions
-  const { actions, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
+  const { actions, getUserById, getAllPosts, getAllDiscussionTopics } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   const allPosts = getAllPosts();
   const allDiscussions = getAllDiscussionTopics();
 
@@ -57,7 +61,7 @@ export function IdeaVersionsTab({
   const versionSupports = useMemo(() => {
     const supports: {[key: string]: boolean} = {};
     versionIdeas.forEach(versionIdea => {
-      supports[versionIdea.id] = versionIdea.supporters?.some(s => s.id === currentUser.id) || false;
+      supports[versionIdea.id] = versionIdea.supporters?.includes(currentUser.id) || false; // ✅ supporters est maintenant string[]
     });
     return supports;
   }, [versionIdeas, currentUser.id]);
@@ -66,7 +70,7 @@ export function IdeaVersionsTab({
     actions.toggleIdeaSupport(versionId);
   };
 
-  const isCreator = idea.creators?.some(c => c.id === currentUser.id) || false;
+  const isCreator = idea.creatorIds?.includes(currentUser.id) || false;
 
   // Récupérer les discussions pour cette idée depuis le store
   const discussionTopics = allDiscussions.filter(topic => 
@@ -117,7 +121,7 @@ export function IdeaVersionsTab({
               if (!parentIdea) return null;
               
               return (
-                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.viewVersion(parentId)}>
+                <div key={`idea-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => navigation.goToIdea(parentId)}>
                   <div className="flex-shrink-0">
                     <GitBranch className="w-4 h-4 text-purple-600" />
                   </div>
@@ -147,13 +151,17 @@ export function IdeaVersionsTab({
               const parentPost = allPosts.find(p => p.id === parentId);
               if (!parentPost) return null;
               
+              const parentPostAuthor = getUserById(parentPost.authorId);
+              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
+              if (!parentPostAuthor || parentPostAuthor.id === 'unknown') return null;
+              
               return (
-                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => actions.goToPost(parentId)}>
+                <div key={`post-${index}`} className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg cursor-pointer hover:bg-white/80 transition-colors" onClick={() => onPostClick && onPostClick(parentId)}>
                   <div className="flex-shrink-0">
                     <MessageSquare className="w-4 h-4 text-purple-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm text-purple-900">Post de {parentPost.author.name}</p>
+                    <p className="font-medium text-sm text-purple-900">Post de {parentPostAuthor.name}</p>
                     <p className="text-xs text-purple-700 mt-1 line-clamp-2">{parentPost.content}</p>
                     <div className="flex items-center space-x-3 text-xs text-purple-600 mt-2">
                       <div className="flex items-center space-x-1">
@@ -210,7 +218,7 @@ export function IdeaVersionsTab({
       {/* Versions List - maintenant ce sont des idées normales */}
       <div className="space-y-4">
         {versionIdeas.map(versionIdea => {
-          const isAuthor = versionIdea.creators?.some(c => c.id === currentUser.id) || false;
+          const isAuthor = versionIdea.creatorIds?.includes(currentUser.id) || false;
           const hasSupported = versionSupports[versionIdea.id] || false;
 
           return (
@@ -226,7 +234,7 @@ export function IdeaVersionsTab({
                       <h4 
                         className="font-medium hover:text-primary cursor-pointer"
                         onClick={() => {
-                          actions.viewVersion(versionIdea.id);
+                          navigation.goToIdea(versionIdea.id);
                         }}
                       >
                         {versionIdea.title}
@@ -237,18 +245,33 @@ export function IdeaVersionsTab({
                     </div>
                     
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
-                      <Avatar className="w-6 h-6">
-                        <AvatarImage src={versionIdea.creators[0]?.avatar} alt={versionIdea.creators[0]?.name} />
-                        <AvatarFallback className="text-xs">{versionIdea.creators[0]?.name.slice(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <span>
-                        {versionIdea.creators.length === 1 
-                          ? versionIdea.creators[0].name
-                          : versionIdea.creators.length === 2
-                            ? `${versionIdea.creators[0].name} et ${versionIdea.creators[1].name}`
-                            : `${versionIdea.creators[0].name} et ${versionIdea.creators.length - 1} autre${versionIdea.creators.length > 2 ? 's' : ''}`
-                        }
-                      </span>
+                      {(() => {
+                        // ✅ Résoudre les créateurs depuis les IDs
+                        const resolvedCreators = (versionIdea.creatorIds || [])
+                          .map(id => getUserById(id))
+                          .filter(Boolean) as User[];
+                        
+                        if (resolvedCreators.length === 0) return null;
+                        
+                        const firstCreator = resolvedCreators[0];
+                        
+                        return (
+                          <>
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={firstCreator.avatar} alt={firstCreator.name} />
+                              <AvatarFallback className="text-xs">{firstCreator.name.slice(0, 1)}</AvatarFallback>
+                            </Avatar>
+                            <span>
+                              {resolvedCreators.length === 1 
+                                ? firstCreator.name
+                                : resolvedCreators.length === 2
+                                  ? `${firstCreator.name} et ${resolvedCreators[1].name}`
+                                  : `${firstCreator.name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
+                              }
+                            </span>
+                          </>
+                        );
+                      })()}
                       <span>•</span>
                       <Calendar className="w-3 h-3" />
                       <span>{versionIdea.createdAt.toLocaleDateString('fr-FR')}</span>
@@ -298,7 +321,7 @@ export function IdeaVersionsTab({
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        actions.viewVersion(versionIdea.id);
+                        navigation.goToIdea(versionIdea.id);
                       }}
                       className="flex items-center space-x-1"
                     >
@@ -391,11 +414,14 @@ function StoreDebugPanel({ idea, allIdeas, allPosts, versionIdeas }: StoreDebugP
       title: i.title,
       summary: i.summary
     })),
-    sourcePostsInStore: allPosts.filter(p => idea.sourcePosts?.includes(p.id)).map(p => ({
-      id: p.id,
-      content: p.content.substring(0, 50) + '...',
-      author: p.author.name
-    })),
+    sourcePostsInStore: allPosts.filter(p => idea.sourcePosts?.includes(p.id)).map(p => {
+      const author = getUserById(p.authorId);
+      return {
+        id: p.id,
+        content: p.content.substring(0, 50) + '...',
+        author: (author && author.id !== 'unknown') ? author.name : 'Inconnu'
+      };
+    }),
     versionsInStore: versionIdeas.map(v => ({
       id: v.id,
       title: v.title,

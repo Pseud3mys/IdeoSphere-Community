@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Search, Plus, X, Lightbulb, MessageSquare, Filter } from 'lucide-react';
+import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 interface ContentLinkDialogProps {
   ideas: Idea[];
@@ -24,6 +25,7 @@ export function ContentLinkDialog({
   onContentToggle, 
   children 
 }: ContentLinkDialogProps) {
+  const { getUserById } = useEntityStoreSimple();
   const [searchQuery, setSearchQuery] = useState('');
   const [contentFilter, setContentFilter] = useState<'all' | 'ideas' | 'posts'>('all');
   const [isOpen, setIsOpen] = useState(false);
@@ -44,31 +46,38 @@ export function ContentLinkDialog({
 
     if (contentFilter === 'all' || contentFilter === 'ideas') {
       ideas.forEach(idea => {
+        // ✅ Résoudre le créateur depuis le store avec les IDs
+        const firstCreator = idea.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+        const author = firstCreator || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } };
+        
         combinedContent.push({
           id: idea.id,
           type: 'idea',
           title: idea.title,
           summary: idea.summary,
-          author: idea.creators[0] || { id: 'unknown', name: 'Créateur inconnu', email: '', avatar: '', preferences: { newsletter: false, visibility: 'public' } }, // Protection contre creators vide
+          author: author,
           createdAt: idea.createdAt,
           supportCount: idea.supporters?.length || 0,
-          isSupported: idea.supporters?.some(supporter => supporter.id === currentUser.id) || false
+          isSupported: idea.supporters?.includes(currentUser.id) || false // ✅ supporters est maintenant string[]
         });
       });
     }
 
     if (contentFilter === 'all' || contentFilter === 'posts') {
       posts.forEach(post => {
-        combinedContent.push({
-          id: post.id,
-          type: 'post',
-          title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
-          summary: post.content,
-          author: post.author,
-          createdAt: post.createdAt,
-          supportCount: post.supporters?.length || 0,
-          isSupporting: post.supporters?.includes(currentUser.id) || false
-        });
+        const author = getUserById(post.authorId);
+        if (author) {
+          combinedContent.push({
+            id: post.id,
+            type: 'post',
+            title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
+            summary: post.content,
+            author: author,
+            createdAt: post.createdAt,
+            supportCount: post.supporters?.length || 0,
+            isSupporting: post.supporters?.includes(currentUser.id) || false
+          });
+        }
       });
     }
 

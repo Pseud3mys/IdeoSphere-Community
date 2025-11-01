@@ -78,7 +78,8 @@ export function MyIdeasPage({
   // Récupération des données depuis l'Entity Store
   const {
     getCurrentUser,
-    getMyContributions
+    getMyContributions,
+    getUserById
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -152,7 +153,14 @@ export function MyIdeasPage({
       feedItems = feedItems.filter(item => {
         const content = item.type === 'post' ? item.content : `${item.title} ${item.summary}`;
         const tags = item.tags?.join(' ') || '';
-        const author = item.type === 'post' ? item.author?.name || '' : item.creators?.[0]?.name || '';
+        let author = '';
+        if (item.type === 'post') {
+          const postAuthor = getUserById(item.authorId);
+          author = postAuthor?.name || '';
+        } else {
+          const firstCreator = item.creatorIds?.[0] ? getUserById(item.creatorIds[0]) : null;
+          author = firstCreator?.name || '';
+        }
         return (content + tags + author).toLowerCase().includes(searchQuery.toLowerCase());
       });
     }

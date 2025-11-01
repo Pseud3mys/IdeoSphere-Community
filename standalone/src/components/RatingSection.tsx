@@ -19,19 +19,22 @@ export function RatingSection({ project, currentUser }: RatingSectionProps) {
   
   const [selectedCriterion, setSelectedCriterion] = useState<string | null>(null);
 
+  // ✅ S'assurer que ratings existe toujours (peut être undefined si pas encore de notes)
+  const ratings = project.ratings || [];
+
   const calculateAverageRating = (criterionId: string): number => {
-    const criterionRatings = project.ratings.filter(r => r.criterionId === criterionId);
+    const criterionRatings = ratings.filter(r => r.criterionId === criterionId);
     if (criterionRatings.length === 0) return 0;
     const sum = criterionRatings.reduce((acc, rating) => acc + rating.value, 0);
     return sum / criterionRatings.length;
   };
 
   const getUserRating = (criterionId: string): Rating | undefined => {
-    return project.ratings.find(r => r.criterionId === criterionId && r.userId === currentUser.id);
+    return ratings.find(r => r.criterionId === criterionId && r.userId === currentUser.id);
   };
 
   const getRatingCount = (criterionId: string): number => {
-    return project.ratings.filter(r => r.criterionId === criterionId).length;
+    return ratings.filter(r => r.criterionId === criterionId).length;
   };
 
   const getLabelForValue = (criterion: RatingCriterion, value: number): string => {
