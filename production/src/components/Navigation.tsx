@@ -15,6 +15,7 @@ export function Navigation() {
     const path = location.pathname;
     if (path.startsWith('/my-ideas')) return '/my-ideas';
     if (path.startsWith('/create-idea')) return '/create-idea';
+    if (path.startsWith('/groups')) return '/groups';
     if (path.startsWith('/communities')) return '/communities';
     return '/discovery'; // Par défaut
   };
@@ -41,10 +42,10 @@ export function Navigation() {
       description: 'Créer et publier une nouvelle idée',
     },
     {
-      path: '/communities',
-      label: 'Groupes de travail',
+      path: '/groups',
+      label: 'Groupes',
       icon: Users2,
-      description: 'Rejoindre les groupes de travail thématiques internes',
+      description: 'Rejoindre et participer aux groupes',
     }
   ];
 

@@ -81,10 +81,9 @@ export function DiscoveryPage({
   const ideas = feedData.ideas;
   const posts = feedData.posts;
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  // (pas de blocage, on affiche le contenu même sans utilisateur connecté)
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité' } as any;
 
   // Utiliser la fonction flat pour récupérer les items avec discriminants de type
   const createFeedItems = (): (FeedItem & { type: 'post' | 'idea' })[] => {
@@ -381,7 +380,7 @@ export function DiscoveryPage({
                   onPostClick(postId);
                 }}
                 onLike={onLike}
-                currentUser={currentUser}
+                currentUser={effectiveUser}
                 onIgnore={onIgnorePost}
                 onReport={onReportPost}
                 chainContext={chainContext}
@@ -400,7 +399,7 @@ export function DiscoveryPage({
                   onIdeaClick(ideaId);
                 }}
                 onSupport={onSupport}
-                currentUser={currentUser}
+                currentUser={effectiveUser}
                 onIgnore={onIgnoreIdea}
                 onReport={onReportIdea}
                 chainContext={chainContext}

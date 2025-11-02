@@ -114,10 +114,38 @@ export function useNavigationActions() {
     },
 
     /**
-     * Navigation vers une communauté
+     * Navigation vers un groupe
      */
-    goToCommunity: (communityId: string) => {
-      navigate(`/community/${communityId}`);
+    goToGroup: (groupId: string) => {
+      navigate(`/groups/${groupId}`);
+    },
+
+    /**
+     * Navigation vers l'annuaire des groupes
+     */
+    goToGroups: () => {
+      navigate('/groups');
+    },
+
+    /**
+     * Navigation vers mes groupes (Phase 2)
+     */
+    goToMyGroups: () => {
+      navigate('/groups/my');
+    },
+
+    /**
+     * Navigation vers un groupe pending (Phase 2)
+     */
+    goToPendingGroup: (pendingId: string) => {
+      navigate(`/groups/pending/${pendingId}`);
+    },
+
+    /**
+     * Navigation vers la page de gestion d'un groupe (Phase 3)
+     */
+    goToGroupManage: (groupId: string) => {
+      navigate(`/groups/${groupId}/manage`);
     },
 
     /**
@@ -126,6 +154,7 @@ export function useNavigationActions() {
     goToDiscovery: () => navigate('/discovery'),
     goToMyIdeas: () => navigate('/my-ideas'),
     goToCreateIdea: () => navigate('/create-idea'),
+    goToCreatePost: () => navigate('/create-idea'), // Utilise la même page pour posts et projets
     goToProfile: () => navigate('/profile'),
     goToCommunities: () => navigate('/communities'),
     goToHome: () => navigate('/'),

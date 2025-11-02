@@ -42,18 +42,6 @@ export function cleanDiscussionId(discussionId: string): string {
 }
 
 /**
- * Nettoie un ID de communauté en supprimant le préfixe "community/" ou "communities/" si présent
- * @param communityId - ID potentiellement préfixé
- * @returns ID nettoyé
- * @example
- * cleanCommunityId("communities/789") // "789"
- * cleanCommunityId("789") // "789"
- */
-export function cleanCommunityId(communityId: string): string {
-  return communityId.replace(/^communit(y|ies)\//, '');
-}
-
-/**
  * Nettoie un ID générique en supprimant tout préfixe de type "type/"
  * @param id - ID potentiellement préfixé
  * @returns ID nettoyé

@@ -61,10 +61,8 @@ export function IdeaDetailPage({
       .filter(Boolean) as User[]
   , [latestIdea.creatorIds, getUserById]);
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   const [activeTab, setActiveTab] = useState('description');
   

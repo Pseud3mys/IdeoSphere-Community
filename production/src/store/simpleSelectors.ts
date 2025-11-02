@@ -1,5 +1,5 @@
 import { SimpleEntityStore } from './SimpleEntityStore';
-import { User, Idea, Post, DiscussionTopic, Community, CommunityMembership } from '../types';
+import { User, Idea, Post, DiscussionTopic, Group, GroupMembership, PendingGroupCreation, GroupLink } from '../types';
 import { unknownUser } from '../data/users';
 
 /**
@@ -217,54 +217,223 @@ export const getUserStats = (store: SimpleEntityStore) => (userId: string) => {
   };
 };
 
-// Community selectors
-export const getAllCommunities = (store: SimpleEntityStore): Community[] => {
-  return Object.values(store.communities);
+// ========================================
+// Group selectors
+// ========================================
+
+export const getAllGroups = (store: SimpleEntityStore): Group[] => {
+  return Object.values(store.groups);
 };
 
-export const getCommunityById = (store: SimpleEntityStore) => (communityId: string): Community | null => {
-  return store.communities[communityId] || null;
+export const getGroupById = (store: SimpleEntityStore) => (groupId: string): Group | null => {
+  return store.groups[groupId] || null;
 };
 
-// NOTE MIGRATION REACT ROUTER (Phase 6) :
-// getSelectedCommunity() supprimée - communityId maintenant passé via props/params
+export const getActiveGroups = (store: SimpleEntityStore): Group[] => {
+  return Object.values(store.groups).filter(group => group.isActive);
+};
 
-export const getUserCommunities = (store: SimpleEntityStore) => (userId: string): Community[] => {
-  const userMemberships = Object.values(store.communityMemberships)
+export const getGroupsByType = (store: SimpleEntityStore) => (type: Group['type']): Group[] => {
+  return Object.values(store.groups).filter(group => group.type === type && group.isActive);
+};
+
+export const getUserGroups = (store: SimpleEntityStore) => (userId: string): Group[] => {
+  const userMemberships = Object.values(store.groupMemberships)
     .filter(membership => membership.userId === userId && membership.isActive);
   
   return userMemberships
-    .map(membership => store.communities[membership.communityId])
+    .map(membership => store.groups[membership.groupId])
     .filter(Boolean);
 };
 
-export const getCommunityMembership = (store: SimpleEntityStore) => (userId: string, communityId: string): CommunityMembership | null => {
-  const membershipId = `${userId}-${communityId}`;
-  return store.communityMemberships[membershipId] || null;
+export const getGroupMembership = (store: SimpleEntityStore) => (userId: string, groupId: string): GroupMembership | null => {
+  const membershipId = `${userId}-${groupId}`;
+  return store.groupMemberships[membershipId] || null;
 };
 
-export const isUserMemberOfCommunity = (store: SimpleEntityStore) => (userId: string, communityId: string): boolean => {
-  const membership = getCommunityMembership(store)(userId, communityId);
+export const isUserMemberOfGroup = (store: SimpleEntityStore) => (userId: string, groupId: string): boolean => {
+  const membership = getGroupMembership(store)(userId, groupId);
   return membership ? membership.isActive : false;
 };
 
-export const getCommunityMembers = (store: SimpleEntityStore) => (communityId: string): User[] => {
-  const communityMemberships = Object.values(store.communityMemberships)
-    .filter(membership => membership.communityId === communityId && membership.isActive);
+export const isUserAnimatorOfGroup = (store: SimpleEntityStore) => (userId: string, groupId: string): boolean => {
+  const membership = getGroupMembership(store)(userId, groupId);
+  return membership ? membership.isActive && membership.role === 'animator' : false;
+};
+
+export const getGroupMembers = (store: SimpleEntityStore) => (groupId: string): User[] => {
+  const groupMemberships = Object.values(store.groupMemberships)
+    .filter(membership => membership.groupId === groupId && membership.isActive);
   
-  return communityMemberships
+  return groupMemberships
     .map(membership => store.users[membership.userId])
     .filter(Boolean);
 };
 
-export const searchCommunities = (store: SimpleEntityStore) => (query: string): Community[] => {
-  if (!query.trim()) return getAllCommunities(store);
+export const getGroupAnimators = (store: SimpleEntityStore) => (groupId: string): User[] => {
+  const groupMemberships = Object.values(store.groupMemberships)
+    .filter(membership => membership.groupId === groupId && membership.isActive && membership.role === 'animator');
+  
+  return groupMemberships
+    .map(membership => store.users[membership.userId])
+    .filter(Boolean);
+};
+
+export const searchGroups = (store: SimpleEntityStore) => (query: string): Group[] => {
+  if (!query.trim()) return getActiveGroups(store);
   
   const lowercaseQuery = query.toLowerCase();
-  return getAllCommunities(store).filter(community =>
-    community.name.toLowerCase().includes(lowercaseQuery) ||
-    community.description.toLowerCase().includes(lowercaseQuery) ||
-    community.shortDescription.toLowerCase().includes(lowercaseQuery) ||
-    community.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+  return getActiveGroups(store).filter(group =>
+    group.name.toLowerCase().includes(lowercaseQuery) ||
+    group.description.toLowerCase().includes(lowercaseQuery) ||
+    group.shortDescription.toLowerCase().includes(lowercaseQuery) ||
+    group.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
   );
+};
+
+// Sélecteurs pour le feed d'un groupe
+export const getGroupIdeas = (store: SimpleEntityStore) => (groupId: string): Idea[] => {
+  return Object.values(store.ideas).filter(idea => idea.groupId === groupId);
+};
+
+export const getGroupPosts = (store: SimpleEntityStore) => (groupId: string): Post[] => {
+  return Object.values(store.posts).filter(post => post.groupId === groupId);
+};
+
+export const getGroupFeed = (store: SimpleEntityStore) => (groupId: string): { posts: Post[]; ideas: Idea[] } => {
+  const ideas = getGroupIdeas(store)(groupId);
+  const posts = getGroupPosts(store)(groupId);
+  
+  return {
+    posts: posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+    ideas: ideas.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+  };
+};
+
+// ========================================
+// Pending Group Creations selectors (Phase 2)
+// ========================================
+
+export const getAllPendingGroupCreations = (store: SimpleEntityStore): PendingGroupCreation[] => {
+  return Object.values(store.pendingGroupCreations);
+};
+
+export const getPendingGroupCreationById = (store: SimpleEntityStore) => (pendingId: string): PendingGroupCreation | null => {
+  return store.pendingGroupCreations[pendingId] || null;
+};
+
+export const getUserPendingGroupCreations = (store: SimpleEntityStore) => (userId: string): PendingGroupCreation[] => {
+  const allPending = Object.values(store.pendingGroupCreations);
+  const filtered = allPending.filter(pg => pg.founders.includes(userId));
+  
+  console.log(`🔍 [Selector.getUserPendingGroupCreations] User: ${userId}, Total: ${allPending.length}, Filtered: ${filtered.length}`);
+  
+  return filtered;
+};
+
+export const getPendingGroupStatus = (store: SimpleEntityStore) => (pendingId: string, userId: string): {
+  hasConfirmed: boolean;
+  confirmationCount: number;
+  totalFounders: number;
+  isComplete: boolean;
+} | null => {
+  const pendingGroup = store.pendingGroupCreations[pendingId];
+  
+  if (!pendingGroup) return null;
+  
+  return {
+    hasConfirmed: pendingGroup.confirmations.includes(userId),
+    confirmationCount: pendingGroup.confirmations.length,
+    totalFounders: pendingGroup.founders.length,
+    isComplete: pendingGroup.confirmations.length === pendingGroup.founders.length,
+  };
+};
+
+// ========================================
+// Group Links selectors (Phase 4)
+// ========================================
+
+export const getAllGroupLinks = (store: SimpleEntityStore) => {
+  return Object.values(store.groupLinks);
+};
+
+export const getGroupLinkById = (store: SimpleEntityStore) => (linkId: string) => {
+  return store.groupLinks[linkId] || null;
+};
+
+/**
+ * Récupère tous les liens d'un groupe (parents, enfants, partenaires)
+ */
+export const getGroupLinks = (store: SimpleEntityStore) => (groupId: string) => {
+  const allLinks = Object.values(store.groupLinks);
+  
+  const parentLinks = allLinks.filter(link => 
+    link.type === 'vertical' && link.childGroupId === groupId
+  );
+  
+  const childLinks = allLinks.filter(link => 
+    link.type === 'vertical' && link.parentGroupId === groupId
+  );
+  
+  const partnerLinks = allLinks.filter(link => 
+    link.type === 'horizontal' && (link.groupId1 === groupId || link.groupId2 === groupId)
+  );
+  
+  return { parentLinks, childLinks, partnerLinks };
+};
+
+/**
+ * Récupère les groupes parents d'un groupe
+ */
+export const getGroupParents = (store: SimpleEntityStore) => (groupId: string): Group[] => {
+  const { parentLinks } = getGroupLinks(store)(groupId);
+  
+  return parentLinks
+    .map(link => store.groups[link.parentGroupId])
+    .filter(Boolean);
+};
+
+/**
+ * Récupère les groupes enfants d'un groupe
+ */
+export const getGroupChildren = (store: SimpleEntityStore) => (groupId: string): Group[] => {
+  const { childLinks } = getGroupLinks(store)(groupId);
+  
+  return childLinks
+    .map(link => store.groups[link.childGroupId])
+    .filter(Boolean);
+};
+
+/**
+ * Récupère les groupes partenaires d'un groupe
+ */
+export const getGroupPartners = (store: SimpleEntityStore) => (groupId: string): Group[] => {
+  const { partnerLinks } = getGroupLinks(store)(groupId);
+  
+  return partnerLinks
+    .map(link => {
+      if (link.type === 'horizontal') {
+        const partnerId = link.groupId1 === groupId ? link.groupId2 : link.groupId1;
+        return store.groups[partnerId];
+      }
+      return null;
+    })
+    .filter(Boolean) as Group[];
+};
+
+/**
+ * Vérifie si un lien existe déjà entre deux groupes
+ */
+export const hasGroupLink = (store: SimpleEntityStore) => (groupId1: string, groupId2: string): boolean => {
+  const allLinks = Object.values(store.groupLinks);
+  
+  return allLinks.some(link => {
+    if (link.type === 'vertical') {
+      return (link.parentGroupId === groupId1 && link.childGroupId === groupId2) ||
+             (link.parentGroupId === groupId2 && link.childGroupId === groupId1);
+    } else {
+      return (link.groupId1 === groupId1 && link.groupId2 === groupId2) ||
+             (link.groupId1 === groupId2 && link.groupId2 === groupId1);
+    }
+  });
 };

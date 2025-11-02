@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Idea, Post, DiscussionTopic, PrefilledContent, Community, CommunityMembership } from '../types';
+import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import { User, Idea, Post, DiscussionTopic, PrefilledContent, Group, GroupMembership, PendingGroupCreation, GroupLink } from '../types';
 import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
@@ -9,8 +9,10 @@ interface SimpleEntityStore {
   ideas: Record<string, Idea>;
   posts: Record<string, Post>;
   discussionTopics: Record<string, DiscussionTopic>;
-  communities: Record<string, Community>;
-  communityMemberships: Record<string, CommunityMembership>;
+  groups: Record<string, Group>;
+  groupMemberships: Record<string, GroupMembership>;
+  pendingGroupCreations: Record<string, PendingGroupCreation>;
+  groupLinks: Record<string, GroupLink>;
   
   // États UI
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
@@ -61,13 +63,23 @@ interface SimpleEntityActions {
   addDiscussionTopic: (topic: DiscussionTopic) => void;
   updateDiscussionTopic: (topicId: string, updates: Partial<DiscussionTopic>) => void;
   
-  setCommunities: (communities: Record<string, Community>) => void;
-  addCommunity: (community: Community) => void;
-  updateCommunity: (communityId: string, updates: Partial<Community>) => void;
+  setGroups: (groups: Record<string, Group>) => void;
+  addGroup: (group: Group) => void;
+  updateGroup: (groupId: string, updates: Partial<Group>) => void;
   
-  setCommunityMemberships: (memberships: Record<string, CommunityMembership>) => void;
-  addCommunityMembership: (membership: CommunityMembership) => void;
-  updateCommunityMembership: (membershipId: string, updates: Partial<CommunityMembership>) => void;
+  setGroupMemberships: (memberships: Record<string, GroupMembership>) => void;
+  addGroupMembership: (membership: GroupMembership) => void;
+  updateGroupMembership: (userId: string, groupId: string, updates: Partial<GroupMembership>) => void;
+  
+  setPendingGroupCreations: (pendingGroups: Record<string, PendingGroupCreation>) => void;
+  addPendingGroupCreation: (pendingGroup: PendingGroupCreation) => void;
+  updatePendingGroupCreation: (pendingId: string, updates: Partial<PendingGroupCreation>) => void;
+  removePendingGroupCreation: (pendingId: string) => void;
+  
+  setGroupLinks: (groupLinks: Record<string, GroupLink>) => void;
+  addGroupLink: (groupLink: GroupLink) => void;
+  updateGroupLink: (linkId: string, updates: Partial<GroupLink>) => void;
+  removeGroupLink: (linkId: string) => void;
   
   // Actions UI
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
@@ -101,9 +113,10 @@ interface SimpleEntityActions {
     ideas: Idea[];
     posts: Post[];
     discussionTopics: DiscussionTopic[];
-    communities: Community[];
-    communityMemberships: CommunityMembership[];
-    currentUserId: string;
+    groups?: Group[];
+    groupMemberships?: GroupMembership[];
+    pendingGroups?: PendingGroupCreation[];
+    currentUserId: string | null;
   }) => void;
 }
 
@@ -123,8 +136,10 @@ const createInitialStore = (): SimpleEntityStore => ({
   ideas: {},
   posts: {},
   discussionTopics: {},
-  communities: {},
-  communityMemberships: {},
+  groups: {},
+  groupMemberships: {},
+  pendingGroupCreations: {},
+  groupLinks: {},
   hasEnteredPlatform: false,
   showOnboarding: false,
   currentUserId: null,
@@ -187,21 +202,29 @@ const normalizeDiscussionTopics = (topics: DiscussionTopic[]): Record<string, Di
   }, {} as Record<string, DiscussionTopic>);
 };
 
-const normalizeCommunities = (communities: Community[]): Record<string, Community> => {
-  if (!communities || !Array.isArray(communities)) return {};
-  return communities.reduce((acc, community) => {
-    acc[community.id] = community;
+const normalizeGroups = (groups: Group[]): Record<string, Group> => {
+  if (!groups || !Array.isArray(groups)) return {};
+  return groups.reduce((acc, group) => {
+    acc[group.id] = group;
     return acc;
-  }, {} as Record<string, Community>);
+  }, {} as Record<string, Group>);
 };
 
-const normalizeCommunityMemberships = (memberships: CommunityMembership[]): Record<string, CommunityMembership> => {
+const normalizeGroupMemberships = (memberships: GroupMembership[]): Record<string, GroupMembership> => {
   if (!memberships || !Array.isArray(memberships)) return {};
   return memberships.reduce((acc, membership) => {
-    const membershipId = `${membership.userId}-${membership.communityId}`;
+    const membershipId = `${membership.userId}-${membership.groupId}`;
     acc[membershipId] = membership;
     return acc;
-  }, {} as Record<string, CommunityMembership>);
+  }, {} as Record<string, GroupMembership>);
+};
+
+const normalizeGroupLinks = (links: GroupLink[]): Record<string, GroupLink> => {
+  if (!links || !Array.isArray(links)) return {};
+  return links.reduce((acc, link) => {
+    acc[link.id] = link;
+    return acc;
+  }, {} as Record<string, GroupLink>);
 };
 
 // Type pour le storeUpdater qui accepte une fonction ou un objet partiel
@@ -216,14 +239,14 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
   const [store, setStore] = useState<SimpleEntityStore>(createInitialStore);
 
   // StoreUpdater qui peut accepter une fonction pour éviter les stale closures
-  const storeUpdater: StoreUpdater = (newStoreData) => {
+  const storeUpdater: StoreUpdater = useMemo(() => (newStoreData) => {
     setStore(prevStore => {
       const updates = typeof newStoreData === 'function' ? newStoreData(prevStore) : newStoreData;
       return { ...prevStore, ...updates };
     });
-  };
+  }, []);
 
-  const actions: SimpleEntityActions = {
+  const actions: SimpleEntityActions = useMemo(() => ({
     // Users
     setUsers: (users) => setStore(prev => ({ ...prev, users })),
     addUser: (user) => setStore(prev => ({ 
@@ -370,36 +393,88 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       }
     })),
 
-    // Communities
-    setCommunities: (communities) => setStore(prev => ({ ...prev, communities })),
-    addCommunity: (community) => setStore(prev => ({ 
+    // Groups
+    setGroups: (groups) => setStore(prev => ({ ...prev, groups })),
+    addGroup: (group) => setStore(prev => ({ 
       ...prev, 
-      communities: { ...prev.communities, [community.id]: community }
+      groups: { ...prev.groups, [group.id]: group }
     })),
-    updateCommunity: (communityId, updates) => setStore(prev => ({
+    updateGroup: (groupId, updates) => setStore(prev => ({
       ...prev,
-      communities: {
-        ...prev.communities,
-        [communityId]: { ...prev.communities[communityId], ...updates }
+      groups: {
+        ...prev.groups,
+        [groupId]: { ...prev.groups[groupId], ...updates }
       }
     })),
 
-    // Community Memberships
-    setCommunityMemberships: (memberships) => setStore(prev => ({ ...prev, communityMemberships: memberships })),
-    addCommunityMembership: (membership) => {
-      const membershipId = `${membership.userId}-${membership.communityId}`;
+    // Group Memberships (Phase 1)
+    setGroupMemberships: (memberships) => setStore(prev => ({ ...prev, groupMemberships: memberships })),
+    addGroupMembership: (membership) => {
+      const membershipId = `${membership.userId}-${membership.groupId}`;
       setStore(prev => ({ 
         ...prev, 
-        communityMemberships: { ...prev.communityMemberships, [membershipId]: membership }
+        groupMemberships: { ...prev.groupMemberships, [membershipId]: membership }
       }));
     },
-    updateCommunityMembership: (membershipId, updates) => setStore(prev => ({
+    updateGroupMembership: (userId, groupId, updates) => {
+      const membershipId = `${userId}-${groupId}`;
+      setStore(prev => ({
+        ...prev,
+        groupMemberships: {
+          ...prev.groupMemberships,
+          [membershipId]: { ...prev.groupMemberships[membershipId], ...updates }
+        }
+      }));
+    },
+
+    // Pending Group Creations (Phase 2)
+    setPendingGroupCreations: (pendingGroups) => setStore(prev => ({ ...prev, pendingGroupCreations: pendingGroups })),
+    addPendingGroupCreation: (pendingGroup) => {
+      console.log(`🔧 [Store.addPendingGroupCreation] Ajout du groupe ${pendingGroup.id} au store`);
+      setStore(prev => {
+        const newStore = { 
+          ...prev, 
+          pendingGroupCreations: { ...prev.pendingGroupCreations, [pendingGroup.id]: pendingGroup }
+        };
+        console.log(`📊 [Store.addPendingGroupCreation] Store mis à jour, total pending groups:`, Object.keys(newStore.pendingGroupCreations).length);
+        return newStore;
+      });
+    },
+    updatePendingGroupCreation: (pendingId, updates) => setStore(prev => ({
       ...prev,
-      communityMemberships: {
-        ...prev.communityMemberships,
-        [membershipId]: { ...prev.communityMemberships[membershipId], ...updates }
+      pendingGroupCreations: {
+        ...prev.pendingGroupCreations,
+        [pendingId]: { ...prev.pendingGroupCreations[pendingId], ...updates }
       }
     })),
+    removePendingGroupCreation: (pendingId) => setStore(prev => {
+      const { [pendingId]: removed, ...remainingPending } = prev.pendingGroupCreations;
+      return {
+        ...prev,
+        pendingGroupCreations: remainingPending
+      };
+    }),
+
+    // Group Links (Phase 4)
+    setGroupLinks: (groupLinks) => setStore(prev => ({ ...prev, groupLinks })),
+    addGroupLink: (groupLink) => setStore(prev => ({
+      ...prev,
+      groupLinks: { ...prev.groupLinks, [groupLink.id]: groupLink }
+    })),
+    updateGroupLink: (linkId, updates) => setStore(prev => ({
+      ...prev,
+      groupLinks: {
+        ...prev.groupLinks,
+        [linkId]: { ...prev.groupLinks[linkId], ...updates }
+      }
+    })),
+    removeGroupLink: (linkId) => setStore(prev => {
+      const { [linkId]: removed, ...remainingLinks } = prev.groupLinks;
+      return {
+        ...prev,
+        groupLinks: remainingLinks
+      };
+    }),
 
     // UI Actions
     // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
@@ -436,14 +511,24 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
           
           console.log('✅ [Store] Utilisateur inconnu ajouté au store:', unknownUser.name);
           
+          const normalizePendingGroups = (pending: PendingGroupCreation[]): Record<string, PendingGroupCreation> => {
+            if (!pending || !Array.isArray(pending)) return {};
+            return pending.reduce((acc, pg) => {
+              acc[pg.id] = pg;
+              return acc;
+            }, {} as Record<string, PendingGroupCreation>);
+          };
+
           return {
             ...prev,
             users: normalizedUsers,
             ideas: normalizeIdeas(initialData.ideas || []),
             posts: normalizePosts(initialData.posts || []),
             discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
-            communities: normalizeCommunities(initialData.communities || []),
-            communityMemberships: normalizeCommunityMemberships(initialData.communityMemberships || []),
+            groups: normalizeGroups(initialData.groups || []),
+            groupMemberships: normalizeGroupMemberships(initialData.groupMemberships || []),
+            pendingGroupCreations: normalizePendingGroups(initialData.pendingGroups || []),
+            groupLinks: normalizeGroupLinks((initialData as any).groupLinks || []),
             currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
           };
         });
@@ -451,10 +536,12 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
         console.error('❌ Erreur lors de l\'initialisation du store:', error);
       }
     }
-  };
+  }), []);
+
+  const contextValue = useMemo(() => ({ store, actions, storeUpdater }), [store, actions, storeUpdater]);
 
   return (
-    <SimpleEntityStoreContext.Provider value={{ store, actions, storeUpdater }}>
+    <SimpleEntityStoreContext.Provider value={contextValue}>
       {children}
     </SimpleEntityStoreContext.Provider>
   );

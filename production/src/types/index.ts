@@ -93,6 +93,7 @@ export interface Post {
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];
   location?: string;
+  groupId?: string; // Groupe auquel appartient ce post
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // IDs des utilisateurs qui soutiennent ce post
   replies: PostReply[];
@@ -127,6 +128,7 @@ export interface Idea {
   createdAt: Date;
   tags?: string[];
   location?: string;
+  groupId?: string; // Groupe auquel appartient cette idée
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // ✅ IDs des utilisateurs (aligné avec Post.supporters)
   discussionIds: string[];
@@ -163,32 +165,90 @@ export interface PrefilledContent {
   location?: string; // Localisation du contenu source
 }
 
-// Communautés/Groupes de travail
-export interface Community {
+// Groupes (anciennement Communautés)
+export type GroupType = 'community' | 'team' | 'project' | 'local';
+
+export interface Group {
   id: string;
   name: string;
   description: string;
   shortDescription: string;
-  type: 'association' | 'thematic' | 'local' | 'project' | 'education' | 'event';
-  avatar: string;
+  type: GroupType;
+  avatar?: string;
   banner?: string;
   location?: string;
   tags: string[];
   memberCount: number;
   ideaCount: number;
+  projectCount: number;
   createdAt: Date;
-  admins: string[]; // User IDs
-  isPublic: boolean;
-  joinPolicy: 'open' | 'request' | 'invite-only';
+  createdBy: string[]; // Les 3+ fondateurs (Phase 2)
+  animators: string[]; // User IDs des animateurs
+  isActive: boolean; // false si en attente (Phase 2)
 }
 
-export interface CommunityMembership {
+export interface GroupMembership {
   userId: string;
-  communityId: string;
-  role: 'member' | 'moderator' | 'admin';
+  groupId: string;
+  role: 'animator' | 'member';
   joinedAt: Date;
   isActive: boolean;
 }
+
+// Liens entre groupes (Phase 4)
+export interface VerticalGroupLink {
+  id: string;
+  parentGroupId: string;
+  childGroupId: string;
+  type: 'vertical';
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface HorizontalGroupLink {
+  id: string;
+  groupId1: string;
+  groupId2: string;
+  type: 'horizontal';
+  createdAt: Date;
+  createdBy: string;
+}
+
+export type GroupLink = VerticalGroupLink | HorizontalGroupLink;
+
+// Suggestions de contenu entre groupes (Phase 5)
+export interface ContentSuggestion {
+  id: string;
+  contentId: string;
+  contentType: 'idea' | 'post';
+  sourceGroupId: string;
+  targetGroupId: string;
+  suggestedBy: string;
+  suggestedAt: Date;
+}
+
+// Groupes en attente de création (Phase 2)
+export interface PendingGroupCreation {
+  id: string;
+  name: string;
+  description: string;
+  shortDescription: string;
+  type: GroupType;
+  avatar?: string;
+  location?: string;
+  tags: string[];
+  founders: string[]; // User IDs (min 3)
+  confirmations: string[]; // User IDs qui ont confirmé
+  createdAt: Date;
+  expiresAt: Date; // 7 jours après création
+  initiatorId: string; // Celui qui a lancé la création
+}
+
+// Alias pour compatibilité avec le code existant (sera supprimé progressivement)
+/** @deprecated Use Group instead */
+export type Community = Group;
+/** @deprecated Use GroupMembership instead */
+export type CommunityMembership = GroupMembership;
 
 // NOTE MIGRATION REACT ROUTER (Phase 6) :
 // TabType supprimé - navigation maintenant gérée par React Router avec URLs

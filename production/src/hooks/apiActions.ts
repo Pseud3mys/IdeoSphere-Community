@@ -29,7 +29,10 @@ export function createApiActions(
           users: mockData.users.length + 2, // +2 pour currentUser et guestUser
           ideas: mockData.ideas.length,
           posts: mockData.posts.length,
-          discussions: mockData.discussions.length
+          discussions: mockData.discussions.length,
+          groups: mockData.groups?.length || 0,
+          groupMemberships: mockData.groupMemberships?.length || 0,
+          pendingGroups: mockData.pendingGroups?.length || 0
         });
         
         // Initialiser le store avec toutes les données SANS utilisateur connecté
@@ -39,8 +42,9 @@ export function createApiActions(
           ideas: mockData.ideas,
           posts: mockData.posts,
           discussionTopics: mockData.discussions,
-          communities: [],
-          communityMemberships: [],
+          groups: mockData.groups || [],
+          groupMemberships: mockData.groupMemberships || [],
+          pendingGroups: mockData.pendingGroups || [],
           currentUserId: null // ✅ Pas d'utilisateur connecté par défaut
         });
         

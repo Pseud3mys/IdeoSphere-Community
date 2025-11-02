@@ -10,6 +10,7 @@ export function getMockIdeas(): Idea[] {
       id: 'ideas/1',
       title: 'Des bancs dans nos rues pour pouvoir se reposer',
       summary: 'Installer des bancs publics aux endroits stratégiques du village pour que chacun puisse s\'arrêter, se reposer et discuter avec les voisins',
+      groupId: 'g5', // Quartier Nord
       description: `## Le manque de bancs dans notre village
 
 Ça fait plusieurs fois qu'on en parle entre nous : il n'y a quasiment aucun endroit pour s'asseoir dans nos rues ! Entre les courses, les balades avec les enfants ou quand on vieillit... on a tous besoin de pouvoir faire une pause.
@@ -100,6 +101,7 @@ Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
       id: 'ideas/2',
       title: 'Café-réparation tous les premiers samedis',
       summary: 'Organiser un atelier mensuel où chacun apporte ses objets cassés pour les réparer ensemble, dans l\'esprit du partage et de l\'anti-gaspillage',
+      groupId: 'g4', // Commission Environnement
       description: `## L'idée du café-réparation
 
 J'ai encore jeté mon grille-pain ce matin... 😔 Ça m'embête de jeter alors que Pierre pourrait sûrement le réparer ! Et si on organisait des moments pour bricoler ensemble au lieu de jeter ?
@@ -189,6 +191,7 @@ Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix
       id: 'ideas/3',
       title: 'Système d\'échange de services entre voisins',
       summary: 'Créer un réseau local d\'entraide où chacun propose ses compétences et peut demander de l\'aide à ses voisins',
+      groupId: 'g5', // Quartier Nord
       description: `## L'idée d'un réseau d'entraide local
 
 Hier j'avais des courses lourdes et j'aurais bien eu besoin d'un coup de main... 🛒 En même temps, moi je peux aider avec l'informatique ! On pourrait pas s'organiser pour s'entraider ?
@@ -290,6 +293,7 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
       id: 'ideas/4',
       title: 'Réparer les nids de poule rue des Écoles',
       summary: 'Signaler et organiser la réparation des trous dans la chaussée qui abîment les voitures et sont dangereux pour les piétons',
+      groupId: 'g5', // Quartier Nord
       description: `## Le problème des nids de poule rue des Écoles
 
 Ça fait des mois qu'on slalome entre les trous ! Entre celui devant chez Pierre qui fait sauter les amortisseurs et celui près de l'école qui retient l'eau... il faut qu'on s'organise pour que ça bouge !

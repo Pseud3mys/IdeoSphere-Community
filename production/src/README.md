@@ -1,118 +1,193 @@
 # IdeoSphere
 
-Application web collaborative pour la collecte et discussion d'idées, fonctionnant comme un "système nerveux" permettant aux meilleures idées d'émerger naturellement grâce à l'intelligence collective.
+**Plateforme collaborative** de collecte et discussion d'idées citoyennes avec système de notation sur trois critères et organisation en groupes.
 
 ---
 
-## Architecture Générale
+## 🎯 Fonctionnalités principales
 
-IdeoSphere suit une **architecture unidirectionnelle stricte** basée sur React Router v6 :
+### Contenu
+- **Projets** (Idées) : Propositions structurées avec description détaillée et évaluation multi-critères
+- **Discussions** (Posts) : Messages courts et réactifs pour échanger rapidement
+- **Transformations** : Tout contenu peut évoluer (post → projet, améliorations, dérivations)
 
-```
-Composants React
-    ↓
-React Router (Navigation) + useEntityStoreSimple (Données)
-    ↓
-API Services
-    ↓
-Données Mockées
-```
+### Groupes
+- **4 types** : Communauté, Équipe, Projet, Local
+- **Création collaborative** : Noyau initial de 3 personnes minimum
+- **Liens entre groupes** : Hiérarchiques (parent/enfant) ou de collaboration
+- **Interface moderne** : 3 onglets (Projets, Discussions, Réseau)
+
+### Évaluation
+- **3 critères** de notation sur chaque projet
+- **Discussions** associées aux idées
+- **Soutiens** pour les discussions
+
+---
+
+## 🏗️ Architecture
 
 ### Principes Fondamentaux
 
 1. **Source Unique de Vérité** : 
    - **Navigation** : URLs (React Router)
    - **Données** : SimpleEntityStore
-2. **Communication Stricte** : Aucune communication directe entre composants et données mockées
-3. **Chargement Progressif** : Les données sont chargées selon les besoins (feed minimal, puis détails à la demande)
-4. **Mutations Contrôlées** : Toutes les modifications passent par des actions du store
-5. **Deep Linking** : Toutes les pages sont accessibles via URL directe
+2. **Communication Stricte** : Composants → Hooks → API Services → Données
+3. **Chargement Progressif** : Feed minimal, puis détails à la demande
+4. **Deep Linking** : Toutes les pages accessibles via URL directe
 
-### Distinction Posts vs Projets
+### Flow unidirectionnel
 
-- **Posts** : Messages courts et simples (comme des tweets)
-- **Projets** : Contenu complexe avec évaluations sur 3 critères (Potentiel, Faisabilité, Aboutissement)
-
-## Structure des Dossiers
-
-### `/store`
-Gestion centralisée de l'état applicatif. Voir [store/README.md](./store/README.md)
-
-### `/hooks`
-Interface entre composants et store. Voir [hooks/README.md](./hooks/README.md)
-
-### `/api`
-Couche de services pour accéder aux données. Voir [api/README.md](./api/README.md)
-
-### `/components`
-Composants React organisés par fonctionnalité :
-- `auth/` : Authentification (login, signup)
-- `create-idea/` : Création d'idées et projets
-- `ui/` : Composants UI réutilisables (shadcn/ui)
-- Autres : Pages et composants métier
-
-### `/data`
-Données mockées simulant une base de données
-
-### `/types`
-Définitions TypeScript partagées
-
-### `/utils`
-Fonctions utilitaires
-
-## Flux de Données Principaux
-
-### 1. Chargement Initial
 ```
-App.tsx initialise le store
+Composants React
     ↓
-WelcomePage affiche la page d'accueil
+React Router + useEntityStoreSimple
     ↓
-Utilisateur entre sur la plateforme
+API Services
     ↓
-actions.enterPlatform() charge le feed minimal
+Données Mockées
 ```
 
-### 2. Navigation vers une Idée
+---
+
+## 📁 Structure du projet
+
 ```
-Utilisateur clique sur une carte (<Link to={`/content/${ideaId}`}>)
-    ↓
-React Router navigue vers /content/ideas/123
-    ↓
-IdeaDetailPageWrapper charge les détails
-    ↓
-fetchIdeaDetails() + fetchDiscussions()
-    ↓
-Store mis à jour → Composant re-rendu
+/components     # Composants React
+  /group        # Composants spécifiques aux groupes
+  /create-idea  # Formulaires de création
+  /ui           # Composants shadcn/ui
+  
+/api            # Services API (mockés)
+/data           # Données mockées
+/hooks          # Hooks personnalisés
+/store          # Store global SimpleEntityStore
+/types          # Types TypeScript
+/router         # Configuration routes
+/docs           # Documentation technique
 ```
 
-### 3. Interaction (Support/Like)
-```
-Utilisateur clique sur "Soutenir"
-    ↓
-actions.toggleIdeaSupport(ideaId)
-    ↓
-Mise à jour optimiste du store
-    ↓
-Appel API en arrière-plan
-    ↓
-Confirmation ou rollback
+---
+
+## 🚀 Système de groupes
+
+| Phase | Description | Statut |
+|-------|-------------|--------|
+| Phase 1 | Fondations & Annuaire | ✅ Terminée |
+| Phase 2 | Création (Noyau Initial) | ✅ Terminée |
+| Phase 3 | Gestion des groupes | ✅ Terminée |
+| Phase 4 | Liens entre groupes | ✅ Terminée |
+| **Phase 5** | **Intégration complète** | **📋 En cours** |
+| Phase 6 | Politiques d'accès | 🔜 À venir |
+| Phase 7 | Polish & Optimisations | 🔜 À venir |
+
+**Voir** `/GROUPES_SYNTHESE.md` pour la vue d'ensemble complète.
+
+---
+
+## 📚 Documentation
+
+### Groupes (nouveau)
+- **`/GROUPES_SYNTHESE.md`** ⭐ - Vue d'ensemble du système de groupes
+- **`/PHASE5_INTEGRATION_GROUPES.md`** - Plan détaillé Phase 5
+- **`/PHASE4_COMPLETE.md`** - Système de liens entre groupes
+- **`/GROUPE_UI_REVISION.md`** - Refonte interface de groupe
+
+### Architecture
+- **`/ARCHITECTURE.md`** - Vue d'ensemble complète
+- **`/ETAT_PROJET.md`** ⭐ - État général du projet
+- **`/store/README.md`** - Gestion de l'état
+- **`/hooks/README.md`** - Interface avec le store
+- **`/api/README.md`** - Couche de services
+
+### Routing et Navigation
+- **`/docs/ROUTING.md`** ⭐ - Guide complet React Router
+- **`/docs/DATA_FLOW.md`** - Circulation des données
+- **`/docs/API_CALLS_PATTERN.md`** - Conventions d'appel
+
+### Plans de Migration
+- **`/PLANS_MIGRATION_INDEX.md`** - Index de tous les plans
+- **`/PLAN_MIGRATION_REFACTORING.md`** - Refactoring 7 phases
+- **`/PLAN_MIGRATION_UNKNOWN_USER.md`** - Centralisation unknownUser
+
+---
+
+## 🧭 Navigation principale
+
+### Pages publiques
+- `/` - Accueil / Feed général
+- `/groups` - Annuaire des groupes
+- `/groups/:id` - Page d'un groupe (Projets, Discussions, Réseau)
+- `/ideas/:id` - Détails d'un projet
+- `/posts/:id` - Détails d'une discussion
+
+### Pages utilisateur
+- `/profile` - Mon profil
+- `/my-ideas` - Mes contributions
+- `/groups/my` - Mes groupes
+- `/create/idea` - Créer un projet
+
+### Gestion (animateurs)
+- `/groups/:id/manage` - Gérer un groupe
+- `/groups/pending/:id` - Groupe en attente de confirmation
+
+---
+
+## 🎨 Stack technique
+
+- **React** + TypeScript
+- **Tailwind CSS** v4.0
+- **shadcn/ui** - Composants UI
+- **React Router** v6 - Navigation
+- **Zustand** - State management (SimpleEntityStore)
+- **Lucide React** - Icônes
+
+---
+
+## 🚀 Démarrage
+
+```bash
+# Installation des dépendances
+npm install
+
+# Lancer le serveur de développement
+npm run dev
 ```
 
-### 4. Navigation entre pages
-```
-Utilisateur clique sur un onglet (<Link to="/my-ideas">)
-    ↓
-React Router navigue vers /my-ideas
-    ↓
-MyIdeasPageWrapper vérifie si données chargées
-    ↓
-Si non chargé : appel API pour données manquantes
-    ↓
-Store mis à jour → Page affiche les données
-```
+---
 
-## Règles de Développement
+## 🎯 Phase 5 : Intégration des groupes (en cours)
+
+La Phase 5 intègre complètement les groupes au reste du système :
+
+### Objectifs
+- ✅ Champ `groupId` sur tout le contenu (groupe d'origine)
+- ✅ Système de suggestions vers des groupes
+- ✅ Badge d'origine visible sur le contenu
+- ✅ Sélecteur de groupe dans les formulaires de création
+- ✅ Feed de groupe avec contenu suggéré
+
+### Nouveaux composants
+- `GroupOriginBadge` - Badge cliquable d'origine
+- `SuggestToGroupDialog` - Dialog pour suggérer vers un groupe
+- `GroupSelector` - Sélection de groupe dans formulaires
+
+**Plan détaillé** : `/PHASE5_INTEGRATION_GROUPES.md`
+
+---
+
+## 📊 État actuel
+
+✅ **Système de base** : Fonctionnel et robuste  
+✅ **Groupes** : 4 phases complétées  
+✅ **Interface** : Moderne et intuitive  
+✅ **Navigation** : Fluide et responsive  
+✅ **Mode invité** : Accès complet en lecture  
+
+Le système est prêt pour la Phase 5 ! 🚀
+
+---
+
+## 🧑‍💻 Règles de développement
 
 ### ✅ À Faire
 
@@ -120,19 +195,17 @@ Store mis à jour → Page affiche les données
 - **Toujours** utiliser les actions du store pour modifier l'état
 - Protéger les propriétés optionnelles avec `?.` ou `|| []`
 - Utiliser le chargement progressif : feed minimal puis détails à la demande
-- Éviter les données imbriquées complexes
 
 ### ❌ À Éviter
 
 - Accéder directement aux données mockées depuis les composants
 - Créer des états locaux pour des données déjà dans le store
 - Charger toutes les données d'un coup
-- Muter directement le store (toujours passer par `storeUpdater`)
-- Oublier les protections sur les tableaux optionnels
+- Muter directement le store (toujours passer par les actions)
 
-## Exemples d'Utilisation
+---
 
-### Dans un Composant
+## 📝 Exemple d'utilisation
 
 ```tsx
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
@@ -166,63 +239,6 @@ function MyComponent() {
 }
 ```
 
-### Protection des Propriétés Optionnelles
+---
 
-```tsx
-// ✅ Correct - Utiliser les IDs
-const userIdeas = ideas.filter(idea => 
-  idea.creatorIds?.includes(userId)
-);
-
-// ❌ Incorrect (peut crasher)
-const userIdeas = ideas.filter(idea => 
-  idea.creatorIds.includes(userId)
-);
-```
-
-## Technologies
-
-- **React** : Framework UI
-- **React Router v6** : Navigation et routing
-- **TypeScript** : Typage statique
-- **Tailwind CSS v4** : Styles
-- **Context API** (via SimpleEntityStore) : Gestion d'état
-- **shadcn/ui** : Composants UI
-
-## Démarrage
-
-```bash
-# Installation des dépendances
-npm install
-
-# Lancer le serveur de développement
-npm run dev
-```
-
-**Note importante** : React Router doit être installé :
-```bash
-npm install react-router-dom
-```
-
-## Documentation Détaillée
-
-### Architecture
-- [Architecture Générale](./ARCHITECTURE.md) - Vue d'ensemble complète
-- [Architecture du Store](./store/README.md) - Gestion de l'état
-- [Guide des Hooks](./hooks/README.md) - Interface avec le store
-- [Services API](./api/README.md) - Couche de services
-
-### Routing et Navigation
-- [Guide du Routing](./docs/ROUTING.md) ⭐ - Guide complet React Router
-- [Migration React Router](./MIGRATION_REACT_ROUTER_SUMMARY.md) - Récapitulatif de la migration
-- [Plan de Migration](./PLAN_MIGRATION_REACT_ROUTER.md) - Détails techniques
-
-### Fonctionnalités
-- [Feed Intelligent](./docs/INTELLIGENT_FEED.md) - Algorithme du fil d'actualité
-- [Flux de Données](./docs/DATA_FLOW.md) - Circulation des données
-- [Patterns API](./docs/API_CALLS_PATTERN.md) - Conventions d'appel
-
-### Autres
-- [Guide Rapide](./QUICKSTART.md) - Démarrage rapide
-- [Changelog](./CHANGELOG.md) - Historique des modifications
-- [Index Documentation](./DOCUMENTATION_INDEX.md) - Vue d'ensemble des docs
+*IdeoSphere - Plateforme collaborative d'intelligence collective*

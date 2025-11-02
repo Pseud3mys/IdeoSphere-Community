@@ -118,7 +118,6 @@ export interface RawFeedback {
  * @returns Objet Idea pour le store (avec champs non chargés vides)
  */
 export function transformIdeaCardToIdea(ideaCard: any): Idea {
-  console.log(ideaCard.creatorIds);
   return {
     id: ideaCard.id,
     title: ideaCard.title,

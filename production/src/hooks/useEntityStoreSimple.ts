@@ -2,6 +2,7 @@ import { useSimpleEntityStore } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
 import { User } from '../types';
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { extractHashtagsFromMultipleTexts } from '../utils/hashtagUtils';
 
 // Imports des modules d'actions
@@ -20,6 +21,7 @@ let storeInitialized = false;
  */
 export function useEntityStoreSimple() {
   const { store, actions, storeUpdater } = useSimpleEntityStore();
+  const navigate = useNavigate();
   const initializationRef = useRef(false);
 
   // ⚠️ INITIALISATION UNIQUE DES DONNÉES
@@ -90,15 +92,39 @@ export function useEntityStoreSimple() {
     // Stats selectors
     getUserStats: (userId: string) => selectors.getUserStats(store)(userId),
     
-    // Community selectors
-    getAllCommunities: () => selectors.getAllCommunities(store),
-    getCommunityById: (communityId: string) => selectors.getCommunityById(store)(communityId),
-    // getSelectedCommunity: supprimée (Phase 6) - communityId passé via props/params
-    getUserCommunities: (userId: string) => selectors.getUserCommunities(store)(userId),
-    getCommunityMembership: (userId: string, communityId: string) => selectors.getCommunityMembership(store)(userId, communityId),
-    isUserMemberOfCommunity: (userId: string, communityId: string) => selectors.isUserMemberOfCommunity(store)(userId, communityId),
-    getCommunityMembers: (communityId: string) => selectors.getCommunityMembers(store)(communityId),
-    searchCommunities: (query: string) => selectors.searchCommunities(store)(query),
+    // Group selectors
+    getAllGroups: () => selectors.getAllGroups(store),
+    getGroupById: (groupId: string) => selectors.getGroupById(store)(groupId),
+    getActiveGroups: () => selectors.getActiveGroups(store),
+    getGroupsByType: (type: string) => selectors.getGroupsByType(store)(type as any),
+    getUserGroups: (userId: string) => selectors.getUserGroups(store)(userId),
+    getGroupMembership: (userId: string, groupId: string) => selectors.getGroupMembership(store)(userId, groupId),
+    isUserMemberOfGroup: (userId: string, groupId: string) => selectors.isUserMemberOfGroup(store)(userId, groupId),
+    isUserAnimatorOfGroup: (userId: string, groupId: string) => selectors.isUserAnimatorOfGroup(store)(userId, groupId),
+    getGroupMembers: (groupId: string) => selectors.getGroupMembers(store)(groupId),
+    getGroupAnimators: (groupId: string) => selectors.getGroupAnimators(store)(groupId),
+    searchGroups: (query: string) => selectors.searchGroups(store)(query),
+    getGroupIdeas: (groupId: string) => selectors.getGroupIdeas(store)(groupId),
+    getGroupPosts: (groupId: string) => selectors.getGroupPosts(store)(groupId),
+    getGroupFeed: (groupId: string) => selectors.getGroupFeed(store)(groupId),
+    // Alias pour cohérence
+    getIdeasByGroup: (groupId: string) => selectors.getGroupIdeas(store)(groupId),
+    getPostsByGroup: (groupId: string) => selectors.getGroupPosts(store)(groupId),
+    
+    // Pending Group Creations selectors (Phase 2)
+    getAllPendingGroupCreations: () => selectors.getAllPendingGroupCreations(store),
+    getPendingGroupCreationById: (pendingId: string) => selectors.getPendingGroupCreationById(store)(pendingId),
+    getUserPendingGroupCreations: (userId: string) => selectors.getUserPendingGroupCreations(store)(userId),
+    getPendingGroupStatus: (pendingId: string, userId: string) => selectors.getPendingGroupStatus(store)(pendingId, userId),
+    
+    // Group Links selectors (Phase 4)
+    getAllGroupLinks: () => selectors.getAllGroupLinks(store),
+    getGroupLinkById: (linkId: string) => selectors.getGroupLinkById(store)(linkId),
+    getGroupLinks: (groupId: string) => selectors.getGroupLinks(store)(groupId),
+    getGroupParents: (groupId: string) => selectors.getGroupParents(store)(groupId),
+    getGroupChildren: (groupId: string) => selectors.getGroupChildren(store)(groupId),
+    getGroupPartners: (groupId: string) => selectors.getGroupPartners(store)(groupId),
+    hasGroupLink: (groupId1: string, groupId2: string) => selectors.hasGroupLink(store)(groupId1, groupId2),
     
     // My contributions selector
     getMyContributions: () => {
@@ -185,7 +211,7 @@ export function useEntityStoreSimple() {
 
   // Créer les modules d'actions
   const navigationActions = createNavigationActions(store, actions, boundSelectors, storeUpdater);
-  const contentActions = createContentActions(store, actions, boundSelectors, navigationActions, storeUpdater);
+  const contentActions = createContentActions(store, actions, boundSelectors, navigationActions, storeUpdater, navigate);
   const userActions = createUserActions(store, actions, boundSelectors, navigationActions, storeUpdater);
   const apiActions = createApiActions(store, actions, boundSelectors, storeUpdater);
 
@@ -193,15 +219,34 @@ export function useEntityStoreSimple() {
   const simpleActions = {
     // Actions de base du store (pour manipulation directe)
     addPost: actions.addPost,
-    setPost: actions.setPost,
+    setPosts: actions.setPosts,
     addIdea: actions.addIdea,
-    setIdea: actions.setIdea,
+    setIdeas: actions.setIdeas,
     addUser: actions.addUser,
     updateIdea: actions.updateIdea,
     updatePost: actions.updatePost,
     updateUser: actions.updateUser,
     addDiscussionTopic: actions.addDiscussionTopic,
-    setSelectedCommunityId: actions.setSelectedCommunityId,
+    
+    // Actions Group (Phase 1)
+    addGroup: actions.addGroup,
+    updateGroup: actions.updateGroup,
+    setGroups: actions.setGroups,
+    addGroupMembership: actions.addGroupMembership,
+    updateGroupMembership: actions.updateGroupMembership,
+    setGroupMemberships: actions.setGroupMemberships,
+    
+    // Actions Pending Group Creations (Phase 2)
+    addPendingGroupCreation: actions.addPendingGroupCreation,
+    updatePendingGroupCreation: actions.updatePendingGroupCreation,
+    removePendingGroupCreation: actions.removePendingGroupCreation,
+    setPendingGroupCreations: actions.setPendingGroupCreations,
+    
+    // Actions Group Links (Phase 4)
+    addGroupLink: actions.addGroupLink,
+    updateGroupLink: actions.updateGroupLink,
+    removeGroupLink: actions.removeGroupLink,
+    setGroupLinks: actions.setGroupLinks,
     
     // Actions de navigation
     ...navigationActions,
@@ -288,9 +333,15 @@ export function useEntityStoreSimple() {
     publishPost: apiActions.publishPost
   };
 
+  // Computed values
+  const currentUser = boundSelectors.getCurrentUser();
+
   return {
     // Store state
     store,
+    
+    // Current user
+    currentUser,
     
     // Selectors
     ...boundSelectors,

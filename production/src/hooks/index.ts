@@ -7,3 +7,11 @@ export { useEntityStoreSimple } from './useEntityStoreSimple';
 
 // Hooks d'authentification
 export { useAuthHandlers } from './useAuthHandlers';
+
+// Hooks de navigation
+export { useNavigationActions } from './useNavigationActions';
+
+// Hooks spécialisés pour les entités
+export { useCommunityActions } from './useCommunityActions';
+export { useGroupActions } from './useGroupActions';
+export { useGroupLinkActions } from './useGroupLinkActions';
