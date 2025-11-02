@@ -35,20 +35,31 @@ export function createApiActions(
           pendingGroups: mockData.pendingGroups?.length || 0
         });
         
-        // Initialiser le store avec toutes les données SANS utilisateur connecté
-        // Les boutons de connexion définiront le currentUserId
+        // Créer un utilisateur anonyme temporaire pour la navigation
+        const anonymousUser = {
+          id: 'anonymous',
+          name: 'Visiteur',
+          email: '',
+          avatar: '',
+          bio: '',
+          createdAt: new Date(),
+          isRegistered: false
+        };
+        
+        // Initialiser le store avec toutes les données avec utilisateur anonyme
+        // Les boutons de connexion changeront le currentUserId
         actions.initializeStore({
-          users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
+          users: [anonymousUser, mockData.currentUser, mockData.guestUser, ...mockData.users],
           ideas: mockData.ideas,
           posts: mockData.posts,
           discussionTopics: mockData.discussions,
           groups: mockData.groups || [],
           groupMemberships: mockData.groupMemberships || [],
           pendingGroups: mockData.pendingGroups || [],
-          currentUserId: null // ✅ Pas d'utilisateur connecté par défaut
+          currentUserId: 'anonymous' // ✅ Utilisateur anonyme par défaut pour la navigation
         });
         
-        console.log('✅ [apiActions] Store initialisé avec toutes les données (currentUserId: null)');
+        console.log('✅ [apiActions] Store initialisé avec toutes les données (currentUserId: anonymous)');
         
         return true;
       } catch (error) {

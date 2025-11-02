@@ -222,27 +222,46 @@ export function PostDetailPage({
       {/* Post principal - Style Reddit/Twitter */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Header utilisateur */}
-        {postAuthor && (
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-start space-x-3">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {postAuthor.name.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <UserLink user={postAuthor} className="font-semibold text-gray-900" />
-                  <span className="text-gray-500">•</span>
-                  <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-start space-x-3">
+            {postAuthor ? (
+              <>
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {postAuthor.name.slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <UserLink user={postAuthor} className="font-semibold text-gray-900" />
+                    <span className="text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
                 </div>
-                <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <Avatar className="w-12 h-12">
+                  <AvatarFallback className="bg-gray-300 text-gray-600">
+                    ??
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold text-gray-900">Utilisateur inconnu</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">Chargement...</p>
+                </div>
+              </>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Contenu */}
         <div className="p-4">

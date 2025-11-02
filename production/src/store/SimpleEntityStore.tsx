@@ -294,7 +294,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       
       const existing = prev.ideas[idea.id];
       if (existing) {
-        // Fusionner intelligemment : préserver les tableaux non-vides
+        // Fusionner intelligemment : préserver les données complètes déjà chargées
         const merged: Idea = {
           ...existing,
           ...idea,
@@ -306,9 +306,22 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
           supporters: (idea.supporters && idea.supporters.length > 0) ? idea.supporters : existing.supporters || [],
           ratings: (idea.ratings && idea.ratings.length > 0) ? idea.ratings : existing.ratings || [],
           discussionIds: (idea.discussionIds && idea.discussionIds.length > 0) ? idea.discussionIds : existing.discussionIds || [],
-          // Préserver la description si elle est remplie
-          description: idea.description || existing.description || ''
+          // ✅ AMÉLIORATION : Préserver la description existante si elle est non vide ET que la nouvelle est vide/undefined
+          // Cela évite qu'une FeedIdeaCard (sans description) écrase une Idea complète (avec description)
+          description: (idea.description !== undefined && idea.description !== '') 
+            ? idea.description 
+            : (existing.description || '')
         };
+        
+        // 🔍 Debug : Afficher les descriptions lors de la fusion
+        if (existing.description && !idea.description) {
+          console.log(`[Store] addIdea - Fusion pour ${idea.id}:`, {
+            existingDesc: existing.description.substring(0, 50) + '...',
+            newDesc: idea.description || '(vide)',
+            mergedDesc: merged.description.substring(0, 50) + '...'
+          });
+        }
+        
         return { ...prev, users: newUsers, ideas: { ...prev.ideas, [idea.id]: merged } };
       }
       return { ...prev, users: newUsers, ideas: { ...prev.ideas, [idea.id]: idea } };
@@ -352,7 +365,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       
       const existing = prev.posts[post.id];
       if (existing) {
-        // Fusionner intelligemment : préserver les tableaux non-vides
+        // Fusionner intelligemment : préserver les données complètes déjà chargées
         const merged: Post = {
           ...existing,
           ...post,
@@ -362,7 +375,11 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
           sourcePosts: (post.sourcePosts && post.sourcePosts.length > 0) ? post.sourcePosts : existing.sourcePosts || [],
           // Préserver les supporters/replies si non vides
           supporters: (post.supporters && post.supporters.length > 0) ? post.supporters : existing.supporters || [],
-          replies: (post.replies && post.replies.length > 0) ? post.replies : existing.replies || []
+          replies: (post.replies && post.replies.length > 0) ? post.replies : existing.replies || [],
+          // ✅ AMÉLIORATION : Préserver le contenu existant si le nouveau est vide/undefined
+          content: (post.content !== undefined && post.content !== '') 
+            ? post.content 
+            : (existing.content || '')
         };
         return { ...prev, users: newUsers, posts: { ...prev.posts, [post.id]: merged } };
       }

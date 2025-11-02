@@ -31,7 +31,7 @@ import { toast } from 'sonner@2.0.3';
 
 interface IdeaVersionsTabProps {
   idea: Idea;
-  currentUser: User;
+  currentUser: User | null;
   allIdeas: Idea[]; // Toutes les idées pour trouver les versions
   isSupported: boolean;
   onPostClick?: (postId: string) => void; // Navigation vers un post

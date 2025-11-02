@@ -36,6 +36,7 @@ export function PostDetailPageWrapper() {
 
       try {
         const { fetchPostDetails } = await import('../api/contentService');
+        const { fetchUserProfileFromApi } = await import('../api/contentService');
         
         // 1. Vérifier si le post est déjà dans le store
         let postData = getPostById(postId);
@@ -51,16 +52,31 @@ export function PostDetailPageWrapper() {
           }
 
           // Ajouter au store
-          actions.setPost(apiPostDetails);
+          actions.addPost(apiPostDetails);
           postData = getPostById(postId);
         }
 
+        // 2b. Charger l'auteur du post - toujours pour assurer qu'il est dans le store
+        if (postData && postData.authorId) {
+          const author = await fetchUserProfileFromApi(postData.authorId);
+          if (author) {
+            actions.addUser(author);
+          }
+        }
+
         // 3. Charger les posts référencés (sourcePosts) - toujours
-        if (postData && postData.sourcePostIds && postData.sourcePostIds.length > 0) {
-          for (const sourcePostId of postData.sourcePostIds) {
+        if (postData && postData.sourcePosts && postData.sourcePosts.length > 0) {
+          for (const sourcePostId of postData.sourcePosts) {
             const sourcePost = await fetchPostDetails(sourcePostId);
             if (sourcePost) {
-              actions.setPost(sourcePost);
+              actions.addPost(sourcePost);
+              // Charger aussi l'auteur de chaque post source
+              if (sourcePost.authorId) {
+                const author = await fetchUserProfileFromApi(sourcePost.authorId);
+                if (author) {
+                  actions.addUser(author);
+                }
+              }
             }
           }
         }

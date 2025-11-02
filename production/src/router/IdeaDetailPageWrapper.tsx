@@ -35,7 +35,7 @@ export function IdeaDetailPageWrapper() {
       setIsLoading(true);
 
       try {
-        const { fetchIdeaDetails } = await import('../api/contentService');
+        const { fetchIdeaDetails, fetchUserProfileFromApi } = await import('../api/contentService');
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
@@ -55,6 +55,16 @@ export function IdeaDetailPageWrapper() {
           // Ajouter au store
           actions.addIdea(apiIdeaDetails);
           ideaData = getIdeaById(ideaId);
+        }
+
+        // 2b. Charger les créateurs de l'idée - toujours pour assurer qu'ils sont dans le store
+        if (ideaData && ideaData.creatorIds && ideaData.creatorIds.length > 0) {
+          for (const creatorId of ideaData.creatorIds) {
+            const creator = await fetchUserProfileFromApi(creatorId);
+            if (creator) {
+              actions.addUser(creator);
+            }
+          }
         }
 
         // 3. Charger les ratings (toujours, pour avoir les plus récents)
