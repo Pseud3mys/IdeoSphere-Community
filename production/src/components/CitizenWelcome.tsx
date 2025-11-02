@@ -113,14 +113,18 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       address: guestLocation.trim() || undefined
     };
     
+    console.log('🔄 [CitizenWelcome] Création d\'un compte invité via l\'API pour partager l\'idée...');
     const tempUser = await actions.createTemporaryGuest(guestData);
     
     if (!tempUser) {
-      console.error('❌ Impossible de créer un utilisateur temporaire');
+      console.error('❌ [CitizenWelcome] Impossible de créer un utilisateur temporaire');
       return;
     }
     
-    console.log('✅ [CitizenWelcome] Utilisateur temporaire créé:', tempUser.id, tempUser.name);
+    console.log('✅ [CitizenWelcome] Compte invité créé avec succès via l\'API !');
+    console.log('   - ID:', tempUser.id);
+    console.log('   - Nom:', tempUser.name);
+    console.log('   - Email:', tempUser.email);
     
     // 2. Entrer dans la plateforme
     actions.enterPlatform();

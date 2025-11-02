@@ -244,11 +244,5 @@ export interface PendingGroupCreation {
   initiatorId: string; // Celui qui a lancé la création
 }
 
-// Alias pour compatibilité avec le code existant (sera supprimé progressivement)
-/** @deprecated Use Group instead */
-export type Community = Group;
-/** @deprecated Use GroupMembership instead */
-export type CommunityMembership = GroupMembership;
-
 // NOTE MIGRATION REACT ROUTER (Phase 6) :
 // TabType supprimé - navigation maintenant gérée par React Router avec URLs

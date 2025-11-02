@@ -1,7 +1,6 @@
 import { Idea } from '../types';
 import { users, currentUser, guestUser } from './users';
 import { defaultRatingCriteria } from './ratings';
-import { getVersionsForIdea } from './versions';
 
 // Function to create ideas data lazily to avoid circular dependencies
 export function getMockIdeas(): Idea[] {
@@ -718,18 +717,3 @@ Un petit village qui innove et implique ses citoyens ! 💡📱🌙`,
 
 // Export the ideas lazily
 export const mockIdeas = getMockIdeas();
-
-// Fonction pour récupérer une idée avec ses données liées chargées dynamiquement
-export function getIdeaWithRelatedData(ideaId: string): Idea | undefined {
-  const idea = mockIdeas.find(i => i.id === ideaId);
-  if (!idea) return undefined;
-
-  const versions = getVersionsForIdea(ideaId);
-  
-  console.log(`Loading idea ${ideaId} - found ${versions.length} versions`);
-
-  return {
-    ...idea,
-    ideaVersions: versions
-  };
-}

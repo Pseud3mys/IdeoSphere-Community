@@ -12,6 +12,5 @@ export { useAuthHandlers } from './useAuthHandlers';
 export { useNavigationActions } from './useNavigationActions';
 
 // Hooks spécialisés pour les entités
-export { useCommunityActions } from './useCommunityActions';
 export { useGroupActions } from './useGroupActions';
 export { useGroupLinkActions } from './useGroupLinkActions';

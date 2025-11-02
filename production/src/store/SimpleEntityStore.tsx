@@ -16,7 +16,7 @@ interface SimpleEntityStore {
   
   // États UI
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
-  // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedCommunityId supprimés (maintenant dans l'URL)
+  // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedGroupId supprimés (maintenant dans l'URL)
   // - Seuls les états UI purs sont conservés
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
@@ -83,7 +83,7 @@ interface SimpleEntityActions {
   
   // Actions UI
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
-  // Actions supprimées : setActiveTab, setSelectedIdeaId, setSelectedPostId, setSelectedUserId, setSelectedCommunityId
+  // Actions supprimées : setActiveTab, setSelectedIdeaId, setSelectedPostId, setSelectedUserId, setSelectedGroupId
   setHasEnteredPlatform: (entered: boolean) => void;
   setShowOnboarding: (show: boolean) => void;
   setCurrentUserId: (id: string | null) => void;
