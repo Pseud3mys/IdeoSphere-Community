@@ -26,15 +26,16 @@ export function useNavigationActions() {
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
-        const apiIdeaDetails = await fetchIdeaDetails(ideaId);
+        const apiResponse = await fetchIdeaDetails(ideaId);
         
-        if (!apiIdeaDetails) {
+        if (!apiResponse) {
           console.error(`❌ Idée ${ideaId} non trouvée`);
           return;
         }
         
-        // 2. Ajouter au store
-        actions.addIdea(apiIdeaDetails);
+        // 2. Ajouter au store (idée + utilisateurs)
+        actions.addIdea(apiResponse.idea);
+        apiResponse.users.forEach(user => actions.addUser(user));
         
         // 3. Charger les ratings
         const ratings = await getIdeaRatingsOnApi(ideaId);
@@ -80,15 +81,16 @@ export function useNavigationActions() {
       try {
         // 1. Charger les données du post depuis l'API
         const { fetchPostDetails } = await import('../api/contentService');
-        const apiPostDetails = await fetchPostDetails(postId);
+        const apiResponse = await fetchPostDetails(postId);
         
-        if (!apiPostDetails) {
+        if (!apiResponse) {
           console.error(`❌ Post ${postId} non trouvé`);
           return;
         }
         
-        // 2. Ajouter au store
-        actions.addPost(apiPostDetails);
+        // 2. Ajouter au store (post + utilisateurs)
+        actions.addPost(apiResponse.post);
+        apiResponse.users.forEach(user => actions.addUser(user));
         
         console.log(`✅ Post ${postId} chargé avec succès`);
         

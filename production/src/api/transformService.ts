@@ -227,7 +227,7 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
 /**
  * Transforms a RawIdea into the frontend Idea type.
  */
-export const transformIdea = (raw: RawIdea, usersMap: Map<string, User>): Idea => {
+export const transformIdea = (raw: RawIdea): Idea => {
 
   return {
     id: raw._id,
@@ -295,7 +295,7 @@ export const transformFeedData = (rawData: RawFeedData): { ideas: Idea[], posts:
   rawData.content.forEach(item => {
     // Heuristic to differentiate Ideas from Posts based on unique fields
     if (item.description !== undefined || item.summary !== undefined) {
-      ideas.push(transformIdea(item, usersMap));
+      ideas.push(transformIdea(item));
     } else {
       posts.push(transformPost(item, usersMap));
     }

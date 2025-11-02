@@ -51,7 +51,7 @@ export async function createIdeaOnApi(payload: CreateIdeaPayload): Promise<Idea 
     };
     const response = await apiClient.post<RawIdea>('/ideas', apiPayload);
     
-    return transformIdea(response.data, new Map());
+    return transformIdea(response.data);
   } catch (error) {
     console.error('❌ Error creating idea:', error);
     return null;
@@ -93,13 +93,23 @@ export async function createPostOnApi(payload: CreatePostPayload): Promise<Post 
  * Récupère les détails complets d'une idée.
  * Corresponds à GET /ideas/{key}
  */
-export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
+export async function fetchIdeaDetails(ideaId: string): Promise<{ idea: Idea; users: User[] } | null> {
   console.log(`[API] fetchIdeaDetails - ${ideaId}`);
   try {
     const ideaKey = ideaId.split('/')[1];
     const response = await apiClient.get<{ content: RawIdea, users: RawUser[] }>(`/ideas/${ideaKey}`);
-    const usersMap = new Map(response.data.users.map(u => [u._id, transformUser(u)]));
-    return transformIdea(response.data.content, usersMap);
+    
+    // Transformer la liste brute des utilisateurs
+    const users = response.data.users.map(transformUser);
+    
+    // Créer une map pour la transformation de l'idée, si nécessaire
+    const usersMap = new Map(users.map(u => [u.id, u]));
+    
+    // Transformer l'idée brute
+    const idea = transformIdea(response.data.content);
+
+    // Retourner l'objet combiné
+    return { idea, users };
   } catch (error) {
     console.error(`❌ Error fetching idea ${ideaId}:`, error);
     return null;
@@ -110,13 +120,23 @@ export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
  * Récupère les détails complets d'un post.
  * Corresponds à GET /posts/{key}
  */
-export async function fetchPostDetails(postId: string): Promise<Post | null> {
+export async function fetchPostDetails(postId: string): Promise<{ post: Post; users: User[] } | null> {
   console.log(`[API] fetchPostDetails - ${postId}`);
   try {
     const postKey = postId.split('/')[1];
     const response = await apiClient.get<{ content: RawPost, users: RawUser[] }>(`/posts/${postKey}`);
-    const usersMap = new Map(response.data.users.map(u => [u._id, transformUser(u)]));
-    return transformPost(response.data.content, usersMap);
+
+    // Transformer la liste brute des utilisateurs
+    const users = response.data.users.map(transformUser);
+    
+    // Créer une map pour la transformation du post
+    const usersMap = new Map(users.map(u => [u.id, u]));
+    
+    // Transformer le post brut
+    const post = transformPost(response.data.content, usersMap);
+
+    // Retourner l'objet combiné
+    return { post, users };
   } catch (error) {
     console.error(`❌ Error fetching post ${postId}:`, error);
     return null;

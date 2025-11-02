@@ -19,13 +19,6 @@ export function PostDetailPageWrapper() {
   const params = useParams<{ postId?: string; contentId?: string; '*'?: string }>();
   const postId = params['*'] || params.contentId || params.postId;
   
-  console.log(`🔍 [PostDetailPageWrapper] Params reçus:`, { 
-    params, 
-    postId,
-    splat: params['*'],
-    contentId: params.contentId 
-  });
-  
   const navigate = useNavigate();
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
@@ -47,59 +40,39 @@ export function PostDetailPageWrapper() {
 
       try {
         const { fetchPostDetails } = await import('../api/contentService');
-        const { fetchUserProfileFromApi } = await import('../api/contentService');
         
         // 1. Vérifier si le post est déjà dans le store
         let postData = getPostById(postId);
 
         // 2. Si pas dans le store, charger depuis l'API
         if (!postData) {
-          const apiPostDetails = await fetchPostDetails(postId);
+          const apiResponse = await fetchPostDetails(postId);
 
-          if (!apiPostDetails) {
+          if (!apiResponse) {
             console.error(`❌ Post ${postId} non trouvé`);
             navigate('/discovery');
             return;
           }
 
-          // Ajouter au store
-          actions.addPost(apiPostDetails);
+          // ✅ Ajouter le post ET les utilisateurs au store
+          actions.addPost(apiResponse.post);
+          apiResponse.users.forEach(user => actions.addUser(user));
           postData = getPostById(postId);
-        }
-
-        // 2b. Charger l'auteur du post - toujours pour assurer qu'il est dans le store
-        if (postData && postData.authorId) {
-          const author = await fetchUserProfileFromApi(postData.authorId);
-          if (author) {
-            actions.addUser(author);
-          }
         }
 
         // 3. Charger les posts référencés (sourcePosts) - toujours
         if (postData && postData.sourcePosts && postData.sourcePosts.length > 0) {
           for (const sourcePostId of postData.sourcePosts) {
-            const sourcePost = await fetchPostDetails(sourcePostId);
-            if (sourcePost) {
-              actions.addPost(sourcePost);
-              // Charger aussi l'auteur de chaque post source
-              if (sourcePost.authorId) {
-                const author = await fetchUserProfileFromApi(sourcePost.authorId);
-                if (author) {
-                  actions.addUser(author);
-                }
-              }
+            const sourcePostResponse = await fetchPostDetails(sourcePostId);
+            if (sourcePostResponse) {
+              actions.addPost(sourcePostResponse.post);
+              sourcePostResponse.users.forEach(user => actions.addUser(user));
             }
           }
         }
 
         // 4. Vérifier que le post est bien dans le store
         postData = getPostById(postId);
-        console.log(`✅ [PostDetailPageWrapper] Post final chargé:`, {
-          postId,
-          hasPost: !!postData,
-          content: postData?.content?.substring(0, 50),
-          hasAuthor: !!postData?.authorId
-        });
         // ✅ Plus besoin de setPost car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
@@ -132,11 +105,9 @@ export function PostDetailPageWrapper() {
 
   // Si le post n'existe pas
   if (!post) {
-    console.log(`❌ [PostDetailPageWrapper] Rendu: post est null pour postId=${postId}`);
     return null;
   }
 
-  console.log(`✅ [PostDetailPageWrapper] Rendu de PostDetailPage avec post:`, post.content.substring(0, 50));
   return (
     <PostDetailPage
       post={post}

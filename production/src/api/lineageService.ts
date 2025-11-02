@@ -32,7 +32,7 @@ export async function fetchLineage(itemId: string): Promise<{ lineage: LineageRe
     const usersMap = new Map(users.map(u => [u.id, u]));
 
     const transformContent = (raw: RawContent) => raw.description 
-      ? transformIdea(raw, usersMap) 
+      ? transformIdea(raw) 
       : transformPost(raw, usersMap);
 
     const parents = response.data.sources.map(transformContent);

@@ -19,13 +19,6 @@ export function IdeaDetailPageWrapper() {
   const params = useParams<{ ideaId?: string; contentId?: string; '*'?: string }>();
   const ideaId = params['*'] || params.contentId || params.ideaId;
   
-  console.log(`🔍 [IdeaDetailPageWrapper] Params reçus:`, { 
-    params, 
-    ideaId,
-    splat: params['*'],
-    contentId: params.contentId 
-  });
-  
   const navigate = useNavigate();
   const navigation = useNavigationActions();
   const { getIdeaById, actions } = useEntityStoreSimple();
@@ -46,7 +39,7 @@ export function IdeaDetailPageWrapper() {
       setIsLoading(true);
 
       try {
-        const { fetchIdeaDetails, fetchUserProfileFromApi } = await import('../api/contentService');
+        const { fetchIdeaDetails } = await import('../api/contentService');
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
@@ -55,27 +48,18 @@ export function IdeaDetailPageWrapper() {
 
         // 2. Si pas dans le store, charger l'idée depuis l'API
         if (!ideaData) {
-          const apiIdeaDetails = await fetchIdeaDetails(ideaId);
+          const apiResponse = await fetchIdeaDetails(ideaId);
 
-          if (!apiIdeaDetails) {
+          if (!apiResponse) {
             console.error(`❌ Idée ${ideaId} non trouvée`);
             navigate('/discovery');
             return;
           }
 
-          // Ajouter au store
-          actions.addIdea(apiIdeaDetails);
+          // ✅ Ajouter l'idée ET les utilisateurs au store
+          actions.addIdea(apiResponse.idea);
+          apiResponse.users.forEach(user => actions.addUser(user));
           ideaData = getIdeaById(ideaId);
-        }
-
-        // 2b. Charger les créateurs de l'idée - toujours pour assurer qu'ils sont dans le store
-        if (ideaData && ideaData.creatorIds && ideaData.creatorIds.length > 0) {
-          for (const creatorId of ideaData.creatorIds) {
-            const creator = await fetchUserProfileFromApi(creatorId);
-            if (creator) {
-              actions.addUser(creator);
-            }
-          }
         }
 
         // 3. Charger les ratings (toujours, pour avoir les plus récents)
@@ -111,9 +95,10 @@ export function IdeaDetailPageWrapper() {
           // Charger les sourceIdeas
           if (currentIdea.sourceIdeas && currentIdea.sourceIdeas.length > 0) {
             for (const sourceIdeaId of currentIdea.sourceIdeas) {
-              const sourceIdea = await fetchIdeaDetails(sourceIdeaId);
-              if (sourceIdea) {
-                actions.addIdea(sourceIdea);
+              const sourceIdeaResponse = await fetchIdeaDetails(sourceIdeaId);
+              if (sourceIdeaResponse) {
+                actions.addIdea(sourceIdeaResponse.idea);
+                sourceIdeaResponse.users.forEach(user => actions.addUser(user));
               }
             }
           }
@@ -122,9 +107,10 @@ export function IdeaDetailPageWrapper() {
           if (currentIdea.sourcePosts && currentIdea.sourcePosts.length > 0) {
             const { fetchPostDetails } = await import('../api/contentService');
             for (const sourcePostId of currentIdea.sourcePosts) {
-              const sourcePost = await fetchPostDetails(sourcePostId);
-              if (sourcePost) {
-                actions.addPost(sourcePost);
+              const sourcePostResponse = await fetchPostDetails(sourcePostId);
+              if (sourcePostResponse) {
+                actions.addPost(sourcePostResponse.post);
+                sourcePostResponse.users.forEach(user => actions.addUser(user));
               }
             }
           }
@@ -132,12 +118,6 @@ export function IdeaDetailPageWrapper() {
 
         // 6. Vérifier que l'idée est bien dans le store
         ideaData = getIdeaById(ideaId);
-        console.log(`✅ [IdeaDetailPageWrapper] Idée finale chargée:`, {
-          ideaId,
-          hasIdea: !!ideaData,
-          title: ideaData?.title,
-          hasCreators: ideaData?.creatorIds?.length || 0
-        });
         // ✅ Plus besoin de setIdea car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
@@ -170,10 +150,8 @@ export function IdeaDetailPageWrapper() {
 
   // Si l'idée n'existe pas, rediriger (déjà fait dans useEffect, mais garde pour sécurité)
   if (!idea) {
-    console.log(`❌ [IdeaDetailPageWrapper] Rendu: idea est null pour ideaId=${ideaId}`);
     return null;
   }
 
-  console.log(`✅ [IdeaDetailPageWrapper] Rendu de IdeaDetailPage avec idea:`, idea.title);
   return <IdeaDetailPage idea={idea} onBack={handleBack} onPostClick={navigation.goToPost} />;
 }
