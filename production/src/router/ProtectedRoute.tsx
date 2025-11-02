@@ -20,8 +20,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   
   // Si non authentifié, rediriger vers la page d'accueil
   if (!isAuthenticated) {
-    console.log('🔒 [ProtectedRoute] Utilisateur non authentifié, redirection vers /');
-    return <Navigate to="/" replace />;
+    console.log('🔒 [ProtectedRoute] Utilisateur non authentifié. Désactivé!');
+    // TODO return <Navigate to="/" replace />;
   }
   
   // Si authentifié, afficher le contenu protégé
