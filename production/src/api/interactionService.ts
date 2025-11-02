@@ -1,6 +1,6 @@
 // src/services/interactionService.ts
 import apiClient from './apiClient';
-import { PostReply, Post, Rating, DiscussionTopic } from '../types';
+import { PostReply, Post, Rating, DiscussionTopic, User } from '../types';
 import { transformComment, transformUser, RawComment, RawUser, transformPostToDiscussion, transformFeedbackToRatings, RawFeedback } from './transformService';
 
 /**
@@ -144,13 +144,13 @@ export async function createDiscussionTopicOnApi(
       title: data.title,
       content: data.content,
       type: data.type,
-      isDiscussion: true, 
-      sourceIds: [ideaId] 
+      // Le backend déduira "isDiscussion" de la présence du champ suivant
+      discussionForIdeaId: ideaId // <-- MODIFICATION PRINCIPALE
+      // On ne met plus l'ID de l'idée dans sourceIds pour une discussion
     };
     const response = await apiClient.post<any>('/posts', payload);
-    const usersMap = new Map<string, User>();
     
-    // **CORRECTION APPLIQUÉE**
+    const usersMap = new Map<string, User>();
     return transformPostToDiscussion(response.data, usersMap);
 
   } catch (error) {
