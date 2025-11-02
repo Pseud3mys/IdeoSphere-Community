@@ -28,7 +28,7 @@ async function getIdeaById(ideaId: string): Promise<Idea | null> {
     const ideaKey = ideaId.split('/')[1];
     const response = await apiClient.get<{ content: RawIdea, users: RawUser[] }>(`/ideas/${ideaKey}`);
     const usersMap = new Map(response.data.users.map(u => [u._id, transformUser(u)]));
-    return transformIdea(response.data.content, usersMap);
+    return transformIdea(response.data.content);
   } catch (error) {
     console.error(`❌ Error fetching idea ${ideaId}:`, error);
     return null;

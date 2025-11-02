@@ -50,30 +50,47 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
   const ideas = getAllIdeas();
   const posts = getAllPosts();
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   // Mode création : déterminer selon les données préremplies
   const [creationMode, setCreationMode] = useState<'post' | 'idea'>(() => {
-    // Si on a une idée source préremplie, c'est qu'on veut créer une idée
+    // IMPORTANT : L'ordre de vérification est crucial !
+    
+    console.log('🎯 [CreateIdeaPage] Détermination du mode de création:', {
+      prefilledSourceIdea,
+      prefilledLinkedContentLength: prefilledLinkedContent?.length,
+      prefilledSelectedDiscussionsLength: prefilledSelectedDiscussions?.length,
+      hasSourcePost: !!sourcePost
+    });
+    
+    // 1. Vérifier d'abord si on a une idée source préremplie
     if (prefilledSourceIdea) {
+      console.log('✅ Mode IDEA : idée source détectée');
       return 'idea';
     }
-    // Si on a du contenu lié prérempli, c'est qu'on veut créer une idée
+    
+    // 2. Si on a du contenu lié prérempli, c'est qu'on veut créer une idée
     if (prefilledLinkedContent && prefilledLinkedContent.length > 0) {
+      console.log('✅ Mode IDEA : contenu lié détecté');
       return 'idea';
     }
-    // Si on a des discussions sélectionnées, c'est qu'on veut créer une idée
+    
+    // 3. Si on a des discussions sélectionnées, c'est qu'on veut créer une idée
     if (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0) {
+      console.log('✅ Mode IDEA : discussions sélectionnées');
       return 'idea';
     }
-    // Si on a un post source prérempli, c'est qu'on veut créer un post de réponse
+    
+    // 4. SEULEMENT si on a un post source ET qu'on n'a AUCUN autre indicateur,
+    // alors c'est qu'on veut créer un post de réponse
     if (sourcePost) {
+      console.log('✅ Mode POST : post source pour réponse');
       return 'post';
     }
-    // Par défaut, commencer en mode post (plus simple)
+    
+    // 5. Par défaut, commencer en mode post (plus simple)
+    console.log('✅ Mode POST : par défaut');
     return 'post';
   });
 

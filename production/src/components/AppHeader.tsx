@@ -3,7 +3,7 @@ import logoImage from '../assets/logo.png';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 interface AppHeaderProps {
-  currentUserData: User;
+  currentUserData: User | null;
   onHomeClick: () => void;
   onProfileClick: () => void;
   onHelpClick: () => void;

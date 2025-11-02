@@ -82,14 +82,12 @@ export function PostDetailPage({
   // ✅ Résoudre l'auteur du post
   const postAuthor = getUserById(latestPost.authorId);
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   const [newReply, setNewReply] = useState('');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
-  const isSupporting = latestPost.supporters?.includes(currentUser.id) || false;
+  const isSupporting = latestPost.supporters?.includes(effectiveUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
   // Tracker les chargements déjà effectués pour éviter les boucles infinies
@@ -125,6 +123,14 @@ export function PostDetailPage({
   const sourcePosts = latestPost.sourcePosts
     ?.map(sourceId => posts.find(p => p.id === sourceId))
     .filter(Boolean) || [];
+  
+  // Debug: Afficher les infos sur les posts sources
+  console.log(`📍 [PostDetailPage] Post ${latestPost.id}:`, {
+    sourcePostIds: latestPost.sourcePosts,
+    sourcePostsFound: sourcePosts.length,
+    allPostsCount: posts.length,
+    sourcePosts: sourcePosts.map(p => ({ id: p?.id, authorId: p?.authorId }))
+  });
   
   // Trouver les idées dérivées de ce post (utiliser derivedIdeas du post)
   const derivedIdeas = latestPost.derivedIdeas
@@ -169,37 +175,42 @@ export function PostDetailPage({
         </div>
       </div>
 
-      {/* Posts sources si ce post en cite d'autres */}
+      {/* Posts sources - L'inspiration */}
       {sourcePosts.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-500 mb-3">
-            <Quote className="w-4 h-4" />
-            <span>En réponse à {sourcePosts.length > 1 ? `${sourcePosts.length} posts` : 'ce post'}</span>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Quote className="w-4 h-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-700">
+              {sourcePosts.length > 1 ? 'En réponse à plusieurs messages' : 'En réponse à'}
+            </h3>
           </div>
           <div className="space-y-2">
             {sourcePosts.map((sourcePost, index) => {
               const sourceAuthor = getUserById(sourcePost?.authorId);
-              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
-              if (!sourceAuthor || sourceAuthor.id === 'unknown') return null;
+              // Afficher quand même si l'auteur n'est pas trouvé, mais avec un nom par défaut
+              const displayAuthor = sourceAuthor || { id: 'unknown', name: 'Utilisateur inconnu', email: '' };
               
               return (
                 <div 
                   key={sourcePost?.id}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
                   onClick={() => sourcePost && onPostClick(sourcePost.id)}
                 >
-                  <div className="flex items-start space-x-2">
-                    <Avatar className="w-6 h-6">
-                      <AvatarImage src={getValidAvatar(sourceAuthor.name, sourceAuthor.avatar)} alt={sourceAuthor.name} />
-                      <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
-                        {sourceAuthor.name.slice(0, 2)}
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarImage src={getValidAvatar(displayAuthor.name, displayAuthor.avatar)} alt={displayAuthor.name} />
+                      <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                        {displayAuthor.name.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-gray-900">{sourceAuthor.name}</span>
-                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{sourcePost?.content}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-gray-900">{displayAuthor.name}</span>
+                        <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 line-clamp-2">{sourcePost?.content}</p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                   </div>
                 </div>
               );
@@ -211,27 +222,46 @@ export function PostDetailPage({
       {/* Post principal - Style Reddit/Twitter */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Header utilisateur */}
-        {postAuthor && (
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-start space-x-3">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {postAuthor.name.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <UserLink user={postAuthor} className="font-semibold text-gray-900" />
-                  <span className="text-gray-500">•</span>
-                  <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-start space-x-3">
+            {postAuthor ? (
+              <>
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {postAuthor.name.slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <UserLink user={postAuthor} className="font-semibold text-gray-900" />
+                    <span className="text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
                 </div>
-                <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <Avatar className="w-12 h-12">
+                  <AvatarFallback className="bg-gray-300 text-gray-600">
+                    ??
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold text-gray-900">Utilisateur inconnu</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">Chargement...</p>
+                </div>
+              </>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Contenu */}
         <div className="p-4">
@@ -262,214 +292,226 @@ export function PostDetailPage({
           </div>
         </div>
 
-        {/* Actions principales */}
+        {/* Actions principales - CONTRIBUER AU FIL */}
         <div className="px-4 py-3 border-t border-gray-100 bg-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1">
+          <div className="mb-3">
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">Apporter votre pierre à l'édifice</h4>
+            <p className="text-xs text-gray-600">Développez la discussion ou structurez un projet</p>
+          </div>
+          
+          {/* Actions principales de contribution */}
+          <div className="space-y-2 mb-3">
+            {/* Post de réponse */}
+            <button
+              className="w-full p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 transition-colors text-left group"
+              onClick={() => actions.createResponsePost(latestPost.id)}
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare className="w-4 h-4 text-gray-500 group-hover:text-blue-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 mb-0.5">Ajouter un élément à la discussion</p>
+                  <p className="text-xs text-gray-600">
+                    Développer un argument, partager une suggestion, apporter une nuance...
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Projet complet */}
+            <button
+              className="w-full p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50/30 transition-colors text-left group"
+              onClick={() => actions.promotePostToIdea(latestPost.id)}
+            >
+              <div className="flex items-center gap-3">
+                <Lightbulb className="w-4 h-4 text-gray-500 group-hover:text-purple-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 mb-0.5">Structurer en projet complet</p>
+                  <p className="text-xs text-gray-600">
+                    Transformer en idée aboutie avec description détaillée et évaluations
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Actions secondaires */}
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="ghost"
                 size="sm"
-                className={`flex items-center space-x-2 h-9 px-4 rounded-full hover:bg-blue-50 ${
-                  isSupporting ? 'text-primary bg-blue-50' : 'text-gray-500'
+                className={`flex items-center gap-2 ${
+                  isSupporting ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
                 }`}
                 onClick={() => actions.togglePostLike(latestPost.id)}
               >
                 <Heart className={`w-4 h-4 ${isSupporting ? 'fill-current' : ''}`} />
-                <span className="hidden sm:inline">Soutenir</span>
+                <span className="text-sm">{isSupporting ? 'Soutenu' : 'Soutenir'}</span>
+                {supportCount > 0 && (
+                  <span className="text-xs text-gray-500">({supportCount})</span>
+                )}
               </Button>
               
               <ShareDialog contentId={latestPost.id} contentTitle={latestPost.content} contentType="post">
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="flex items-center space-x-2 h-9 px-4 rounded-full hover:bg-blue-50 text-gray-500"
+                  className="flex items-center gap-2 text-gray-600 hover:bg-gray-50"
                 >
                   <Share className="w-4 h-4" />
-                  <span className="hidden sm:inline">Partager</span>
+                  <span className="text-sm">Partager</span>
                 </Button>
               </ShareDialog>
             </div>
-
-            <Button 
-              className="h-9 px-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            
+            <button
               onClick={() => setShowCreateOptions(!showCreateOptions)}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Créer
-            </Button>
+              {showCreateOptions ? 'Masquer' : 'En savoir plus'}
+            </button>
           </div>
 
-          {/* Options de création */}
+          {/* Explications détaillées (optionnel) */}
           {showCreateOptions && (
-            <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
-              <p className="text-sm text-gray-600 mb-4">Que voulez-vous créer à partir de ce post ?</p>
-              
-              {/* Post de réponse - avec explication */}
-              <div className="space-y-3 mb-4">
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                      <MessageSquare className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-blue-900 mb-1">Post de réponse</h4>
-                      <p className="text-sm text-blue-700 mb-2">
-                        Créez un nouveau post public qui cite ce message. Il apparaîtra dans le fil de la communauté et sera visible par tous.
-                      </p>
-                      <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded inline-block">
-                        💬 Publié comme un nouveau post dans le fil
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="w-full h-9 rounded-full border-blue-300 text-blue-700 hover:bg-blue-100"
-                    onClick={() => actions.createResponsePost(latestPost.id)}
-                  >
-                    Créer un post de réponse
-                  </Button>
-                </div>
-
-                {/* Idée complète */}
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                      <Lightbulb className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-purple-900 mb-1">Idée complète</h4>
-                      <p className="text-sm text-purple-700 mb-2">
-                        Développez une idée structurée avec titre, résumé et description détaillée, inspirée de ce post.
-                      </p>
-                      <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded inline-block">
-                        💡 Création d'une idée avec évaluations
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm"
-                    className="w-full h-9 rounded-full bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => actions.promotePostToIdea(latestPost.id)}
-                  >
-                    Créer une idée complète
-                  </Button>
-                </div>
-              </div>
-
-              {/* Différence avec les commentaires */}
-              <div className="pt-3 border-t border-gray-200">
-                <p className="text-xs text-gray-500 text-center">
-                  <strong>Rappel :</strong> Les commentaires ci-dessous restent attachés à ce post. 
-                  Un post de réponse devient un nouveau contenu indépendant.
-                </p>
-              </div>
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600 space-y-1">
+              <p>
+                <strong>Discussion :</strong> Les posts de réponse alimentent le fil de manière fluide et permettent un échange d'arguments.
+              </p>
+              <p>
+                <strong>Projet :</strong> Pour les idées mûres qui nécessitent une évaluation structurée sur plusieurs critères.
+              </p>
+              <p className="pt-1 border-t border-gray-200 text-gray-500">
+                💬 Les commentaires ci-dessous sont pour les réactions courtes et spontanées.
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Contenu dérivé */}
+      {/* Contenu dérivé - Projets mis en avant */}
       {(derivedIdeas.length > 0 || derivedPosts.length > 0) && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Réactions à ce post ({derivedIdeas.length + derivedPosts.length})
-          </h3>
-          
-          <div className="space-y-4">
-            {/* Projets dérivés */}
-            {derivedIdeas.map(idea => {
-              // ✅ Résoudre le créateur depuis les IDs
-              const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+        <div className="mt-6 space-y-4">
+          {/* Projets dérivés - Section importante */}
+          {derivedIdeas.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="w-4 h-4 text-gray-500" />
+                <h3 className="text-base font-medium text-gray-900">
+                  Projets issus de cette discussion ({derivedIdeas.length})
+                </h3>
+              </div>
               
-              return (
-              <Card 
-                key={idea?.id}
-                className="border-purple-200 bg-purple-50/30 cursor-pointer hover:bg-purple-50/50 transition-colors"
-                onClick={() => idea && onIdeaClick(idea.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Lightbulb className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-                          💡 Idée créée
-                        </Badge>
-                        <span className="text-xs text-gray-500">par <UserLink user={firstCreator} className="text-gray-700 hover:text-primary" /></span>
-                      </div>
-                      <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
-                      <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
-                      <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
-                        <span>{idea?.supporters?.length || 0} soutiens</span>
-                        <span>{idea && formatTimeAgo(idea.createdAt)}</span>
-                      </div>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              );
-            })}
+              <div className="space-y-3">
+                {derivedIdeas.map(idea => {
+                  const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+                  
+                  return (
+                    <Card 
+                      key={idea?.id}
+                      className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
+                      onClick={() => idea && onIdeaClick(idea.id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Lightbulb className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
+                                Projet
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                par <UserLink user={firstCreator} className="text-gray-700 hover:text-purple-600 font-medium" />
+                              </span>
+                              <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
+                            </div>
+                            <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
+                            <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                              <span>{idea?.supporters?.length || 0} soutiens</span>
+                            </div>
+                          </div>
+                          <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-            {/* Posts dérivés */}
-            {derivedPosts.map(derivedPost => {
-              const derivedAuthor = getUserById(derivedPost?.authorId);
-              // Ne pas afficher si l'utilisateur n'est pas trouvé (unknownUser)
-              if (!derivedAuthor || derivedAuthor.id === 'unknown') return null;
+          {/* Posts dérivés - Style discussion */}
+          {derivedPosts.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="w-4 h-4 text-gray-500" />
+                <h3 className="text-base font-medium text-gray-900">
+                  Suite de la discussion ({derivedPosts.length})
+                </h3>
+              </div>
               
-              return (
-                <Card 
-                  key={derivedPost?.id}
-                  className="border-blue-200 bg-blue-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
-                  onClick={() => derivedPost && onPostClick(derivedPost.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={getValidAvatar(derivedAuthor.name, derivedAuthor.avatar)} alt={derivedAuthor.name} />
-                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                          {derivedAuthor.name.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                            💬 Post de réponse
-                          </Badge>
-                          <span className="text-xs text-gray-500">par <UserLink user={derivedAuthor} className="text-gray-700 hover:text-primary" /></span>
-                          <span className="text-xs text-gray-500">{derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+              <div className="space-y-2">
+                {derivedPosts.map(derivedPost => {
+                  const derivedAuthor = getUserById(derivedPost?.authorId);
+                  if (!derivedAuthor || derivedAuthor.id === 'unknown') return null;
+                  
+                  return (
+                    <div
+                      key={derivedPost?.id}
+                      className="border-l-2 border-gray-300 bg-gray-50 rounded-r-lg p-3 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors"
+                      onClick={() => derivedPost && onPostClick(derivedPost.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarImage src={getValidAvatar(derivedAuthor.name, derivedAuthor.avatar)} alt={derivedAuthor.name} />
+                          <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                            {derivedAuthor.name.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <UserLink user={derivedAuthor} className="font-medium text-gray-900 text-sm" />
+                            <span className="text-xs text-gray-500">• {derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 line-clamp-2">{derivedPost?.content}</p>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1.5">
+                            <span>{derivedPost?.supporters?.length || 0} soutiens</span>
+                            <span>{derivedPost?.replies.length} réponses</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-800 line-clamp-3">{derivedPost?.content}</p>
-                        <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
-                          <span>{derivedPost?.supporters?.length || 0} soutiens</span>
-                          <span>{derivedPost?.replies.length} réponses</span>
-                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400" />
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Section commentaires style Reddit */}
+      {/* Section commentaires - clairement secondaire */}
       <div className="mt-8">
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          {/* Header commentaires */}
-          <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="font-semibold text-gray-900">
-              Commentaires ({latestPost.replies.length})
-            </h3>
+          {/* Header commentaires avec clarification */}
+          <div className="p-4 border-b border-gray-100 bg-gray-50">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  Réactions rapides ({latestPost.replies.length})
+                </h3>
+                <p className="text-xs text-gray-500">
+                  💬 Commentaires simples • Pour développer une idée, créez un post de réponse ou un projet ci-dessus
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Formulaire nouveau commentaire */}
-          <div className="p-4 border-b border-gray-100">
+          {/* Formulaire nouveau commentaire - simplifié */}
+          <div className="p-4 border-b border-gray-100 bg-gray-50/30">
             <div className="flex space-x-3">
               <Avatar className="w-8 h-8 flex-shrink-0">
                 <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
@@ -477,23 +519,27 @@ export function PostDetailPage({
                   {currentUser.name.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-2">
                 <Textarea
                   value={newReply}
                   onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Ajouter un commentaire..."
-                  rows={3}
-                  className="resize-none border-gray-200 focus:border-blue-300 focus:ring-blue-200"
+                  placeholder="Une réaction rapide, un mot d'encouragement..."
+                  rows={2}
+                  className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
                 />
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-500">
+                    Pour un argument construit, utilisez "Post de réponse" ↑
+                  </p>
                   <Button 
                     onClick={handleReply}
                     disabled={!newReply.trim()}
                     size="sm"
+                    variant="outline"
                     className="rounded-full"
                   >
                     <Send className="w-3 h-3 mr-2" />
-                    Commenter
+                    Réagir
                   </Button>
                 </div>
               </div>
@@ -558,8 +604,8 @@ export function PostDetailPage({
             {latestPost.replies.length === 0 && (
               <div className="p-8 text-center text-gray-500">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Aucun commentaire pour le moment</p>
-                <p className="text-sm">Soyez le premier à réagir !</p>
+                <p>Aucune réaction rapide pour le moment</p>
+                <p className="text-xs text-gray-400 mt-1">Les commentaires sont pour les réactions courtes • Pour développer, créez un post de réponse ↑</p>
               </div>
             )}
           </div>

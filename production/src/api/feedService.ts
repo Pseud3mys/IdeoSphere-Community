@@ -91,7 +91,7 @@ export async function fetchHomePageStats(): Promise<HomePageData> {
     const posts: Post[] = [];
     rawFeedData.content.forEach(item => {
       if (item.description !== undefined || item.summary !== undefined) {
-        ideas.push(transformIdea(item, usersMap));
+        ideas.push(transformIdea(item));
       } else {
         posts.push(transformPost(item, usersMap));
       }
@@ -148,7 +148,7 @@ export async function fetchFeed(userId: string): Promise<{
     rawData.content.forEach(item => {
       // 1. Détecter si c'est une Idée (logique inchangée)
       if (item.description !== undefined || item.summary !== undefined) {
-        ideas.push(transformIdea(item as RawIdea, usersMap));
+        ideas.push(transformIdea(item as RawIdea));
       } 
       // 2. Sinon, c'est un Post. Il faut maintenant vérifier son type.
       else {
@@ -208,7 +208,7 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
     const participationPosts: Post[] = [];
     rawData.participated_content.forEach(item => {
       if (item.description !== undefined || item.summary !== undefined) {
-        participationIdeas.push(transformIdea(item, usersMap));
+        participationIdeas.push(transformIdea(item));
       } else {
         participationPosts.push(transformPost(item, usersMap));
       }
@@ -219,7 +219,7 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
     const supportPosts: Post[] = [];
     rawData.supported_content.forEach(item => {
       if (item.description !== undefined || item.summary !== undefined) {
-        supportIdeas.push(transformIdea(item, usersMap));
+        supportIdeas.push(transformIdea(item));
       } else {
         supportPosts.push(transformPost(item, usersMap));
       }

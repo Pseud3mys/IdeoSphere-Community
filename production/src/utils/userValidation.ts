@@ -7,7 +7,7 @@ import { User } from '../types';
 export function validateUser(user: User | string | undefined | null): User | null {
   // Cas 1: user est undefined ou null
   if (!user) {
-    console.warn('⚠️ validateUser: user is undefined or null');
+    // Pas de log - c'est un cas normal dans notre architecture
     return null;
   }
 
@@ -37,7 +37,7 @@ export function getFirstCreator(
   getUserById: (id: string) => User | undefined
 ): User | null {
   if (!creatorIds || creatorIds.length === 0) {
-    console.warn('⚠️ getFirstCreator: creatorIds array is empty or undefined');
+    // Pas de log - c'est un cas normal dans notre architecture
     return null;
   }
 

@@ -26,15 +26,16 @@ export function useNavigationActions() {
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
-        const apiIdeaDetails = await fetchIdeaDetails(ideaId);
+        const apiResponse = await fetchIdeaDetails(ideaId);
         
-        if (!apiIdeaDetails) {
+        if (!apiResponse) {
           console.error(`❌ Idée ${ideaId} non trouvée`);
           return;
         }
         
-        // 2. Ajouter au store
-        actions.addIdea(apiIdeaDetails);
+        // 2. Ajouter au store (idée + utilisateurs)
+        actions.addIdea(apiResponse.idea);
+        apiResponse.users.forEach(user => actions.addUser(user));
         
         // 3. Charger les ratings
         const ratings = await getIdeaRatingsOnApi(ideaId);
@@ -80,15 +81,16 @@ export function useNavigationActions() {
       try {
         // 1. Charger les données du post depuis l'API
         const { fetchPostDetails } = await import('../api/contentService');
-        const apiPostDetails = await fetchPostDetails(postId);
+        const apiResponse = await fetchPostDetails(postId);
         
-        if (!apiPostDetails) {
+        if (!apiResponse) {
           console.error(`❌ Post ${postId} non trouvé`);
           return;
         }
         
-        // 2. Ajouter au store
-        actions.addPost(apiPostDetails);
+        // 2. Ajouter au store (post + utilisateurs)
+        actions.addPost(apiResponse.post);
+        apiResponse.users.forEach(user => actions.addUser(user));
         
         console.log(`✅ Post ${postId} chargé avec succès`);
         
@@ -114,10 +116,38 @@ export function useNavigationActions() {
     },
 
     /**
-     * Navigation vers une communauté
+     * Navigation vers un groupe
      */
-    goToCommunity: (communityId: string) => {
-      navigate(`/community/${communityId}`);
+    goToGroup: (groupId: string) => {
+      navigate(`/groups/${groupId}`);
+    },
+
+    /**
+     * Navigation vers l'annuaire des groupes
+     */
+    goToGroups: () => {
+      navigate('/groups');
+    },
+
+    /**
+     * Navigation vers mes groupes (Phase 2)
+     */
+    goToMyGroups: () => {
+      navigate('/groups/my');
+    },
+
+    /**
+     * Navigation vers un groupe pending (Phase 2)
+     */
+    goToPendingGroup: (pendingId: string) => {
+      navigate(`/groups/pending/${pendingId}`);
+    },
+
+    /**
+     * Navigation vers la page de gestion d'un groupe (Phase 3)
+     */
+    goToGroupManage: (groupId: string) => {
+      navigate(`/groups/${groupId}/manage`);
     },
 
     /**
@@ -126,6 +156,7 @@ export function useNavigationActions() {
     goToDiscovery: () => navigate('/discovery'),
     goToMyIdeas: () => navigate('/my-ideas'),
     goToCreateIdea: () => navigate('/create-idea'),
+    goToCreatePost: () => navigate('/create-idea'), // Utilise la même page pour posts et projets
     goToProfile: () => navigate('/profile'),
     goToCommunities: () => navigate('/communities'),
     goToHome: () => navigate('/'),

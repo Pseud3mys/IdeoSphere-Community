@@ -18,11 +18,15 @@ export function PostDetailPageWrapper() {
   // Récupérer l'ID depuis * (splat), contentId ou postId (pour supporter tous les formats)
   const params = useParams<{ postId?: string; contentId?: string; '*'?: string }>();
   const postId = params['*'] || params.contentId || params.postId;
+  
   const navigate = useNavigate();
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const [isLoading, setIsLoading] = useState(true);
-  const [post, setPost] = useState<Post | null>(null);
+  
+  // ✅ Utiliser directement le store au lieu d'un state local
+  // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
+  const post = getPostById(postId || '');
 
   // Charger le post au montage du composant
   useEffect(() => {
@@ -42,32 +46,34 @@ export function PostDetailPageWrapper() {
 
         // 2. Si pas dans le store, charger depuis l'API
         if (!postData) {
-          const apiPostDetails = await fetchPostDetails(postId);
+          const apiResponse = await fetchPostDetails(postId);
 
-          if (!apiPostDetails) {
+          if (!apiResponse) {
             console.error(`❌ Post ${postId} non trouvé`);
             navigate('/discovery');
             return;
           }
 
-          // Ajouter au store
-          actions.setPost(apiPostDetails);
+          // ✅ Ajouter le post ET les utilisateurs au store
+          actions.addPost(apiResponse.post);
+          apiResponse.users.forEach(user => actions.addUser(user));
           postData = getPostById(postId);
         }
 
         // 3. Charger les posts référencés (sourcePosts) - toujours
-        if (postData && postData.sourcePostIds && postData.sourcePostIds.length > 0) {
-          for (const sourcePostId of postData.sourcePostIds) {
-            const sourcePost = await fetchPostDetails(sourcePostId);
-            if (sourcePost) {
-              actions.setPost(sourcePost);
+        if (postData && postData.sourcePosts && postData.sourcePosts.length > 0) {
+          for (const sourcePostId of postData.sourcePosts) {
+            const sourcePostResponse = await fetchPostDetails(sourcePostId);
+            if (sourcePostResponse) {
+              actions.addPost(sourcePostResponse.post);
+              sourcePostResponse.users.forEach(user => actions.addUser(user));
             }
           }
         }
 
-        // 4. Récupérer le post final depuis le store
+        // 4. Vérifier que le post est bien dans le store
         postData = getPostById(postId);
-        setPost(postData || null);
+        // ✅ Plus besoin de setPost car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
         navigate('/discovery');
