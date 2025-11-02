@@ -46,8 +46,12 @@ export function IdeaDetailPageWrapper() {
         // 1. Vérifier si l'idée est déjà dans le store
         let ideaData = getIdeaById(ideaId);
 
-        // 2. Si pas dans le store, charger l'idée depuis l'API
-        if (!ideaData) {
+        // 2. Charger l'idée complète depuis l'API si :
+        //    - Elle n'est pas dans le store OU
+        //    - Elle est dans le store mais sans description (provient du feed)
+        const needsFullLoad = !ideaData || !ideaData.description || ideaData.description.trim() === '';
+        
+        if (needsFullLoad) {
           const apiResponse = await fetchIdeaDetails(ideaId);
 
           if (!apiResponse) {
@@ -56,7 +60,7 @@ export function IdeaDetailPageWrapper() {
             return;
           }
 
-          // ✅ Ajouter l'idée ET les utilisateurs au store
+          // ✅ Ajouter l'idée complète (avec description) ET les utilisateurs au store
           actions.addIdea(apiResponse.idea);
           apiResponse.users.forEach(user => actions.addUser(user));
           ideaData = getIdeaById(ideaId);

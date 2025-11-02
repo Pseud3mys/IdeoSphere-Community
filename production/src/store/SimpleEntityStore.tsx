@@ -313,15 +313,6 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             : (existing.description || '')
         };
         
-        // 🔍 Debug : Afficher les descriptions lors de la fusion
-        if (existing.description && !idea.description) {
-          console.log(`[Store] addIdea - Fusion pour ${idea.id}:`, {
-            existingDesc: existing.description.substring(0, 50) + '...',
-            newDesc: idea.description || '(vide)',
-            mergedDesc: merged.description.substring(0, 50) + '...'
-          });
-        }
-        
         return { ...prev, users: newUsers, ideas: { ...prev.ideas, [idea.id]: merged } };
       }
       return { ...prev, users: newUsers, ideas: { ...prev.ideas, [idea.id]: idea } };
