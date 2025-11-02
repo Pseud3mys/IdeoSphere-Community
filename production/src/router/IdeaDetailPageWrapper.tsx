@@ -18,11 +18,22 @@ export function IdeaDetailPageWrapper() {
   // Récupérer l'ID depuis * (splat), contentId ou ideaId (pour supporter tous les formats)
   const params = useParams<{ ideaId?: string; contentId?: string; '*'?: string }>();
   const ideaId = params['*'] || params.contentId || params.ideaId;
+  
+  console.log(`🔍 [IdeaDetailPageWrapper] Params reçus:`, { 
+    params, 
+    ideaId,
+    splat: params['*'],
+    contentId: params.contentId 
+  });
+  
   const navigate = useNavigate();
   const navigation = useNavigationActions();
   const { getIdeaById, actions } = useEntityStoreSimple();
   const [isLoading, setIsLoading] = useState(true);
-  const [idea, setIdea] = useState<Idea | null>(null);
+  
+  // ✅ Utiliser directement le store au lieu d'un state local
+  // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
+  const idea = getIdeaById(ideaId || '');
 
   // Charger l'idée au montage du composant
   useEffect(() => {
@@ -119,9 +130,15 @@ export function IdeaDetailPageWrapper() {
           }
         }
 
-        // 6. Récupérer l'idée finale mise à jour depuis le store
+        // 6. Vérifier que l'idée est bien dans le store
         ideaData = getIdeaById(ideaId);
-        setIdea(ideaData || null);
+        console.log(`✅ [IdeaDetailPageWrapper] Idée finale chargée:`, {
+          ideaId,
+          hasIdea: !!ideaData,
+          title: ideaData?.title,
+          hasCreators: ideaData?.creatorIds?.length || 0
+        });
+        // ✅ Plus besoin de setIdea car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
         navigate('/discovery');
@@ -153,8 +170,10 @@ export function IdeaDetailPageWrapper() {
 
   // Si l'idée n'existe pas, rediriger (déjà fait dans useEffect, mais garde pour sécurité)
   if (!idea) {
+    console.log(`❌ [IdeaDetailPageWrapper] Rendu: idea est null pour ideaId=${ideaId}`);
     return null;
   }
 
+  console.log(`✅ [IdeaDetailPageWrapper] Rendu de IdeaDetailPage avec idea:`, idea.title);
   return <IdeaDetailPage idea={idea} onBack={handleBack} onPostClick={navigation.goToPost} />;
 }

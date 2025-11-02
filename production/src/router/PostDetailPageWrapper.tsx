@@ -18,11 +18,22 @@ export function PostDetailPageWrapper() {
   // Récupérer l'ID depuis * (splat), contentId ou postId (pour supporter tous les formats)
   const params = useParams<{ postId?: string; contentId?: string; '*'?: string }>();
   const postId = params['*'] || params.contentId || params.postId;
+  
+  console.log(`🔍 [PostDetailPageWrapper] Params reçus:`, { 
+    params, 
+    postId,
+    splat: params['*'],
+    contentId: params.contentId 
+  });
+  
   const navigate = useNavigate();
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const [isLoading, setIsLoading] = useState(true);
-  const [post, setPost] = useState<Post | null>(null);
+  
+  // ✅ Utiliser directement le store au lieu d'un state local
+  // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
+  const post = getPostById(postId || '');
 
   // Charger le post au montage du composant
   useEffect(() => {
@@ -81,9 +92,15 @@ export function PostDetailPageWrapper() {
           }
         }
 
-        // 4. Récupérer le post final depuis le store
+        // 4. Vérifier que le post est bien dans le store
         postData = getPostById(postId);
-        setPost(postData || null);
+        console.log(`✅ [PostDetailPageWrapper] Post final chargé:`, {
+          postId,
+          hasPost: !!postData,
+          content: postData?.content?.substring(0, 50),
+          hasAuthor: !!postData?.authorId
+        });
+        // ✅ Plus besoin de setPost car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
         navigate('/discovery');
@@ -115,9 +132,11 @@ export function PostDetailPageWrapper() {
 
   // Si le post n'existe pas
   if (!post) {
+    console.log(`❌ [PostDetailPageWrapper] Rendu: post est null pour postId=${postId}`);
     return null;
   }
 
+  console.log(`✅ [PostDetailPageWrapper] Rendu de PostDetailPage avec post:`, post.content.substring(0, 50));
   return (
     <PostDetailPage
       post={post}
