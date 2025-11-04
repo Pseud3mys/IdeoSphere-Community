@@ -152,7 +152,7 @@ export function ContentLinkSearch({
           <div className="flex items-center space-x-2 mb-1">
             <h4 className="text-sm font-medium text-gray-900 truncate">{title}</h4>
             {content.type === 'idea' && (
-              <Badge variant="outline" className="text-xs">Idée</Badge>
+              <Badge variant="outline" className="text-xs">Projet</Badge>
             )}
             {content.type === 'post' && (
               <Badge variant="secondary" className="text-xs">Post</Badge>
@@ -212,7 +212,7 @@ export function ContentLinkSearch({
             <span>Rechercher et lier du contenu</span>
           </DialogTitle>
           <DialogDescription>
-            Recherchez et sélectionnez des idées ou posts existants pour les lier à votre contenu.
+            Recherchez et sélectionnez des projets ou posts existants pour les lier à votre contenu.
           </DialogDescription>
         </DialogHeader>
 
@@ -257,7 +257,7 @@ export function ContentLinkSearch({
               </TabsTrigger>
               <TabsTrigger value="ideas" className="flex items-center space-x-2">
                 <Lightbulb className="w-3 h-3" />
-                <span>Idées</span>
+                <span>Projets</span>
                 <Badge variant="secondary" className="text-xs">
                   {filteredContent.ideas.length}
                 </Badge>
@@ -294,7 +294,7 @@ export function ContentLinkSearch({
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <Lightbulb className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>Aucune idée trouvée</p>
+                    <p>Aucun projet trouvé</p>
                   </div>
                 )}
               </div>

@@ -105,10 +105,10 @@ export function ContentLinkDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Search className="w-5 h-5" />
-            <span>Lier des idées et posts</span>
+            <span>Lier des projets et posts</span>
           </DialogTitle>
           <DialogDescription>
-            Recherchez et liez des contenus existants pour enrichir votre idée
+            Recherchez et liez des contenus existants pour enrichir votre projet
           </DialogDescription>
         </DialogHeader>
 
@@ -177,7 +177,7 @@ export function ContentLinkDialog({
                       <div className="flex-1 min-w-0">
                         <span className="text-sm truncate">{content.title}</span>
                         <div className="text-xs text-muted-foreground">
-                          {content.type === 'idea' ? 'Idée' : 'Post'} • {content.author.name}
+                          {content.type === 'idea' ? 'Projet' : 'Post'} • {content.author.name}
                         </div>
                       </div>
                     </div>
@@ -243,7 +243,7 @@ export function ContentLinkDialog({
                               </Avatar>
                               <span>{content.author.name}</span>
                               <span>•</span>
-                              <span>{content.type === 'idea' ? 'Idée' : 'Post'}</span>
+                              <span>{content.type === 'idea' ? 'Projet' : 'Post'}</span>
                               <span>•</span>
                               <span>{content.createdAt.toLocaleDateString('fr-FR')}</span>
                               {(content.isSupported || content.isSupporting) && (
