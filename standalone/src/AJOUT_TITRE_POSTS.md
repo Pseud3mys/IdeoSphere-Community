@@ -112,6 +112,46 @@ Le titre améliore considérablement la lisibilité du système de lineage :
 4. **Contexte clair** : Comprendre rapidement le sujet d'un post
 5. **Organisation** : Facilite la structuration des discussions
 
+## 🐛 Bug corrigé - Détection de type dans le lineage
+
+### Symptôme
+Après l'ajout du champ `title` optionnel aux Posts, le système de lineage ne fonctionnait plus correctement. Les posts sources n'étaient pas détectés et affichés dans `PostDetailPage`.
+
+### Cause racine
+La logique de détection du type d'entité dans `/hooks/apiActions.ts` utilisait la présence du champ `title` pour distinguer les Idées des Posts :
+```typescript
+// ❌ Ancienne logique bugguée
+if ('title' in parent && 'summary' in parent) {
+  // C'est une Idea
+} else if ('content' in parent && 'authorId' in parent && !('title' in parent)) {
+  // C'est un Post
+}
+```
+
+Avec le champ `title` maintenant optionnel sur les Posts, un Post avec titre était incorrectement identifié comme une Idée.
+
+### Solution
+Utiliser une détection de type plus robuste basée sur les champs spécifiques à chaque entité :
+```typescript
+// ✅ Nouvelle logique robuste
+if ('summary' in parent && 'creatorIds' in parent) {
+  // C'est une Idea (a summary ET creatorIds)
+} else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+  // C'est un Post (a content, authorId ET supporters)
+} else if ('posts' in parent && 'type' in parent) {
+  // C'est une DiscussionTopic (a posts ET type)
+}
+```
+
+### Fichiers modifiés
+- `/hooks/apiActions.ts` : Correction de la détection de type dans `loadLineage`, `loadIdeaWithLineageFromAPI`, et `loadIdeaWithLineage`
+- Ajout du champ `title` dans les objets Post ajoutés au store via le lineage
+
+### Zones impactées
+- ✅ `loadLineage()` : Lignes 380-415 (parents et enfants)
+- ✅ `loadIdeaWithLineageFromAPI()` : Lignes 550-670 (parents, enfants, filtres)
+- ✅ `loadIdeaWithLineage()` : Lignes 690-750 (détection de type avec logs)
+
 ## 🚀 Prochaines étapes possibles
 - [ ] Ajouter des suggestions de titre basées sur le contenu (IA)
 - [ ] Limiter la longueur du titre (par exemple 100 caractères max)

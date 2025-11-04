@@ -153,27 +153,37 @@ async function getParentLineageComplete(
   data: any,
   maxDepth: number
 ): Promise<(Idea | Post | DiscussionTopic)[]> {
+  console.log(`🔍 [lineageService] getParentLineageComplete - type: ${type}, element.id: ${element.id}`);
   const parents: (Idea | Post | DiscussionTopic)[] = [];
   const ideas = data.ideas;
   const posts = data.posts;
   const discussions = data.discussions;
+  console.log(`🔍 [lineageService] Données disponibles - ${ideas.length} idées, ${posts.length} posts, ${discussions.length} discussions`);
 
   if (type === 'idea' && 'sourceIdeas' in element) {
     // Ajouter les idées sources
     const sourceIdeas = element.sourceIdeas || [];
+    console.log(`🔍 [lineageService] Idée ${element.id} - sourceIdeas:`, sourceIdeas);
     for (const sourceId of sourceIdeas.slice(0, maxDepth)) {
       const sourceIdea = ideas.find((i: Idea) => i.id === sourceId);
       if (sourceIdea) {
+        console.log(`  ✅ Idée source trouvée: ${sourceIdea.id} - ${sourceIdea.title}`);
         parents.push(sourceIdea);
+      } else {
+        console.log(`  ❌ Idée source NON trouvée: ${sourceId}`);
       }
     }
 
     // Ajouter les posts sources
     const sourcePosts = element.sourcePosts || [];
+    console.log(`🔍 [lineageService] Idée ${element.id} - sourcePosts:`, sourcePosts);
     for (const postId of sourcePosts.slice(0, maxDepth)) {
       const sourcePost = posts.find((p: Post) => p.id === postId);
       if (sourcePost) {
+        console.log(`  ✅ Post source trouvé: ${sourcePost.id} - ${sourcePost.title || sourcePost.content.substring(0, 50)}`);
         parents.push(sourcePost);
+      } else {
+        console.log(`  ❌ Post source NON trouvé: ${postId}`);
       }
     }
 
@@ -188,10 +198,14 @@ async function getParentLineageComplete(
   } else if (type === 'post' && 'sourcePosts' in element) {
     // Pour les posts, ajouter les posts sources
     const sourcePosts = element.sourcePosts || [];
+    console.log(`🔍 [lineageService] Post ${element.id} - sourcePosts:`, sourcePosts);
     for (const postId of sourcePosts.slice(0, maxDepth)) {
       const sourcePost = posts.find((p: Post) => p.id === postId);
       if (sourcePost) {
+        console.log(`  ✅ Post source trouvé: ${sourcePost.id} - ${sourcePost.title || sourcePost.content.substring(0, 50)}`);
         parents.push(sourcePost);
+      } else {
+        console.log(`  ❌ Post source NON trouvé: ${postId}`);
       }
     }
   }
