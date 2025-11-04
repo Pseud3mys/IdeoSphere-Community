@@ -7,6 +7,13 @@ import { PostCard } from './PostCard';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { analyzeContentChains, ContentChain, getItemChainContext } from '../utils/feedChainUtils';
 import { 
+  getPostTrendingScore, 
+  getIdeaTrendingScore,
+  getUniqueEngagementForPost,
+  getUniqueEngagementForIdea,
+  getLineageScore
+} from '../utils/trendingUtils';
+import { 
   Plus,
   Sparkles,
   Users,
@@ -114,7 +121,6 @@ export function DiscoveryPage({
       
       case 'trending': {
         // ✅ Utiliser l'algorithme de tendance avec engagement unique
-        const { getPostTrendingScore, getIdeaTrendingScore } = require('../utils/trendingUtils');
         const allDiscussions = getAllDiscussionTopics();
         
         return items
@@ -132,7 +138,6 @@ export function DiscoveryPage({
       
       default: { // 'default'
         // Algorithme "par défaut" - mix équilibré récent + engagement (utilisateurs uniques)
-        const { getUniqueEngagementForPost, getUniqueEngagementForIdea, getLineageScore } = require('../utils/trendingUtils');
         const allDiscussions = getAllDiscussionTopics();
         
         return items.sort((a, b) => {

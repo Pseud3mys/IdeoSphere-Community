@@ -239,6 +239,13 @@ export function useEntityStoreSimple() {
     updateUser: actions.updateUser,
     addDiscussionTopic: actions.addDiscussionTopic,
     
+    // Actions d'authentification et utilisateur
+    setCurrentUserId: actions.setCurrentUserId,
+    
+    // Actions UI/UX
+    showOnboarding: () => actions.setShowOnboarding(true),
+    hideOnboarding: () => actions.setShowOnboarding(false),
+    
     // Actions Group (Phase 1)
     addGroup: actions.addGroup,
     updateGroup: actions.updateGroup,

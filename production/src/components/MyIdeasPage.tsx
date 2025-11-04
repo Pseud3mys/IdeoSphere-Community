@@ -8,6 +8,12 @@ import { Badge } from './ui/badge';
 import { IdeaCard } from './IdeaCard';
 import { PostCard } from './PostCard';
 import { 
+  getPostTrendingScore,
+  getIdeaTrendingScore,
+  getUniqueEngagementForPost,
+  getUniqueEngagementForIdea
+} from '../utils/trendingUtils';
+import { 
   Search,
   ChevronDown,
   Target,
@@ -176,8 +182,7 @@ export function MyIdeasPage({
         feedItems.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
         break;
       case 'trending': {
-        // Importer les utilitaires de tendance
-        const { getPostTrendingScore, getIdeaTrendingScore } = require('../utils/trendingUtils');
+        // Utiliser l'algorithme de tendance
         const allDiscussions = getAllDiscussionTopics();
         
         feedItems.sort((a, b) => {
@@ -192,8 +197,7 @@ export function MyIdeasPage({
         break;
       }
       case 'popular': {
-        // Importer les utilitaires pour le comptage unique
-        const { getUniqueEngagementForPost, getUniqueEngagementForIdea } = require('../utils/trendingUtils');
+        // Utiliser le comptage unique
         const allDiscussions = getAllDiscussionTopics();
         
         feedItems.sort((a, b) => {

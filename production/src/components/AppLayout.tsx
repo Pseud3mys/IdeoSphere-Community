@@ -23,7 +23,8 @@ export function AppLayout() {
       actions.setCurrentUserId(user.id);
     },
     () => {
-      // handleEnterPlatform - pas besoin de navigation car on est déjà dans l'app
+      // handleEnterPlatform - navigation vers la page discovery
+      navigate('/discovery');
     },
     (email) => {
       // switchToUserByEmail
