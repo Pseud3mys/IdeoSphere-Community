@@ -162,12 +162,12 @@ export function PostCard({
       {/* Titre et actions */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          {/* Titre généré à partir du contenu */}
+          {/* Titre du post (optionnel) ou généré à partir du contenu */}
           <Link to={`/content/${latestPost.id}`}>
             <h3 
               className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
             >
-              {latestPost.content.split('\n')[0].slice(0, 60)}{latestPost.content.length > 60 ? '...' : ''}
+              {latestPost.title || (latestPost.content.split('\n')[0].slice(0, 60) + (latestPost.content.length > 60 ? '...' : ''))}
             </h3>
           </Link>
           

@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
-import { LoginDialog } from './auth/LoginDialog';
+import { AuthButtons } from './AuthButtons';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
@@ -13,8 +13,6 @@ import logoImage from 'figma:asset/f40f0fed92c1933fc6e0d4bd7aad22c5b11f342d.png'
 import { 
   ArrowRight, 
   MapPin, 
-  LogIn, 
-  UserPlus, 
   Lightbulb,
   Users,
   MessageSquare,
@@ -50,7 +48,6 @@ interface CitizenWelcomeProps {
 }
 
 export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onNavigateToHowItWorks, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
   const [guestName, setGuestName] = useState('');
@@ -62,8 +59,11 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser l'Entity Store uniquement pour les actions (pas pour les données)
-  const { actions, getUserById } = useEntityStoreSimple();
+  const { actions, getUserById, getCurrentUser } = useEntityStoreSimple();
   const navigation = useNavigationActions();
+  
+  // Récupérer l'utilisateur actuel pour le composant AuthButtons
+  const currentUser = getCurrentUser();
   
   // Charger les données de manière autonome
   useEffect(() => {
@@ -90,13 +90,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     loadHomeData();
   }, []);
 
-  const handleAuthAction = (action: 'login' | 'signup') => {
-    if (action === 'login') {
-      setShowLoginDialog(true);
-    } else {
-      // Rediriger vers la page d'inscription
-      navigation.goToSignup();
-    }
+  const handleProfileClick = () => {
+    navigation.goToProfile();
   };
 
   const handleShareIdea = () => {
@@ -113,14 +108,18 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       address: guestLocation.trim() || undefined
     };
     
+    console.log('🔄 [CitizenWelcome] Création d\'un compte invité via l\'API pour partager l\'idée...');
     const tempUser = await actions.createTemporaryGuest(guestData);
     
     if (!tempUser) {
-      console.error('❌ Impossible de créer un utilisateur temporaire');
+      console.error('❌ [CitizenWelcome] Impossible de créer un utilisateur temporaire');
       return;
     }
     
-    console.log('✅ [CitizenWelcome] Utilisateur temporaire créé:', tempUser.id, tempUser.name);
+    console.log('✅ [CitizenWelcome] Compte invité créé avec succès via l\'API !');
+    console.log('   - ID:', tempUser.id);
+    console.log('   - Nom:', tempUser.name);
+    console.log('   - Email:', tempUser.email);
     
     // 2. Entrer dans la plateforme
     actions.enterPlatform();
@@ -228,21 +227,16 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               >
                 Comment ça marche ?
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => handleAuthAction('login')}
-                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
-              >
-                <LogIn className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Se connecter</span>
-              </Button>
-              <Button 
-                onClick={() => handleAuthAction('signup')}
-                className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base px-2 sm:px-4"
-              >
-                <UserPlus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Créer un compte</span>
-              </Button>
+              
+              {/* Composant réutilisable pour l'authentification */}
+              <AuthButtons
+                currentUser={currentUser}
+                onLogin={onLogin}
+                onSocialLogin={onSocialLogin}
+                onProfileClick={handleProfileClick}
+                onEnterPlatform={onEnterPlatform}
+                compact={false}
+              />
             </div>
           </div>
         </div>
@@ -527,20 +521,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
           </div>
         </section>
       </div>
-
-      {/* Dialogs d'authentification */}
-      <LoginDialog
-        isOpen={showLoginDialog}
-        onClose={() => setShowLoginDialog(false)}
-        onLogin={onLogin}
-        onSocialLogin={onSocialLogin}
-        onEnterPlatform={onEnterPlatform}
-        onSwitchToSignup={() => {
-          setShowLoginDialog(false);
-          navigation.goToSignup();
-        }}
-        onLoginSSO={onLoginSSO}
-      />
     </div>
   );
 }

@@ -22,10 +22,8 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
   const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   // ✅ Résoudre l'auteur du post source
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
@@ -51,6 +49,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     
     if (content.trim()) {
       const newPost = await actions.publishPost({
+        title: title.trim() || undefined,
         content: content.trim(),
         location: location.trim() || undefined,
         sourcePostIds: sourcePost ? [sourcePost.id] : []

@@ -10,7 +10,7 @@ import Markdown from 'react-markdown';
 
 interface IdeaDescriptionTabProps {
   idea: Idea;
-  currentUser: User;
+  currentUser: User | null;
   onSwitchToDiscussions: () => void;
 }
 

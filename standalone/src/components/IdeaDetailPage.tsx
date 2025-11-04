@@ -61,10 +61,8 @@ export function IdeaDetailPage({
       .filter(Boolean) as User[]
   , [latestIdea.creatorIds, getUserById]);
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   const [activeTab, setActiveTab] = useState('description');
   
@@ -107,8 +105,9 @@ export function IdeaDetailPage({
   }, [activeTab, latestIdea.id]); // Retirer loadTabData des dépendances car elle ne change pas vraiment
 
   const isSupported = useMemo(() => {
+    if (!currentUser) return false;
     return latestIdea.supporters?.includes(currentUser.id) || false; // ✅ supporters est maintenant string[]
-  }, [latestIdea.supporters, currentUser.id]);
+  }, [latestIdea.supporters, currentUser]);
   
   const supportCount = useMemo(() => {
     return latestIdea.supporters?.length || 0;
@@ -381,6 +380,7 @@ export function IdeaDetailPage({
           <RatingSection
             project={latestIdea}
             currentUser={currentUser}
+            isSupported={isSupported}
           />
         </TabsContent>
 

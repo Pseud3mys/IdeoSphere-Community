@@ -5,15 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Edit3 } from 'lucide-react';
+import { Edit3, Heart, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface RatingSectionProps {
   project: Idea;
-  currentUser: User;
+  currentUser: User | null;
+  isSupported: boolean;
 }
 
-export function RatingSection({ project, currentUser }: RatingSectionProps) {
+export function RatingSection({ project, currentUser, isSupported }: RatingSectionProps) {
   // Récupérer les actions directement depuis l'Entity Store
   const { actions } = useEntityStoreSimple();
   
@@ -30,6 +31,7 @@ export function RatingSection({ project, currentUser }: RatingSectionProps) {
   };
 
   const getUserRating = (criterionId: string): Rating | undefined => {
+    if (!currentUser) return undefined;
     return ratings.find(r => r.criterionId === criterionId && r.userId === currentUser.id);
   };
 
@@ -83,20 +85,41 @@ export function RatingSection({ project, currentUser }: RatingSectionProps) {
       </CardHeader>
       
       <CardContent className="pt-0 space-y-4">
-        {project.ratingCriteria.map((criterion) => {
-          const averageRating = calculateAverageRating(criterion.id);
-          const userRating = getUserRating(criterion.id);
-          const ratingCount = getRatingCount(criterion.id);
-          const progressValue = (averageRating / 5) * 100;
-          const progressColor = getProgressColor(criterion.id, averageRating);
-          // Afficher la moyenne si elle existe
-          const showAverage = averageRating > 0;
-
-          return (
-            <div 
-              key={criterion.id} 
-              className="space-y-3"
+        {!isSupported ? (
+          <div className="bg-muted/50 border border-dashed border-muted-foreground/30 rounded-lg p-4 text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <Lock className="w-5 h-5 text-muted-foreground" />
+              <span className="font-medium text-muted-foreground">Évaluation réservée aux soutiens</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Pour évaluer cette idée, vous devez d'abord la soutenir.
+            </p>
+            <Button 
+              variant="default"
+              size="sm"
+              onClick={() => actions.toggleIdeaSupport(project.id)}
+              className="flex items-center space-x-2"
             >
+              <Heart className="w-4 h-4" />
+              <span>Soutenir pour évaluer</span>
+            </Button>
+          </div>
+        ) : (
+          <>
+            {project.ratingCriteria.map((criterion) => {
+              const averageRating = calculateAverageRating(criterion.id);
+              const userRating = getUserRating(criterion.id);
+              const ratingCount = getRatingCount(criterion.id);
+              const progressValue = (averageRating / 5) * 100;
+              const progressColor = getProgressColor(criterion.id, averageRating);
+              // Afficher la moyenne si elle existe
+              const showAverage = averageRating > 0;
+
+              return (
+                <div 
+                  key={criterion.id} 
+                  className="space-y-3"
+                >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium">{criterion.name}</span>
@@ -184,7 +207,7 @@ export function RatingSection({ project, currentUser }: RatingSectionProps) {
           );
         })}
 
-        {isReadyForProject && (
+            {isReadyForProject && (
           <div 
             className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4"
           >
@@ -196,6 +219,8 @@ export function RatingSection({ project, currentUser }: RatingSectionProps) {
               Niveau de complétude suffisant pour devenir un projet financé.
             </p>
           </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

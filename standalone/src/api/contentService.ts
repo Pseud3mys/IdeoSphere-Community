@@ -1,6 +1,6 @@
 import { Idea, Post, User } from '../types';
 import { extractHashtagsFromMultipleTexts } from '../utils/hashtagUtils';
-import { loadMockDataSet, getUserById, getIdeaById, getPostById } from './dataService';
+import { loadMockDataSet, getUserById, getIdeaById, getPostById, addDynamicIdea, addDynamicPost, addDynamicUser } from './dataService';
 import { getValidAvatar } from './avatarService';
 
 // Simuler un délai d'API
@@ -51,7 +51,7 @@ export async function createIdeaOnApi(payload: {
     summary: payload.summary,
     description: payload.description,
     location: payload.location,
-    creators: [creator],
+    creatorIds: [payload.authorId], // ✅ Utiliser creatorIds (array d'IDs) au lieu de creators
     status: 'published',
     createdAt: new Date(),
     supportCount: 0,
@@ -66,6 +66,9 @@ export async function createIdeaOnApi(payload: {
     derivedIdeas: []
   };
   
+  // ✅ Ajouter l'idée au cache dynamique pour qu'elle soit accessible via getIdeaById
+  addDynamicIdea(newIdea);
+  
   console.log(`[api] createIdeaOnApi - Créée: ${newIdea.id} avec ${finalTags.length} tags`);
   return newIdea;
 }
@@ -74,6 +77,7 @@ export async function createIdeaOnApi(payload: {
  * Création d'un nouveau post
  */
 export async function createPostOnApi(payload: {
+  title?: string;
   content: string;
   location?: string;
   authorId: string;
@@ -101,6 +105,7 @@ export async function createPostOnApi(payload: {
   
   const newPost: Post = {
     id: `post-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    title: payload.title,
     content: payload.content,
     location: payload.location,
     authorId: payload.authorId,
@@ -114,44 +119,63 @@ export async function createPostOnApi(payload: {
     sourcePosts: payload.sourcePostIds || []
   };
   
+  // ✅ Ajouter le post au cache dynamique pour qu'il soit accessible via getPostById
+  addDynamicPost(newPost);
+  
   console.log(`[api] createPostOnApi - Créé: ${newPost.id} avec ${finalTags.length} tag(s)`);
   return newPost;
 }
 
 /**
- * Récupération des détails complets d'une idée
+ * Récupération des détails complets d'une idée avec ses créateurs
+ * @returns { idea, users } où users contient tous les créateurs de l'idée
  */
-export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
-  console.log(`[api] fetchIdeaDetails - ${ideaId}`);
+export async function fetchIdeaDetails(ideaId: string): Promise<{ idea: Idea; users: User[] } | null> {
   await simulateApiDelay(100);
   
   const idea = await getIdeaById(ideaId);
   
-  if (idea) {
-    console.log(`[api] fetchIdeaDetails - Trouvée: "${idea.title}"`);
-    return idea;
+  if (!idea) {
+    return null;
   }
   
-  console.log(`[api] fetchIdeaDetails - Non trouvée: ${ideaId}`);
-  return null;
+  // Récupérer tous les créateurs de l'idée
+  const users: User[] = [];
+  if (idea.creatorIds && idea.creatorIds.length > 0) {
+    for (const creatorId of idea.creatorIds) {
+      const creator = await getUserById(creatorId);
+      if (creator) {
+        users.push(creator);
+      }
+    }
+  }
+  
+  return { idea, users };
 }
 
 /**
- * Récupération des détails complets d'un post
+ * Récupération des détails complets d'un post avec son auteur
+ * @returns { post, users } où users contient l'auteur du post
  */
-export async function fetchPostDetails(postId: string): Promise<Post | null> {
-  console.log(`[api] fetchPostDetails - ${postId}`);
+export async function fetchPostDetails(postId: string): Promise<{ post: Post; users: User[] } | null> {
   await simulateApiDelay(100);
   
   const post = await getPostById(postId);
   
-  if (post) {
-    console.log(`[api] fetchPostDetails - Trouvé`);
-    return post;
+  if (!post) {
+    return null;
   }
   
-  console.log(`[api] fetchPostDetails - Non trouvé: ${postId}`);
-  return null;
+  // Récupérer l'auteur du post
+  const users: User[] = [];
+  if (post.authorId) {
+    const author = await getUserById(post.authorId);
+    if (author) {
+      users.push(author);
+    }
+  }
+  
+  return { post, users };
 }
 
 /**
@@ -196,6 +220,9 @@ export async function createUserAccountOnApi(userData: {
     createdAt: new Date(),
     isRegistered: true
   };
+  
+  // ✅ Ajouter l'utilisateur au cache dynamique pour qu'il soit accessible via getUserById
+  addDynamicUser(newUser);
   
   console.log(`[api] createUserAccountOnApi - Créé: ${newUser.name}`);
   return newUser;

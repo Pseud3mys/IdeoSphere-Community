@@ -11,7 +11,8 @@ export function createContentActions(
   actions: any,
   boundSelectors: any,
   navigationActions: any,
-  storeUpdater: StoreUpdater
+  storeUpdater: StoreUpdater,
+  navigate?: (path: string) => void
 ) {
   // Fonction générique pour lier du contenu (discussions, posts, idées) à un contenu (post ou idée)
   const linkContentToContent = (params: {
@@ -30,7 +31,7 @@ export function createContentActions(
     
     console.log(`🧹 Toutes les données pré-remplies précédentes ont été supprimées`);
     
-    // Ensuite, préparer les nouvelles données pré-remplies selon le type source
+    // Ensuite, préparer les nouvelles données pré-remplies selon le type source ET la cible
     if (params.sourceType === 'discussion') {
       actions.setPrefilledSelectedDiscussions(params.sourceIds);
     } else if (params.sourceType === 'idea') {
@@ -39,7 +40,24 @@ export function createContentActions(
       }
     } else if (params.sourceType === 'post') {
       if (params.sourceIds.length > 0) {
-        actions.setPrefilledSourcePostId(params.sourceIds[0]);
+        // Si la cible est un post, utiliser prefilledSourcePostId (pour réponse post)
+        if (params.targetType === 'post') {
+          actions.setPrefilledSourcePostId(params.sourceIds[0]);
+        } else if (params.targetType === 'idea') {
+          // Pour promotion post->idée, marquer le post comme source inspirante
+          // en l'ajoutant dans prefilledLinkedContent
+          // Cela déclenchera automatiquement le mode 'idea' dans CreateIdeaPage
+          const post = boundSelectors.getPostById(params.sourceIds[0]);
+          if (post) {
+            actions.setPrefilledLinkedContent([{
+              type: 'post',
+              id: post.id,
+              title: post.content.substring(0, 50),
+              content: post.content,
+              author: post.authorId
+            }]);
+          }
+        }
       }
     }
     
@@ -363,19 +381,39 @@ export function createContentActions(
         targetType: 'post'
       });
       // Naviguer vers la page de création de post
-      navigationActions.goToCreatePost();
+      if (navigate) {
+        console.log(`✅ Navigation vers /create-idea (pour créer un post de réponse)`);
+        navigate('/create-idea');
+      } else {
+        console.error(`❌ [createResponsePost] navigate n'est pas défini!`);
+      }
     },
     
-    // Promouvoir un post en idée
+    // Promouvoir un post en idée (renommé "projet" dans l'UI)
     promotePostToIdea: (postId: string) => {
-      console.log(`🚀 Promotion du post ${postId} en idée`);
+      console.log(`🚀 Promotion du post ${postId} en projet`);
+      
+      // Récupérer le post pour passer son contenu
+      const post = boundSelectors.getPostById(postId);
+      
       linkContentToContent({
         sourceType: 'post',
         sourceIds: [postId],
         targetType: 'idea'
       });
-      // Naviguer vers la page de création d'idée
-      navigationActions.goToCreateIdea();
+      
+      // Naviguer vers la page de création de projet avec le contenu du post
+      if (navigate) {
+        console.log(`✅ Navigation vers /create-idea avec préremplissage du post ${postId}`);
+        navigate('/create-idea', { 
+          state: { 
+            sourcePost: post,
+            prefillFromPost: true 
+          } 
+        });
+      } else {
+        console.error(`❌ [promotePostToIdea] navigate n'est pas défini!`);
+      }
     },
     
     // Actions d'onboarding

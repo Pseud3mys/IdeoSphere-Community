@@ -137,9 +137,20 @@ export const mockUsers: User[] = [...];
 ### `/api` - Services API (Simulent Backend)
 
 ```typescript
-export async function fetchIdeaDetails(ideaId: string): Promise<Idea | null> {
-  const { getIdeaById } = await import('./dataService');
-  return await getIdeaById(ideaId);
+export async function fetchIdeaDetails(ideaId: string): Promise<{ idea: Idea; users: User[] } | null> {
+  const idea = await getIdeaById(ideaId);
+  if (!idea) return null;
+  
+  // Récupérer les créateurs
+  const users: User[] = [];
+  if (idea.creatorIds) {
+    for (const creatorId of idea.creatorIds) {
+      const creator = await getUserById(creatorId);
+      if (creator) users.push(creator);
+    }
+  }
+  
+  return { idea, users };
 }
 ```
 

@@ -1,4 +1,4 @@
-import { User, Idea, Post, DiscussionTopic } from '../types';
+import { User, Idea, Post, DiscussionTopic, Group, GroupMembership, PendingGroupCreation, GroupLink } from '../types';
 
 /**
  * Service de données pur - Point d'accès unique aux données mockées
@@ -13,10 +13,19 @@ export interface MockDataSet {
   currentUser: User;
   guestUser: User;
   discussions: DiscussionTopic[];
+  groups: Group[];
+  groupMemberships: GroupMembership[];
+  pendingGroups: PendingGroupCreation[];
 }
 
 // Cache pour éviter les imports multiples
 let mockDataCache: MockDataSet | null = null;
+
+// Cache pour les contenus créés dynamiquement (posts, idées, etc.)
+// Ces contenus n'existent que pendant la session et ne sont pas dans les données mockées
+const dynamicIdeasCache: Map<string, Idea> = new Map();
+const dynamicPostsCache: Map<string, Post> = new Map();
+const dynamicUsersCache: Map<string, User> = new Map();
 
 /**
  * Charge et retourne toutes les données mockées
@@ -32,12 +41,16 @@ export async function loadMockDataSet(): Promise<MockDataSet> {
       { mockIdeas },
       { mockPosts },
       { currentUser, users, guestUser },
-      { discussionTopics }
+      { discussionTopics },
+      { groups, groupMemberships },
+      { pendingGroups }
     ] = await Promise.all([
       import('../data/ideas'),
       import('../data/posts'),
       import('../data/users'),
-      import('../data/discussions')
+      import('../data/discussions'),
+      import('../data/groups'),
+      import('../data/pendingGroups')
     ]);
 
     mockDataCache = {
@@ -46,7 +59,10 @@ export async function loadMockDataSet(): Promise<MockDataSet> {
       users: users || [],
       currentUser,
       guestUser,
-      discussions: discussionTopics || []
+      discussions: discussionTopics || [],
+      groups: groups || [],
+      groupMemberships: groupMemberships || [],
+      pendingGroups: pendingGroups || []
     };
 
     return mockDataCache;
@@ -75,7 +91,10 @@ export async function loadMockDataSet(): Promise<MockDataSet> {
         createdAt: new Date(),
         isRegistered: false
       },
-      discussions: []
+      discussions: [],
+      groups: [],
+      groupMemberships: [],
+      pendingGroups: []
     };
   }
 }
@@ -89,11 +108,26 @@ export function invalidateMockDataCache(): void {
 }
 
 /**
+ * Ajoute un utilisateur au cache dynamique
+ * @param user - Utilisateur à ajouter
+ */
+export function addDynamicUser(user: User): void {
+  dynamicUsersCache.set(user.id, user);
+}
+
+/**
  * Retourne un utilisateur par ID
+ * Cherche d'abord dans le cache dynamique, puis dans les données mockées
  * @param userId - ID de l'utilisateur
  * @returns Utilisateur trouvé ou null
  */
 export async function getUserById(userId: string): Promise<User | null> {
+  // Vérifier d'abord dans le cache dynamique
+  if (dynamicUsersCache.has(userId)) {
+    return dynamicUsersCache.get(userId) || null;
+  }
+  
+  // Sinon chercher dans les données mockées
   const data = await loadMockDataSet();
   const allUsers = [data.guestUser, data.currentUser, ...data.users];
   return allUsers.find(user => user.id === userId) || null;
@@ -111,21 +145,51 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 /**
+ * Ajoute une idée au cache dynamique
+ * @param idea - Idée à ajouter
+ */
+export function addDynamicIdea(idea: Idea): void {
+  dynamicIdeasCache.set(idea.id, idea);
+}
+
+/**
  * Retourne une idée par ID
+ * Cherche d'abord dans le cache dynamique, puis dans les données mockées
  * @param ideaId - ID de l'idée
  * @returns Idée trouvée ou null
  */
 export async function getIdeaById(ideaId: string): Promise<Idea | null> {
+  // Vérifier d'abord dans le cache dynamique
+  if (dynamicIdeasCache.has(ideaId)) {
+    return dynamicIdeasCache.get(ideaId) || null;
+  }
+  
+  // Sinon chercher dans les données mockées
   const data = await loadMockDataSet();
   return data.ideas.find(idea => idea.id === ideaId) || null;
 }
 
 /**
+ * Ajoute un post au cache dynamique
+ * @param post - Post à ajouter
+ */
+export function addDynamicPost(post: Post): void {
+  dynamicPostsCache.set(post.id, post);
+}
+
+/**
  * Retourne un post par ID
+ * Cherche d'abord dans le cache dynamique, puis dans les données mockées
  * @param postId - ID du post
  * @returns Post trouvé ou null
  */
 export async function getPostById(postId: string): Promise<Post | null> {
+  // Vérifier d'abord dans le cache dynamique
+  if (dynamicPostsCache.has(postId)) {
+    return dynamicPostsCache.get(postId) || null;
+  }
+  
+  // Sinon chercher dans les données mockées
   const data = await loadMockDataSet();
   return data.posts.find(post => post.id === postId) || null;
 }

@@ -29,7 +29,7 @@ import { toast } from 'sonner@2.0.3';
 
 interface IdeaDiscussionsTabProps {
   idea: Idea;
-  currentUser: User;
+  currentUser: User | null;
   discussions: DiscussionTopic[];
   isSupported: boolean;
   onSwitchToVersions?: () => void; // Ajouter cette fonction pour changer d'onglet

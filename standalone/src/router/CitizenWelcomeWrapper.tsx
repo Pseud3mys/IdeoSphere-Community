@@ -3,6 +3,7 @@ import { CitizenWelcome } from '../components/CitizenWelcome';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useAuthHandlers } from '../hooks/useAuthHandlers';
 import { useNavigationActions } from '../hooks/useNavigationActions';
+import { toast } from 'sonner@2.0.3';
 
 /**
  * CitizenWelcomeWrapper
@@ -47,17 +48,38 @@ export function CitizenWelcomeWrapper() {
   );
 
   // Handler pour entrer sur la plateforme (après connexion ou en mode exploration)
-  const handleEnterPlatform = () => {
-    actions.enterPlatform();
-    navigate('/discovery');
+  const handleEnterPlatform = async () => {
+    try {
+      // Créer un compte invité via l'API
+      console.log('🔄 [CitizenWelcomeWrapper] Création d\'un compte invité via l\'API...');
+      const guestUser = await actions.createTemporaryGuest();
+      
+      if (guestUser) {
+        console.log('✅ [CitizenWelcomeWrapper] Compte invité créé avec succès via l\'API !');
+        console.log('   - ID:', guestUser.id);
+        console.log('   - Nom:', guestUser.name);
+        console.log('   - Email:', guestUser.email);
+        console.log('   - isRegistered:', guestUser.isRegistered);
+        
+        toast.success(`Bienvenue ${guestUser.name} !`, {
+          description: 'Compte invité créé - Vous pouvez explorer IdeoSphere'
+        });
+        
+        actions.enterPlatform();
+        navigate('/discovery');
+      } else {
+        console.error('❌ [CitizenWelcomeWrapper] Impossible de créer le compte invité');
+        toast.error('Erreur lors de la création du compte invité');
+      }
+    } catch (error) {
+      console.error('❌ [CitizenWelcomeWrapper] Erreur handleEnterPlatform:', error);
+      toast.error('Une erreur est survenue');
+    }
   };
 
-  // Handler pour entrer avec un utilisateur temporaire
+  // Handler pour entrer avec un utilisateur temporaire (alias)
   const handleEnterPlatformWithTempUser = async () => {
-    // Logique d'entrée avec utilisateur temporaire
-    // Pour l'instant, redirige simplement vers discovery
-    actions.enterPlatform();
-    navigate('/discovery');
+    await handleEnterPlatform();
   };
 
   // Handler pour naviguer vers la création d'idée

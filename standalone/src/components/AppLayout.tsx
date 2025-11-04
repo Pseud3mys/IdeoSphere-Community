@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useAuthHandlers } from '../hooks/useAuthHandlers';
 import { AppHeader } from './AppHeader';
 import { Navigation } from './Navigation';
 import { OnboardingTour } from './OnboardingTour';
@@ -14,6 +15,32 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { store, actions, getCurrentUser } = useEntityStoreSimple();
   const currentUserData = getCurrentUser();
+
+  // Créer les handlers d'authentification
+  const authHandlers = useAuthHandlers(
+    (user) => {
+      actions.addUser(user);
+      actions.setCurrentUserId(user.id);
+    },
+    () => {
+      // handleEnterPlatform - navigation vers la page discovery
+      navigate('/discovery');
+    },
+    (email) => {
+      // switchToUserByEmail
+      const allUsers = Object.values(store.users);
+      const user = allUsers.find(u => u.email === email);
+      if (user) {
+        actions.setCurrentUserId(user.id);
+        return user;
+      }
+      return null;
+    },
+    actions.checkEmailExists,
+    actions.loginWithSocialProvider,
+    actions.signupUser,
+    actions.subscribeToNewsletter
+  );
 
   // Handlers pour le header
   const handleHomeClick = () => {
@@ -40,6 +67,8 @@ export function AppLayout() {
         onHomeClick={handleHomeClick}
         onProfileClick={handleProfileClick}
         onHelpClick={handleHelpClick}
+        onLogin={authHandlers.handleLogin}
+        onSocialLogin={authHandlers.handleSocialLogin}
       />
 
       {/* Navigation principale */}

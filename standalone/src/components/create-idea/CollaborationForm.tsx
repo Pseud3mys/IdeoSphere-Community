@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ContentLinkSearch } from '../ContentLinkSearch';
 import { User, Idea, Post } from '../../types';
-import { discussionTopics } from '../../data/discussions';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -43,7 +42,7 @@ export function CollaborationForm({
   ideas,
   posts
 }: CollaborationFormProps) {
-  const { getUserById } = useEntityStoreSimple();
+  const { getUserById, getDiscussionTopicsByIds } = useEntityStoreSimple();
   const [coCreatorSearch, setCoCreatorSearch] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(true);
 
@@ -122,9 +121,14 @@ export function CollaborationForm({
       return [];
     }
 
-    return discussionTopics.filter(discussion => 
-      prefilledSelectedDiscussions.includes(discussion.id)
-    );
+    // ✅ Récupérer les discussions depuis le store au lieu des données mockées statiques
+    const discussions = getDiscussionTopicsByIds(prefilledSelectedDiscussions);
+    console.log(`📋 [CollaborationForm] Récupération discussions:`, {
+      requestedIds: prefilledSelectedDiscussions,
+      foundCount: discussions.length,
+      discussions: discussions.map(d => ({ id: d.id, title: d.title }))
+    });
+    return discussions;
   };
 
   const selectedContent = getSelectedContent();
@@ -247,7 +251,7 @@ export function CollaborationForm({
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate">{content.title}</div>
                       <div className="text-xs text-muted-foreground">
-                        par {content.author.name} • {content.type === 'idea' ? 'Idée' : 'Post'}
+                        par {content.author.name} • {content.type === 'idea' ? 'Projet' : 'Post'}
                       </div>
                     </div>
                     <Button

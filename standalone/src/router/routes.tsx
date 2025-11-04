@@ -12,7 +12,11 @@ import { CreateIdeaPageWrapper } from './CreateIdeaPageWrapper';
 import { ContentDetailPageWrapper } from './ContentDetailPageWrapper';
 import { UserProfilePageWrapper } from './UserProfilePageWrapper';
 import { UserProfilePagePublicWrapper } from './UserProfilePagePublicWrapper';
-import { CommunityDetailPageWrapper } from './CommunityDetailPageWrapper';
+import { GroupsExplorerPageWrapper } from './GroupsExplorerPageWrapper';
+import { GroupHubPageWrapper } from './GroupHubPageWrapper';
+import { MyGroupsPageWrapper } from './MyGroupsPageWrapper';
+import { PendingGroupDetailPageWrapper } from './PendingGroupDetailPageWrapper';
+import { GroupManagePageWrapper } from './GroupManagePageWrapper';
 
 // Pages publiques
 import { AboutPage } from '../components/AboutPage';
@@ -21,8 +25,7 @@ import { FAQPage } from '../components/FAQPage';
 import { PrivacyPolicyPage } from '../components/PrivacyPolicyPage';
 import { TermsPage } from '../components/TermsPage';
 
-// Pages protégées sans paramètres
-import { CommunitiesPage } from '../components/CommunitiesPage';
+// Pages protégées sans paramètres (aucune pour le moment)
 
 /**
  * Configuration des routes de l'application
@@ -76,14 +79,11 @@ export const routes: RouteObject[] = [
 
   // ========================================
   // ROUTES PROTÉGÉES (nécessitent authentification)
+  // NOTE TEMPORAIRE : Protection désactivée pour permettre l'accès invité
   // ========================================
   {
     path: '/',
-    element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
-    ),
+    element: <AppLayout />,
     children: [
       {
         path: 'discovery',
@@ -109,13 +109,26 @@ export const routes: RouteObject[] = [
         path: 'user/:userId',
         element: <UserProfilePagePublicWrapper />,
       },
+      // Routes pour les groupes
       {
-        path: 'communities',
-        element: <CommunitiesPage />,
+        path: 'groups',
+        element: <GroupsExplorerPageWrapper />,
       },
       {
-        path: 'community/:communityId',
-        element: <CommunityDetailPageWrapper />,
+        path: 'groups/my',
+        element: <MyGroupsPageWrapper />,
+      },
+      {
+        path: 'groups/pending/:pendingId',
+        element: <PendingGroupDetailPageWrapper />,
+      },
+      {
+        path: 'groups/:groupId/manage',
+        element: <GroupManagePageWrapper />,
+      },
+      {
+        path: 'groups/:groupId',
+        element: <GroupHubPageWrapper />,
       },
     ],
   },
