@@ -49,6 +49,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     
     if (content.trim()) {
       const newPost = await actions.publishPost({
+        title: title.trim() || undefined,
         content: content.trim(),
         location: location.trim() || undefined,
         sourcePostIds: sourcePost ? [sourcePost.id] : []

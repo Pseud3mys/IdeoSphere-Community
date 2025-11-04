@@ -208,6 +208,9 @@ export function PostDetailPage({
                         <span className="text-sm font-medium text-gray-900">{displayAuthor.name}</span>
                         <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
                       </div>
+                      {sourcePost?.title && (
+                        <p className="text-sm font-medium text-gray-900 mb-1">{sourcePost.title}</p>
+                      )}
                       <p className="text-sm text-gray-700 line-clamp-2">{sourcePost?.content}</p>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
@@ -265,6 +268,12 @@ export function PostDetailPage({
 
         {/* Contenu */}
         <div className="p-4">
+          {/* Titre du post si présent */}
+          {latestPost.title && (
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              {latestPost.title}
+            </h2>
+          )}
           <p className="text-lg text-gray-900 leading-relaxed whitespace-pre-line mb-4">
             {latestPost.content}
           </p>

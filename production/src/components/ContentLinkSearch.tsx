@@ -107,6 +107,10 @@ export function ContentLinkSearch({
     if (content.type === 'idea') {
       return content.title;
     } else {
+      // Pour les posts, utiliser le titre s'il existe, sinon le début du contenu
+      if (content.title) {
+        return content.title;
+      }
       return content.content.length > 50 ? content.content.substring(0, 50) + '...' : content.content;
     }
   };

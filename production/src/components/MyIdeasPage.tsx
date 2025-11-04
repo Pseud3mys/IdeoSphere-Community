@@ -159,7 +159,7 @@ export function MyIdeasPage({
     // Filtrer par recherche
     if (searchQuery) {
       feedItems = feedItems.filter(item => {
-        const content = item.type === 'post' ? item.content : `${item.title} ${item.summary}`;
+        const content = item.type === 'post' ? (item.title ? `${item.title} ${item.content}` : item.content) : `${item.title} ${item.summary}`;
         const tags = item.tags?.join(' ') || '';
         let author = '';
         if (item.type === 'post') {
@@ -213,8 +213,8 @@ export function MyIdeasPage({
       }
       case 'alphabetical':
         feedItems.sort((a, b) => {
-          const aTitle = a.type === 'post' ? a.content.substring(0, 50) : a.title;
-          const bTitle = b.type === 'post' ? b.content.substring(0, 50) : b.title;
+          const aTitle = a.type === 'post' ? (a.title || a.content.substring(0, 50)) : a.title;
+          const bTitle = b.type === 'post' ? (b.title || b.content.substring(0, 50)) : b.title;
           return aTitle.localeCompare(bTitle);
         });
         break;

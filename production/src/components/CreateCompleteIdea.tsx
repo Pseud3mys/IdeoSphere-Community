@@ -90,10 +90,14 @@ export function CreateCompleteIdea({
     if (sourceIdea) {
       return `[À modifier] ${sourceIdea.summary}`;
     }
-    // Utiliser le contenu du post comme base pour le résumé
+    // Utiliser le titre ou le contenu du post comme base pour le résumé
     if (derivedSourcePost) {
+      // Si le post a un titre, l'utiliser comme résumé de base
+      if (derivedSourcePost.title) {
+        return derivedSourcePost.title;
+      }
+      // Sinon, prendre les 200 premiers caractères du post comme résumé
       const postContent = derivedSourcePost.content;
-      // Prendre les 200 premiers caractères du post comme résumé
       const truncated = postContent.length > 200 ? postContent.substring(0, 200) + '...' : postContent;
       return truncated;
     }
@@ -124,9 +128,10 @@ export function CreateCompleteIdea({
     }
     if (derivedSourcePost) {
       const authorName = derivedSourcePostAuthor?.name || 'un membre';
+      const postIntro = derivedSourcePost.title ? `**${derivedSourcePost.title}**\n\n${derivedSourcePost.content}` : derivedSourcePost.content;
       return `## 💭 Contexte
 
-${derivedSourcePost.content}
+${postIntro}
 
 *(Post original de ${authorName})*
 

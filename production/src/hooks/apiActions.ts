@@ -932,6 +932,7 @@ export function createApiActions(
      * Publie un nouveau post avec extraction automatique des hashtags
      */
     publishPost: async (payload: {
+      title?: string;
       content: string;
       location?: string;
       tags?: string[];
@@ -969,6 +970,7 @@ export function createApiActions(
         // Créer le post via l'API en passant les tags extraits
         const { createPostOnApi } = await import('../api/contentService');
         const newPost = await createPostOnApi({
+          title: payload.title,
           content: payload.content,
           location: payload.location,
           authorId: finalAuthorId,

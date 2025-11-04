@@ -149,6 +149,7 @@ export function transformIdeaCardToIdea(ideaCard: any): Idea {
 export function transformPostCardToPost(postCard: any): Post {
   return {
     id: postCard.id,
+    title: postCard.title,
     content: postCard.content,
     location: postCard.location,
     authorId: postCard.authorId,
@@ -210,6 +211,7 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
   return {
     id: raw._id, // c'est le trucentier posts/123345
     type: 'post',
+    title: raw.title || '',
     content: raw.content || raw.title || '',
     authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),

@@ -87,6 +87,7 @@ export type IdeaStatus = 'draft' | 'published' | 'featured' | 'archived';
  */
 export interface Post {
   id: string;
+  title?: string; // Titre optionnel du post
   content: string;
   authorId: string;
   createdAt: Date;

@@ -70,7 +70,8 @@ export function ContentLinkDialog({
           combinedContent.push({
             id: post.id,
             type: 'post',
-            title: post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content,
+            // Utiliser le titre du post s'il existe, sinon le début du contenu
+            title: post.title || (post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content),
             summary: post.content,
             author: author,
             createdAt: post.createdAt,
