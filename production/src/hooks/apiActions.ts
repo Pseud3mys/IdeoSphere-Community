@@ -378,40 +378,36 @@ export function createApiActions(
           
           // Ajouter les parents au store
           lineageResult.parents.forEach((parent: Idea | Post | DiscussionTopic) => {
-            if ('title' in parent && 'summary' in parent) {
-              // C'est une Idea
+            // ✅ Détecter le type d'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
               actions.addIdea(parent as Idea);
               parentIdeaIds.push(parent.id);
-            } else if ('content' in parent && 'authorId' in parent && !('title' in parent)) {
-              // Distinguer Post et DiscussionTopic
-              if ('type' in parent && (parent as any).type) {
-                // C'est une DiscussionTopic
-                actions.addDiscussionTopic(parent as DiscussionTopic);
-                parentDiscussionIds.push(parent.id);
-              } else {
-                // C'est un Post
-                actions.addPost(parent as Post);
-                parentPostIds.push(parent.id);
-              }
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
+              actions.addPost(parent as Post);
+              parentPostIds.push(parent.id);
+            } else if ('content' in parent && 'type' in parent) {
+              // C'est une DiscussionTopic (a content ET type)
+              actions.addDiscussionTopic(parent as DiscussionTopic);
+              parentDiscussionIds.push(parent.id);
             }
           });
           
           // Ajouter les enfants au store
           lineageResult.children.forEach((child: Idea | Post | DiscussionTopic) => {
-            if ('title' in child && 'summary' in child) {
-              // C'est une Idea
+            // ✅ Détecter le type d'entité de manière robuste
+            if ('summary' in child && 'creatorIds' in child) {
+              // C'est une Idea (a summary ET creatorIds)
               actions.addIdea(child as Idea);
               childIdeaIds.push(child.id);
-            } else if ('content' in child && 'authorId' in child && !('title' in child)) {
-              // Distinguer Post et DiscussionTopic
-              if ('type' in child && (child as any).type) {
-                // C'est une DiscussionTopic (peu probable en enfant, mais on gère le cas)
-                actions.addDiscussionTopic(child as DiscussionTopic);
-              } else {
-                // C'est un Post
-                actions.addPost(child as Post);
-                childPostIds.push(child.id);
-              }
+            } else if ('content' in child && 'authorId' in child && 'supporters' in child) {
+              // C'est un Post (a content, authorId ET supporters)
+              actions.addPost(child as Post);
+              childPostIds.push(child.id);
+            } else if ('content' in child && 'type' in child) {
+              // C'est une DiscussionTopic (a content ET type)
+              actions.addDiscussionTopic(child as DiscussionTopic);
             }
           });
           
@@ -554,12 +550,12 @@ export function createApiActions(
           // 2. AJOUTER toutes les entités du lineage au store
           // Ajouter les parents au store
           lineageData.parents.forEach(parent => {
-            // ✅ Type guard pour déterminer le type de l'entité
-            if ('title' in parent && 'summary' in parent && 'creatorIds' in parent) {
-              // C'est une Idea
+            // ✅ Type guard pour déterminer le type de l'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
               const existingIdea = boundSelectors.getIdeaById(parent.id);
               if (!existingIdea) {
-                console.log(`📥 [apiActions] Ajout idée parente au store: ${parent.title}`);
+                console.log(`📥 [apiActions] Ajout idée parente au store: ${parent.title || parent.id}`);
                 actions.addIdea({
                   id: parent.id,
                   title: parent.title || '',
@@ -580,13 +576,14 @@ export function createApiActions(
                   discussionIds: []
                 });
               }
-            } else if ('content' in parent && 'authorId' in parent && !('posts' in parent)) {
-              // C'est un Post (pas un DiscussionTopic qui a aussi 'content' et 'authorId')
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
               const existingPost = boundSelectors.getPostById(parent.id);
               if (!existingPost) {
-                console.log(`📥 [apiActions] Ajout post parent au store: ${parent.content?.substring(0, 50)}`);
+                console.log(`📥 [apiActions] Ajout post parent au store: ${parent.title || parent.content?.substring(0, 50)}`);
                 actions.addPost({
                   id: parent.id,
+                  title: parent.title,
                   content: parent.content || '',
                   authorId: parent.authorId,
                   createdAt: parent.createdAt,
@@ -600,11 +597,11 @@ export function createApiActions(
                   derivedPosts: []
                 });
               }
-            } else if ('title' in parent && 'posts' in parent && 'type' in parent) {
-              // C'est un DiscussionTopic
+            } else if ('posts' in parent && 'type' in parent) {
+              // C'est un DiscussionTopic (a posts ET type)
               const existingDiscussion = boundSelectors.getDiscussionTopicById(parent.id);
               if (!existingDiscussion) {
-                console.log(`📥 [apiActions] Ajout discussion parente au store: ${parent.title}`);
+                console.log(`📥 [apiActions] Ajout discussion parente au store: ${parent.title || parent.id}`);
                 actions.addDiscussionTopic(parent);
               } else {
                 console.log(`✓ [apiActions] Discussion déjà dans le store: ${parent.title}`);
@@ -644,19 +641,19 @@ export function createApiActions(
           
           // 3. METTRE À JOUR l'idée actuelle avec les IDs des parents et enfants
           const parentIdeaIds = lineageData.parents
-            .filter(p => 'title' in p && 'summary' in p && 'creatorIds' in p)
+            .filter(p => 'summary' in p && 'creatorIds' in p)
             .map(p => p.id);
           
           const parentPostIds = lineageData.parents
-            .filter(p => 'content' in p && 'authorId' in p && !('posts' in p))
+            .filter(p => 'content' in p && 'authorId' in p && 'supporters' in p)
             .map(p => p.id);
           
           const parentDiscussionIds = lineageData.parents
-            .filter(p => 'title' in p && 'posts' in p && 'type' in p)
+            .filter(p => 'posts' in p && 'type' in p)
             .map(p => p.id);
           
           const childIdeaIds = lineageData.children
-            .filter(c => 'title' in c && 'summary' in c && 'creatorIds' in c)
+            .filter(c => 'summary' in c && 'creatorIds' in c)
             .map(c => c.id);
           
           actions.updateIdea(ideaId, {
@@ -697,9 +694,9 @@ export function createApiActions(
               hasType: 'type' in parent
             });
             
-            // ✅ Type guard pour déterminer le type de l'entité
-            if ('title' in parent && 'summary' in parent && 'creatorIds' in parent) {
-              // C'est une Idea
+            // ✅ Type guard pour déterminer le type de l'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
               console.log(`    ✓ Identifié comme Idea: ${parent.id}`);
               const idea = boundSelectors.getIdeaById(parent.id);
               if (!idea) {
@@ -722,8 +719,8 @@ export function createApiActions(
                 level: -1,
                 relationshipType: 'parent' as const
               };
-            } else if ('content' in parent && 'authorId' in parent && !('posts' in parent)) {
-              // C'est un Post
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
               console.log(`    ✓ Identifié comme Post: ${parent.id}`);
               const post = boundSelectors.getPostById(parent.id);
               if (!post) {
@@ -741,8 +738,8 @@ export function createApiActions(
                 level: -1,
                 relationshipType: 'parent' as const
               };
-            } else if ('title' in parent && 'posts' in parent && 'type' in parent) {
-              // C'est un DiscussionTopic
+            } else if ('posts' in parent && 'type' in parent) {
+              // C'est un DiscussionTopic (a posts ET type)
               console.log(`    ✓ Identifié comme DiscussionTopic: ${parent.id}`);
               const discussion = boundSelectors.getDiscussionTopicById(parent.id);
               if (!discussion) {
