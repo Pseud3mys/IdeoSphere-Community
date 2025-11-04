@@ -19,6 +19,9 @@ export function PostDetailPageWrapper() {
   const params = useParams<{ postId?: string; contentId?: string; '*'?: string }>();
   const postId = params['*'] || params.contentId || params.postId;
   
+  // ✅ Ne pas enlever le préfixe 'posts/' car les IDs dans les données mockées l'incluent
+  // Les IDs sont au format 'posts/1', 'posts/2', etc.
+  
   const navigate = useNavigate();
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();

@@ -68,7 +68,9 @@ export function useNavigationActions() {
         
         // 5. Naviguer vers la page de détail avec React Router
         // Utiliser le format unifié /content/:id avec l'ID préfixé
-        navigate(`/content/${ideaId}`);
+        // Ajouter le préfixe 'ideas/' si ce n'est pas déjà présent
+        const prefixedId = ideaId.startsWith('ideas/') ? ideaId : `ideas/${ideaId}`;
+        navigate(`/content/${prefixedId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
       }
@@ -96,7 +98,9 @@ export function useNavigationActions() {
         
         // 3. Naviguer vers la page de détail avec React Router
         // Utiliser le format unifié /content/:id avec l'ID préfixé
-        navigate(`/content/${postId}`);
+        // Ajouter le préfixe 'posts/' si ce n'est pas déjà présent
+        const prefixedId = postId.startsWith('posts/') ? postId : `posts/${postId}`;
+        navigate(`/content/${prefixedId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
       }

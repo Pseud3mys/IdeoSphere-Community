@@ -42,7 +42,7 @@ interface MyIdeasPageProps {
 // Types simplifiés
 type ContributionSection = 'participations' | 'supports';
 type ContentFilter = 'all' | 'posts' | 'ideas';
-type SortOrder = 'recent' | 'popular' | 'alphabetical' | 'oldest';
+type SortOrder = 'recent' | 'trending' | 'popular' | 'alphabetical' | 'oldest';
 
 const contributionSections = [
   { value: 'participations', label: 'Mes participations', icon: Target },
@@ -57,7 +57,8 @@ const contentFilters = [
 
 const sortOptions = [
   { value: 'recent', label: 'Plus récent', icon: Calendar },
-  { value: 'popular', label: 'Plus populaire', icon: TrendingUp },
+  { value: 'trending', label: 'Tendance', icon: TrendingUp },
+  { value: 'popular', label: 'Plus populaire', icon: Heart },
   { value: 'alphabetical', label: 'Alphabétique', icon: ArrowUpAZ },
   { value: 'oldest', label: 'Plus ancien', icon: Calendar },
 ] as const;
@@ -79,7 +80,8 @@ export function MyIdeasPage({
   const {
     getCurrentUser,
     getMyContributions,
-    getUserById
+    getUserById,
+    getAllDiscussionTopics
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -173,15 +175,38 @@ export function MyIdeasPage({
       case 'oldest':
         feedItems.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
         break;
-      case 'popular':
+      case 'trending': {
+        // Importer les utilitaires de tendance
+        const { getPostTrendingScore, getIdeaTrendingScore } = require('../utils/trendingUtils');
+        const allDiscussions = getAllDiscussionTopics();
+        
         feedItems.sort((a, b) => {
-          const aSupports = a.type === 'post' ? (a.supporters?.length || 0) : (a.supporters?.length || 0);
-          const aPopularity = a.type === 'post' ? aSupports + (a.replies?.length || 0) : aSupports;
-          const bSupports = b.type === 'post' ? (b.supporters?.length || 0) : (b.supporters?.length || 0);
-          const bPopularity = b.type === 'post' ? bSupports + (b.replies?.length || 0) : bSupports;
-          return bPopularity - aPopularity;
+          const aScore = a.type === 'post' 
+            ? getPostTrendingScore(a)
+            : getIdeaTrendingScore(a, allDiscussions);
+          const bScore = b.type === 'post'
+            ? getPostTrendingScore(b)
+            : getIdeaTrendingScore(b, allDiscussions);
+          return bScore - aScore;
         });
         break;
+      }
+      case 'popular': {
+        // Importer les utilitaires pour le comptage unique
+        const { getUniqueEngagementForPost, getUniqueEngagementForIdea } = require('../utils/trendingUtils');
+        const allDiscussions = getAllDiscussionTopics();
+        
+        feedItems.sort((a, b) => {
+          const aEngagement = a.type === 'post' 
+            ? getUniqueEngagementForPost(a)
+            : getUniqueEngagementForIdea(a, allDiscussions);
+          const bEngagement = b.type === 'post'
+            ? getUniqueEngagementForPost(b)
+            : getUniqueEngagementForIdea(b, allDiscussions);
+          return bEngagement - aEngagement;
+        });
+        break;
+      }
       case 'alphabetical':
         feedItems.sort((a, b) => {
           const aTitle = a.type === 'post' ? a.content.substring(0, 50) : a.title;
@@ -207,44 +232,74 @@ export function MyIdeasPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Header personnel */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <Avatar className="w-12 h-12 ring-3 ring-blue-100">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-            <AvatarFallback className="bg-gradient-to-br from-[#4f75ff] to-purple-600 text-white">
-              {currentUser.name.slice(0, 2)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-2xl text-gray-900">Mes contributions</h1>
-            <p className="text-gray-600">Votre activité sur IdeoSphere</p>
+      {/* Header compact */}
+      <div className="mb-6">
+        {/* Version desktop */}
+        <div className="hidden sm:flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <Avatar className="w-10 h-10 ring-2 ring-blue-100">
+              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+              <AvatarFallback className="bg-gradient-to-br from-[#4f75ff] to-purple-600 text-white text-sm">
+                {currentUser.name.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-xl text-gray-900">Mes contributions</h1>
+              <p className="text-sm text-gray-600">Votre activité personnelle</p>
+            </div>
           </div>
-        </div>
-        
-        {/* Statistiques simples */}
-        <div className="flex items-center justify-center space-x-6 text-sm">
-          <div className="flex flex-col items-center">
+          
+          {/* Stats compactes à droite */}
+          <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-1 text-[#4f75ff]">
               <Target className="w-4 h-4" />
-              <span>{stats.participations}</span>
+              <span className="font-medium">{stats.participations}</span>
             </div>
-            <span className="text-xs text-gray-500">Participations</span>
-          </div>
-          <div className="flex flex-col items-center">
             <div className="flex items-center space-x-1 text-green-600">
               <Heart className="w-4 h-4" />
-              <span>{stats.supports}</span>
+              <span className="font-medium">{stats.supports}</span>
             </div>
-            <span className="text-xs text-gray-500">Soutiens</span>
-          </div>
-          <div className="flex flex-col items-center">
             <div className="flex items-center space-x-1 text-purple-600">
               <Lightbulb className="w-4 h-4" />
-              <span>{stats.myCreations}</span>
+              <span className="font-medium">{stats.myCreations}</span>
             </div>
-            <span className="text-xs text-gray-500">Créations</span>
           </div>
+        </div>
+
+        {/* Version mobile */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center space-x-3 mb-3">
+            <Avatar className="w-10 h-10 ring-2 ring-blue-100">
+              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+              <AvatarFallback className="bg-gradient-to-br from-[#4f75ff] to-purple-600 text-white text-sm">
+                {currentUser.name.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h1 className="text-xl text-gray-900">Mes contributions</h1>
+              <div className="flex items-center space-x-3 text-xs mt-1">
+                <span className="flex items-center space-x-1 text-[#4f75ff]">
+                  <Target className="w-3.5 h-3.5" />
+                  <span>{stats.participations}</span>
+                </span>
+                <span className="flex items-center space-x-1 text-green-600">
+                  <Heart className="w-3.5 h-3.5" />
+                  <span>{stats.supports}</span>
+                </span>
+                <span className="flex items-center space-x-1 text-purple-600">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  <span>{stats.myCreations}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bandeau info intégré */}
+        <div className="bg-purple-50/50 border border-purple-100 rounded-lg px-3 py-2">
+          <p className="text-xs text-gray-600 text-center">
+            🎯 Espace personnel • Seules vos contributions sont visibles ici
+          </p>
         </div>
       </div>
 

@@ -69,6 +69,7 @@ export function DiscoveryPage({
     getHomePageData, 
     getCurrentUser,
     getUserById,
+    getAllDiscussionTopics,
     actions
   } = useEntityStoreSimple();
 
@@ -111,32 +112,48 @@ export function DiscoveryPage({
       case 'chronological':
         return items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       
-      case 'trending':
+      case 'trending': {
+        // ✅ Utiliser l'algorithme de tendance avec engagement unique
+        const { getPostTrendingScore, getIdeaTrendingScore } = require('../utils/trendingUtils');
+        const allDiscussions = getAllDiscussionTopics();
+        
         return items
           .sort((a, b) => {
             const scoreA = a.type === 'post' 
-              ? (a.supporters?.length || 0) + a.replies.length * 2 
-              : (a.supporters?.length || 0) + (a.discussionIds?.length || 0) * 2;
-            const scoreB = b.type === 'post' 
-              ? (b.supporters?.length || 0) + b.replies.length * 2 
-              : (b.supporters?.length || 0) + (b.discussionIds?.length || 0) * 2;
+              ? getPostTrendingScore(a)
+              : getIdeaTrendingScore(a, allDiscussions);
+            const scoreB = b.type === 'post'
+              ? getPostTrendingScore(b)
+              : getIdeaTrendingScore(b, allDiscussions);
             return scoreB - scoreA;
           })
           .slice(0, 20);
+      }
       
-      default: // 'default'
-        // Algorithme "par défaut" - mix équilibré récent + engagement
+      default: { // 'default'
+        // Algorithme "par défaut" - mix équilibré récent + engagement (utilisateurs uniques)
+        const { getUniqueEngagementForPost, getUniqueEngagementForIdea, getLineageScore } = require('../utils/trendingUtils');
+        const allDiscussions = getAllDiscussionTopics();
+        
         return items.sort((a, b) => {
           const now = Date.now();
           const ageA = (now - a.createdAt.getTime()) / (1000 * 60 * 60); // en heures
           const ageB = (now - b.createdAt.getTime()) / (1000 * 60 * 60);
           
-          const engagementA = a.type === 'post' 
-            ? (a.supporters?.length || 0) + a.replies.length * 1.5
-            : (a.supporters?.length || 0) + (a.discussionIds?.length || 0) * 1.5;
-          const engagementB = b.type === 'post' 
-            ? (b.supporters?.length || 0) + b.replies.length * 1.5
-            : (b.supporters?.length || 0) + (b.discussionIds?.length || 0) * 1.5;
+          // Engagement basé sur les utilisateurs uniques
+          const uniqueEngagementA = a.type === 'post' 
+            ? getUniqueEngagementForPost(a)
+            : getUniqueEngagementForIdea(a, allDiscussions);
+          const uniqueEngagementB = b.type === 'post'
+            ? getUniqueEngagementForPost(b)
+            : getUniqueEngagementForIdea(b, allDiscussions);
+          
+          // Bonus pour le lineage (idées seulement)
+          const lineageA = a.type === 'idea' ? getLineageScore(a) * 0.3 : 0;
+          const lineageB = b.type === 'idea' ? getLineageScore(b) * 0.3 : 0;
+          
+          const engagementA = uniqueEngagementA + lineageA;
+          const engagementB = uniqueEngagementB + lineageB;
           
           // Score combiné : engagement / âge (plus récent = meilleur)
           const scoreA = engagementA / Math.max(ageA / 24, 0.1); // normaliser par jour
@@ -144,6 +161,7 @@ export function DiscoveryPage({
           
           return scoreB - scoreA;
         });
+      }
     }
   };
 
@@ -255,32 +273,65 @@ export function DiscoveryPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Header accueillant */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center space-x-2 mb-3">
-          <Sparkles className="w-6 h-6 text-blue-500" />
-          <h1 className="text-2xl text-gray-900">Fil de la communauté</h1>
-          <Sparkles className="w-6 h-6 text-blue-500" />
+      {/* Header compact */}
+      <div className="mb-6">
+        {/* Version desktop */}
+        <div className="hidden sm:flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <Sparkles className="w-5 h-5 text-blue-500" />
+            <div>
+              <h1 className="text-xl text-gray-900">Fil de la communauté</h1>
+              <p className="text-sm text-gray-600">Découvrez les idées et conversations</p>
+            </div>
+          </div>
+          
+          {/* Stats compactes à droite */}
+          <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <div className="flex items-center space-x-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{totalPosts}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Lightbulb className="w-4 h-4" />
+              <span>{totalIdeas}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Users className="w-4 h-4" />
+              <span>{totalParticipants}</span>
+            </div>
+          </div>
         </div>
-        <p className="text-gray-600 max-w-md mx-auto">
-          Découvrez les conversations et idées de votre communauté
-        </p>
-        
-        {/* Stats rassurantes */}
-        <div className="flex items-center justify-center space-x-6 mt-4 text-sm text-gray-500">
-          <div className="flex items-center space-x-1">
-            <MessageSquare className="w-4 h-4" />
-            <span>{totalPosts} contributions</span>
+
+        {/* Version mobile */}
+        <div className="sm:hidden text-center mb-3">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <Sparkles className="w-5 h-5 text-blue-500" />
+            <h1 className="text-xl text-gray-900">Fil de la communauté</h1>
           </div>
-          <div className="flex items-center space-x-1">
-            <Lightbulb className="w-4 h-4" />
-            <span>{totalIdeas} projets</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Users className="w-4 h-4" />
-            <span>{totalParticipants} soutiens</span>
+          <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+            <span className="flex items-center space-x-1">
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>{totalPosts}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <Lightbulb className="w-3.5 h-3.5" />
+              <span>{totalIdeas}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <Users className="w-3.5 h-3.5" />
+              <span>{totalParticipants}</span>
+            </span>
           </div>
         </div>
+
+        {/* Bandeau info intégré */}
+        {currentUser && currentUser.id !== 'unknown' && (
+          <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-3 py-2 mt-3">
+            <p className="text-xs text-gray-600 text-center">
+              💡 Retrouvez vos propres contributions dans <span className="font-medium text-blue-700">Mes contributions</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Navigation améliorée */}

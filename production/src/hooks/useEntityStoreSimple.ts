@@ -38,9 +38,20 @@ export function useEntityStoreSimple() {
       const apiActions = createApiActions(store, actions, boundSelectors, storeUpdater);
       
       // Charger TOUTES les données mockées
-      apiActions.loadInitialData().then((success) => {
+      apiActions.loadInitialData().then(async (success) => {
         if (success) {
           console.log('✅ [useEntityStoreSimple] Données initiales chargées avec succès');
+          
+          // Si un currentUserId est restauré depuis localStorage, vérifier qu'il existe dans le store
+          if (store.currentUserId && store.currentUserId !== 'unknown-user') {
+            const userInStore = selectors.getUserById(store)(store.currentUserId);
+            if (!userInStore) {
+              console.warn(`⚠️ [useEntityStoreSimple] Utilisateur restauré ${store.currentUserId} non trouvé dans le store. Retour à unknownUser.`);
+              actions.setCurrentUserId(null);
+            } else {
+              console.log(`✅ [useEntityStoreSimple] Utilisateur ${userInStore.name} restauré depuis localStorage`);
+            }
+          }
         } else {
           console.error('❌ [useEntityStoreSimple] Échec du chargement des données initiales');
         }

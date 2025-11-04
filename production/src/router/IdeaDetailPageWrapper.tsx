@@ -19,6 +19,9 @@ export function IdeaDetailPageWrapper() {
   const params = useParams<{ ideaId?: string; contentId?: string; '*'?: string }>();
   const ideaId = params['*'] || params.contentId || params.ideaId;
   
+  // ✅ Ne pas enlever le préfixe 'ideas/' car les IDs dans les données mockées l'incluent
+  // Les IDs sont au format 'ideas/1', 'ideas/2', etc.
+  
   const navigate = useNavigate();
   const navigation = useNavigationActions();
   const { getIdeaById, actions } = useEntityStoreSimple();
