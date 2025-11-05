@@ -52,8 +52,9 @@ export interface RawContent {
   creators: string[]; // List of user _ids
   tags?: string[];
   location?: string;
-  // Idea-specific
   title?: string;
+  groupIds?: string[]; // List of group _ids
+  // Idea-specific
   description?: string;
   summary?: string;
   supporters?: string[]; // List of user _ids
@@ -161,6 +162,7 @@ export function transformIdeaCardToIdea(ideaCard: any): Idea {
     createdAt: new Date(ideaCard.createdAt),
     tags: ideaCard.tags || [],
     supporters: ideaCard.supporters || [],
+    groupIds: ideaCard.groupIds || [],
     // Champs chargés progressivement - initialisés vides
     discussionIds: [], // Chargé dans onglet discussions
     ratingCriteria: defaultRatingCriteria, // CORRIGÉ
@@ -187,6 +189,7 @@ export function transformPostCardToPost(postCard: any): Post {
     authorId: postCard.authorId,
     createdAt: new Date(postCard.createdAt),
     supporters: postCard.supporters || [],
+    groupIds: postCard.groupIds || [],
     tags: postCard.tags || [],
     // Champs chargés progressivement - initialisés vides
     replies: [], // Chargé dans onglet discussions
@@ -248,6 +251,7 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
     authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),
     supporters: raw.supporters || [],
+    groupIds: raw.groupIds || [],
     replies: (raw.comments || []).map(comment => transformComment(comment, usersMap)),
     tags: raw.tags || [],
     location: raw.location || '',
@@ -274,6 +278,7 @@ export const transformIdea = (raw: RawIdea): Idea => {
     supporters: raw.supporters || [],
     status: 'published' as IdeaStatus, // Default status
     tags: raw.tags || [],
+    groupIds: raw.groupIds || [],
     location: raw.location || '',
     // Initialize progressive load fields as empty
     discussionIds: [],
