@@ -135,15 +135,23 @@ export async function leaveGroup(userId: string, groupId: string): Promise<boole
 }
 
 /**
- * Récupère les adhésions (memberships) d'un utilisateur.
- * GET /api/users/<key>/memberships (route fictive)
- * * NOTE FACTICE: Fonction ajoutée temporairement pour supporter le hook useGroupActions.
+ * Récupère les adhésions (memberships) actives d'un utilisateur.
+ * GET /api/users/<key>/memberships
  */
 export async function fetchUserGroupMemberships(userId: string): Promise<GroupMembership[]> {
   try {
-    // Simuler une réponse vide réussie en attendant l'implémentation API
-    console.log(`📦 [API groupService.fetchUserGroupMemberships] Simulation pour ${userId}`);
-    return [];
+    // Extrait la clé de l'ID (ex: "users/123" -> "123")
+    const userKey = userId.split('/')[1];
+    
+    // Appelle la nouvelle route backend
+    const response = await apiClient.get<RawMembership[]>(`/users/${userKey}/memberships`);
+    
+    // Transforme les données brutes en objets GroupMembership
+    const memberships = response.data.map(transformMembership);
+    
+    console.log(`📦 [API groupService.fetchUserGroupMemberships] ${memberships.length} memberships actifs chargés pour ${userId}`);
+    return memberships;
+    
   } catch (error) {
     console.error(`❌ [API groupService.fetchUserGroupMemberships] ${userId}`, error);
     return [];
@@ -204,7 +212,7 @@ export async function confirmGroupFounder(pendingId: string, userId: string): Pr
  * Récupère les groupes d'un utilisateur (actifs + pending).
  * GET /api/groups/my-groups
  */
-export async function fetchMyGroupsOnApi(userId: string): Promise<{
+export async function fetchMyGroups(userId: string): Promise<{
   activeGroups: Group[];
   pendingGroups: PendingGroupCreation[];
 }> {
@@ -217,10 +225,10 @@ export async function fetchMyGroupsOnApi(userId: string): Promise<{
     const activeGroups = response.data.activeGroups.map(transformGroup);
     const pendingGroups = response.data.pendingGroups.map(transformPendingGroup);
     
-    console.log(`📦 [API groupService.fetchMyGroupsOnApi] ${activeGroups.length} actifs, ${pendingGroups.length} pending pour ${userId}`);
+    console.log(`📦 [API groupService.fetchMyGroups] ${activeGroups.length} actifs, ${pendingGroups.length} pending pour ${userId}`);
     return { activeGroups, pendingGroups };
   } catch (error) {
-    console.error(`❌ [API groupService.fetchMyGroupsOnApi] ${userId}`, error);
+    console.error(`❌ [API groupService.fetchMyGroups] ${userId}`, error);
     return { activeGroups: [], pendingGroups: [] };
   }
 }
