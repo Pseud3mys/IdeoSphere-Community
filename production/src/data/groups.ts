@@ -13,7 +13,7 @@ import { Group, GroupMembership } from "../types";
 
 export const groups: Group[] = [
   {
-    id: 'g1',
+    id: 'groups/g1',
     name: 'Commission Culture',
     description: 'Groupe de travail dédié au développement des activités culturelles sur le territoire. Nous coordonnons les initiatives, organisons des événements et soutenons les acteurs culturels locaux.',
     shortDescription: 'Développement des activités culturelles territoriales',
@@ -30,7 +30,7 @@ export const groups: Group[] = [
     isActive: true,
   },
   {
-    id: 'g2',
+    id: 'groups/g2',
     name: 'Culture Locale',
     description: 'Communauté ouverte pour partager et développer toutes les initiatives culturelles locales : spectacles, expositions, ateliers, festivals. Un espace d\'échange pour citoyens, artistes et associations.',
     shortDescription: 'Initiatives culturelles citoyennes et associatives',
@@ -47,7 +47,7 @@ export const groups: Group[] = [
     isActive: true,
   },
   {
-    id: 'g3',
+    id: 'groups/g3',
     name: 'GT Mobilités 2025',
     description: 'Groupe de travail transversal pour repenser les mobilités sur le territoire d\'ici 2025. Focus sur les modes doux, les transports collectifs et l\'accessibilité pour tous.',
     shortDescription: 'Mobilités durables et accessibles sur le territoire',
@@ -64,7 +64,7 @@ export const groups: Group[] = [
     isActive: true,
   },
   {
-    id: 'g4',
+    id: 'groups/g4',
     name: 'Commission Environnement',
     description: 'Groupe de travail pour toutes les questions environnementales : transition écologique, gestion des déchets, biodiversité, énergie. Collaboration avec les autres commissions pour intégrer l\'environnement dans tous les projets.',
     shortDescription: 'Transition écologique et protection de l\'environnement',
@@ -81,7 +81,7 @@ export const groups: Group[] = [
     isActive: true,
   },
   {
-    id: 'g5',
+    id: 'groups/g5',
     name: 'Quartier Nord',
     description: 'Groupe local du Quartier Nord pour les habitants et acteurs du quartier. Échanges sur la vie locale, projets de proximité, événements de quartier et amélioration du cadre de vie.',
     shortDescription: 'Vie locale et projets du Quartier Nord',
@@ -112,30 +112,30 @@ export const groups: Group[] = [
  */
 export const groupMemberships: GroupMembership[] = [
   // Groupe g1 - Commission Culture
-  { userId: '1', groupId: 'g1', role: 'animator', joinedAt: new Date('2024-01-15'), isActive: true },
-  { userId: '2', groupId: 'g1', role: 'member', joinedAt: new Date('2024-01-16'), isActive: true },
-  { userId: '3', groupId: 'g1', role: 'member', joinedAt: new Date('2024-01-17'), isActive: true },
+  { userId: '1', groupId: 'groups/g1', role: 'animator', joinedAt: new Date('2024-01-15'), isActive: true },
+  { userId: '2', groupId: 'groups/g1', role: 'member', joinedAt: new Date('2024-01-16'), isActive: true },
+  { userId: '3', groupId: 'groups/g1', role: 'member', joinedAt: new Date('2024-01-17'), isActive: true },
 
   // Groupe g2 - Culture Locale
-  { userId: '2', groupId: 'g2', role: 'animator', joinedAt: new Date('2024-02-01'), isActive: true },
-  { userId: '4', groupId: 'g2', role: 'animator', joinedAt: new Date('2024-02-01'), isActive: true },
-  { userId: '1', groupId: 'g2', role: 'member', joinedAt: new Date('2024-02-02'), isActive: true },
-  { userId: '5', groupId: 'g2', role: 'member', joinedAt: new Date('2024-02-05'), isActive: true },
+  { userId: '2', groupId: 'groups/g2', role: 'animator', joinedAt: new Date('2024-02-01'), isActive: true },
+  { userId: '4', groupId: 'groups/g2', role: 'animator', joinedAt: new Date('2024-02-01'), isActive: true },
+  { userId: '1', groupId: 'groups/g2', role: 'member', joinedAt: new Date('2024-02-02'), isActive: true },
+  { userId: '5', groupId: 'groups/g2', role: 'member', joinedAt: new Date('2024-02-05'), isActive: true },
 
   // Groupe g3 - GT Mobilités 2025
-  { userId: '3', groupId: 'g3', role: 'animator', joinedAt: new Date('2024-03-10'), isActive: true },
-  { userId: '1', groupId: 'g3', role: 'member', joinedAt: new Date('2024-03-11'), isActive: true },
-  { userId: '12', groupId: 'g3', role: 'member', joinedAt: new Date('2024-03-12'), isActive: true },
+  { userId: '3', groupId: 'groups/g3', role: 'animator', joinedAt: new Date('2024-03-10'), isActive: true },
+  { userId: '1', groupId: 'groups/g3', role: 'member', joinedAt: new Date('2024-03-11'), isActive: true },
+  { userId: '12', groupId: 'groups/g3', role: 'member', joinedAt: new Date('2024-03-12'), isActive: true },
 
   // Groupe g4 - Commission Environnement
-  { userId: '5', groupId: 'g4', role: 'animator', joinedAt: new Date('2024-01-20'), isActive: true },
-  { userId: '2', groupId: 'g4', role: 'member', joinedAt: new Date('2024-01-21'), isActive: true },
-  { userId: '4', groupId: 'g4', role: 'member', joinedAt: new Date('2024-01-22'), isActive: true },
+  { userId: '5', groupId: 'groups/g4', role: 'animator', joinedAt: new Date('2024-01-20'), isActive: true },
+  { userId: '2', groupId: 'groups/g4', role: 'member', joinedAt: new Date('2024-01-21'), isActive: true },
+  { userId: '4', groupId: 'groups/g4', role: 'member', joinedAt: new Date('2024-01-22'), isActive: true },
 
   // Groupe g5 - Quartier Nord
-  { userId: '12', groupId: 'g5', role: 'animator', joinedAt: new Date('2024-02-15'), isActive: true },
-  { userId: '1', groupId: 'g5', role: 'member', joinedAt: new Date('2024-02-16'), isActive: true },
-  { userId: '3', groupId: 'g5', role: 'member', joinedAt: new Date('2024-02-17'), isActive: true },
+  { userId: '12', groupId: 'groups/g5', role: 'animator', joinedAt: new Date('2024-02-15'), isActive: true },
+  { userId: '1', groupId: 'groups/g5', role: 'member', joinedAt: new Date('2024-02-16'), isActive: true },
+  { userId: '3', groupId: 'groups/g5', role: 'member', joinedAt: new Date('2024-02-17'), isActive: true },
 ];
 
 export default groups;

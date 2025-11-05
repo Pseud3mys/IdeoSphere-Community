@@ -1,6 +1,7 @@
 import { User } from '../types';
 import logoImage from '../assets/logo.png';
 import { AuthButtons } from './AuthButtons';
+import { clientConfig } from '../config/clientConfig';
 
 interface AppHeaderProps {
   currentUserData: User | null;
@@ -25,9 +26,9 @@ export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelp
                 <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h1 className="text-xl text-gray-900">IdeoSphere</h1>
+                <h1 className="text-xl text-gray-900">{clientConfig.identity.appName}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Votre communauté d'idées
+                  {clientConfig.identity.appTagline}
                 </p>
               </div>
             </div>
@@ -38,9 +39,9 @@ export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelp
             <button
               onClick={onHelpClick}
               className="w-10 h-10 sm:w-8 sm:h-8 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center text-primary transition-colors text-sm"
-              title="Aide et visite guidée"
+              title={clientConfig.navigation.helpButton.title}
             >
-              ?
+              {clientConfig.navigation.helpButton.icon}
             </button>
             
             {/* Composant réutilisable pour l'authentification */}

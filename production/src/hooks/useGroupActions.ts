@@ -229,7 +229,7 @@ export function useGroupActions() {
     }
     
     try {
-      const { activeGroups, pendingGroups } = await groupService.fetchMyGroupsOnApi(currentUser.id);
+      const { activeGroups, pendingGroups } = await groupService.fetchMyGroups(currentUser.id);
       
       // Ajouter les groupes actifs au store
       activeGroups.forEach(group => actions.addGroup(group));

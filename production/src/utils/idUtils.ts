@@ -42,6 +42,31 @@ export function cleanDiscussionId(discussionId: string): string {
 }
 
 /**
+ * Nettoie un ID de groupe en supprimant le préfixe "group/" ou "groups/" si présent
+ * @param groupId - ID potentiellement préfixé
+ * @returns ID nettoyé
+ * @example
+ * cleanGroupId("groups/g1") // "g1"
+ * cleanGroupId("groups/pg1") // "pg1"
+ * cleanGroupId("g1") // "g1"
+ */
+export function cleanGroupId(groupId: string): string {
+  return groupId.replace(/^groups?\//, '');
+}
+
+/**
+ * Ajoute le préfixe "groups/" à un ID s'il n'est pas déjà présent
+ * @param groupId - ID potentiellement sans préfixe
+ * @returns ID avec préfixe
+ * @example
+ * ensureGroupPrefix("g1") // "groups/g1"
+ * ensureGroupPrefix("groups/g1") // "groups/g1"
+ */
+export function ensureGroupPrefix(groupId: string): string {
+  return groupId.startsWith('groups/') ? groupId : `groups/${groupId}`;
+}
+
+/**
  * Nettoie un ID générique en supprimant tout préfixe de type "type/"
  * @param id - ID potentiellement préfixé
  * @returns ID nettoyé

@@ -18,6 +18,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { clientConfig } from '../config/clientConfig';
 import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner@2.0.3';
 import { GroupTypeBadge } from './group/GroupTypeBadge';
@@ -217,7 +218,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: Commission Culture"
+                placeholder={clientConfig.examples.group.namePlaceholder}
                 maxLength={100}
               />
             </div>
@@ -276,7 +277,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                 id="location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ex: Toulouse"
+                placeholder={clientConfig.examples.group.locationPlaceholder}
               />
             </div>
 
@@ -286,7 +287,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                 id="tags"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                placeholder="Ex: culture, événements, art"
+                placeholder={clientConfig.examples.group.tagsPlaceholder}
               />
             </div>
 

@@ -12,9 +12,12 @@ import { Lightbulb, MessageSquare, Info, ArrowLeft, Plus, FileText } from "lucid
 import { Button } from "./ui/button";
 import { CreateQuickPost } from "./CreateQuickPost";
 import { Dialog, DialogContent } from "./ui/dialog";
+import { ensureGroupPrefix } from "../utils/idUtils";
 
 export function GroupHubPage() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId: urlGroupId } = useParams<{ groupId: string }>();
+  // Ajouter le préfixe "groups/" si nécessaire
+  const groupId = urlGroupId ? ensureGroupPrefix(urlGroupId) : undefined;
   const navigate = useNavigate();
   const {
     getGroupById,

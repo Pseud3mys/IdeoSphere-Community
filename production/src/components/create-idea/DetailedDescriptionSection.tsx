@@ -4,6 +4,7 @@ import { RichTextEditor } from '../RichTextEditor';
 import { FileText } from 'lucide-react';
 import { Post } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
+import { clientConfig } from '../../config/clientConfig';
 
 interface DetailedDescriptionSectionProps {
   description: string;
@@ -39,22 +40,11 @@ export function DetailedDescriptionSection({
         <RichTextEditor
           value={description}
           onChange={onDescriptionChange}
-          placeholder={`## Contexte et enjeu
- 
-${sourcePost && sourcePostAuthor ? `Suite au post de ${sourcePostAuthor.name}, je pense que...` : 'Décrivez le problème ou l\'opportunité que vous avez identifié...'}
- 
-## Solution proposée
- 
-Expliquez en détail votre idée et comment elle répond au besoin...
- 
-## Mise en œuvre
- 
-- Étape 1 : ...
-- Étape 2 : ...
- 
-## Impact attendu
- 
-Quels bénéfices concrets pour les membres de la communauté ?`}
+          placeholder={
+            sourcePost && sourcePostAuthor
+              ? clientConfig.examples.idea.descriptionTemplate.withSourcePost(sourcePostAuthor.name)
+              : clientConfig.examples.idea.descriptionTemplate.withoutSourcePost
+          }
           minHeight="400px"
         />
         <div className="mt-2 text-xs text-muted-foreground">

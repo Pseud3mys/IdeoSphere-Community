@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { X, ArrowRight, ArrowLeft, Lightbulb, MessageCircle, Users, Star, Heart, Eye } from 'lucide-react';
+import { clientConfig, getMemberTerm } from '../config/clientConfig';
 
 interface OnboardingTourProps {
   isVisible: boolean;
@@ -16,7 +17,7 @@ export function OnboardingTour({ isVisible, onClose, onComplete }: OnboardingTou
   const steps = [
     {
       title: "Bienvenue dans votre communauté !",
-      description: "Vous êtes maintenant dans IdeoSphere, l'espace collaboratif de votre ville.",
+      description: `Vous êtes maintenant dans ${clientConfig.identity.appName}, l'espace collaboratif de votre ${clientConfig.terminology.territory.local}.`,
       icon: Users,
       content: (
         <div className="space-y-4">
@@ -25,7 +26,7 @@ export function OnboardingTour({ isVisible, onClose, onComplete }: OnboardingTou
               <span className="text-white text-2xl">🎉</span>
             </div>
             <p className="text-gray-600">
-              Ici, vous découvrirez les idées de vos concitoyens et pourrez partager les vôtres. 
+              Ici, vous découvrirez les idées de vos {getMemberTerm({ plural: true })} et pourrez partager les vôtres. 
               Prenons quelques minutes pour vous orienter !
             </p>
           </div>
@@ -34,7 +35,7 @@ export function OnboardingTour({ isVisible, onClose, onComplete }: OnboardingTou
     },
     {
       title: "Deux types de contenus",
-      description: "IdeoSphere distingue les Posts (messages courts) et les Projets (propositions détaillées).",
+      description: `${clientConfig.identity.appName} distingue les Posts (messages courts) et les Projets (propositions détaillées).`,
       icon: MessageCircle,
       content: (
         <div className="space-y-4">

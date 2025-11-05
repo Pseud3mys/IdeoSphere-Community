@@ -8,6 +8,7 @@ import { RichTextEditor } from '../RichTextEditor';
 import { Lightbulb, FileText, MapPin } from 'lucide-react';
 import { Post } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
+import { clientConfig } from '../../config/clientConfig';
 
 interface BasicIdeaFormProps {
   title: string;
@@ -58,7 +59,7 @@ export function BasicIdeaForm({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Plateforme d'innovation collaborative"
+              placeholder={clientConfig.examples.idea.titlePlaceholder}
               required
               className="text-lg"
             />
@@ -75,7 +76,7 @@ export function BasicIdeaForm({
               id="summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="Décrivez votre idée en une phrase percutante qui donne envie d'en savoir plus..."
+              placeholder={clientConfig.examples.idea.summaryPlaceholder}
               rows={2}
               required
             />
@@ -96,7 +97,7 @@ export function BasicIdeaForm({
                 id="location"
                 value={location || ''}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ex: Place de la République, Quartier Centre-ville"
+                placeholder={clientConfig.examples.idea.locationPlaceholder}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">

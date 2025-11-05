@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { CollaborationQRCode } from '../CollaborationQRCode';
+import { clientConfig } from '../../config/clientConfig';
 import { 
   Users, 
   QrCode, 
@@ -199,7 +200,7 @@ export function CollaborationForm({
               <Input
                 value={coCreatorSearch}
                 onChange={(e) => setCoCreatorSearch(e.target.value)}
-                placeholder="Rechercher un membre à inviter comme co-créateur..."
+                placeholder={clientConfig.examples.collaboration.searchPlaceholder}
               />
               {coCreatorSearch && filteredUsers.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-40 overflow-y-auto">

@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { CollaborationQRCode } from '../CollaborationQRCode';
 import { ContentLinkDialog } from '../ContentLinkDialog';
+import { clientConfig } from '../../config/clientConfig';
 import { 
   Users, 
   QrCode, 
@@ -125,7 +126,7 @@ export function CollaborationSection({
               <Input
                 value={coCreatorSearch}
                 onChange={(e) => onCoCreatorSearchChange(e.target.value)}
-                placeholder="Rechercher un membre à inviter comme co-créateur..."
+                placeholder={clientConfig.examples.collaboration.searchPlaceholder}
               />
               {coCreatorSearch && filteredUsers.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-40 overflow-y-auto">

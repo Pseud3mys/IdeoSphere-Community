@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, Heart, Target, Users, Zap } from 'lucide-react';
+import { clientConfig } from '../config/clientConfig';
 
 interface AboutPageProps {
   onNavigateBack?: () => void; // Optionnel pour compatibilité
@@ -38,7 +39,7 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
             l'intelligence collective
           </h1>
           <p className="text-lg text-gray-600">
-            IdeoSphere accompagne tous types d'organisations dans la mobilisation de leur communauté 
+            {clientConfig.identity.appName} accompagne tous types d'organisations dans la mobilisation de leur communauté 
             et la transformation d'idées en actions concrètes.
           </p>
         </div>
@@ -47,10 +48,7 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
         <Card className="mb-8 border-gray-200">
           <CardContent className="pt-6">
             <p className="text-lg leading-relaxed text-gray-700">
-              IdeoSphere est une plateforme collaborative open source conçue pour faciliter l'émergence 
-              d'idées et d'actions concrètes au service du changement social et écologique. Notre mission 
-              est de créer un "système nerveux" pour l'intelligence collective, permettant aux communautés 
-              de rassembler leurs énergies militantes et de transformer les bonnes idées en projets réalisables.
+              {clientConfig.identity.appMission}
             </p>
           </CardContent>
         </Card>
@@ -134,12 +132,12 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
             Engagement Open Source
           </h2>
           <p className="text-gray-600 mb-6 leading-relaxed">
-            IdeoSphere est entièrement open source. Nous croyons que les outils de démocratie participative 
+            {clientConfig.identity.appName} est entièrement open source. Nous croyons que les outils de démocratie participative 
             doivent être transparents, auditables et améliorables par la communauté.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" size="sm" asChild>
-              <a href="https://github.com/Pseud3mys/IdeoSphere-Community" target="_blank" rel="noopener noreferrer">
+              <a href={clientConfig.footer.contact.github.url} target="_blank" rel="noopener noreferrer">
                 Voir le code source
               </a>
             </Button>

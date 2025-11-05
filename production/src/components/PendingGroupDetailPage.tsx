@@ -19,9 +19,12 @@ import { Separator } from './ui/separator';
 import { GroupTypeBadge } from './group/GroupTypeBadge';
 import { Loader2, Users, Clock, Check, AlertCircle, ArrowLeft, MapPin, Tag } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { ensureGroupPrefix } from '../utils/idUtils';
 
 export function PendingGroupDetailPage() {
-  const { pendingId } = useParams<{ pendingId: string }>();
+  const { pendingId: urlPendingId } = useParams<{ pendingId: string }>();
+  // Ajouter le préfixe "groups/" si nécessaire
+  const pendingId = urlPendingId ? ensureGroupPrefix(urlPendingId) : undefined;
   const navigate = useNavigate();
   const { getPendingGroupCreationById, getUserById, currentUser, getPendingGroupStatus } = useEntityStoreSimple();
   const { loadPendingGroupDetails, confirmGroupFounder } = useGroupActions();

@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { clientConfig } from '../config/clientConfig';
 
 interface CreateQuickPostProps {
   sourcePost?: Post;
@@ -85,7 +86,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Réflexion sur les réunions virtuelles..."
+                placeholder={clientConfig.examples.post.titlePlaceholder}
                 className="text-base"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -101,7 +102,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Partagez votre réflexion, observation, question ou idée avec la communauté..."
+                placeholder={clientConfig.examples.post.contentPlaceholder}
                 rows={4}
                 required
               />
@@ -121,7 +122,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="post-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ex: Place de la République, Quartier Centre-ville"
+                placeholder={clientConfig.examples.post.locationPlaceholder}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">

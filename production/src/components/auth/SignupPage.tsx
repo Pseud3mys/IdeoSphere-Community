@@ -9,6 +9,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ArrowLeft, UserPlus, MapPin, Calendar, Lock, AlertCircle, CheckCircle2, Shield } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { clientConfig, getSignupDescription } from '../../config/clientConfig';
 
 // SVG Icons pour les connexions sociales
 const GoogleIcon = () => (
@@ -190,10 +191,10 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, onRegisterSSO, pre
               <UserPlus className="w-8 h-8" />
             </div>
             <h1 className="text-2xl mb-2">
-              Rejoignez IdeoSphere
+              Rejoignez {clientConfig.identity.appName}
             </h1>
             <p className="text-muted-foreground">
-              Créez votre compte pour participer pleinement à la vie citoyenne de Le Blanc
+              {getSignupDescription()}
             </p>
           </div>
         </div>
@@ -366,7 +367,7 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, onRegisterSSO, pre
                   max={currentYear - 16}
                   value={formData.birthYear}
                   onChange={(e) => handleInputChange('birthYear', e.target.value)}
-                  placeholder="Ex: 1985"
+                  placeholder={clientConfig.examples.profile.birthYearPlaceholder}
                   required
                   disabled={isLoading}
                 />
@@ -401,12 +402,12 @@ export function SignupPage({ onBack, onSignup, onSocialLogin, onRegisterSSO, pre
                   id="bio"
                   value={formData.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Ex: Passionné(e) d'urbanisme et d'écologie, je souhaite contribuer à l'amélioration de notre ville..."
+                  placeholder={clientConfig.examples.profile.bioPlaceholder}
                   rows={3}
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Cela aide les autres citoyens à mieux comprendre vos motivations
+                  {clientConfig.systemMessages.signupPage.bioHelperText}
                 </p>
               </div>
 

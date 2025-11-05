@@ -18,6 +18,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card } from './ui/card';
+import { clientConfig } from '../config/clientConfig';
 import { Avatar } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
@@ -239,7 +240,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Commission Culture"
+                  placeholder={clientConfig.examples.group.namePlaceholder}
                 />
               </div>
 
@@ -285,7 +286,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <Input
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Ex: Paris, France"
+                  placeholder={clientConfig.examples.group.locationPlaceholder}
                 />
               </div>
 
@@ -295,7 +296,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <Input
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="Ex: culture, événements, festivals"
+                  placeholder={clientConfig.examples.group.tagsPlaceholder}
                 />
               </div>
 

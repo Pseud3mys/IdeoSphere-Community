@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEntityStoreSimple } from './useEntityStoreSimple';
+import { cleanGroupId } from '../utils/idUtils';
 
 /**
  * Hook personnalisé pour la navigation avec React Router
@@ -121,9 +122,11 @@ export function useNavigationActions() {
 
     /**
      * Navigation vers un groupe
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToGroup: (groupId: string) => {
-      navigate(`/groups/${groupId}`);
+      const cleanId = cleanGroupId(groupId);
+      navigate(`/groups/${cleanId}`);
     },
 
     /**
@@ -142,16 +145,20 @@ export function useNavigationActions() {
 
     /**
      * Navigation vers un groupe pending (Phase 2)
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToPendingGroup: (pendingId: string) => {
-      navigate(`/groups/pending/${pendingId}`);
+      const cleanId = cleanGroupId(pendingId);
+      navigate(`/groups/pending/${cleanId}`);
     },
 
     /**
      * Navigation vers la page de gestion d'un groupe (Phase 3)
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToGroupManage: (groupId: string) => {
-      navigate(`/groups/${groupId}/manage`);
+      const cleanId = cleanGroupId(groupId);
+      navigate(`/groups/${cleanId}/manage`);
     },
 
     /**
