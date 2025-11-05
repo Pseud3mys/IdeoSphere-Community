@@ -81,17 +81,25 @@ export async function fetchGroupById(groupId: string): Promise<{ group: Group | 
  * Récupère le feed d'un groupe (idées et posts).
  * GET /api/groups/<key>/feed
  */
-export async function fetchGroupFeed(groupId: string): Promise<{ ideas: Idea[], posts: Post[] }> {
+export async function fetchGroupFeed(groupId: string, userId: string): Promise<{ ideas: Idea[], posts: Post[] }> {
   try {
     const groupKey = groupId.split('/')[1];
-    const response = await apiClient.get<RawFeedData>(`/groups/${groupKey}/feed`);
+    // AJOUT: Extraire la clé de l'utilisateur
+    const userKey = userId.split('/')[1];
+
+    const response = await apiClient.get<RawFeedData>(
+      `/groups/${groupKey}/feed`,
+      { params: { userId: userKey } }
+    );
     
     const { ideas, posts } = transformFeedData(response.data);
     
-    console.log(`📦 [API groupService.fetchGroupFeed] Groupe ${groupId} : ${ideas.length} idées, ${posts.length} posts`);
+    console.log(`📦 [API groupService.fetchGroupFeed] Groupe ${groupId} pour User ${userId} : ${ideas.length} idées, ${posts.length} posts`);
     return { ideas, posts };
+
   } catch (error) {
-    console.error(`❌ [API groupService.fetchGroupFeed] Groupe ${groupId}`, error);
+    // MODIFIÉ: Log d'erreur amélioré pour le débogage
+    console.error(`❌ [API groupService.fetchGroupFeed] Erreur pour Groupe ${groupId}, User ${userId}`, error);
     return { ideas: [], posts: [] };
   }
 }

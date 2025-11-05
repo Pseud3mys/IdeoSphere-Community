@@ -275,13 +275,6 @@ export function GroupHubPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Dialog de création */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
-          <CreateQuickPost onClose={() => setShowCreateDialog(false)} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
