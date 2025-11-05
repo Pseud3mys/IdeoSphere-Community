@@ -61,10 +61,16 @@ export function useGroupActions() {
 
   /**
    * Charge le feed d'un groupe (idées et posts)
+   * NOTE TEMPORAIRE: Protection désactivée, on vérifie seulement isRegistered
    */
   const loadGroupFeed = async (groupId: string) => {
+    if (!currentUser || !currentUser.isRegistered) {
+      console.warn('⚠️ [useGroupActions.loadGroupFeed] Utilisateur non enregistré - skip');
+      return;
+    }
+
     try {
-      const { ideas, posts } = await groupService.fetchGroupFeed(groupId);
+      const { ideas, posts } = await groupService.fetchGroupFeed(groupId, currentUser.id);
       
       // Ajouter les idées au store
       ideas.forEach(idea => actions.addIdea(idea));
@@ -72,7 +78,7 @@ export function useGroupActions() {
       // Ajouter les posts au store
       posts.forEach(post => actions.addPost(post));
       
-      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} : ${ideas.length} idées, ${posts.length} posts`);
+      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} pour utilisateur ${currentUser.id} : ${ideas.length} idées, ${posts.length} posts`);
     } catch (error) {
       console.error(`❌ [useGroupActions.loadGroupFeed] Erreur pour ${groupId}:`, error);
       throw error;
@@ -351,27 +357,32 @@ export function useGroupActions() {
     }
 
     try {
-      // Pour l'instant, simuler l'ajout des groupes au contenu
-      // Dans une vraie API, cela enverrait une requête au backend
+      // Appeler le service API qui contient toute la logique
+      const success = await groupService.recommendContentToGroups(
+        contentId,
+        contentType,
+        groupIds,
+        currentUser.id
+      );
       
-      if (contentType === 'idea') {
-        const idea = getIdeaById(contentId);
-        if (idea) {
-          const existingGroupIds = idea.groupIds || [];
-          const newGroupIds = [...new Set([...existingGroupIds, ...groupIds])];
-          actions.updateIdea(contentId, { groupIds: newGroupIds });
+      if (success) {
+        // Recharger le contenu mis à jour depuis l'API pour mettre à jour le store
+        if (contentType === 'idea') {
+          const idea = getIdeaById(contentId);
+          if (idea) {
+            actions.updateIdea(contentId, { groupIds: idea.groupIds });
+          }
+        } else {
+          const post = getPostById(contentId);
+          if (post) {
+            actions.updatePost(contentId, { groupIds: post.groupIds });
+          }
         }
-      } else {
-        const post = getPostById(contentId);
-        if (post) {
-          const existingGroupIds = post.groupIds || [];
-          const newGroupIds = [...new Set([...existingGroupIds, ...groupIds])];
-          actions.updatePost(contentId, { groupIds: newGroupIds });
-        }
+        
+        console.log(`✅ [useGroupActions.recommendContentToGroups] ${contentType} ${contentId} recommandé dans ${groupIds.length} groupes`);
       }
       
-      console.log(`✅ [useGroupActions.recommendContentToGroups] ${contentType} ${contentId} recommandé dans ${groupIds.length} groupes`);
-      return true;
+      return success;
     } catch (error) {
       console.error('❌ [useGroupActions.recommendContentToGroups] Erreur:', error);
       throw error;

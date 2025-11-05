@@ -10,8 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card } from "./ui/card";
 import { Lightbulb, MessageSquare, Info, ArrowLeft, Plus, FileText } from "lucide-react";
 import { Button } from "./ui/button";
-import { CreateQuickPost } from "./CreateQuickPost";
-import { Dialog, DialogContent } from "./ui/dialog";
 import { ensureGroupPrefix } from "../utils/idUtils";
 
 export function GroupHubPage() {
@@ -38,7 +36,6 @@ export function GroupHubPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("projets");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Charger les données du groupe
   useEffect(() => {
@@ -234,8 +231,8 @@ export function GroupHubPage() {
                 <p className="text-sm text-gray-600 mb-4">
                   Lancez une discussion pour échanger avec les membres du groupe
                 </p>
-                {isMember && (
-                  <Button variant="outline" onClick={() => setShowCreateDialog(true)}>
+                {isMember && groupId && (
+                  <Button variant="outline" onClick={() => goToCreateWithGroups([groupId], 'post')}>
                     <Plus className="w-4 h-4 mr-2" />
                     Lancer une discussion
                   </Button>
