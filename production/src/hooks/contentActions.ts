@@ -28,6 +28,7 @@ export function createContentActions(
     actions.setPrefilledLinkedContent([]);
     actions.setPrefilledSelectedDiscussions([]);
     actions.setPrefilledLocation(null);
+    actions.setPrefilledGroupIds([]); // Nettoyer les groupes (Phase 5)
     
     console.log(`🧹 Toutes les données pré-remplies précédentes ont été supprimées`);
     
@@ -344,17 +345,22 @@ export function createContentActions(
     
     // Actions de préremplissage
     setPrefillFromIdea: (ideaId: string) => actions.setPrefilledSourceIdea(ideaId),
+    setPrefilledGroupIds: (groupIds: string[]) => actions.setPrefilledGroupIds(groupIds), // Phase 5
     clearPrefill: () => {
       actions.setPrefilledSourceIdea(null);
       actions.setPrefilledLinkedContent([]);
       actions.setPrefilledSelectedDiscussions([]);
       actions.setPrefilledLocation(null); // Nettoyer la localisation pré-remplie
       actions.setPrefilledSourcePostId(null); // Nettoyer le post source pour la création
+      actions.setPrefilledGroupIds([]); // Nettoyer les groupes pré-remplis (Phase 5)
     },
     
     // Action pour créer une version depuis une idée
     createVersionFromIdea: (ideaId: string, selectedDiscussionIds: string[]) => {
       console.log(`🔄 Création version depuis idée ${ideaId} avec ${selectedDiscussionIds.length} discussions`);
+      
+      // Récupérer l'idée source pour hériter ses groupes
+      const sourceIdea = boundSelectors.getIdeaById(ideaId);
       
       // Utiliser la fonction générique de liaison
       linkContentToContent({
@@ -366,7 +372,36 @@ export function createContentActions(
       // Ajouter aussi l'idée source
       actions.setPrefilledSourceIdea(ideaId);
       
+      // Hériter les groupes de l'idée source (Phase 5)
+      if (sourceIdea?.groupIds && sourceIdea.groupIds.length > 0) {
+        actions.setPrefilledGroupIds(sourceIdea.groupIds);
+        console.log(`✅ Héritage de ${sourceIdea.groupIds.length} groupe(s) depuis l'idée source`);
+      }
+      
       console.log(`✅ Navigation vers création avec idée source ${ideaId}`);
+    },
+    
+    // Action pour créer une version depuis un post (Phase 5)
+    createVersionFromPost: (postId: string) => {
+      console.log(`🔄 Création version depuis post ${postId}`);
+      
+      // Récupérer le post source pour hériter ses groupes
+      const sourcePost = boundSelectors.getPostById(postId);
+      
+      // Lier le post source
+      linkContentToContent({
+        sourceType: 'post',
+        sourceIds: [postId],
+        targetType: 'idea'
+      });
+      
+      // Hériter les groupes du post source (Phase 5)
+      if (sourcePost?.groupIds && sourcePost.groupIds.length > 0) {
+        actions.setPrefilledGroupIds(sourcePost.groupIds);
+        console.log(`✅ Héritage de ${sourcePost.groupIds.length} groupe(s) depuis le post source`);
+      }
+      
+      console.log(`✅ Navigation vers création avec post source ${postId}`);
     },
     
     // Exposer la fonction générique de liaison de contenu
@@ -393,7 +428,7 @@ export function createContentActions(
     promotePostToIdea: (postId: string) => {
       console.log(`🚀 Promotion du post ${postId} en projet`);
       
-      // Récupérer le post pour passer son contenu
+      // Récupérer le post pour passer son contenu et hériter ses groupes
       const post = boundSelectors.getPostById(postId);
       
       linkContentToContent({
@@ -401,6 +436,12 @@ export function createContentActions(
         sourceIds: [postId],
         targetType: 'idea'
       });
+      
+      // Hériter les groupes du post source (Phase 5)
+      if (post?.groupIds && post.groupIds.length > 0) {
+        actions.setPrefilledGroupIds(post.groupIds);
+        console.log(`✅ Héritage de ${post.groupIds.length} groupe(s) depuis le post source`);
+      }
       
       // Naviguer vers la page de création de projet avec le contenu du post
       if (navigate) {

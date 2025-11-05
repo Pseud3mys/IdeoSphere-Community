@@ -12,6 +12,7 @@ export function getMockPosts(): Post[] {
       createdAt: new Date('2024-01-08T10:30:00'),
       supporters: ['1', '2', '3', 'current', 'guest'],
       tags: ['vie-de-quartier', 'vieillesse'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/1'], // L'idée des bancs vient de ce post
       derivedPosts: ['posts/post-2', 'posts/post-3'], // Autres posts qui en parlent
       sourcePosts: [], // Aucun post source
@@ -94,6 +95,7 @@ export function getMockPosts(): Post[] {
       createdAt: new Date('2024-01-12T16:45:00'),
       supporters: ['1', '2', '4', 'current'],
       tags: ['solidarité'],
+      groupIds: ['groups/1', 'groups/2'], // Groupes "Vivre à Saint-Cloud" et "Zéro déchet"
       derivedIdeas: ['ideas/2'], // L'idée du café-réparation vient de ce post
       derivedPosts: ['posts/post-9'],
       sourcePosts: [], // Aucun post source
@@ -150,6 +152,7 @@ export function getMockPosts(): Post[] {
       createdAt: new Date('2024-01-16T08:15:00'),
       supporters: ['1', '2', 'current'],
       tags: ['vie-de-quartier'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/4'], // L'idée sur les nids de poule vient de ce post
       derivedPosts: ['posts/post-11'],
       sourcePosts: [], // Aucun post source
@@ -178,6 +181,7 @@ export function getMockPosts(): Post[] {
       createdAt: new Date('2024-01-22T08:45:00'),
       supporters: ['2', '3', 'current'],
       tags: ['jeunesse'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/5'], // L'idée sur le stationnement école vient de ce post
       derivedPosts: ['posts/post-8'],
       sourcePosts: [], // Aucun post source

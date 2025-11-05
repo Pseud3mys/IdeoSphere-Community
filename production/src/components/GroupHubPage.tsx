@@ -31,7 +31,7 @@ export function GroupHubPage() {
     getIdeasByGroup,
   } = useEntityStoreSimple();
   
-  const { goToIdea, goToPost, goToGroupManage } = useNavigationActions();
+  const { goToIdea, goToPost, goToGroupManage, goToCreateWithGroups } = useNavigationActions();
   const currentUser = getCurrentUser();
 
   const groupActions = useGroupActions();
@@ -155,14 +155,14 @@ export function GroupHubPage() {
                 <Button
                   variant="outline"
                   className="flex-1 md:flex-none bg-white hover:bg-blue-50 border-blue-300"
-                  onClick={() => setShowCreateDialog(true)}
+                  onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Discussion
                 </Button>
                 <Button
                   className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
-                  onClick={() => setShowCreateDialog(true)}
+                  onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}
                 >
                   <Lightbulb className="w-4 h-4 mr-2" />
                   Projet
@@ -204,7 +204,7 @@ export function GroupHubPage() {
                   Soyez le premier à proposer un projet structuré pour ce groupe
                 </p>
                 {isMember && (
-                  <Button onClick={() => setShowCreateDialog(true)}>
+                  <Button onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>
                     <Plus className="w-4 h-4 mr-2" />
                     Créer un projet
                   </Button>

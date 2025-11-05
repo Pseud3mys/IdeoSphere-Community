@@ -12,6 +12,7 @@ import { ChainBadge } from './ChainBadge';
 import { ItemChainContext } from '../utils/feedChainUtils';
 import { useState } from 'react';
 import { getValidAvatar } from '../api/avatarService';
+import { GroupBadgeList } from './group/GroupBadgeList';
 
 interface PostCardProps {
   post: Post;
@@ -190,6 +191,13 @@ export function PostCard({
                   context={chainContext} 
                   itemType="post"
                 />
+              </>
+            )}
+            {/* Groupes associés */}
+            {latestPost.groupIds && latestPost.groupIds.length > 0 && (
+              <>
+                <span>•</span>
+                <GroupBadgeList groupIds={latestPost.groupIds} maxDisplay={2} />
               </>
             )}
           </div>

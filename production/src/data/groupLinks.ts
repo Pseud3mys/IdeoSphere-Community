@@ -13,8 +13,8 @@ export const groupLinks: GroupLink[] = [
   {
     id: 'gl1',
     type: 'vertical',
-    parentGroupId: 'g1',
-    childGroupId: 'g2',
+    parentGroupId: 'groups/g1',
+    childGroupId: 'groups/g2',
     createdAt: new Date('2024-02-05'),
     createdBy: '1', // Marie Dubois
   },
@@ -23,8 +23,8 @@ export const groupLinks: GroupLink[] = [
   {
     id: 'gl2',
     type: 'horizontal',
-    groupId1: 'g3',
-    groupId2: 'g4',
+    groupId1: 'groups/g3',
+    groupId2: 'groups/g4',
     createdAt: new Date('2024-03-15'),
     createdBy: '3', // Sophie Laurent
   },

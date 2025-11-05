@@ -61,6 +61,9 @@ export function useEntityStoreSimple() {
 
   // Selectors bound to current store
   const boundSelectors = {
+    // System selectors
+    isStoreInitialized: () => selectors.isStoreInitialized(store),
+    
     // User selectors
     getCurrentUser: () => selectors.getCurrentUser(store),
     getUserById: (userId: string) => selectors.getUserById(store)(userId),

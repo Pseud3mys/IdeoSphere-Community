@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { CreatorAvatar } from './CreatorAvatar';
 import { CreatorNames } from './CreatorNames';
 import { getFirstCreator } from '../utils/userValidation';
+import { GroupBadgeList } from './group/GroupBadgeList';
 
 interface IdeaCardProps {
   idea: Idea;
@@ -190,6 +191,13 @@ export function IdeaCard({
                   context={chainContext} 
                   itemType="idea"
                 />
+              </>
+            )}
+            {/* Groupes associés */}
+            {latestIdea.groupIds && latestIdea.groupIds.length > 0 && (
+              <>
+                <span>•</span>
+                <GroupBadgeList groupIds={latestIdea.groupIds} maxDisplay={2} />
               </>
             )}
           </div>

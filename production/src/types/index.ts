@@ -94,7 +94,7 @@ export interface Post {
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];
   location?: string;
-  groupId?: string; // Groupe auquel appartient ce post
+  groupIds?: string[]; // Groupes auxquels appartient ce post
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // IDs des utilisateurs qui soutiennent ce post
   replies: PostReply[];
@@ -129,7 +129,7 @@ export interface Idea {
   createdAt: Date;
   tags?: string[];
   location?: string;
-  groupId?: string; // Groupe auquel appartient cette idée
+  groupIds?: string[]; // Groupes auxquels appartient cette idée
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // ✅ IDs des utilisateurs (aligné avec Post.supporters)
   discussionIds: string[];

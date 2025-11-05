@@ -9,7 +9,7 @@ export function getMockIdeas(): Idea[] {
       id: 'ideas/1',
       title: 'Des bancs dans nos rues pour pouvoir se reposer',
       summary: 'Installer des bancs publics aux endroits stratégiques du village pour que chacun puisse s\'arrêter, se reposer et discuter avec les voisins',
-      groupId: 'g5', // Quartier Nord
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       description: `## Le manque de bancs dans notre village
 
 Ça fait plusieurs fois qu'on en parle entre nous : il n'y a quasiment aucun endroit pour s'asseoir dans nos rues ! Entre les courses, les balades avec les enfants ou quand on vieillit... on a tous besoin de pouvoir faire une pause.
@@ -100,7 +100,7 @@ Cette idée simple peut vraiment améliorer notre quotidien à tous ! 🪑`,
       id: 'ideas/2',
       title: 'Café-réparation tous les premiers samedis',
       summary: 'Organiser un atelier mensuel où chacun apporte ses objets cassés pour les réparer ensemble, dans l\'esprit du partage et de l\'anti-gaspillage',
-      groupId: 'g4', // Commission Environnement
+      groupIds: ['groups/2'], // Groupe "Zéro déchet"
       description: `## L'idée du café-réparation
 
 J'ai encore jeté mon grille-pain ce matin... 😔 Ça m'embête de jeter alors que Pierre pourrait sûrement le réparer ! Et si on organisait des moments pour bricoler ensemble au lieu de jeter ?
@@ -190,7 +190,7 @@ Et puis voir la joie sur le visage quand l'objet remarche... ça n'a pas de prix
       id: 'ideas/3',
       title: 'Système d\'échange de services entre voisins',
       summary: 'Créer un réseau local d\'entraide où chacun propose ses compétences et peut demander de l\'aide à ses voisins',
-      groupId: 'g5', // Quartier Nord
+      groupIds: ['groups/1', 'groups/3'], // Groupes "Vivre à Saint-Cloud" et "Entraide voisins"
       description: `## L'idée d'un réseau d'entraide local
 
 Hier j'avais des courses lourdes et j'aurais bien eu besoin d'un coup de main... 🛒 En même temps, moi je peux aider avec l'informatique ! On pourrait pas s'organiser pour s'entraider ?
@@ -292,7 +292,7 @@ Et franchement, la prochaine fois que j'ai mes packs d'eau à porter, ça m'arra
       id: 'ideas/4',
       title: 'Réparer les nids de poule rue des Écoles',
       summary: 'Signaler et organiser la réparation des trous dans la chaussée qui abîment les voitures et sont dangereux pour les piétons',
-      groupId: 'g5', // Quartier Nord
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       description: `## Le problème des nids de poule rue des Écoles
 
 Ça fait des mois qu'on slalome entre les trous ! Entre celui devant chez Pierre qui fait sauter les amortisseurs et celui près de l'école qui retient l'eau... il faut qu'on s'organise pour que ça bouge !
@@ -399,6 +399,7 @@ Cette idée peut paraître basique, mais c'est exactement le genre de problème 
       id: 'ideas/5',
       title: 'Solution pour le stationnement devant l\'école',
       summary: 'Organiser le stationnement chaotique aux heures d\'entrée et sortie d\'école qui bloque la circulation et met les enfants en danger',
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       description: `## Le bazar du stationnement devant l'école
 
 Tous les matins et le soir, c'est la même galère ! Les voitures garées n'importe où, les enfants qui courent entre les véhicules, et nous qui râlons tous dans nos voitures... Il faut qu'on trouve une solution !
@@ -520,6 +521,7 @@ Cette problématique, on la vit tous ! Avec un peu d'organisation et de bonne vo
       id: 'ideas/idea-version-1',
       title: 'Bancs intelligents avec recharge solaire et WiFi',
       summary: 'Une version évoluée des bancs publics incluant des ports USB solaires et des zones WiFi gratuit pour moderniser l\'espace public',
+      groupIds: ['groups/1'], // Hérité du groupe de l'idée source
       description: `## Évolution de l'idée originale des bancs
 
 Après avoir lu l'excellente proposition de Marie sur les bancs publics, je pense qu'on peut aller plus loin et créer des "bancs intelligents" qui répondent aux besoins d'aujourd'hui.
@@ -615,6 +617,7 @@ C'est un investissement plus important mais qui transforme vraiment l'espace pub
       id: 'ideas/idea-version-2',
       title: 'Éclairage participatif avec application mobile',
       summary: 'Extension de l\'idée d\'éclairage avec une app pour signaler les problèmes et adapter l\'intensité selon les besoins des habitants',
+      groupIds: ['groups/2'], // Hérité du groupe de l'idée source
       description: `## Faire évoluer l'idée d'éclairage de Pierre
 
 L'idée de Pierre sur l'éclairage LED était très pertinente ! Je propose de l'enrichir avec une dimension participative grâce au numérique.

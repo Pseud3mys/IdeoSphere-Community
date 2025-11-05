@@ -172,5 +172,14 @@ export function useNavigationActions() {
     goToCommunities: () => navigate('/communities'),
     goToHome: () => navigate('/'),
     goToSignup: () => navigate('/signup'),
+    
+    /**
+     * Navigation vers la création avec des groupes pré-remplis
+     * @param groupIds - IDs des groupes à pré-remplir
+     * @param mode - Mode de création : 'post' (discussion rapide) ou 'idea' (projet complet)
+     */
+    goToCreateWithGroups: (groupIds: string[], mode: 'post' | 'idea' = 'post') => {
+      navigate('/create-idea', { state: { prefilledGroupIds: groupIds, creationMode: mode } });
+    },
   };
 }

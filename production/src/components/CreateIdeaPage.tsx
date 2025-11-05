@@ -20,6 +20,8 @@ interface CreateIdeaPageProps {
   prefilledSourceIdea?: string | null;
   prefilledLinkedContent?: string[];
   prefilledSelectedDiscussions?: string[];
+  prefilledGroupIds?: string[];
+  prefilledCreationMode?: 'post' | 'idea'; // Mode de création pré-rempli depuis la navigation
   onClearPrefilled?: () => void;
 }
 
@@ -34,7 +36,7 @@ interface Draft {
   sourcePostIds?: string[];
 }
 
-export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinkedContent, prefilledSelectedDiscussions, onClearPrefilled }: CreateIdeaPageProps) {
+export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinkedContent, prefilledSelectedDiscussions, prefilledGroupIds, prefilledCreationMode, onClearPrefilled }: CreateIdeaPageProps) {
   // Récup��ration des données depuis l'Entity Store
   const {
     store,
@@ -58,11 +60,18 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
     // IMPORTANT : L'ordre de vérification est crucial !
     
     console.log('🎯 [CreateIdeaPage] Détermination du mode de création:', {
+      prefilledCreationMode,
       prefilledSourceIdea,
       prefilledLinkedContentLength: prefilledLinkedContent?.length,
       prefilledSelectedDiscussionsLength: prefilledSelectedDiscussions?.length,
       hasSourcePost: !!sourcePost
     });
+    
+    // 0. Si un mode est explicitement passé via la navigation, l'utiliser en priorité
+    if (prefilledCreationMode) {
+      console.log(`✅ Mode ${prefilledCreationMode.toUpperCase()} : explicitement défini via navigation`);
+      return prefilledCreationMode;
+    }
     
     // 1. Vérifier d'abord si on a une idée source préremplie
     if (prefilledSourceIdea) {
@@ -195,6 +204,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
           {creationMode === 'post' ? (
             <CreateQuickPost
               sourcePost={sourcePost}
+              prefilledGroupIds={prefilledGroupIds}
               onSwitchToIdea={switchToIdeaMode}
             />
           ) : (
@@ -203,6 +213,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
               prefilledSourceIdea={prefilledSourceIdea}
               prefilledLinkedContent={prefilledLinkedContent}
               prefilledSelectedDiscussions={prefilledSelectedDiscussions}
+              prefilledGroupIds={prefilledGroupIds}
               onClearPrefilled={onClearPrefilled}
               onSaveDraft={handleSaveDraft}
               loadedDraft={loadedDraft}

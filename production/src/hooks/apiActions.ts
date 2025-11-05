@@ -861,6 +861,7 @@ export function createApiActions(
       summary: string;
       description: string;
       location?: string;
+      groupIds?: string[];
       creators?: User[];
       sourceIdeas?: string[];
       sourcePosts?: string[];
@@ -897,6 +898,7 @@ export function createApiActions(
           description: payload.description,
           location: payload.location,
           authorId: currentUser.id,
+          groupIds: payload.groupIds,
           tags: finalTags, // ✅ Envoyer les tags à l'API
           sourceIdeas: payload.sourceIdeas || [],
           sourcePosts: payload.sourcePosts || [],
@@ -934,6 +936,7 @@ export function createApiActions(
       location?: string;
       tags?: string[];
       authorId?: string;
+      groupIds?: string[];
       linkedContent?: string[];
       parentDiscussionId?: string;
       sourcePostIds?: string[];
@@ -972,6 +975,7 @@ export function createApiActions(
           location: payload.location,
           authorId: finalAuthorId,
           author: finalAuthor, // ✅ Passer l'objet author complet pour éviter les problèmes avec les utilisateurs temporaires
+          groupIds: payload.groupIds,
           sourcePostIds: payload.sourcePostIds || [],
           tags: finalTags // ✅ Envoyer les tags au service API
         });

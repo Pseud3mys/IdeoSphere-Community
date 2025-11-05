@@ -6,6 +6,11 @@ import { unknownUser } from '../data/users';
  * Selectors simples pour extraire des données du store
  */
 
+// System selectors
+export const isStoreInitialized = (store: SimpleEntityStore): boolean => {
+  return store.isInitialized;
+};
+
 // User selectors
 export const getCurrentUser = (store: SimpleEntityStore): User | null => {
   if (!store.currentUserId) return null;

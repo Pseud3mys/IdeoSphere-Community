@@ -15,6 +15,7 @@ interface CreateCompleteIdeaProps {
   prefilledSourceIdea?: string | null;
   prefilledLinkedContent?: string[];
   prefilledSelectedDiscussions?: string[];
+  prefilledGroupIds?: string[];
   onClearPrefilled?: () => void;
   onSaveDraft?: (title: string, summary: string, description?: string) => void;
   loadedDraft?: {
@@ -34,6 +35,7 @@ export function CreateCompleteIdea({
   prefilledSourceIdea,
   prefilledLinkedContent,
   prefilledSelectedDiscussions,
+  prefilledGroupIds,
   onClearPrefilled,
   onSaveDraft,
   loadedDraft,
@@ -47,6 +49,7 @@ export function CreateCompleteIdea({
     getAllUsers,
     getAllIdeas,
     getAllPosts,
+    getAllGroups,
     getDiscussionTopicById,
     actions
   } = useEntityStoreSimple();
@@ -56,6 +59,7 @@ export function CreateCompleteIdea({
   const users = getAllUsers();
   const ideas = getAllIdeas();
   const posts = getAllPosts();
+  const allGroups = getAllGroups();
 
   // Les utilisateurs sont déjà chargés au démarrage de l'app via loadInitialData
 
@@ -162,6 +166,7 @@ ${postIntro}
     // Pré-remplir avec la localisation du store, de l'idée source ou du post source
     return store.prefilledLocation || sourceIdea?.location || derivedSourcePost?.location || '';
   });
+  const [groupIds, setGroupIds] = useState<string[]>(prefilledGroupIds || []);
   const [selectedCoCreators, setSelectedCoCreators] = useState<User[]>([]);
   const [selectedParentIds, setSelectedParentIds] = useState<string[]>(() => {
     const initialIds = prefilledLinkedContent || [];
@@ -258,6 +263,7 @@ ${postIntro}
       summary: summary.trim(),
       description: description.trim(),
       location: location.trim() || undefined,
+      groupIds: groupIds.length > 0 ? groupIds : undefined,
       creators: selectedCoCreators,
       sourceIdeas: sourceIdeas,
       sourcePosts: sourcePosts,
@@ -275,6 +281,7 @@ ${postIntro}
     setSummary('');
     setDescription('');
     setLocation('');
+    setGroupIds([]);
     setSelectedCoCreators([]);
     setSelectedParentIds([]);
   };
@@ -294,6 +301,7 @@ ${postIntro}
     setSummary('');
     setDescription('');
     setLocation('');
+    setGroupIds([]);
     setSelectedParentIds([]);
     setSelectedCoCreators([]);
     
@@ -328,6 +336,8 @@ ${postIntro}
           setDescription={setDescription}
           location={location}
           setLocation={setLocation}
+          groupIds={groupIds}
+          setGroupIds={setGroupIds}
           sourcePost={derivedSourcePost}
         />
 

@@ -18,6 +18,7 @@ interface SimpleEntityStore {
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
   // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedGroupId supprimés (maintenant dans l'URL)
   // - Seuls les états UI purs sont conservés
+  isInitialized: boolean; // Indique si les données initiales sont chargées
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
   currentUserId: string | null;
@@ -29,6 +30,7 @@ interface SimpleEntityStore {
   prefilledSelectedDiscussions: string[];
   prefilledLocation: string | null; // Localisation pré-remplie
   prefilledSourcePostId: string | null; // Post source spécifiquement pour la création
+  prefilledGroupIds: string[]; // Groupes pré-remplis pour la création
   prefilledSignupData: {
     name?: string;
     email?: string;
@@ -95,6 +97,7 @@ interface SimpleEntityActions {
   setPrefilledSelectedDiscussions: (discussions: string[]) => void;
   setPrefilledLocation: (location: string | null) => void;
   setPrefilledSourcePostId: (id: string | null) => void;
+  setPrefilledGroupIds: (groupIds: string[]) => void;
   setPrefilledSignupData: (data: { name?: string; email?: string } | null) => void;
   
   // Actions pour les IDs du feed
@@ -146,6 +149,7 @@ const createInitialStore = (): SimpleEntityStore => {
     groupMemberships: {},
     pendingGroupCreations: {},
     groupLinks: {},
+    isInitialized: false, // Pas encore initialisé
     hasEnteredPlatform: false,
     showOnboarding: false,
     currentUserId: savedUserId, // Restauré depuis localStorage
@@ -155,6 +159,7 @@ const createInitialStore = (): SimpleEntityStore => {
     prefilledSelectedDiscussions: [],
     prefilledLocation: null,
     prefilledSourcePostId: null,
+    prefilledGroupIds: [],
     prefilledSignupData: null,
     feedIdeaIds: [],
     feedPostIds: [],
@@ -514,6 +519,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setPrefilledSelectedDiscussions: (discussions) => setStore(prev => ({ ...prev, prefilledSelectedDiscussions: discussions })),
     setPrefilledLocation: (location) => setStore(prev => ({ ...prev, prefilledLocation: location })),
     setPrefilledSourcePostId: (id) => setStore(prev => ({ ...prev, prefilledSourcePostId: id })),
+    setPrefilledGroupIds: (groupIds) => setStore(prev => ({ ...prev, prefilledGroupIds: groupIds })),
     
     // Feed IDs Actions
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),
@@ -554,7 +560,8 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             groupMemberships: normalizeGroupMemberships(initialData.groupMemberships || []),
             pendingGroupCreations: normalizePendingGroups(initialData.pendingGroups || []),
             groupLinks: normalizeGroupLinks((initialData as any).groupLinks || []),
-            currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
+            currentUserId: initialData.currentUserId || null, // ✅ null par défaut, pas de string vide
+            isInitialized: true // ✅ Marquer comme initialisé
           };
         });
       } catch (error) {
