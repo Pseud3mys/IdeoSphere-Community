@@ -410,11 +410,22 @@ export function createContentActions(
     // Créer un post de réponse depuis un post existant
     createResponsePost: (postId: string) => {
       console.log(`📝 Création d'un post de réponse depuis le post ${postId}`);
+      
+      // Récupérer le post source pour hériter ses groupes
+      const sourcePost = boundSelectors.getPostById(postId);
+      
       linkContentToContent({
         sourceType: 'post',
         sourceIds: [postId],
         targetType: 'post'
       });
+      
+      // Hériter les groupes du post source (Phase 5)
+      if (sourcePost?.groupIds && sourcePost.groupIds.length > 0) {
+        actions.setPrefilledGroupIds(sourcePost.groupIds);
+        console.log(`✅ Héritage de ${sourcePost.groupIds.length} groupe(s) depuis le post source`);
+      }
+      
       // Naviguer vers la page de création de post
       if (navigate) {
         console.log(`✅ Navigation vers /create-idea (pour créer un post de réponse)`);
