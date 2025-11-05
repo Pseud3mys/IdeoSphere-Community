@@ -8,18 +8,20 @@ import {
   Rating,
   IdeaStatus,
   DiscussionTopic,
-  DiscussionPost
+  DiscussionPost,
+  Group,
+  GroupType,
+  PendingGroupCreation,
+  GroupMembership,
+  VerticalGroupLink,
+  HorizontalGroupLink
 } from '../types';
-import { defaultRatingCriteria } from '../data/ratings'; // Importation ajoutée
+import { defaultRatingCriteria } from '../data/ratings';
 
 // =============================================================================
 // RAW INTERFACES - Mirror the JSON structure from the Python API
 // =============================================================================
 
-/**
- * Raw user data directly from the ArangoDB/Python API.
- *
- */
 export interface RawUser {
   _id: string;
   _key: string;
@@ -33,10 +35,6 @@ export interface RawUser {
   isRegistered?: boolean;
 }
 
-/**
- * Raw comment data as a sub-document within a Post.
- *
- */
 export interface RawComment {
   id: string;
   authorId: string;
@@ -46,12 +44,6 @@ export interface RawComment {
   isAnswer?: boolean;
 }
 
-/**
-
- * A generic raw content item (Idea or Post) from the API.
- * Fields match the ArangoDB schema definition.
- *
- */
 export interface RawContent {
   _id: string;
   _key: string;
@@ -69,48 +61,88 @@ export interface RawContent {
   content?: string;
   upvotes?: string[]; // List of user _ids
   comments?: RawComment[];
-  type?: string; // e.g., 'question', 'general'
-  //Discussion-specific
+  type?: string; 
   isDiscussion?: boolean;
 }
 
-export type RawIdea = RawContent;
-export type RawPost = RawContent;
 
-/**
- * The standard structure for feed responses.
- *
- */
 export interface RawFeedData {
   content: RawContent[];
   users: RawUser[];
 }
 
-/**
- * The structure for lineage (history) API responses.
- *
- */
 export interface RawLineageData {
   sources: RawContent[];
   versions: RawContent[];
-  users: RawUser[]; // Assuming users are provided here as well
+  users: RawUser[];
 }
 
-/**
- * Raw feedback data from the API, representing an edge.
- */
 export interface RawFeedback {
   _id: string;
-  _from: string; // L'ID de l'utilisateur
-  _to: string;   // L'ID du contenu (idea)
+  _from: string; 
+  _to: string;   
   type: 'supports' | 'reports' | 'objects' | 'ignores';
-  ratings?: { [criterionName: string]: number }; // C'est un objet, pas un tableau
+  ratings?: { [criterionName: string]: number };
 }
 
+// --- NOUVEAUX RAW TYPES (pour les Groupes) ---
+
+export interface RawGroup {
+  _id: string;
+  _key: string;
+  name: string;
+  description: string;
+  shortDescription: string;
+  type: GroupType;
+  avatar?: string;
+  banner?: string;
+  location?: string;
+  tags: string[];
+  createdAt: string; // ISO String
+  createdBy: string;
+  status: "pending" | "active" | "archived";
+  // Les champs 'memberCount' etc. peuvent être absents
+  // et seront calculés ou gérés par le frontend au besoin.
+}
+
+export interface RawPendingGroup extends RawGroup {
+  status: "pending";
+  pendingFounders: string[];
+  pendingConfirmations: string[];
+  pendingExpiresAt: string; // ISO String
+}
+
+export interface RawMembership {
+  _id: string;
+  _key: string;
+  _from: string; // User ID
+  _to: string; // Group ID
+  role: 'animator' | 'member';
+  joinedAt: string; // ISO String
+}
+
+export interface RawVerticalLink {
+  _id: string;
+  _key: string;
+  parentGroupId: string; // Vient de la transformation AQL
+  childGroupId: string;  // Vient de la transformation AQL
+  createdAt: string; // ISO String
+  createdBy: string;
+}
+
+export interface RawHorizontalLink {
+  _id: string;
+  _key: string;
+  groupId1: string; // Vient de la transformation AQL
+  groupId2: string; // Vient de la transformation AQL
+  createdAt: string; // ISO String
+  createdBy: string;
+}
 
 // =============================================================================
-// TRANSFORMATION FUNCTIONS
+// FONCTIONS DE TRANSFORMATION (Existantes)
 // =============================================================================
+
 /**
  * Convertit une carte d'idée (données minimales depuis le feed) en Idea avec champs vides
  * Les relations et données enrichies seront chargées progressivement selon les onglets consultés
@@ -183,7 +215,7 @@ export const transformUser = (raw: RawUser): User => ({
   name: raw.name,
   email: raw.email,
   createdAt: new Date(raw.createdAt),
-  avatar: raw.avatar || '', // Placeholder
+  avatar: raw.avatar || '',
   bio: raw.bio || '',
   location: raw.location || '',
   birthYear: raw.birthYear,
@@ -195,10 +227,10 @@ export const transformUser = (raw: RawUser): User => ({
  * Requires a map of users to populate the author field.
  */
 export const transformComment = (raw: RawComment, usersMap: Map<string, User>): DiscussionPost => ({
-  id: raw.id, // Utilise _id pour l'ID
+  id: raw.id,
   authorId: raw.authorId,
   content: raw.content,
-  timestamp: new Date(raw.createdAt), // Mappe createdAt vers timestamp
+  timestamp: new Date(raw.createdAt),
   upvotes: raw.upvotes || [],
   isAnswer: raw.isAnswer
 });
@@ -254,79 +286,43 @@ export const transformIdea = (raw: RawIdea): Idea => {
   };
 };
 
-/**
- * Transforms a RawPost into a DiscussionTopic.
- * This is used for the "discussions" attached to an idea.
- */
-export const transformPostToDiscussion = (raw: RawPost, usersMap: Map<string, User>): DiscussionTopic => {
-    return {
-        id: raw._id,
-        title: raw.title || 'Discussion',
-        type: (raw.type as 'general' | 'question' | 'suggestion' | 'technical') || 'general',
-        authorId: raw.creators?.[0],
-        content: raw.content || '',
-        timestamp: new Date(raw.createdAt),
-        createdAt: new Date(raw.createdAt),
-        upvotes: raw.upvotes || [],
-        posts: (raw.comments || []).map(c => ({
-            id: c.id,
-            authorId: c.authorId,
-            content: c.content,
-            timestamp: new Date(c.createdAt),
-            upvotes: c.upvotes || [],
-            isAnswer: c.isAnswer
-        }))
-    };
-};
 
+export const transformPostToDiscussion = (raw: RawContent, usersMap: Map<string, User>): DiscussionTopic => ({
+    id: raw._id,
+    title: raw.title || 'Discussion',
+    type: (raw.type as 'general' | 'question' | 'suggestion' | 'technical') || 'general',
+    authorId: raw.creators?.[0],
+    content: raw.content || '',
+    timestamp: new Date(raw.createdAt),
+    createdAt: new Date(raw.createdAt),
+    upvotes: raw.upvotes || [],
+    posts: (raw.comments || []).map(c => transformComment(c, usersMap))
+});
 
-/**
- * Processes a raw feed response from the API into structured frontend data.
- */
 export const transformFeedData = (rawData: RawFeedData): { ideas: Idea[], posts: Post[], users: Map<string, User> } => {
   if (!rawData || !Array.isArray(rawData.users) || !Array.isArray(rawData.content)) {
     console.error("Invalid feed data received from API", rawData);
     return { ideas: [], posts: [], users: new Map() };
   }
-
   const usersMap = new Map(rawData.users.map(rawUser => [rawUser._id, transformUser(rawUser)]));
-  
   const ideas: Idea[] = [];
   const posts: Post[] = [];
 
   rawData.content.forEach(item => {
-    // Heuristic to differentiate Ideas from Posts based on unique fields
     if (item.description !== undefined || item.summary !== undefined) {
       ideas.push(transformIdea(item));
     } else {
       posts.push(transformPost(item, usersMap));
     }
   });
-
   return { ideas, posts, users: usersMap };
 };
 
-/**
- * Transforme un ou plusieurs objets RawFeedback de l'API
- * en un tableau plat d'objets Rating utilisable par le front-end.
- */
-export function transformFeedbackToRatings(
-  data: RawFeedback | RawFeedback[]
-): Rating[] {
-  // 1. S'assurer que nous travaillons toujours avec un tableau
+export function transformFeedbackToRatings(data: RawFeedback | RawFeedback[]): Rating[] {
   const feedbackItems = Array.isArray(data) ? data : [data];
-
-  // 2. Transformer chaque feedback en un tableau de ratings, puis aplatir le résultat
   return feedbackItems.flatMap(item => {
-    // Si un feedback n'a pas de ratings ou que l'objet est vide, on retourne un tableau vide
-    if (!item.ratings || Object.keys(item.ratings).length === 0) {
-      return [];
-    }
-
-    const userId = item._from; // L'auteur du feedback est l'auteur du rating
-
-    // 3. Utiliser Object.entries pour convertir l'objet { key: value } en un tableau [ [key, value] ]
-    // Ensuite, mapper ce tableau pour créer nos objets Rating
+    if (!item.ratings || Object.keys(item.ratings).length === 0) return [];
+    const userId = item._from;
     return Object.entries(item.ratings).map(([criterionName, value]) => ({
       criterionId: criterionName,
       value: value,
@@ -334,3 +330,85 @@ export function transformFeedbackToRatings(
     }));
   });
 }
+
+// =============================================================================
+// NOUVELLES FONCTIONS DE TRANSFORMATION (pour les Groupes)
+// =============================================================================
+
+/**
+ * Transforme un RawGroup en Group (frontend type).
+ */
+export const transformGroup = (raw: RawGroup): Group => ({
+  id: raw._id,
+  name: raw.name,
+  description: raw.description,
+  shortDescription: raw.shortDescription,
+  type: raw.type,
+  avatar: raw.avatar,
+  banner: raw.banner,
+  location: raw.location,
+  tags: raw.tags || [],
+  createdAt: new Date(raw.createdAt),
+  createdBy: [raw.createdBy], // L'API stocke un seul initiateur
+  animators: [], // Sera peuplé par la réponse normalisée
+  isActive: raw.status === 'active',
+  // Ces champs devront être calculés ou fournis par des endpoints dédiés
+  memberCount: 0, 
+  ideaCount: 0,
+  projectCount: 0,
+});
+
+/**
+ * Transforme un RawPendingGroup en PendingGroupCreation (frontend type).
+ */
+export const transformPendingGroup = (raw: RawPendingGroup): PendingGroupCreation => ({
+  id: raw._id,
+  name: raw.name,
+  description: raw.description,
+  shortDescription: raw.shortDescription,
+  type: raw.type,
+  avatar: raw.avatar,
+  location: raw.location,
+  tags: raw.tags || [],
+  createdAt: new Date(raw.createdAt),
+  initiatorId: raw.createdBy,
+  founders: raw.pendingFounders || [],
+  confirmations: raw.pendingConfirmations || [],
+  expiresAt: new Date(raw.pendingExpiresAt),
+});
+
+/**
+ * Transforme un RawMembership en GroupMembership (frontend type).
+ */
+export const transformMembership = (raw: RawMembership): GroupMembership => ({
+  id: raw._id,
+  userId: raw._from,
+  groupId: raw._to,
+  role: raw.role,
+  joinedAt: new Date(raw.joinedAt),
+  isActive: true, // Si on la reçoit, elle est active
+});
+
+/**
+ * Transforme un RawVerticalLink en VerticalGroupLink (frontend type).
+ */
+export const transformVerticalLink = (raw: RawVerticalLink): VerticalGroupLink => ({
+  id: raw._id,
+  type: 'vertical',
+  parentGroupId: raw.parentGroupId,
+  childGroupId: raw.childGroupId,
+  createdAt: new Date(raw.createdAt),
+  createdBy: raw.createdBy,
+});
+
+/**
+ * Transforme un RawHorizontalLink en HorizontalGroupLink (frontend type).
+ */
+export const transformHorizontalLink = (raw: RawHorizontalLink): HorizontalGroupLink => ({
+  id: raw._id,
+  type: 'horizontal',
+  groupId1: raw.groupId1,
+  groupId2: raw.groupId2,
+  createdAt: new Date(raw.createdAt),
+  createdBy: raw.createdBy,
+});
