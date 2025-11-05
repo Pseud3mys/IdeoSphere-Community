@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Copy, Check, Share, Smartphone } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import QRCode from 'qrcode';
+import { getIdeaShareText, getPostShareText, clientConfig } from '../config/clientConfig';
 
 interface ShareDialogProps {
   contentId: string;
@@ -75,12 +76,14 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
     ? contentTitle
     : contentTitle.length > 100 ? contentTitle.slice(0, 100) + '...' : contentTitle;
 
-  const shareTitle = contentType === 'idea' ? contentTitle : 'Post IdeoSphere';
+  const shareTitle = contentType === 'idea' ? contentTitle : `Post ${clientConfig.identity.appName}`;
   const shareText = contentType === 'idea'
-    ? `Découvrez cette idée citoyenne : ${contentTitle}`
-    : `Découvrez ce post citoyen : ${previewText}`;
+    ? getIdeaShareText(contentTitle)
+    : getPostShareText(previewText);
 
-  const dialogTitle = contentType === 'idea' ? 'Partager cette idée' : 'Partager ce post';
+  const dialogTitle = contentType === 'idea' 
+    ? clientConfig.systemMessages.shareDialog.ideaDialogTitle 
+    : clientConfig.systemMessages.shareDialog.postDialogTitle;
   const dialogDescription = contentType === 'idea'
     ? 'Partagez cette idée avec vos amis et voisins pour recueillir plus de soutiens.'
     : 'Partagez ce post avec vos amis et voisins pour encourager les discussions.';

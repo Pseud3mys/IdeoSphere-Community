@@ -18,6 +18,7 @@ interface SimpleEntityStore {
   // NOTE MIGRATION REACT ROUTER (Phases 5 & 6) :
   // - activeTab, selectedIdeaId, selectedPostId, selectedUserId, selectedGroupId supprimés (maintenant dans l'URL)
   // - Seuls les états UI purs sont conservés
+  isInitialized: boolean; // Indique si les données initiales sont chargées
   hasEnteredPlatform: boolean;
   showOnboarding: boolean;
   currentUserId: string | null;
@@ -29,6 +30,7 @@ interface SimpleEntityStore {
   prefilledSelectedDiscussions: string[];
   prefilledLocation: string | null; // Localisation pré-remplie
   prefilledSourcePostId: string | null; // Post source spécifiquement pour la création
+  prefilledGroupIds: string[]; // Groupes pré-remplis pour la création
   prefilledSignupData: {
     name?: string;
     email?: string;
@@ -95,6 +97,7 @@ interface SimpleEntityActions {
   setPrefilledSelectedDiscussions: (discussions: string[]) => void;
   setPrefilledLocation: (location: string | null) => void;
   setPrefilledSourcePostId: (id: string | null) => void;
+  setPrefilledGroupIds: (groupIds: string[]) => void;
   setPrefilledSignupData: (data: { name?: string; email?: string } | null) => void;
   
   // Actions pour les IDs du feed
@@ -130,31 +133,40 @@ type SimpleEntityStoreContext = {
 // Créer le context
 const SimpleEntityStoreContext = createContext<SimpleEntityStoreContext>(null);
 
-// Store initial
-const createInitialStore = (): SimpleEntityStore => ({
-  users: {},
-  ideas: {},
-  posts: {},
-  discussionTopics: {},
-  groups: {},
-  groupMemberships: {},
-  pendingGroupCreations: {},
-  groupLinks: {},
-  hasEnteredPlatform: false,
-  showOnboarding: false,
-  currentUserId: null,
-  discussionPosts: {},
-  prefilledSourceIdea: null,
-  prefilledLinkedContent: [],
-  prefilledSelectedDiscussions: [],
-  prefilledLocation: null,
-  prefilledSourcePostId: null,
-  prefilledSignupData: null,
-  feedIdeaIds: [],
-  feedPostIds: [],
-  feedLastFetched: null,
-  contributionsLastFetched: null
-});
+// Store initial avec persistance du currentUserId
+const createInitialStore = (): SimpleEntityStore => {
+  // Restaurer currentUserId depuis localStorage si disponible
+  const savedUserId = typeof window !== 'undefined' 
+    ? localStorage.getItem('ideosphere_currentUserId') 
+    : null;
+  
+  return {
+    users: {},
+    ideas: {},
+    posts: {},
+    discussionTopics: {},
+    groups: {},
+    groupMemberships: {},
+    pendingGroupCreations: {},
+    groupLinks: {},
+    isInitialized: false, // Pas encore initialisé
+    hasEnteredPlatform: false,
+    showOnboarding: false,
+    currentUserId: savedUserId, // Restauré depuis localStorage
+    discussionPosts: {},
+    prefilledSourceIdea: null,
+    prefilledLinkedContent: [],
+    prefilledSelectedDiscussions: [],
+    prefilledLocation: null,
+    prefilledSourcePostId: null,
+    prefilledGroupIds: [],
+    prefilledSignupData: null,
+    feedIdeaIds: [],
+    feedPostIds: [],
+    feedLastFetched: null,
+    contributionsLastFetched: null
+  };
+};
 
 // Fonctions helper pour extraire les utilisateurs des idées et posts
 const extractUsersFromIdea = (idea: Idea): User[] => {
@@ -488,7 +500,17 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
     setHasEnteredPlatform: (entered) => setStore(prev => ({ ...prev, hasEnteredPlatform: entered })),
     setShowOnboarding: (show) => setStore(prev => ({ ...prev, showOnboarding: show })),
-    setCurrentUserId: (id) => setStore(prev => ({ ...prev, currentUserId: id })),
+    setCurrentUserId: (id) => {
+      // Persister dans localStorage
+      if (typeof window !== 'undefined') {
+        if (id) {
+          localStorage.setItem('ideosphere_currentUserId', id);
+        } else {
+          localStorage.removeItem('ideosphere_currentUserId');
+        }
+      }
+      setStore(prev => ({ ...prev, currentUserId: id }));
+    },
 
     // Temporary Actions
     setDiscussionPosts: (posts) => setStore(prev => ({ ...prev, discussionPosts: posts })),
@@ -497,6 +519,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setPrefilledSelectedDiscussions: (discussions) => setStore(prev => ({ ...prev, prefilledSelectedDiscussions: discussions })),
     setPrefilledLocation: (location) => setStore(prev => ({ ...prev, prefilledLocation: location })),
     setPrefilledSourcePostId: (id) => setStore(prev => ({ ...prev, prefilledSourcePostId: id })),
+    setPrefilledGroupIds: (groupIds) => setStore(prev => ({ ...prev, prefilledGroupIds: groupIds })),
     
     // Feed IDs Actions
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),
@@ -537,7 +560,8 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             groupMemberships: normalizeGroupMemberships(initialData.groupMemberships || []),
             pendingGroupCreations: normalizePendingGroups(initialData.pendingGroups || []),
             groupLinks: normalizeGroupLinks((initialData as any).groupLinks || []),
-            currentUserId: initialData.currentUserId || null // ✅ null par défaut, pas de string vide
+            currentUserId: initialData.currentUserId || null, // ✅ null par défaut, pas de string vide
+            isInitialized: true // ✅ Marquer comme initialisé
           };
         });
       } catch (error) {

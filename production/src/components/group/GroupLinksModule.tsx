@@ -244,8 +244,11 @@ function GroupLinkItem({
   onDelete,
   isDeleting 
 }: GroupLinkItemProps) {
-  const { getGroupById } = useEntityStoreSimple();
+  const { getGroupById, isStoreInitialized } = useEntityStoreSimple();
   const { goToGroup } = useNavigationActions();
+  
+  // Ne rien afficher si le store n'est pas encore initialisé
+  if (!isStoreInitialized()) return null;
   
   // Trouver l'autre groupe (celui qui n'est pas le groupe courant)
   let linkedGroupId: string;

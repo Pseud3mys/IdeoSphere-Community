@@ -30,15 +30,21 @@ export interface LineageResult {
   totalLevels: number;
 }
 
+// ✅ Nouvelle interface pour le retour avec objets complets
+export interface LineageServiceResult {
+  parents: (Idea | Post | DiscussionTopic)[];
+  children: (Idea | Post | DiscussionTopic)[];
+}
+
 /**
  * Récupère le lineage complet d'une idée ou d'un post
- * @returns { lineage: LineageResult, users: User[] } - Le lineage et les utilisateurs associés
+ * @returns { lineage: LineageServiceResult, users: User[] } - Le lineage et les utilisateurs associés
  */
 export async function fetchLineage(
   itemId: string, 
   itemType: 'idea' | 'post',
   maxDepth: number = 3
-): Promise<{ lineage: LineageResult, users: User[] } | null> {
+): Promise<{ lineage: LineageServiceResult, users: User[] } | null> {
   await simulateApiDelay(150);
 
   try {
@@ -75,38 +81,52 @@ export async function fetchLineage(
       relationshipType: 'current'
     };
 
-    const parents = await getParentLineage(currentElement, itemType, allUsers, maxDepth);
-    const children = await getChildrenLineage(currentElement, itemType, allUsers, maxDepth);
+    // ✅ Récupérer les objets complets pour parents et enfants
+    const parentsComplete = await getParentLineageComplete(currentElement, itemType, data, maxDepth);
+    const childrenComplete = await getChildrenLineageComplete(currentElement, itemType, data, maxDepth);
 
-    const lineageResult: LineageResult = {
-      currentItem,
-      parents,
-      children,
-      totalLevels: Math.max(parents.length, children.length) + 1
+    const lineageServiceResult: LineageServiceResult = {
+      parents: parentsComplete,
+      children: childrenComplete
     };
 
     // ✅ Extraire tous les utilisateurs uniques du lineage
     const userIds = new Set<string>();
-    const collectUserIds = (item: LineageItem) => {
-      if (item.authorId) {
+    
+    // Collecter les IDs des auteurs du contenu actuel
+    if (itemType === 'post') {
+      userIds.add((currentElement as Post).authorId);
+    } else {
+      (currentElement as Idea).creatorIds?.forEach(id => userIds.add(id));
+    }
+    
+    // Collecter les IDs des auteurs des parents
+    parentsComplete.forEach(item => {
+      if ('authorId' in item && item.authorId) {
         userIds.add(item.authorId);
       }
-      if (item.creatorIds) {
-        item.creatorIds.forEach(creatorId => userIds.add(creatorId));
+      if ('creatorIds' in item && item.creatorIds) {
+        item.creatorIds.forEach(id => userIds.add(id));
       }
-    };
-
-    collectUserIds(currentItem);
-    parents.forEach(collectUserIds);
-    children.forEach(collectUserIds);
+    });
+    
+    // Collecter les IDs des auteurs des enfants
+    childrenComplete.forEach(item => {
+      if ('authorId' in item && item.authorId) {
+        userIds.add(item.authorId);
+      }
+      if ('creatorIds' in item && item.creatorIds) {
+        item.creatorIds.forEach(id => userIds.add(id));
+      }
+    });
 
     // ✅ Récupérer les objets User correspondants
     const users = allUsers.filter(user => userIds.has(user.id));
 
-    console.log(`✅ [API] fetchLineage - ${parents.length} parents, ${children.length} enfants, ${users.length} utilisateurs`);
+    console.log(`✅ [API] fetchLineage - ${parentsComplete.length} parents, ${childrenComplete.length} enfants, ${users.length} utilisateurs`);
 
     const returnValue = {
-      lineage: lineageResult,
+      lineage: lineageServiceResult,
       users: users
     };
     
@@ -126,6 +146,116 @@ export async function fetchLineage(
 
 
 
+// ✅ Nouvelles fonctions pour récupérer les objets complets
+async function getParentLineageComplete(
+  element: Idea | Post,
+  type: 'idea' | 'post',
+  data: any,
+  maxDepth: number
+): Promise<(Idea | Post | DiscussionTopic)[]> {
+  console.log(`🔍 [lineageService] getParentLineageComplete - type: ${type}, element.id: ${element.id}`);
+  const parents: (Idea | Post | DiscussionTopic)[] = [];
+  const ideas = data.ideas;
+  const posts = data.posts;
+  const discussions = data.discussions;
+  console.log(`🔍 [lineageService] Données disponibles - ${ideas.length} idées, ${posts.length} posts, ${discussions.length} discussions`);
+
+  if (type === 'idea' && 'sourceIdeas' in element) {
+    // Ajouter les idées sources
+    const sourceIdeas = element.sourceIdeas || [];
+    console.log(`🔍 [lineageService] Idée ${element.id} - sourceIdeas:`, sourceIdeas);
+    for (const sourceId of sourceIdeas.slice(0, maxDepth)) {
+      const sourceIdea = ideas.find((i: Idea) => i.id === sourceId);
+      if (sourceIdea) {
+        console.log(`  ✅ Idée source trouvée: ${sourceIdea.id} - ${sourceIdea.title}`);
+        parents.push(sourceIdea);
+      } else {
+        console.log(`  ❌ Idée source NON trouvée: ${sourceId}`);
+      }
+    }
+
+    // Ajouter les posts sources
+    const sourcePosts = element.sourcePosts || [];
+    console.log(`🔍 [lineageService] Idée ${element.id} - sourcePosts:`, sourcePosts);
+    for (const postId of sourcePosts.slice(0, maxDepth)) {
+      const sourcePost = posts.find((p: Post) => p.id === postId);
+      if (sourcePost) {
+        console.log(`  ✅ Post source trouvé: ${sourcePost.id} - ${sourcePost.title || sourcePost.content.substring(0, 50)}`);
+        parents.push(sourcePost);
+      } else {
+        console.log(`  ❌ Post source NON trouvé: ${postId}`);
+      }
+    }
+
+    // ✅ Ajouter les discussions sources
+    const sourceDiscussions = element.sourceDiscussions || [];
+    for (const discussionId of sourceDiscussions.slice(0, maxDepth)) {
+      const sourceDiscussion = discussions.find((d: DiscussionTopic) => d.id === discussionId);
+      if (sourceDiscussion) {
+        parents.push(sourceDiscussion);
+      }
+    }
+  } else if (type === 'post' && 'sourcePosts' in element) {
+    // Pour les posts, ajouter les posts sources
+    const sourcePosts = element.sourcePosts || [];
+    console.log(`🔍 [lineageService] Post ${element.id} - sourcePosts:`, sourcePosts);
+    for (const postId of sourcePosts.slice(0, maxDepth)) {
+      const sourcePost = posts.find((p: Post) => p.id === postId);
+      if (sourcePost) {
+        console.log(`  ✅ Post source trouvé: ${sourcePost.id} - ${sourcePost.title || sourcePost.content.substring(0, 50)}`);
+        parents.push(sourcePost);
+      } else {
+        console.log(`  ❌ Post source NON trouvé: ${postId}`);
+      }
+    }
+  }
+
+  return parents;
+}
+
+async function getChildrenLineageComplete(
+  element: Idea | Post,
+  type: 'idea' | 'post',
+  data: any,
+  maxDepth: number
+): Promise<(Idea | Post | DiscussionTopic)[]> {
+  const children: (Idea | Post | DiscussionTopic)[] = [];
+  const ideas = data.ideas;
+  const posts = data.posts;
+
+  if (type === 'idea' && 'derivedIdeas' in element) {
+    // Ideas dérivées d'une Idea
+    const derivedIds = element.derivedIdeas || [];
+    for (const derivedId of derivedIds.slice(0, maxDepth)) {
+      const derivedIdea = ideas.find((i: Idea) => i.id === derivedId);
+      if (derivedIdea) {
+        children.push(derivedIdea);
+      }
+    }
+  } else if (type === 'post') {
+    // Ideas dérivées d'un Post
+    const derivedIdeaIds = (element as Post).derivedIdeas || [];
+    for (const derivedId of derivedIdeaIds.slice(0, maxDepth)) {
+      const derivedIdea = ideas.find((i: Idea) => i.id === derivedId);
+      if (derivedIdea) {
+        children.push(derivedIdea);
+      }
+    }
+
+    // Posts dérivés d'un Post
+    const derivedPostIds = (element as Post).derivedPosts || [];
+    for (const derivedId of derivedPostIds.slice(0, maxDepth)) {
+      const derivedPost = posts.find((p: Post) => p.id === derivedId);
+      if (derivedPost) {
+        children.push(derivedPost);
+      }
+    }
+  }
+
+  return children;
+}
+
+// ✅ Garder les anciennes fonctions pour compatibilité (utilisées par LineageResult)
 async function getParentLineage(
   element: Idea | Post,
   type: 'idea' | 'post',
@@ -163,6 +293,23 @@ async function getParentLineage(
           type: 'post',
           content: sourcePost.content,
           authorId: sourcePost.authorId, // ✅ Posts: utiliser authorId (string)
+          createdAt: sourcePost.createdAt,
+          level: -1,
+          relationshipType: 'parent'
+        });
+      }
+    }
+  } else if (type === 'post' && 'sourcePosts' in element) {
+    // ✅ Gérer les sourcePosts pour les posts aussi !
+    const sourcePosts = element.sourcePosts || [];
+    for (const postId of sourcePosts.slice(0, maxDepth)) {
+      const sourcePost = posts.find(p => p.id === postId);
+      if (sourcePost) {
+        parents.push({
+          id: sourcePost.id,
+          type: 'post',
+          content: sourcePost.content,
+          authorId: sourcePost.authorId,
           createdAt: sourcePost.createdAt,
           level: -1,
           relationshipType: 'parent'

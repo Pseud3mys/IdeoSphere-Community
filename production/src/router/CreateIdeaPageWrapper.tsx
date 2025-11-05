@@ -22,6 +22,14 @@ export function CreateIdeaPageWrapper() {
     : undefined;
   
   const sourcePost = navigationSourcePost || storeSourcePost;
+  
+  // Groupes pré-remplis depuis la navigation (ex: depuis GroupHubPage) OU depuis le store (héritage)
+  const navigationGroupIds = location.state?.prefilledGroupIds;
+  const storeGroupIds = store.prefilledGroupIds;
+  const prefilledGroupIds = navigationGroupIds || (storeGroupIds.length > 0 ? storeGroupIds : undefined);
+  
+  // Mode de création pré-rempli (ex: 'idea' depuis le bouton "Projet" du groupe)
+  const prefilledCreationMode = location.state?.creationMode as 'post' | 'idea' | undefined;
 
   return (
     <CreateIdeaPage
@@ -29,6 +37,8 @@ export function CreateIdeaPageWrapper() {
       prefilledSourceIdea={store.prefilledSourceIdea}
       prefilledLinkedContent={store.prefilledLinkedContent?.map(content => content.id) || []}
       prefilledSelectedDiscussions={store.prefilledSelectedDiscussions}
+      prefilledGroupIds={prefilledGroupIds}
+      prefilledCreationMode={prefilledCreationMode}
       onClearPrefilled={actions.clearPrefill}
     />
   );

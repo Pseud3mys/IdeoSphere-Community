@@ -1,4 +1,4 @@
-import { Idea, Post, User, DiscussionTopic, Community, CommunityMembership } from '../types';
+import { Idea, Post, User, DiscussionTopic } from '../types';
 import { loadMockDataSet } from './dataService';
 import { users } from '../data/users';
 
@@ -105,7 +105,6 @@ export async function fetchHomePageStats(): Promise<HomePageData> {
 export async function fetchFeed(userId?: string): Promise<{
   ideas: FeedIdeaCard[];
   posts: FeedPostCard[];
-  communities: Community[];
   users: User[];
 }> {
   console.log(`[api] fetchFeed${userId ? ` - User ${userId}` : ''}`);
@@ -170,12 +169,11 @@ export async function fetchFeed(userId?: string): Promise<{
       };
     });
 
-  console.log(`[api] fetchFeed - OK (${ideaCards.length} idées, ${postCards.length} posts, ${data.users.length} utilisateurs) - User content excluded: ${userId ? 'yes' : 'no'}`);
+  console.log(`[api] fetchFeed - OK (${ideaCards.length} idées, ${postCards.length} posts, ${data.users.length} utilisateurs)`);
   
   return {
     ideas: ideaCards,
     posts: postCards,
-    communities: data.communities || [],
     users: data.users || []
   };
 }

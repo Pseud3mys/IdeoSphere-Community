@@ -193,12 +193,78 @@ export function functionName(param1: string): string {
 
 ---
 
+---
+
+### `trendingUtils.ts` - Algorithme de tendance
+
+Calcule le score de tendance pour le tri des contenus basé sur l'engagement unique des utilisateurs et la récence.
+
+**Principe** :
+- Compte les **utilisateurs uniques** qui interagissent (pas le nombre total d'interactions)
+- Si quelqu'un soutient ET commente, il ne compte qu'une fois
+- Combine popularité (engagement) et récence avec décroissance temporelle
+
+**Fonctions disponibles** :
+
+```typescript
+// Pour les posts
+getUniqueEngagementForPost(post: Post): number
+// Compte: supporters + auteurs des commentaires (dédupliqués)
+
+getPostTrendingScore(post: Post): number
+// Score de tendance = engagement unique × décroissance temporelle
+
+// Pour les idées
+getUniqueEngagementForIdea(idea: Idea, allDiscussions?: DiscussionTopic[]): number
+// Compte: supporters + créateurs de discussions (dédupliqués)
+
+getLineageScore(idea: Idea): number
+// Score basé sur le réseau (sources + dérivations)
+
+getIdeaTrendingScore(idea: Idea, allDiscussions?: DiscussionTopic[]): number
+// Score = (engagement unique + lineage × 0.3) × décroissance temporelle
+
+// Tri mixte
+sortByTrending<T>(items: T[], allDiscussions?: DiscussionTopic[]): T[]
+// Trie un tableau mixte de posts et idées par score de tendance
+```
+
+**Algorithme de décroissance** :
+- Demi-vie de 7 jours (168 heures)
+- Les contenus perdent 50% de leur score tous les 7 jours
+- Formule: `score = engagement × 0.5^(ageInHours / 168)`
+
+**Utilisation** :
+
+```typescript
+// Dans un filtre "Tendance"
+import { getPostTrendingScore, getIdeaTrendingScore } from '../utils/trendingUtils';
+
+const allDiscussions = getAllDiscussionTopics();
+
+items.sort((a, b) => {
+  const scoreA = a.type === 'post' 
+    ? getPostTrendingScore(a)
+    : getIdeaTrendingScore(a, allDiscussions);
+  const scoreB = b.type === 'post'
+    ? getPostTrendingScore(b)
+    : getIdeaTrendingScore(b, allDiscussions);
+  return scoreB - scoreA; // Ordre décroissant
+});
+```
+
+**Différence avec "Plus populaire"** :
+- **Tendance** : engagement × récence (favorise le contenu récent ET populaire)
+- **Plus populaire** : engagement uniquement (favorise le contenu le plus engageant, peu importe l'âge)
+
+---
+
 ## 📊 Statistiques
 
-**Fichiers** : 4  
-**Fonctions exportées** : ~10  
-**Utilisation** : ~30 imports à travers l'app  
-**Couverture** : IDs, hashtags, chaînes, validation
+**Fichiers** : 5  
+**Fonctions exportées** : ~15  
+**Utilisation** : ~40 imports à travers l'app  
+**Couverture** : IDs, hashtags, chaînes, validation, tendance
 
 ---
 

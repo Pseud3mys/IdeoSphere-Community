@@ -50,14 +50,18 @@ uploadUserAvatar(userId: string, imageDataUrl: string): Promise<string>
 ```typescript
 createIdeaOnApi(payload: {...}): Promise<Idea>
 createPostOnApi(payload: {...}): Promise<Post>
-fetchIdeaDetails(ideaId: string): Promise<Idea | null>
-fetchPostDetails(postId: string): Promise<Post | null>
+fetchIdeaDetails(ideaId: string): Promise<{ idea: Idea; users: User[] } | null>
+fetchPostDetails(postId: string): Promise<{ post: Post; users: User[] } | null>
 fetchUserProfileFromApi(userId: string): Promise<User | null>
 createUserAccountOnApi(userData: {...}): Promise<User>
 updateUserProfileOnApi(userId: string, updates: Partial<User>): Promise<User | null>
 ```
 
-**Retours** : `Idea`, `Post`, `User` (objets complets) ou `null`
+**Retours** : 
+- `createIdeaOnApi`, `createPostOnApi`: objets complets (`Idea`, `Post`)
+- `fetchIdeaDetails`: `{ idea: Idea; users: User[] }` - l'idée complète avec ses créateurs
+- `fetchPostDetails`: `{ post: Post; users: User[] }` - le post complet avec son auteur
+- `fetchUserProfileFromApi`, `createUserAccountOnApi`, `updateUserProfileOnApi`: `User` ou `null`
 
 ---
 

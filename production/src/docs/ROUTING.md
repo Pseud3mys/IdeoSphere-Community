@@ -268,14 +268,28 @@ export function ContentDetailPageWrapper() {
   
   // Détection automatique du type
   if (contentId?.startsWith('ideas/')) {
-    return <IdeaDetailPageWrapper />;
+    return <IdeaDetailPageWrapper />; // IdeaDetailPageWrapper extrait l'ID réel
   }
   
   if (contentId?.startsWith('posts/')) {
-    return <PostDetailPageWrapper />;
+    return <PostDetailPageWrapper />; // PostDetailPageWrapper extrait l'ID réel
   }
   
   return <div>Type de contenu invalide</div>;
+}
+```
+
+### IdeaDetailPageWrapper et PostDetailPageWrapper
+
+Ces wrappers extraient automatiquement l'ID réel depuis le format préfixé :
+
+```tsx
+// Dans IdeaDetailPageWrapper
+let ideaId = params['*'] || params.contentId || params.ideaId;
+
+// Extraire l'ID réel si le format est 'ideas/xxx'
+if (ideaId?.startsWith('ideas/')) {
+  ideaId = ideaId.substring(6); // 'ideas/123' → '123'
 }
 ```
 
@@ -285,6 +299,7 @@ export function ContentDetailPageWrapper() {
 ✅ **Pas de duplication** : Un seul point d'entrée  
 ✅ **Extensible** : Facile d'ajouter de nouveaux types  
 ✅ **IDs préfixés** : `ideas/123`, `posts/456` (cohérent avec l'API)  
+✅ **Navigation transparente** : Les hooks ajoutent automatiquement le préfixe  
 
 ---
 

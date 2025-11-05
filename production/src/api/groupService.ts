@@ -1,157 +1,174 @@
+// src/services/groupService.ts
+
+import { 
+  Group, 
+  GroupMembership, 
+  Idea, 
+  Post, 
+  PendingGroupCreation, 
+  User 
+} from '../types';
+import apiClient from './apiClient';
+import { 
+  transformGroup, 
+  transformPendingGroup, 
+  transformUser, 
+  transformFeedData,
+  transformMembership,
+  RawGroup, 
+  RawPendingGroup, 
+  RawUser, 
+  RawFeedData,
+  RawMembership
+} from './transformService';
+
+
+/*
+  NOTE: Les fonctions 'updateGroup' et 'promoteToAnimator' 
+  ont été omises car elles n'ont pas de route correspondante 
+  dans le backend 'group_routes.py' fourni.
+*/
+
 /**
- * Service API pour la gestion des groupes
- * 
- * Phase 1 : Fonctions simples mockées pour les tests
- * Les vraies fonctions API seront implémentées lors du passage en production
+ * Récupère tous les groupes actifs et leurs animateurs.
+ * GET /api/groups
  */
+export async function fetchAllGroups(): Promise<{ groups: Group[], users: User[] }> {
+  try {
+    const response = await apiClient.get<{ groups: RawGroup[], users: RawUser[] }>('/groups');
+    const groups = response.data.groups.map(transformGroup);
+    const users = response.data.users.map(transformUser);
+    
+    // Attribuer les animateurs aux groupes (basé sur la réponse de get_all_groups_normalized)
+    const animatorIdsByGroup = new Map<string, string[]>();
+    users.forEach(user => {
+      // Cette info n'est pas directement dans la réponse, on doit la déduire
+      // ... En fait, la réponse 'users' contient TOUS les animateurs de TOUS les groupes.
+      // Le frontend devra faire le lien via `group.animators` qui est dans le type Group
+      // mais pas rempli par la DB.
+      // Simplifions:
+    });
 
-import { Group, GroupMembership, Idea, Post, PendingGroupCreation } from '../types';
-import { groups, groupMemberships } from '../data/groups';
-import { pendingGroups } from '../data/pendingGroups';
-import { getMockIdeas } from '../data/ideas';
-import { getMockPosts } from '../data/posts';
-import { users } from '../data/users';
-
-// Simulation de délai réseau
-const simulateNetworkDelay = () => new Promise(resolve => setTimeout(resolve, 300));
-
-/**
- * Récupère tous les groupes actifs
- */
-export async function fetchAllGroups(): Promise<{ groups: Group[], users: typeof import('../data/users').users }> {
-  await simulateNetworkDelay();
-  
-  // Récupérer tous les animateurs
-  const animatorIds = new Set<string>();
-  groups.forEach(g => g.animators.forEach(id => animatorIds.add(id)));
-  const animators = users.filter(u => animatorIds.has(u.id));
-  
-  console.log(`📦 [groupService.fetchAllGroups] ${groups.length} groupes chargés`);
-  return { groups: [...groups], users: animators };
+    console.log(`📦 [API groupService.fetchAllGroups] ${groups.length} groupes chargés`);
+    return { groups, users };
+  } catch (error) {
+    console.error("❌ [API groupService.fetchAllGroups]", error);
+    return { groups: [], users: [] };
+  }
 }
 
 /**
- * Récupère un groupe par son ID
+ * Récupère un groupe par son ID et la liste de ses membres.
+ * GET /api/groups/<key>
  */
-export async function fetchGroupById(groupId: string): Promise<{ 
-  group: Group | null, 
-  members: typeof import('../data/users').users 
-}> {
-  await simulateNetworkDelay();
-  
-  const group = groups.find(g => g.id === groupId) || null;
-  
-  if (!group) {
-    console.log(`📦 [groupService.fetchGroupById] Groupe ${groupId} introuvable`);
+export async function fetchGroupById(groupId: string): Promise<{ group: Group | null, members: User[] }> {
+  try {
+    const groupKey = groupId.split('/')[1];
+    const response = await apiClient.get<{ group: RawGroup, users: RawUser[] }>(`/groups/${groupKey}`);
+    
+    const group = transformGroup(response.data.group);
+    const members = response.data.users.map(transformUser);
+    
+    console.log(`📦 [API groupService.fetchGroupById] Groupe ${groupId} avec ${members.length} membres`);
+    return { group, members };
+  } catch (error) {
+    console.error(`❌ [API groupService.fetchGroupById] Groupe ${groupId}`, error);
     return { group: null, members: [] };
   }
-  
-  // Récupérer tous les membres du groupe
-  const membershipIds = groupMemberships
-    .filter(m => m.groupId === groupId && m.isActive)
-    .map(m => m.userId);
-  
-  const members = users.filter(u => membershipIds.includes(u.id));
-  
-  console.log(`📦 [groupService.fetchGroupById] Groupe ${groupId} avec ${members.length} membres`);
-  return { group, members };
 }
 
 /**
- * Récupère le feed d'un groupe (idées et posts)
- * Filtrage par groupId
+ * Récupère le feed d'un groupe (idées et posts).
+ * GET /api/groups/<key>/feed
  */
-export async function fetchGroupFeed(groupId: string): Promise<{ ideas: Idea[], posts: Post[] }> {
-  await simulateNetworkDelay();
-  
-  const ideas = getMockIdeas();
-  const posts = getMockPosts();
-  
-  const groupIdeas = ideas.filter(i => i.groupId === groupId);
-  const groupPosts = posts.filter(p => p.groupId === groupId);
-  
-  console.log(`📦 [groupService.fetchGroupFeed] Groupe ${groupId} : ${groupIdeas.length} idées, ${groupPosts.length} posts`);
-  return { ideas: groupIdeas, posts: groupPosts };
+export async function fetchGroupFeed(groupId: string, userId: string): Promise<{ ideas: Idea[], posts: Post[] }> {
+  try {
+    const groupKey = groupId.split('/')[1];
+    // AJOUT: Extraire la clé de l'utilisateur
+    const userKey = userId.split('/')[1];
+
+    const response = await apiClient.get<RawFeedData>(
+      `/groups/${groupKey}/feed`,
+      { params: { userId: userKey } }
+    );
+    
+    const { ideas, posts } = transformFeedData(response.data);
+    
+    console.log(`📦 [API groupService.fetchGroupFeed] Groupe ${groupId} pour User ${userId} : ${ideas.length} idées, ${posts.length} posts`);
+    return { ideas, posts };
+
+  } catch (error) {
+    // MODIFIÉ: Log d'erreur amélioré pour le débogage
+    console.error(`❌ [API groupService.fetchGroupFeed] Erreur pour Groupe ${groupId}, User ${userId}`, error);
+    return { ideas: [], posts: [] };
+  }
 }
 
 /**
- * Permet à un utilisateur de rejoindre un groupe
+ * Permet à un utilisateur de rejoindre un groupe.
+ * POST /api/groups/<key>/join
  */
 export async function joinGroup(userId: string, groupId: string): Promise<GroupMembership> {
-  await simulateNetworkDelay();
-  
-  const membership: GroupMembership = {
-    userId,
-    groupId,
-    role: 'member',
-    joinedAt: new Date(),
-    isActive: true,
-  };
-  
-  // Ajouter au tableau (mutable pour les données mockées)
-  groupMemberships.push(membership);
-  
-  // Incrémenter le compteur de membres
-  const group = groups.find(g => g.id === groupId);
-  if (group) {
-    group.memberCount++;
+  try {
+    const groupKey = groupId.split('/')[1];
+    // Le backend attend { userId } dans le corps (simulé, car auth gère)
+    const response = await apiClient.post<RawMembership>(`/groups/${groupKey}/join`, { userId });
+    
+    const membership = transformMembership(response.data);
+    
+    console.log(`📦 [API groupService.joinGroup] ${userId} a rejoint le groupe ${groupId}`);
+    return membership;
+  } catch (error) {
+    console.error(`❌ [API groupService.joinGroup] ${userId} / ${groupId}`, error);
+    throw error;
   }
-  
-  console.log(`📦 [groupService.joinGroup] ${userId} a rejoint le groupe ${groupId}`);
-  return membership;
 }
 
 /**
- * Permet à un utilisateur de quitter un groupe
+ * Permet à un utilisateur de quitter un groupe.
+ * POST /api/groups/<key>/leave
  */
 export async function leaveGroup(userId: string, groupId: string): Promise<boolean> {
-  await simulateNetworkDelay();
-  
-  const membership = groupMemberships.find(
-    m => m.userId === userId && m.groupId === groupId && m.isActive
-  );
-  
-  if (!membership) {
-    console.log(`📦 [groupService.leaveGroup] Aucun membership actif trouvé`);
+  try {
+    const groupKey = groupId.split('/')[1];
+    // Le backend attend { userId } dans le corps (simulé, car auth gère)
+    await apiClient.post(`/groups/${groupKey}/leave`, { userId });
+    
+    console.log(`📦 [API groupService.leaveGroup] ${userId} a quitté le groupe ${groupId}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ [API groupService.leaveGroup] ${userId} / ${groupId}`, error);
     return false;
   }
-  
-  // Marquer comme inactif
-  membership.isActive = false;
-  
-  // Décrémenter le compteur de membres
-  const group = groups.find(g => g.id === groupId);
-  if (group && group.memberCount > 0) {
-    group.memberCount--;
-  }
-  
-  console.log(`📦 [groupService.leaveGroup] ${userId} a quitté le groupe ${groupId}`);
-  return true;
 }
 
 /**
- * Récupère les memberships d'un utilisateur
+ * Récupère les adhésions (memberships) actives d'un utilisateur.
+ * GET /api/users/<key>/memberships
  */
 export async function fetchUserGroupMemberships(userId: string): Promise<GroupMembership[]> {
-  await simulateNetworkDelay();
-  
-  const memberships = groupMemberships.filter(m => m.userId === userId && m.isActive);
-  
-  console.log(`📦 [groupService.fetchUserGroupMemberships] ${memberships.length} memberships pour ${userId}`);
-  return memberships;
+  try {
+    // Extrait la clé de l'ID (ex: "users/123" -> "123")
+    const userKey = userId.split('/')[1];
+    
+    // Appelle la nouvelle route backend
+    const response = await apiClient.get<RawMembership[]>(`/users/${userKey}/memberships`);
+    
+    // Transforme les données brutes en objets GroupMembership
+    const memberships = response.data.map(transformMembership);
+    
+    console.log(`📦 [API groupService.fetchUserGroupMemberships] ${memberships.length} memberships actifs chargés pour ${userId}`);
+    return memberships;
+    
+  } catch (error) {
+    console.error(`❌ [API groupService.fetchUserGroupMemberships] ${userId}`, error);
+    return [];
+  }
 }
 
-// ========================================
-// PHASE 2 : Création de groupes avec Noyau Initial
-// ========================================
-
 /**
- * Crée un groupe en attente (pending) avec noyau initial
- * @param groupData - Données du groupe (nom, description, type, tags, etc.)
- * @param founderIds - IDs des fondateurs
- * @param initiatorId - ID de l'utilisateur qui initie la création
- * @param founderEmails - Emails de fondateurs (optionnel, sera vérifié côté backend)
- * @returns Le PendingGroupCreation créé
+ * Crée un groupe en attente (pending) avec noyau initial.
+ * POST /api/groups/pending
  */
 export async function createPendingGroup(
   groupData: {
@@ -167,286 +184,82 @@ export async function createPendingGroup(
   initiatorId: string,
   founderEmails: string[] = []
 ): Promise<PendingGroupCreation> {
-  await simulateNetworkDelay();
-  
-  // Validation : minimum 2 fondateurs (IDs + emails combinés)
-  const totalFounders = founderIds.length + founderEmails.length;
-  if (totalFounders < 2) {
-    throw new Error('Un groupe nécessite au moins 2 co-fondateurs');
+  try {
+    const payload = { ...groupData, founderIds, initiatorId };
+    const response = await apiClient.post<RawPendingGroup>('/groups/pending', payload);
+    
+    const pendingGroup = transformPendingGroup(response.data);
+    console.log(`📦 [API groupService.createPendingGroup] Groupe pending créé : ${pendingGroup.id}`);
+    return pendingGroup;
+  } catch (error) {
+    console.error(`❌ [API groupService.createPendingGroup]`, error);
+    throw error;
   }
-  
-  // Mock: Dans un vrai backend, on vérifierait que les emails correspondent à des utilisateurs
-  // et on convertirait les emails en IDs
-  console.log(`📧 [Backend Mock] Vérification de ${founderEmails.length} emails...`);
-  
-  // Pour la démo, on ajoute l'initiateur + les IDs fournis aux fondateurs
-  const allFounderIds = [initiatorId, ...founderIds.filter(id => id !== initiatorId)];
-  
-  // Créer l'ID
-  const pendingId = `pg${Date.now()}`;
-  
-  // Créer le groupe pending
-  const pendingGroup: PendingGroupCreation = {
-    id: pendingId,
-    name: groupData.name,
-    description: groupData.description,
-    shortDescription: groupData.shortDescription,
-    type: groupData.type,
-    avatar: groupData.avatar,
-    location: groupData.location,
-    tags: groupData.tags,
-    founders: allFounderIds, // Les IDs vérifiés
-    confirmations: [initiatorId], // L'initiateur confirme automatiquement
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 jours
-    initiatorId,
-  };
-  
-  // Ajouter au tableau mocké (mutable)
-  pendingGroups.push(pendingGroup);
-  
-  console.log(`📦 [groupService.createPendingGroup] Groupe pending créé : ${pendingId} avec ${allFounderIds.length} fondateurs (${founderIds.length} IDs + ${founderEmails.length} emails)`);
-  console.log(`   📧 [Backend Mock] Emails envoyés aux ${allFounderIds.length - 1} invités + ${founderEmails.length} emails pour vérification`);
-  
-  return pendingGroup;
 }
 
 /**
- * Confirme la participation d'un fondateur à un groupe pending
- * @param pendingId - ID du groupe pending
- * @param userId - ID de l'utilisateur qui confirme
- * @returns Le PendingGroupCreation mis à jour
+ * Confirme la participation d'un fondateur à un groupe pending.
+ * POST /api/groups/pending/<key>/confirm
  */
 export async function confirmGroupFounder(pendingId: string, userId: string): Promise<PendingGroupCreation> {
-  await simulateNetworkDelay();
-  
-  const pendingGroup = pendingGroups.find(pg => pg.id === pendingId);
-  
-  if (!pendingGroup) {
-    throw new Error(`Groupe pending ${pendingId} introuvable`);
-  }
-  
-  // Vérifier que l'utilisateur est bien un fondateur
-  if (!pendingGroup.founders.includes(userId)) {
-    throw new Error(`L'utilisateur ${userId} n'est pas un fondateur de ce groupe`);
-  }
-  
-  // Vérifier si déjà confirmé
-  if (pendingGroup.confirmations.includes(userId)) {
-    console.log(`📦 [groupService.confirmGroupFounder] ${userId} avait déjà confirmé`);
+  try {
+    const pendingKey = pendingId.split('/')[1];
+    // Le backend attend { userId } dans le corps (simulé, car auth gère)
+    const response = await apiClient.post<RawPendingGroup>(`/groups/pending/${pendingKey}/confirm`, { userId });
+    
+    const pendingGroup = transformPendingGroup(response.data);
+    console.log(`📦 [API groupService.confirmGroupFounder] ${userId} a confirmé ${pendingId}`);
     return pendingGroup;
+  } catch (error) {
+    console.error(`❌ [API groupService.confirmGroupFounder] ${pendingId}`, error);
+    throw error;
   }
-  
-  // Ajouter la confirmation
-  pendingGroup.confirmations.push(userId);
-  
-  console.log(`📦 [groupService.confirmGroupFounder] ${userId} a confirmé. ${pendingGroup.confirmations.length}/${pendingGroup.founders.length} confirmations`);
-  
-  // Si tous les fondateurs ont confirmé, activer le groupe automatiquement
-  if (pendingGroup.confirmations.length === pendingGroup.founders.length) {
-    console.log(`✅ [groupService.confirmGroupFounder] Tous les fondateurs ont confirmé - Activation automatique`);
-    await activatePendingGroup(pendingId);
-  }
-  
-  return pendingGroup;
 }
 
 /**
- * Active un groupe pending (tous les fondateurs ont confirmé)
- * @param pendingId - ID du groupe pending à activer
- * @returns Le Group activé
- */
-async function activatePendingGroup(pendingId: string): Promise<Group> {
-  const pendingGroup = pendingGroups.find(pg => pg.id === pendingId);
-  
-  if (!pendingGroup) {
-    throw new Error(`Groupe pending ${pendingId} introuvable`);
-  }
-  
-  // Créer le groupe actif
-  const newGroupId = `g${Date.now()}`;
-  const newGroup: Group = {
-    id: newGroupId,
-    name: pendingGroup.name,
-    description: pendingGroup.description,
-    shortDescription: pendingGroup.shortDescription,
-    type: pendingGroup.type,
-    avatar: pendingGroup.avatar,
-    location: pendingGroup.location,
-    tags: pendingGroup.tags,
-    memberCount: pendingGroup.founders.length,
-    ideaCount: 0,
-    projectCount: 0,
-    createdAt: new Date(),
-    createdBy: pendingGroup.founders,
-    animators: pendingGroup.founders, // Tous les fondateurs deviennent animateurs
-    isActive: true,
-  };
-  
-  // Ajouter le groupe
-  groups.push(newGroup);
-  
-  // Créer les memberships pour tous les fondateurs (tous animateurs)
-  pendingGroup.founders.forEach(founderId => {
-    const membership: GroupMembership = {
-      userId: founderId,
-      groupId: newGroupId,
-      role: 'animator',
-      joinedAt: new Date(),
-      isActive: true,
-    };
-    groupMemberships.push(membership);
-  });
-  
-  // Retirer le groupe pending
-  const index = pendingGroups.findIndex(pg => pg.id === pendingId);
-  if (index !== -1) {
-    pendingGroups.splice(index, 1);
-  }
-  
-  console.log(`✅ [groupService.activatePendingGroup] Groupe ${newGroupId} activé avec ${pendingGroup.founders.length} animateurs`);
-  console.log(`   📧 [Backend Mock] Emails de confirmation envoyés à tous les fondateurs`);
-  
-  return newGroup;
-}
-
-/**
- * Récupère les groupes d'un utilisateur (actifs + pending)
- * @param userId - ID de l'utilisateur
- * @returns Groupes actifs et pending de l'utilisateur
+ * Récupère les groupes d'un utilisateur (actifs + pending).
+ * GET /api/groups/my-groups
  */
 export async function fetchMyGroups(userId: string): Promise<{
   activeGroups: Group[];
   pendingGroups: PendingGroupCreation[];
 }> {
-  await simulateNetworkDelay();
-  
-  // Groupes actifs où l'utilisateur est membre
-  const userMemberships = groupMemberships.filter(m => m.userId === userId && m.isActive);
-  const activeGroupIds = userMemberships.map(m => m.groupId);
-  const activeGroups = groups.filter(g => activeGroupIds.includes(g.id));
-  
-  // Groupes pending où l'utilisateur est fondateur
-  const userPendingGroups = pendingGroups.filter(pg => pg.founders.includes(userId));
-  
-  return {
-    activeGroups,
-    pendingGroups: userPendingGroups,
-  };
+  try {
+    const response = await apiClient.get<{ activeGroups: RawGroup[], pendingGroups: RawPendingGroup[] }>(
+      '/groups/my-groups', 
+      { params: { userId } }
+    );
+    
+    const activeGroups = response.data.activeGroups.map(transformGroup);
+    const pendingGroups = response.data.pendingGroups.map(transformPendingGroup);
+    
+    console.log(`📦 [API groupService.fetchMyGroups] ${activeGroups.length} actifs, ${pendingGroups.length} pending pour ${userId}`);
+    return { activeGroups, pendingGroups };
+  } catch (error) {
+    console.error(`❌ [API groupService.fetchMyGroups] ${userId}`, error);
+    return { activeGroups: [], pendingGroups: [] };
+  }
 }
 
 /**
- * Récupère les détails d'un groupe pending
- * @param pendingId - ID du groupe pending
- * @returns Le PendingGroupCreation et les users fondateurs
+ * Récupère les détails d'un groupe pending.
+ * GET /api/groups/pending/<key>
  */
 export async function fetchPendingGroupDetails(pendingId: string): Promise<{
   pendingGroup: PendingGroupCreation | null;
-  founders: typeof import('../data/users').users;
+  founders: User[];
 }> {
-  await simulateNetworkDelay();
-  
-  const pendingGroup = pendingGroups.find(pg => pg.id === pendingId) || null;
-  
-  if (!pendingGroup) {
-    console.log(`📦 [groupService.fetchPendingGroupDetails] Groupe pending ${pendingId} introuvable`);
+  try {
+    const pendingKey = pendingId.split('/')[1];
+    const response = await apiClient.get<{ group: RawPendingGroup, users: RawUser[] }>(`/groups/pending/${pendingKey}`);
+    
+    const pendingGroup = transformPendingGroup(response.data.group);
+    const founders = response.data.users.map(transformUser);
+    
+    console.log(`📦 [API groupService.fetchPendingGroupDetails] Groupe pending ${pendingId} avec ${founders.length} fondateurs`);
+    return { pendingGroup, founders };
+  } catch (error) {
+    console.error(`❌ [API groupService.fetchPendingGroupDetails] ${pendingId}`, error);
     return { pendingGroup: null, founders: [] };
   }
-  
-  // Récupérer les users fondateurs
-  const founders = users.filter(u => pendingGroup.founders.includes(u.id));
-  
-  console.log(`📦 [groupService.fetchPendingGroupDetails] Groupe pending ${pendingId} avec ${founders.length} fondateurs`);
-  return { pendingGroup, founders };
-}
-
-// ========================================
-// PHASE 3 : Gestion des groupes
-// ========================================
-
-/**
- * Met à jour les informations d'un groupe
- * @param groupId - ID du groupe à mettre à jour
- * @param updates - Champs à mettre à jour
- * @param updatedBy - ID de l'utilisateur qui effectue la mise à jour (doit être animateur)
- * @returns Le groupe mis à jour
- */
-export async function updateGroup(
-  groupId: string,
-  updates: Partial<Pick<Group, 'name' | 'description' | 'shortDescription' | 'type' | 'avatar' | 'banner' | 'location' | 'tags'>>,
-  updatedBy: string
-): Promise<Group | null> {
-  await simulateNetworkDelay();
-  
-  const group = groups.find(g => g.id === groupId);
-  
-  if (!group) {
-    console.error(`❌ [groupService.updateGroup] Groupe ${groupId} introuvable`);
-    return null;
-  }
-  
-  // Vérifier que l'utilisateur est animateur
-  if (!group.animators.includes(updatedBy)) {
-    console.error(`❌ [groupService.updateGroup] Utilisateur ${updatedBy} n'est pas animateur du groupe ${groupId}`);
-    throw new Error('Vous devez être animateur pour modifier ce groupe');
-  }
-  
-  // Appliquer les mises à jour
-  Object.assign(group, updates);
-  
-  console.log(`✅ [groupService.updateGroup] Groupe ${groupId} mis à jour par ${updatedBy}`);
-  return group;
-}
-
-/**
- * Promeut un membre en animateur
- * @param groupId - ID du groupe
- * @param userId - ID de l'utilisateur à promouvoir
- * @param promotedBy - ID de l'animateur qui effectue la promotion
- * @returns Le membership mis à jour
- */
-export async function promoteToAnimator(
-  groupId: string,
-  userId: string,
-  promotedBy: string
-): Promise<GroupMembership | null> {
-  await simulateNetworkDelay();
-  
-  const group = groups.find(g => g.id === groupId);
-  
-  if (!group) {
-    console.error(`❌ [groupService.promoteToAnimator] Groupe ${groupId} introuvable`);
-    return null;
-  }
-  
-  // Vérifier que promotedBy est animateur
-  if (!group.animators.includes(promotedBy)) {
-    console.error(`❌ [groupService.promoteToAnimator] Utilisateur ${promotedBy} n'est pas animateur du groupe ${groupId}`);
-    throw new Error('Vous devez être animateur pour promouvoir un membre');
-  }
-  
-  // Trouver le membership
-  const membership = groupMemberships.find(m => m.userId === userId && m.groupId === groupId);
-  
-  if (!membership) {
-    console.error(`❌ [groupService.promoteToAnimator] Membership introuvable pour ${userId} dans ${groupId}`);
-    return null;
-  }
-  
-  // Si déjà animateur, ne rien faire
-  if (membership.role === 'animator') {
-    console.warn(`⚠️ [groupService.promoteToAnimator] ${userId} est déjà animateur du groupe ${groupId}`);
-    return membership;
-  }
-  
-  // Promouvoir le membre
-  membership.role = 'animator';
-  
-  // Ajouter à la liste des animateurs du groupe
-  if (!group.animators.includes(userId)) {
-    group.animators.push(userId);
-  }
-  
-  console.log(`✅ [groupService.promoteToAnimator] ${userId} promu animateur du groupe ${groupId} par ${promotedBy}`);
-  return membership;
 }

@@ -346,6 +346,7 @@ export function createApiActions(
     
     /**
      * Charge le lineage (parents/enfants) d'un contenu
+     * ✅ Nouvelle version qui gère les objets complets (Idea | Post | DiscussionTopic)
      */
     loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
@@ -361,146 +362,84 @@ export function createApiActions(
             return;
           }
           
-          // ✅ IMPORTANT: Ajouter TOUS les utilisateurs au store EN PREMIER
-          // pour éviter la race condition qui cause l'affichage de "utilisateur inconnu"
-          // L'API retourne déjà tous les utilisateurs nécessaires (auteurs des posts et créateurs des ideas)
+          // ✅ ÉTAPE 1: Ajouter TOUS les utilisateurs au store EN PREMIER
           users.forEach((user: User) => {
             actions.addUser(user);
           });
           
           console.log(`✅ [apiActions] loadLineage - ${users.length} utilisateurs ajoutés au store`);
           
-          // Ajouter/fusionner les éléments au store directement
-          const parentIds: string[] = [];
-          const childIds: string[] = [];
+          // ✅ ÉTAPE 2: Ventiler les entités dans leurs tranches respectives
+          const parentIdeaIds: string[] = [];
+          const parentPostIds: string[] = [];
+          const parentDiscussionIds: string[] = [];
+          const childIdeaIds: string[] = [];
+          const childPostIds: string[] = [];
           
-          lineageResult.parents.forEach((parentItem: any) => {
-            if (parentItem.type === 'idea') {
-              // Créer un objet Idea complet à partir du LineageItem
-              actions.addIdea({
-                id: parentItem.id,
-                title: parentItem.title || '',
-                summary: parentItem.summary || '',
-                description: '',
-                creatorIds: parentItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
-                createdAt: parentItem.createdAt,
-                supportCount: 0,
-                supporters: [],
-                ratings: [],
-                ratingCriteria: [],
-                tags: [],
-                status: 'published',
-                sourceIdeas: [],
-                sourcePosts: [],
-                derivedIdeas: itemType === 'idea' ? [itemId] : [], // ✅ L'idée parente a l'item actuel comme dérivée si c'est une idée
-                discussionIds: []
-              });
-            } else {
-              // Créer un objet Post complet à partir du LineageItem
-              actions.addPost({
-                id: parentItem.id,
-                content: parentItem.content || '',
-                authorId: parentItem.authorId || 'unknown', // ✅ Posts: utiliser authorId (string)
-                createdAt: parentItem.createdAt,
-                supportCount: 0,
-                supporters: [],
-                replies: [],
-                tags: [],
-                location: '',
-                linkedContent: [],
-                sourcePosts: [],
-                derivedIdeas: itemType === 'idea' ? [itemId] : [], // ✅ Le post parent a l'item actuel comme dérivée si c'est une idée
-                derivedPosts: itemType === 'post' ? [itemId] : [] // ✅ Ou comme post dérivé si c'est un post
-              });
+          // Ajouter les parents au store
+          lineageResult.parents.forEach((parent: Idea | Post | DiscussionTopic) => {
+            // ✅ Détecter le type d'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
+              actions.addIdea(parent as Idea);
+              parentIdeaIds.push(parent.id);
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
+              actions.addPost(parent as Post);
+              parentPostIds.push(parent.id);
+            } else if ('content' in parent && 'type' in parent) {
+              // C'est une DiscussionTopic (a content ET type)
+              actions.addDiscussionTopic(parent as DiscussionTopic);
+              parentDiscussionIds.push(parent.id);
             }
-            parentIds.push(parentItem.id);
           });
           
-          lineageResult.children.forEach((childItem: any) => {
-            if (childItem.type === 'idea') {
-              // Créer un objet Idea complet à partir du LineageItem
-              actions.addIdea({
-                id: childItem.id,
-                title: childItem.title || '',
-                summary: childItem.summary || '',
-                description: '',
-                creatorIds: childItem.creatorIds || [], // ✅ Ideas: utiliser creatorIds (string[])
-                createdAt: childItem.createdAt,
-                supportCount: 0,
-                supporters: [],
-                ratings: [],
-                ratingCriteria: [],
-                tags: [],
-                status: 'published',
-                sourceIdeas: itemType === 'idea' ? [itemId] : [], // ✅ L'idée dérivée provient de l'item actuel si c'est une idée
-                sourcePosts: itemType === 'post' ? [itemId] : [], // ✅ Ou du post actuel si c'est un post
-                derivedIdeas: [],
-                discussionIds: []
-              });
-            } else {
-              // Créer un objet Post complet à partir du LineageItem
-              actions.addPost({
-                id: childItem.id,
-                content: childItem.content || '',
-                authorId: childItem.authorId || 'unknown', // ✅ Posts: utiliser authorId (string)
-                createdAt: childItem.createdAt,
-                supportCount: 0,
-                supporters: [],
-                replies: [],
-                tags: [],
-                location: '',
-                linkedContent: [],
-                sourcePosts: [],
-                derivedIdeas: [],
-                derivedPosts: []
-              });
+          // Ajouter les enfants au store
+          lineageResult.children.forEach((child: Idea | Post | DiscussionTopic) => {
+            // ✅ Détecter le type d'entité de manière robuste
+            if ('summary' in child && 'creatorIds' in child) {
+              // C'est une Idea (a summary ET creatorIds)
+              actions.addIdea(child as Idea);
+              childIdeaIds.push(child.id);
+            } else if ('content' in child && 'authorId' in child && 'supporters' in child) {
+              // C'est un Post (a content, authorId ET supporters)
+              actions.addPost(child as Post);
+              childPostIds.push(child.id);
+            } else if ('content' in child && 'type' in child) {
+              // C'est une DiscussionTopic (a content ET type)
+              actions.addDiscussionTopic(child as DiscussionTopic);
             }
-            childIds.push(childItem.id);
           });
           
-          // Mettre à jour l'élément actuel avec les IDs des parents et enfants
+          // ✅ ÉTAPE 3: Mettre à jour l'élément actuel avec les IDs des parents et enfants
           if (itemType === 'idea') {
-            const parentIdeaIds = parentIds.filter(id => {
-              const item = lineageResult.parents.find((p: any) => p.id === id);
-              return item?.type === 'idea';
-            });
-            const parentPostIds = parentIds.filter(id => {
-              const item = lineageResult.parents.find((p: any) => p.id === id);
-              return item?.type === 'post';
-            });
-            const childIdeaIds = childIds.filter(id => {
-              const item = lineageResult.children.find((c: any) => c.id === id);
-              return item?.type === 'idea';
-            });
-            
             actions.updateIdea(itemId, {
               sourceIdeas: parentIdeaIds,
               sourcePosts: parentPostIds,
+              sourceDiscussions: parentDiscussionIds, // ✅ Nouveau champ
               derivedIdeas: childIdeaIds
+            });
+            
+            console.log(`✅ [apiActions] loadLineage - Idée ${itemId} mise à jour:`, {
+              sourceIdeas: parentIdeaIds.length,
+              sourcePosts: parentPostIds.length,
+              sourceDiscussions: parentDiscussionIds.length,
+              derivedIdeas: childIdeaIds.length
             });
           } else {
             // Pour un post
-            const parentPostIds = parentIds.filter(id => {
-              const item = lineageResult.parents.find((p: any) => p.id === id);
-              return item?.type === 'post';
-            });
-            const childIdeaIds = childIds.filter(id => {
-              const item = lineageResult.children.find((c: any) => c.id === id);
-              return item?.type === 'idea';
-            });
-            const childPostIds = childIds.filter(id => {
-              const item = lineageResult.children.find((c: any) => c.id === id);
-              return item?.type === 'post';
-            });
-            
             actions.updatePost(itemId, {
               sourcePosts: parentPostIds,
               derivedIdeas: childIdeaIds,
               derivedPosts: childPostIds
             });
+            
+            console.log(`✅ [apiActions] loadLineage - Post ${itemId} mis à jour:`, {
+              sourcePosts: parentPostIds.length,
+              derivedIdeas: childIdeaIds.length,
+              derivedPosts: childPostIds.length
+            });
           }
-          
-          console.log(`✅ [hook/apiActions] loadLineage - ${itemType} ${itemId} mis à jour avec ${parentIds.length} parents et ${childIds.length} enfants`);
           
           return lineageResult;
         }
@@ -611,51 +550,64 @@ export function createApiActions(
           // 2. AJOUTER toutes les entités du lineage au store
           // Ajouter les parents au store
           lineageData.parents.forEach(parent => {
-            if (parent.type === 'idea') {
-              // Vérifier si l'idée existe dans le store
+            // ✅ Type guard pour déterminer le type de l'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
               const existingIdea = boundSelectors.getIdeaById(parent.id);
               if (!existingIdea) {
-                console.log(`📥 [apiActions] Ajout idée parente au store: ${parent.title}`);
-                // Créer un objet Idea complet à partir du LineageItem
+                console.log(`📥 [apiActions] Ajout idée parente au store: ${parent.title || parent.id}`);
                 actions.addIdea({
                   id: parent.id,
                   title: parent.title || '',
                   summary: parent.summary || '',
-                  description: '',
-                  creators: parent.authors || [],
+                  description: parent.description || '',
+                  creatorIds: parent.creatorIds || [],
                   createdAt: parent.createdAt,
                   supportCount: 0,
                   supporters: [],
                   ratings: [],
                   ratingCriteria: [],
-                  tags: [],
+                  tags: parent.tags || [],
                   status: 'published',
                   sourceIdeas: [],
                   sourcePosts: [],
+                  sourceDiscussions: [],
                   derivedIdeas: [ideaId], // ✅ L'idée parente a l'idée actuelle comme dérivée
                   discussionIds: []
                 });
               }
-            } else if (parent.type === 'post') {
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
               const existingPost = boundSelectors.getPostById(parent.id);
               if (!existingPost) {
-                console.log(`📥 [apiActions] Ajout post parent au store: ${parent.content?.substring(0, 50)}`);
+                console.log(`📥 [apiActions] Ajout post parent au store: ${parent.title || parent.content?.substring(0, 50)}`);
                 actions.addPost({
                   id: parent.id,
+                  title: parent.title,
                   content: parent.content || '',
-                  authorId: parent.authors?.[0]?.id || 'unknown', // ✅ Migré de author: object vers authorId: string
+                  authorId: parent.authorId,
                   createdAt: parent.createdAt,
                   supportCount: 0,
                   supporters: [],
                   replies: [],
-                  tags: [],
-                  location: '',
-                  linkedContent: [],
+                  tags: parent.tags || [],
+                  location: parent.location || '',
                   sourcePosts: [],
                   derivedIdeas: [ideaId], // ✅ Le post parent a l'idée actuelle comme dérivée
                   derivedPosts: []
                 });
               }
+            } else if ('posts' in parent && 'type' in parent) {
+              // C'est un DiscussionTopic (a posts ET type)
+              const existingDiscussion = boundSelectors.getDiscussionTopicById(parent.id);
+              if (!existingDiscussion) {
+                console.log(`📥 [apiActions] Ajout discussion parente au store: ${parent.title || parent.id}`);
+                actions.addDiscussionTopic(parent);
+              } else {
+                console.log(`✓ [apiActions] Discussion déjà dans le store: ${parent.title}`);
+              }
+            } else {
+              console.warn(`⚠️ [apiActions] Type de parent non reconnu:`, parent);
             }
           });
           
@@ -689,26 +641,32 @@ export function createApiActions(
           
           // 3. METTRE À JOUR l'idée actuelle avec les IDs des parents et enfants
           const parentIdeaIds = lineageData.parents
-            .filter(p => p.type === 'idea')
+            .filter(p => 'summary' in p && 'creatorIds' in p)
             .map(p => p.id);
           
           const parentPostIds = lineageData.parents
-            .filter(p => p.type === 'post')
+            .filter(p => 'content' in p && 'authorId' in p && 'supporters' in p)
+            .map(p => p.id);
+          
+          const parentDiscussionIds = lineageData.parents
+            .filter(p => 'posts' in p && 'type' in p)
             .map(p => p.id);
           
           const childIdeaIds = lineageData.children
-            .filter(c => c.type === 'idea')
+            .filter(c => 'summary' in c && 'creatorIds' in c)
             .map(c => c.id);
           
           actions.updateIdea(ideaId, {
             sourceIdeas: parentIdeaIds,
             sourcePosts: parentPostIds,
+            sourceDiscussions: parentDiscussionIds,
             derivedIdeas: childIdeaIds
           });
           
           console.log(`✅ [apiActions] Idée mise à jour avec lineage:`, {
             sourceIdeas: parentIdeaIds.length,
             sourcePosts: parentPostIds.length,
+            sourceDiscussions: parentDiscussionIds.length,
             derivedIdeas: childIdeaIds.length
           });
           
@@ -723,15 +681,35 @@ export function createApiActions(
           console.log(`📊 [apiActions] Construction du résultat depuis le store pour: ${currentIdea.title}`);
           
           // 5. CONSTRUIRE le résultat en utilisant lineageData et le store
+          console.log(`📊 [apiActions] Début construction, ${lineageData.parents.length} parents à traiter`);
           const parentsFromStore = lineageData.parents.map(parent => {
-            if (parent.type === 'idea') {
+            console.log(`  🔍 [apiActions] Traitement parent:`, { 
+              id: parent.id, 
+              hasTitle: 'title' in parent, 
+              hasSummary: 'summary' in parent,
+              hasCreatorIds: 'creatorIds' in parent,
+              hasContent: 'content' in parent,
+              hasAuthorId: 'authorId' in parent,
+              hasPosts: 'posts' in parent,
+              hasType: 'type' in parent
+            });
+            
+            // ✅ Type guard pour déterminer le type de l'entité de manière robuste
+            if ('summary' in parent && 'creatorIds' in parent) {
+              // C'est une Idea (a summary ET creatorIds)
+              console.log(`    ✓ Identifié comme Idea: ${parent.id}`);
               const idea = boundSelectors.getIdeaById(parent.id);
+              if (!idea) {
+                console.log(`    ❌ Idea ${parent.id} non trouvée dans le store`);
+                return null;
+              }
+              
               // Résoudre les créateurs depuis les IDs
               const authors = (idea.creatorIds || [])
                 .map(id => boundSelectors.getUserById(id))
                 .filter(Boolean) as User[];
               
-              return idea ? {
+              return {
                 id: idea.id,
                 type: 'idea' as const,
                 title: idea.title,
@@ -740,19 +718,49 @@ export function createApiActions(
                 createdAt: idea.createdAt,
                 level: -1,
                 relationshipType: 'parent' as const
-              } : null;
-            } else {
+              };
+            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
+              // C'est un Post (a content, authorId ET supporters)
+              console.log(`    ✓ Identifié comme Post: ${parent.id}`);
               const post = boundSelectors.getPostById(parent.id);
-              return post ? {
+              if (!post) {
+                console.log(`    ❌ Post ${parent.id} non trouvé dans le store`);
+                return null;
+              }
+              
+              const author = boundSelectors.getUserById(post.authorId);
+              return {
                 id: post.id,
                 type: 'post' as const,
                 content: post.content,
-                authors: [post.author],
+                authors: author ? [author] : [],
                 createdAt: post.createdAt,
                 level: -1,
                 relationshipType: 'parent' as const
-              } : null;
+              };
+            } else if ('posts' in parent && 'type' in parent) {
+              // C'est un DiscussionTopic (a posts ET type)
+              console.log(`    ✓ Identifié comme DiscussionTopic: ${parent.id}`);
+              const discussion = boundSelectors.getDiscussionTopicById(parent.id);
+              if (!discussion) {
+                console.log(`    ❌ Discussion ${parent.id} non trouvée dans le store`);
+                return null;
+              }
+              
+              const author = boundSelectors.getUserById(discussion.authorId);
+              return {
+                id: discussion.id,
+                type: 'discussion' as const,
+                title: discussion.title,
+                content: discussion.content,
+                authors: author ? [author] : [],
+                createdAt: discussion.createdAt || discussion.timestamp,
+                level: -1,
+                relationshipType: 'parent' as const
+              };
             }
+            console.log(`    ⚠️ Type de parent non reconnu pour ${parent.id}`);
+            return null;
           }).filter(Boolean);
           
           const childrenFromStore = lineageData.children.map(child => {
@@ -853,6 +861,7 @@ export function createApiActions(
       summary: string;
       description: string;
       location?: string;
+      groupIds?: string[];
       creators?: User[];
       sourceIdeas?: string[];
       sourcePosts?: string[];
@@ -889,6 +898,7 @@ export function createApiActions(
           description: payload.description,
           location: payload.location,
           authorId: currentUser.id,
+          groupIds: payload.groupIds,
           tags: finalTags, // ✅ Envoyer les tags à l'API
           sourceIdeas: payload.sourceIdeas || [],
           sourcePosts: payload.sourcePosts || [],
@@ -921,10 +931,12 @@ export function createApiActions(
      * Publie un nouveau post avec extraction automatique des hashtags
      */
     publishPost: async (payload: {
+      title?: string;
       content: string;
       location?: string;
       tags?: string[];
       authorId?: string;
+      groupIds?: string[];
       linkedContent?: string[];
       parentDiscussionId?: string;
       sourcePostIds?: string[];
@@ -958,10 +970,12 @@ export function createApiActions(
         // Créer le post via l'API en passant les tags extraits
         const { createPostOnApi } = await import('../api/contentService');
         const newPost = await createPostOnApi({
+          title: payload.title,
           content: payload.content,
           location: payload.location,
           authorId: finalAuthorId,
           author: finalAuthor, // ✅ Passer l'objet author complet pour éviter les problèmes avec les utilisateurs temporaires
+          groupIds: payload.groupIds,
           sourcePostIds: payload.sourcePostIds || [],
           tags: finalTags // ✅ Envoyer les tags au service API
         });

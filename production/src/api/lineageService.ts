@@ -1,47 +1,61 @@
-import { Idea, Post, User } from '../types';
+import { Idea, Post, User, DiscussionTopic } from '../types'; // <-- 1. AJOUTER DiscussionTopic
 import apiClient from './apiClient';
 import {
   transformUser,
   transformIdea,
   transformPost,
+  transformPostToDiscussion, // <-- 2. IMPORTER ce transformateur
   RawUser,
   RawLineageData,
   RawContent,
 } from './transformService';
 
-// This interface should reflect what the frontend expects to use.
-// Note: We are not exporting this, as the final return type is more complex.
-interface LineageResult {
-  parents: (Idea | Post)[];
-  children: (Idea | Post)[];
+/**
+ * Le type de retour pour le lineage.
+ * Il contient maintenant les objets complets, y compris les DiscussionTopic.
+ */
+export interface LineageServiceResult {
+  parents: (Idea | Post | DiscussionTopic)[];
+  children: (Idea | Post | DiscussionTopic)[];
 }
 
 /**
  * Récupère l'arbre généalogique complet d'une idée ou d'un post.
  * Corresponds à GET /ideas/{key}/lineage ou /posts/{key}/lineage
- *
- * @returns Un objet contenant le lineage et les utilisateurs associés.
  */
-export async function fetchLineage(itemId: string): Promise<{ lineage: LineageResult, users: User[] } | null> {
+export async function fetchLineage(itemId: string): Promise<{ lineage: LineageServiceResult, users: User[] } | null> {
   console.log(`[API] fetchLineage - ${itemId}`);
   try {
     const response = await apiClient.get<RawLineageData>(`/${itemId}/lineage`);
     
-    // Transformer la liste brute des utilisateurs en une liste propre
+    // Transformer les utilisateurs
     const users = response.data.users.map(transformUser);
     const usersMap = new Map(users.map(u => [u.id, u]));
 
-    const transformContent = (raw: RawContent) => raw.description 
-      ? transformIdea(raw) 
-      : transformPost(raw, usersMap);
+    // --- 3. LA LOGIQUE DE TRANSFORMATION CORRIGÉE ---
+    /**
+     * Transforme un RawContent en objet Idea, Post, ou DiscussionTopic complet.
+     */
+    const transformContent = (raw: RawContent): Idea | Post | DiscussionTopic => {
+      // Cas 1: C'est une Discussion (prioritaire)
+      if (raw.isDiscussion === true) {
+        return transformPostToDiscussion(raw, usersMap);
+      }
+      // Cas 2: C'est une Idée
+      if (raw.description !== undefined || raw.summary !== undefined) { 
+        return transformIdea(raw); 
+      }
+      // Cas 3: C'est un Post standard
+      return transformPost(raw, usersMap);
+    };
 
+    // Appliquer la transformation
     const parents = response.data.sources.map(transformContent);
     const children = response.data.versions.map(transformContent);
     
     console.log(`[API] fetchLineage - OK (${parents.length} parents, ${children.length} enfants, ${users.length} utilisateurs)`);
   
-    // --- FIX APPLIED HERE ---
-    // Wrap the result in the structure expected by the frontend.
+    // 4. Retourner la structure avec les objets complets
     return {
       lineage: {
         parents,

@@ -10,11 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card } from "./ui/card";
 import { Lightbulb, MessageSquare, Info, ArrowLeft, Plus, FileText } from "lucide-react";
 import { Button } from "./ui/button";
-import { CreateQuickPost } from "./CreateQuickPost";
-import { Dialog, DialogContent } from "./ui/dialog";
+import { ensureGroupPrefix } from "../utils/idUtils";
 
 export function GroupHubPage() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId: urlGroupId } = useParams<{ groupId: string }>();
+  // Ajouter le préfixe "groups/" si nécessaire
+  const groupId = urlGroupId ? ensureGroupPrefix(urlGroupId) : undefined;
   const navigate = useNavigate();
   const {
     getGroupById,
@@ -28,14 +29,13 @@ export function GroupHubPage() {
     getIdeasByGroup,
   } = useEntityStoreSimple();
   
-  const { goToIdea, goToPost, goToGroupManage } = useNavigationActions();
+  const { goToIdea, goToPost, goToGroupManage, goToCreateWithGroups } = useNavigationActions();
   const currentUser = getCurrentUser();
 
   const groupActions = useGroupActions();
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("projets");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Charger les données du groupe
   useEffect(() => {
@@ -152,14 +152,14 @@ export function GroupHubPage() {
                 <Button
                   variant="outline"
                   className="flex-1 md:flex-none bg-white hover:bg-blue-50 border-blue-300"
-                  onClick={() => setShowCreateDialog(true)}
+                  onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Discussion
                 </Button>
                 <Button
                   className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
-                  onClick={() => setShowCreateDialog(true)}
+                  onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}
                 >
                   <Lightbulb className="w-4 h-4 mr-2" />
                   Projet
@@ -201,7 +201,7 @@ export function GroupHubPage() {
                   Soyez le premier à proposer un projet structuré pour ce groupe
                 </p>
                 {isMember && (
-                  <Button onClick={() => setShowCreateDialog(true)}>
+                  <Button onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>
                     <Plus className="w-4 h-4 mr-2" />
                     Créer un projet
                   </Button>
@@ -231,8 +231,8 @@ export function GroupHubPage() {
                 <p className="text-sm text-gray-600 mb-4">
                   Lancez une discussion pour échanger avec les membres du groupe
                 </p>
-                {isMember && (
-                  <Button variant="outline" onClick={() => setShowCreateDialog(true)}>
+                {isMember && groupId && (
+                  <Button variant="outline" onClick={() => goToCreateWithGroups([groupId], 'post')}>
                     <Plus className="w-4 h-4 mr-2" />
                     Lancer une discussion
                   </Button>
@@ -275,13 +275,6 @@ export function GroupHubPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Dialog de création */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
-          <CreateQuickPost onClose={() => setShowCreateDialog(false)} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

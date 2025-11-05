@@ -13,6 +13,8 @@ import { IdeaDescriptionTab } from './IdeaDescriptionTab';
 import { IdeaDiscussionsTab } from './IdeaDiscussionsTab';
 import { IdeaVersionsTab } from './IdeaVersionsTab';
 import { getValidAvatar } from '../api/avatarService';
+import { GroupBadgeList } from './group/GroupBadgeList';
+import { RecommendToGroupDialog } from './group/RecommendToGroupDialog';
 
 import { 
   ArrowLeft, 
@@ -22,7 +24,8 @@ import {
   GitBranch,
   FileText,
   Zap,
-  Share
+  Share,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
@@ -158,12 +161,25 @@ export function IdeaDetailPage({
             </div>
             <p className="text-muted-foreground text-sm mb-3 leading-relaxed">{latestIdea.summary}</p>
             
-            {/* Tags */}
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {latestIdea.tags?.map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-xs">{tag}</Badge>
-              ))}
-            </div>
+            {/* Tags et Groupes associés - Version mobile */}
+            {((latestIdea.tags && latestIdea.tags.length > 0) || (latestIdea.groupIds && latestIdea.groupIds.length > 0)) && (
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {/* Groupes associés - Plus visibles */}
+                {latestIdea.groupIds && latestIdea.groupIds.length > 0 && (
+                  <GroupBadgeList 
+                    groupIds={latestIdea.groupIds} 
+                    maxDisplay={10} 
+                    size="sm"
+                    showCount={false}
+                  />
+                )}
+                
+                {/* Tags - Moins visibles */}
+                {latestIdea.tags?.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200">{tag}</Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Bouton soutenir mobile - pleine largeur */}
@@ -188,6 +204,19 @@ export function IdeaDetailPage({
               <span>Partager</span>
             </Button>
           </ShareDialog>
+          
+          {/* Bouton recommander mobile */}
+          <RecommendToGroupDialog 
+            contentId={latestIdea.id} 
+            contentTitle={latestIdea.title} 
+            contentType="idea"
+            currentGroupIds={latestIdea.groupIds}
+          >
+            <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2">
+              <Users className="w-4 h-4" />
+              <span>Recommander dans un groupe</span>
+            </Button>
+          </RecommendToGroupDialog>
         </div>
 
         {/* Version desktop */}
@@ -202,12 +231,25 @@ export function IdeaDetailPage({
               </div>
               <p className="text-muted-foreground mb-4">{latestIdea.summary}</p>
               
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2">
-                {latestIdea.tags?.map((tag, index) => (
-                  <Badge key={index} variant="outline">{tag}</Badge>
-                ))}
-              </div>
+              {/* Tags et Groupes associés */}
+              {((latestIdea.tags && latestIdea.tags.length > 0) || (latestIdea.groupIds && latestIdea.groupIds.length > 0)) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {/* Groupes associés - Plus visibles */}
+                  {latestIdea.groupIds && latestIdea.groupIds.length > 0 && (
+                    <GroupBadgeList 
+                      groupIds={latestIdea.groupIds} 
+                      maxDisplay={10} 
+                      size="sm"
+                      showCount={false}
+                    />
+                  )}
+                  
+                  {/* Tags - Moins visibles */}
+                  {latestIdea.tags?.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">{tag}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3 ml-6">
@@ -231,6 +273,18 @@ export function IdeaDetailPage({
                   <span>Partager</span>
                 </Button>
               </ShareDialog>
+              
+              <RecommendToGroupDialog 
+                contentId={latestIdea.id} 
+                contentTitle={latestIdea.title} 
+                contentType="idea"
+                currentGroupIds={latestIdea.groupIds}
+              >
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <Users className="w-4 h-4" />
+                  <span>Recommander</span>
+                </Button>
+              </RecommendToGroupDialog>
             </div>
           </div>
         </div>

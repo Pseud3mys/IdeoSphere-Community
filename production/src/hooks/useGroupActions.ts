@@ -12,7 +12,7 @@ import * as groupService from '../api/groupService';
 import { Group } from '../types';
 
 export function useGroupActions() {
-  const { actions, currentUser } = useEntityStoreSimple();
+  const { actions, currentUser, getIdeaById, getPostById } = useEntityStoreSimple();
 
   /**
    * Charge tous les groupes actifs
@@ -61,10 +61,16 @@ export function useGroupActions() {
 
   /**
    * Charge le feed d'un groupe (idées et posts)
+   * NOTE TEMPORAIRE: Protection désactivée, on vérifie seulement isRegistered
    */
   const loadGroupFeed = async (groupId: string) => {
+    if (!currentUser || !currentUser.isRegistered) {
+      console.warn('⚠️ [useGroupActions.loadGroupFeed] Utilisateur non enregistré - skip');
+      return;
+    }
+
     try {
-      const { ideas, posts } = await groupService.fetchGroupFeed(groupId);
+      const { ideas, posts } = await groupService.fetchGroupFeed(groupId, currentUser.id);
       
       // Ajouter les idées au store
       ideas.forEach(idea => actions.addIdea(idea));
@@ -72,7 +78,7 @@ export function useGroupActions() {
       // Ajouter les posts au store
       posts.forEach(post => actions.addPost(post));
       
-      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} : ${ideas.length} idées, ${posts.length} posts`);
+      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} pour utilisateur ${currentUser.id} : ${ideas.length} idées, ${posts.length} posts`);
     } catch (error) {
       console.error(`❌ [useGroupActions.loadGroupFeed] Erreur pour ${groupId}:`, error);
       throw error;
@@ -336,6 +342,53 @@ export function useGroupActions() {
     }
   };
 
+  /**
+   * Recommande un contenu (idée ou post) dans un ou plusieurs groupes
+   * Ajoute les groupes aux groupIds du contenu
+   */
+  const recommendContentToGroups = async (
+    contentId: string,
+    contentType: 'idea' | 'post',
+    groupIds: string[]
+  ) => {
+    if (!currentUser || !currentUser.isRegistered) {
+      console.error('❌ [useGroupActions.recommendContentToGroups] Utilisateur non enregistré');
+      throw new Error('Utilisateur non enregistré');
+    }
+
+    try {
+      // Appeler le service API qui contient toute la logique
+      const success = await groupService.recommendContentToGroups(
+        contentId,
+        contentType,
+        groupIds,
+        currentUser.id
+      );
+      
+      if (success) {
+        // Recharger le contenu mis à jour depuis l'API pour mettre à jour le store
+        if (contentType === 'idea') {
+          const idea = getIdeaById(contentId);
+          if (idea) {
+            actions.updateIdea(contentId, { groupIds: idea.groupIds });
+          }
+        } else {
+          const post = getPostById(contentId);
+          if (post) {
+            actions.updatePost(contentId, { groupIds: post.groupIds });
+          }
+        }
+        
+        console.log(`✅ [useGroupActions.recommendContentToGroups] ${contentType} ${contentId} recommandé dans ${groupIds.length} groupes`);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('❌ [useGroupActions.recommendContentToGroups] Erreur:', error);
+      throw error;
+    }
+  };
+
   return {
     // Phase 1
     loadAllGroups,
@@ -354,5 +407,6 @@ export function useGroupActions() {
     // Phase 3
     updateGroupInfo,
     promoteToAnimator,
+    recommendContentToGroups,
   };
 }

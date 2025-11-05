@@ -4,5 +4,8 @@ export { mockPosts } from './posts';
 export { mockIdeas } from './ideas';
 export { discussionTopics } from './discussions';
 export { defaultRatingCriteria } from './ratings';
-export { ideaVersions, getVersionsForIdea } from './versions';
-export { communities, communityMemberships } from './communities';
+
+// Données groupes
+export { groups, groupMemberships } from './groups';
+export { groupLinks } from './groupLinks';
+export { pendingGroups } from './pendingGroups';

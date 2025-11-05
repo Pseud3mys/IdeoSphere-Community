@@ -4,10 +4,12 @@ import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { RichTextEditor } from '../RichTextEditor';
-import { Lightbulb, FileText, MapPin } from 'lucide-react';
+import { Lightbulb, FileText, MapPin, Users, X } from 'lucide-react';
 import { Post } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
+import { clientConfig } from '../../config/clientConfig';
 
 interface BasicIdeaFormProps {
   title: string;
@@ -18,6 +20,8 @@ interface BasicIdeaFormProps {
   setDescription: (description: string) => void;
   location?: string;
   setLocation?: (location: string) => void;
+  groupIds?: string[];
+  setGroupIds?: (groupIds: string[]) => void;
   sourcePost?: Post;
 }
 
@@ -30,11 +34,14 @@ export function BasicIdeaForm({
   setDescription,
   location,
   setLocation,
+  groupIds,
+  setGroupIds,
   sourcePost
 }: BasicIdeaFormProps) {
   // ✅ Résoudre l'auteur du post source
-  const { getUserById } = useEntityStoreSimple();
+  const { getUserById, getAllGroups } = useEntityStoreSimple();
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
+  const allGroups = getAllGroups();
 
   const getWordCount = (text: string) => {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
@@ -58,7 +65,7 @@ export function BasicIdeaForm({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Plateforme d'innovation collaborative"
+              placeholder={clientConfig.examples.idea.titlePlaceholder}
               required
               className="text-lg"
             />
@@ -75,7 +82,7 @@ export function BasicIdeaForm({
               id="summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="Décrivez votre idée en une phrase percutante qui donne envie d'en savoir plus..."
+              placeholder={clientConfig.examples.idea.summaryPlaceholder}
               rows={2}
               required
             />
@@ -84,6 +91,60 @@ export function BasicIdeaForm({
               <span>{getWordCount(summary)} mots</span>
             </div>
           </div>
+
+          {/* Groupes liés (optionnel) */}
+          {setGroupIds && (
+            <div className="space-y-2">
+              <Label htmlFor="idea-group" className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>Groupes liés (optionnel)</span>
+              </Label>
+              {groupIds && groupIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {groupIds.map((gId) => {
+                    const group = allGroups.find(g => g.id === gId);
+                    return group ? (
+                      <Badge key={gId} variant="secondary" className="flex items-center gap-1">
+                        {group.name}
+                        <button
+                          type="button"
+                          onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
+                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              <Select 
+                value="select" 
+                onValueChange={(value) => {
+                  if (value !== 'select' && groupIds && !groupIds.includes(value)) {
+                    setGroupIds([...groupIds, value]);
+                  }
+                }}
+              >
+                <SelectTrigger id="idea-group">
+                  <SelectValue placeholder="Ajouter un groupe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
+                  {allGroups
+                    .filter(group => !groupIds?.includes(group.id))
+                    .map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Associez votre idée à un ou plusieurs groupes pour la partager avec leurs membres
+              </p>
+            </div>
+          )}
 
           {/* Localisation optionnelle */}
           {setLocation && (
@@ -96,7 +157,7 @@ export function BasicIdeaForm({
                 id="location"
                 value={location || ''}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ex: Place de la République, Quartier Centre-ville"
+                placeholder={clientConfig.examples.idea.locationPlaceholder}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">

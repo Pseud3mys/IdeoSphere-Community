@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
-import { LoginDialog } from './auth/LoginDialog';
+import { AuthButtons } from './AuthButtons';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
@@ -13,8 +13,6 @@ import logoImage from '../assets/logo.png';
 import { 
   ArrowRight, 
   MapPin, 
-  LogIn, 
-  UserPlus, 
   Lightbulb,
   Users,
   MessageSquare,
@@ -24,6 +22,7 @@ import {
   TrendingUp,
   Send
 } from 'lucide-react';
+import { clientConfig, getCityName, getMemberTerm } from '../config/clientConfig';
 
 interface CitizenWelcomeProps {
   onEnterPlatform: () => void;
@@ -50,7 +49,6 @@ interface CitizenWelcomeProps {
 }
 
 export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, onNavigateToCreateIdea, onNavigateToHowItWorks, onLogin, onSocialLogin, onSignup, onNewsletterSubscribe, cityName, onLoginSSO, onRegisterSSO }: CitizenWelcomeProps) {
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [quickIdea, setQuickIdea] = useState('');
   const [showLocationStep, setShowLocationStep] = useState(false);
   const [guestName, setGuestName] = useState('');
@@ -62,8 +60,11 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser l'Entity Store uniquement pour les actions (pas pour les données)
-  const { actions, getUserById } = useEntityStoreSimple();
+  const { actions, getUserById, getCurrentUser } = useEntityStoreSimple();
   const navigation = useNavigationActions();
+  
+  // Récupérer l'utilisateur actuel pour le composant AuthButtons
+  const currentUser = getCurrentUser();
   
   // Charger les données de manière autonome
   useEffect(() => {
@@ -90,13 +91,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     loadHomeData();
   }, []);
 
-  const handleAuthAction = (action: 'login' | 'signup') => {
-    if (action === 'login') {
-      setShowLoginDialog(true);
-    } else {
-      // Rediriger vers la page d'inscription
-      navigation.goToSignup();
-    }
+  const handleProfileClick = () => {
+    navigation.goToProfile();
   };
 
   const handleShareIdea = () => {
@@ -150,13 +146,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
   // Statistiques basées sur les données de l'API
   const recentStats = homeData ? [
-    { value: homeData.totalContributions.toString(), label: "contributions totales" },
-    { value: homeData.totalIdeas.toString(), label: "idées partagées" },
-    { value: homeData.totalSupports.toString(), label: "soutiens reçus" }
+    { value: homeData.totalContributions.toString(), label: clientConfig.welcome.stats.totalContributions },
+    { value: homeData.totalIdeas.toString(), label: clientConfig.welcome.stats.totalIdeas },
+    { value: homeData.totalSupports.toString(), label: clientConfig.welcome.stats.totalSupports }
   ] : [
-    { value: "...", label: "contributions totales" },
-    { value: "...", label: "idées partagées" },
-    { value: "...", label: "soutiens reçus" }
+    { value: "...", label: clientConfig.welcome.stats.totalContributions },
+    { value: "...", label: clientConfig.welcome.stats.totalIdeas },
+    { value: "...", label: clientConfig.welcome.stats.totalSupports }
   ];
 
   // Fonction pour formater la date
@@ -187,7 +183,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         location: item.location || (firstCreator?.name + " (créateur)") || "Localisation non précisée",
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
-        category: item.tags?.[0] || "Idée citoyenne",
+        category: item.tags?.[0] || clientConfig.welcome.recentPropositions.fallbackCategoryIdea,
         type: 'idea' as const,
         supporters: item.supporters // ✅ Passer le tableau de supporters pour le calcul dynamique
       };
@@ -201,7 +197,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         location: item.location || (author ? author.name + " (auteur)" : "Localisation non précisée"),
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
-        category: item.tags?.[0] || "Discussion citoyenne",
+        category: item.tags?.[0] || clientConfig.welcome.recentPropositions.fallbackCategoryPost,
         type: 'post' as const,
         supporters: item.supporters // ✅ Passer le tableau de supporters pour le calcul dynamique
       };
@@ -219,8 +215,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                 <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h1 className="text-xl text-gray-900">IdeoSphere</h1>
-                <p className="text-sm text-muted-foreground">Votre communauté d'idées</p>
+                <h1 className="text-xl text-gray-900">{clientConfig.identity.appName}</h1>
+                <p className="text-sm text-muted-foreground">{clientConfig.identity.appTagline}</p>
               </div>
             </div>
             
@@ -230,23 +226,18 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                 onClick={onNavigateToHowItWorks}
                 className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
               >
-                Comment ça marche ?
+                {clientConfig.navigation.howItWorksButton}
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => handleAuthAction('login')}
-                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
-              >
-                <LogIn className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Se connecter</span>
-              </Button>
-              <Button 
-                onClick={() => handleAuthAction('signup')}
-                className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base px-2 sm:px-4"
-              >
-                <UserPlus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Créer un compte</span>
-              </Button>
+              
+              {/* Composant réutilisable pour l'authentification */}
+              <AuthButtons
+                currentUser={currentUser}
+                onLogin={onLogin}
+                onSocialLogin={onSocialLogin}
+                onProfileClick={handleProfileClick}
+                onEnterPlatform={onEnterPlatform}
+                compact={false}
+              />
             </div>
           </div>
         </div>
@@ -256,38 +247,34 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         {/* Section principale */}
         <div className="py-12">
           {/* ✅ Bandeau d'avertissement démonstration */}
-          <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-amber-800 mb-1">
-                  Version Bêta d'ideoSphere !
-                </h3>
-                <div className="text-sm text-amber-700 space-y-1">
-                  <p>
-                    Cette plateforme est en <span className="font-medium">version bêta ouverte</span> : son objectif principal est de vous permettre de découvrir et tester IdeoSphere. 
-                    Certaines fonctionnalités (comme les communautés) ne sont pas encore actives et des bugs peuvent survenir. Vous pouvez déjà l'utiliser pour tester la plateforme et partager vos idées.
-                  </p>
-                  <p className="pt-1">
-                    💡 <span className="font-medium">Signaler un bug ou suggérer une amélioration :</span> ajoutez simplement <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">#bug</code> ou <code className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">#suggestion</code> dans vos posts pour me les faire remonter !
-                  </p>
+          {clientConfig.features.showBetaBanner && (
+            <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-amber-800 mb-1">
+                    {clientConfig.welcome.betaBanner.title}
+                  </h3>
+                  <div className="text-sm text-amber-700 space-y-1">
+                    <p dangerouslySetInnerHTML={{ __html: clientConfig.welcome.betaBanner.description }} />
+                    <p className="pt-1" dangerouslySetInnerHTML={{ __html: clientConfig.welcome.betaBanner.feedbackInstructions }} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Titre principal */}
           <div className="mb-8">
             <h1 className="text-4xl mb-4 text-gray-900 leading-tight">
-              Partagez, explorez ou discutez d'idées locales
+              {clientConfig.welcome.hero.title}
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              Aménagement urbain, services publics, initiatives citoyennes, environnement, mobilité, culture, solidarité... 
-              Des grandes transformations aux petites améliorations du quotidien, votre liste municipale recueille toutes vos propositions pour améliorer votre territoire.
+              {clientConfig.welcome.hero.description}
             </p>
           </div>
 
@@ -297,11 +284,11 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               <div className="space-y-4">
                 <h2 className="text-xl mb-4 text-gray-900 flex items-center">
                   <Lightbulb className="w-5 h-5 mr-2 text-primary" />
-                  Partagez votre idée en quelques mots
+                  {clientConfig.welcome.quickIdea.sectionTitle}
                 </h2>
                 <div className="space-y-3">
                   <Textarea
-                    placeholder="Ex: Des bancs supplémentaires place de la République pour que les personnes âgées puissent se reposer..."
+                    placeholder={clientConfig.welcome.quickIdea.placeholder}
                     value={quickIdea}
                     onChange={(e) => setQuickIdea(e.target.value)}
                     rows={3}
@@ -314,14 +301,14 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                       className="bg-primary hover:bg-primary/90 text-white"
                     >
                       <Send className="w-4 h-4 mr-2" />
-                      Continuer
+                      {clientConfig.welcome.quickIdea.buttonText}
                     </Button>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <h2 className="text-xl mb-4 text-gray-900">Finalisation de votre idée</h2>
+                <h2 className="text-xl mb-4 text-gray-900">{clientConfig.welcome.quickIdea.finalizationTitle}</h2>
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-sm text-gray-700 italic">"{quickIdea}"</p>
@@ -331,10 +318,10 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 flex items-center mb-3">
                         <MapPin className="w-5 h-5 mr-2 text-primary" />
-                        Localisation de l'idée (optionnelle)
+                        {clientConfig.welcome.quickIdea.locationSectionTitle}
                       </h3>
                       <Input
-                        placeholder="Ex: Place de la République, Le Blanc"
+                        placeholder={clientConfig.welcome.quickIdea.locationPlaceholder}
                         className="text-base"
                         value={guestLocation}
                         onChange={(e) => setGuestLocation(e.target.value)}
@@ -343,25 +330,25 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                     
                     <div className="space-y-3 pt-4 border-t border-gray-200">
                       <h3 className="text-base font-medium text-gray-900">
-                        Souhaitez-vous suivre l'évolution de votre idée ? (optionnel)
+                        {clientConfig.welcome.quickIdea.followUpSectionTitle}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Input
-                          placeholder="Votre nom"
+                          placeholder={clientConfig.welcome.quickIdea.namePlaceholder}
                           className="text-base"
                           value={guestName}
                           onChange={(e) => setGuestName(e.target.value)}
                         />
                         <Input
                           type="email"
-                          placeholder="Votre email"
+                          placeholder={clientConfig.welcome.quickIdea.emailPlaceholder}
                           className="text-base"
                           value={guestEmail}
                           onChange={(e) => setGuestEmail(e.target.value)}
                         />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Ces informations nous permettront de vous tenir informé des évolutions de votre idée.
+                        {clientConfig.welcome.quickIdea.followUpDescription}
                       </p>
                     </div>
                     
@@ -371,13 +358,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                         className="bg-primary hover:bg-primary/90 text-white"
                       >
                         <Send className="w-4 h-4 mr-2" />
-                        Partager cette idée
+                        {clientConfig.welcome.quickIdea.submitButtonText}
                       </Button>
                       <Button
                         onClick={handleSkipLocation}
                         variant="outline"
                       >
-                        Partager sans ces informations
+                        {clientConfig.welcome.quickIdea.skipButtonText}
                       </Button>
                     </div>
                   </div>
@@ -389,12 +376,11 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
           {/* Comment partager une idée - APRÈS le formulaire */}
           {!showLocationStep && (
             <div className="mb-8">
-              <h2 className="text-xl mb-4 text-gray-900">Comment ça marche ?</h2>
+              <h2 className="text-xl mb-4 text-gray-900">{clientConfig.welcome.howItWorks.title}</h2>
               <ol className="space-y-2 text-muted-foreground">
-                <li>1. Décrivez votre idée ci-dessus</li>
-                <li>2. Ajoutez une localisation si nécessaire</li>
-                <li>3. Laissez vos coordonnées pour suivre son évolution</li>
-                <li>4. Nous la partageons avec votre communauté</li>
+                {clientConfig.welcome.howItWorks.steps.map((step, index) => (
+                  <li key={index}>{index + 1}. {step}</li>
+                ))}
               </ol>
             </div>
           )}
@@ -412,13 +398,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
         {/* Idées récemment partagées */}
         <section className="py-12 border-t border-gray-100">
-          <h2 className="text-2xl mb-8 text-gray-900">Propositions récemment partagées</h2>
+          <h2 className="text-2xl mb-8 text-gray-900">{clientConfig.welcome.recentPropositions.title}</h2>
           
           <div className="space-y-4">
             {isLoading ? (
               // État de chargement
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Chargement des propositions récentes...</p>
+                <p className="text-muted-foreground">{clientConfig.welcome.recentPropositions.loadingText}</p>
               </div>
             ) : recentPropositions.length > 0 ? (
               recentPropositions.map((item, index) => (
@@ -470,7 +456,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             ) : (
               // Fallback si pas de données
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Aucune proposition récente trouvée.</p>
+                <p className="text-muted-foreground">{clientConfig.welcome.recentPropositions.emptyText}</p>
               </div>
             )}
           </div>
@@ -482,38 +468,34 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               size="lg"
               className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-base"
             >
-              Explorer toutes les propositions
+              {clientConfig.welcome.cta.buttonText}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             
             <div className="flex items-center justify-center space-x-6 mt-6 text-sm text-muted-foreground">
-              <div className="flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-2 text-primary/60" />
-                Participation citoyenne
-              </div>
-              <div className="flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-2 text-primary/60" />
-                Projets concrets
-              </div>
-              <div className="flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-2 text-primary/60" />
-                Budget municipal dédié
-              </div>
+              {clientConfig.welcome.cta.values.map((value, index) => (
+                <div key={index} className="flex items-center">
+                  <CheckCircle2 className="w-4 h-4 mr-2 text-primary/60" />
+                  {value}
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Newsletter personnalisée */}
-        <section className="py-12 border-t border-gray-100">
-          <NewsletterSubscription onSubscribe={onNewsletterSubscribe} />
-        </section>
+        {clientConfig.features.enableNewsletters && (
+          <section className="py-12 border-t border-gray-100">
+            <NewsletterSubscription onSubscribe={onNewsletterSubscribe} />
+          </section>
+        )}
 
         {/* Accès démo en bas de page */}
         <section className="py-12 border-t border-gray-100">
           <div className="text-center">
-            <h2 className="text-2xl mb-4 text-gray-900">Envie de découvrir la plateforme ?</h2>
+            <h2 className="text-2xl mb-4 text-gray-900">{clientConfig.welcome.discover.title}</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              Explorez les propositions déjà partagées par les citoyens et découvrez comment participer à l'amélioration de notre commune.
+              {clientConfig.welcome.discover.description}
             </p>
             
             <Button 
@@ -522,29 +504,15 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 px-12 py-4 text-lg"
             >
               <CheckCircle2 className="w-5 h-5 mr-3" />
-              Accès démo instantané
+              {clientConfig.welcome.discover.buttonText}
             </Button>
             
             <p className="text-sm text-muted-foreground mt-4">
-              Aucune inscription requise • Accès immédiat • Toutes les fonctionnalités
+              {clientConfig.welcome.discover.features.join(' • ')}
             </p>
           </div>
         </section>
       </div>
-
-      {/* Dialogs d'authentification */}
-      <LoginDialog
-        isOpen={showLoginDialog}
-        onClose={() => setShowLoginDialog(false)}
-        onLogin={onLogin}
-        onSocialLogin={onSocialLogin}
-        onEnterPlatform={onEnterPlatform}
-        onSwitchToSignup={() => {
-          setShowLoginDialog(false);
-          navigation.goToSignup();
-        }}
-        onLoginSSO={onLoginSSO}
-      />
     </div>
   );
 }

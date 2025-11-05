@@ -15,6 +15,7 @@ interface CreateCompleteIdeaProps {
   prefilledSourceIdea?: string | null;
   prefilledLinkedContent?: string[];
   prefilledSelectedDiscussions?: string[];
+  prefilledGroupIds?: string[];
   onClearPrefilled?: () => void;
   onSaveDraft?: (title: string, summary: string, description?: string) => void;
   loadedDraft?: {
@@ -34,6 +35,7 @@ export function CreateCompleteIdea({
   prefilledSourceIdea,
   prefilledLinkedContent,
   prefilledSelectedDiscussions,
+  prefilledGroupIds,
   onClearPrefilled,
   onSaveDraft,
   loadedDraft,
@@ -47,6 +49,7 @@ export function CreateCompleteIdea({
     getAllUsers,
     getAllIdeas,
     getAllPosts,
+    getAllGroups,
     getDiscussionTopicById,
     actions
   } = useEntityStoreSimple();
@@ -56,6 +59,7 @@ export function CreateCompleteIdea({
   const users = getAllUsers();
   const ideas = getAllIdeas();
   const posts = getAllPosts();
+  const allGroups = getAllGroups();
 
   // Les utilisateurs sont déjà chargés au démarrage de l'app via loadInitialData
 
@@ -90,10 +94,14 @@ export function CreateCompleteIdea({
     if (sourceIdea) {
       return `[À modifier] ${sourceIdea.summary}`;
     }
-    // Utiliser le contenu du post comme base pour le résumé
+    // Utiliser le titre ou le contenu du post comme base pour le résumé
     if (derivedSourcePost) {
+      // Si le post a un titre, l'utiliser comme résumé de base
+      if (derivedSourcePost.title) {
+        return derivedSourcePost.title;
+      }
+      // Sinon, prendre les 200 premiers caractères du post comme résumé
       const postContent = derivedSourcePost.content;
-      // Prendre les 200 premiers caractères du post comme résumé
       const truncated = postContent.length > 200 ? postContent.substring(0, 200) + '...' : postContent;
       return truncated;
     }
@@ -124,9 +132,10 @@ export function CreateCompleteIdea({
     }
     if (derivedSourcePost) {
       const authorName = derivedSourcePostAuthor?.name || 'un membre';
+      const postIntro = derivedSourcePost.title ? `**${derivedSourcePost.title}**\n\n${derivedSourcePost.content}` : derivedSourcePost.content;
       return `## 💭 Contexte
 
-${derivedSourcePost.content}
+${postIntro}
 
 *(Post original de ${authorName})*
 
@@ -157,6 +166,7 @@ ${derivedSourcePost.content}
     // Pré-remplir avec la localisation du store, de l'idée source ou du post source
     return store.prefilledLocation || sourceIdea?.location || derivedSourcePost?.location || '';
   });
+  const [groupIds, setGroupIds] = useState<string[]>(prefilledGroupIds || []);
   const [selectedCoCreators, setSelectedCoCreators] = useState<User[]>([]);
   const [selectedParentIds, setSelectedParentIds] = useState<string[]>(() => {
     const initialIds = prefilledLinkedContent || [];
@@ -253,6 +263,7 @@ ${derivedSourcePost.content}
       summary: summary.trim(),
       description: description.trim(),
       location: location.trim() || undefined,
+      groupIds: groupIds.length > 0 ? groupIds : undefined,
       creators: selectedCoCreators,
       sourceIdeas: sourceIdeas,
       sourcePosts: sourcePosts,
@@ -270,6 +281,7 @@ ${derivedSourcePost.content}
     setSummary('');
     setDescription('');
     setLocation('');
+    setGroupIds([]);
     setSelectedCoCreators([]);
     setSelectedParentIds([]);
   };
@@ -289,6 +301,7 @@ ${derivedSourcePost.content}
     setSummary('');
     setDescription('');
     setLocation('');
+    setGroupIds([]);
     setSelectedParentIds([]);
     setSelectedCoCreators([]);
     
@@ -323,6 +336,8 @@ ${derivedSourcePost.content}
           setDescription={setDescription}
           location={location}
           setLocation={setLocation}
+          groupIds={groupIds}
+          setGroupIds={setGroupIds}
           sourcePost={derivedSourcePost}
         />
 

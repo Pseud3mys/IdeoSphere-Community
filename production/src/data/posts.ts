@@ -6,11 +6,13 @@ export function getMockPosts(): Post[] {
   return [
     {
       id: 'posts/post-1',
+      title: 'Manque de bancs dans le village',
       content: 'Il y a vraiment pas assez de bancs dans notre village... 😔 Hier ma voisine âgée a dû s\'appuyer contre un mur pour souffler en revenant des courses. On pourrait pas en installer quelques-uns ?',
       authorId: users[0].id, // Marie
       createdAt: new Date('2024-01-08T10:30:00'),
       supporters: ['1', '2', '3', 'current', 'guest'],
       tags: ['vie-de-quartier', 'vieillesse'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/1'], // L'idée des bancs vient de ce post
       derivedPosts: ['posts/post-2', 'posts/post-3'], // Autres posts qui en parlent
       sourcePosts: [], // Aucun post source
@@ -87,11 +89,13 @@ export function getMockPosts(): Post[] {
     },
     {
       id: 'posts/post-4',
+      title: 'Besoin de réparer nos appareils',
       content: 'J\'ai encore jeté mon grille-pain ce matin... 😔 Ça m\'embête de jeter alors que Pierre pourrait sûrement le réparer ! On devrait organiser des moments pour bricoler ensemble non ?',
       authorId: users[4].id, // Thomas
       createdAt: new Date('2024-01-12T16:45:00'),
       supporters: ['1', '2', '4', 'current'],
       tags: ['solidarité'],
+      groupIds: ['groups/1', 'groups/2'], // Groupes "Vivre à Saint-Cloud" et "Zéro déchet"
       derivedIdeas: ['ideas/2'], // L'idée du café-réparation vient de ce post
       derivedPosts: ['posts/post-9'],
       sourcePosts: [], // Aucun post source
@@ -114,6 +118,7 @@ export function getMockPosts(): Post[] {
     },
     {
       id: 'posts/post-5',
+      title: 'S\'organiser pour s\'entraider',
       content: 'Hier j\'avais des courses lourdes et j\'aurais bien eu besoin d\'un coup de main... 🛒 En même temps, moi je peux aider avec l\'informatique ! On pourrait pas s\'organiser pour s\'entraider ?',
       authorId: users[2].id, // Sophie
       createdAt: new Date('2024-01-18T19:00:00'),
@@ -141,11 +146,13 @@ export function getMockPosts(): Post[] {
     },
     {
       id: 'posts/post-6',
+      title: 'Les nids de poule rue des Écoles',
       content: 'Sérieusement, les nids de poule rue des Écoles... 🕳️ J\'ai failli perdre une jante ce matin ! Et celui devant l\'école qui fait une mare à chaque pluie, c\'est dangereux pour les gamins !',
       authorId: users[1].id, // Pierre
       createdAt: new Date('2024-01-16T08:15:00'),
       supporters: ['1', '2', 'current'],
       tags: ['vie-de-quartier'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/4'], // L'idée sur les nids de poule vient de ce post
       derivedPosts: ['posts/post-11'],
       sourcePosts: [], // Aucun post source
@@ -168,11 +175,13 @@ export function getMockPosts(): Post[] {
     },
     {
       id: 'posts/post-7',
+      title: 'Problème de stationnement devant l\'école',
       content: 'Le stationnement devant l\'école le matin... 😩 C\'est l\'anarchie totale ! Les gamins qui courent entre les voitures, les parents qui s\'engueulent... Il faut qu\'on s\'organise !',
       authorId: users[3].id, // Emma
       createdAt: new Date('2024-01-22T08:45:00'),
       supporters: ['2', '3', 'current'],
       tags: ['jeunesse'],
+      groupIds: ['groups/1'], // Groupe "Vivre à Saint-Cloud"
       derivedIdeas: ['ideas/5'], // L'idée sur le stationnement école vient de ce post
       derivedPosts: ['posts/post-8'],
       sourcePosts: [], // Aucun post source

@@ -296,6 +296,128 @@ function WelcomePage() {
 }
 ```
 
+## useNavigationActions.ts
+
+### Rôle
+
+Hook spécialisé pour la **navigation avec React Router**. Remplace les anciennes actions de navigation du store par des appels à `navigate()`.
+
+### Utilisation
+
+```typescript
+import { useNavigationActions } from '../hooks/useNavigationActions';
+
+function IdeaCard({ ideaId }) {
+  const navigation = useNavigationActions();
+  
+  return (
+    <button onClick={() => navigation.goToIdea(ideaId)}>
+      Voir les détails
+    </button>
+  );
+}
+```
+
+### Actions Disponibles
+
+```typescript
+// Navigation vers entités
+navigation.goToIdea(ideaId)           // Charge et navigue vers /content/ideas/123
+navigation.goToPost(postId)           // Charge et navigue vers /content/posts/456
+navigation.goToUser(userId)           // Navigue vers /user/123
+navigation.goToCommunity(communityId) // Navigue vers /community/c1
+
+// Navigation vers pages
+navigation.goToDiscovery()            // Navigue vers /discovery
+navigation.goToMyIdeas()              // Navigue vers /my-ideas
+navigation.goToCreateIdea()           // Navigue vers /create-idea
+navigation.goToProfile()              // Navigue vers /profile
+navigation.goToCommunities()          // Navigue vers /communities
+navigation.goToHome()                 // Navigue vers /
+navigation.goToSignup()               // Navigue vers /signup
+```
+
+## useCommunityActions.ts ⭐ NOUVEAU
+
+### Rôle
+
+Hook spécialisé pour les **actions liées aux communautés/groupes de travail**. Encapsule tous les appels au `communityService` et met à jour le store automatiquement.
+
+### Architecture
+
+```
+Composant → useCommunityActions → communityService → data/communities.ts → Store
+```
+
+### Utilisation
+
+```typescript
+import { useCommunityActions } from '../hooks/useCommunityActions';
+import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+
+function CommunitiesPage() {
+  const { getAllCommunities, getCurrentUser } = useEntityStoreSimple();
+  const communityActions = useCommunityActions();
+  
+  useEffect(() => {
+    // Charger toutes les communautés au montage
+    communityActions.loadAllCommunities();
+  }, []);
+  
+  const communities = getAllCommunities();
+  const currentUser = getCurrentUser();
+  
+  return (
+    <div>
+      {communities.map(community => (
+        <CommunityCard 
+          key={community.id}
+          community={community}
+          onJoin={() => communityActions.joinCommunity(community.id)}
+          onViewDetails={() => communityActions.loadCommunityDetails(community.id)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### Actions Disponibles
+
+```typescript
+// Chargement de données
+communityActions.loadAllCommunities()                    // Charge toutes les communautés + admins
+communityActions.loadCommunityDetails(communityId)       // Charge 1 communauté + tous ses membres
+communityActions.loadUserCommunities(userId)             // Charge les communautés d'un utilisateur
+communityActions.searchCommunities(query)                // Recherche dans les communautés
+communityActions.loadCommunitiesByType(type)             // Filtre par type (thematic, association, etc.)
+communityActions.loadPublicCommunities()                 // Charge uniquement les communautés publiques
+communityActions.loadCommunityStats(communityId)         // Charge les statistiques
+
+// Actions utilisateur
+communityActions.joinCommunity(communityId)              // Rejoindre une communauté
+communityActions.leaveCommunity(communityId)             // Quitter une communauté
+```
+
+### Principe : Mise à Jour Automatique du Store
+
+Toutes les fonctions de `useCommunityActions` :
+1. ✅ Appellent le `communityService`
+2. ✅ Récupèrent les communautés + utilisateurs associés
+3. ✅ Ajoutent automatiquement tout au store via `actions.addCommunity()` et `actions.addUser()`
+4. ✅ Retournent les données pour usage immédiat si nécessaire
+
+**Exemple** :
+```typescript
+// La fonction fait TOUT automatiquement
+await communityActions.loadCommunityDetails('c1');
+
+// Le store est déjà à jour, on peut directement lire
+const community = getCommunityById('c1');
+const members = getCommunityMembers('c1');
+const admins = members.filter(m => m.role === 'admin');
+```
+
 ## Règles de Conception
 
 ### ✅ À Faire

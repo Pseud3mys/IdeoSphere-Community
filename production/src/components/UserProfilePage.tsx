@@ -453,7 +453,7 @@ export function UserProfilePage({
               <p className="text-sm text-blue-800">
                 <strong>Note :</strong> Conformément au RGPD, vous avez le droit de consulter, 
                 modifier ou supprimer vos données personnelles. Pour toute question, 
-                contactez-nous à privacy@ideosphere.org
+                contactez-nous à {clientConfig.footer.contact.email.address}
               </p>
             </div>
           </CardContent>

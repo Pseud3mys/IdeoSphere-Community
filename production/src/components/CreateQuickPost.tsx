@@ -8,19 +8,24 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Badge } from './ui/badge';
+import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin, Users, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { clientConfig } from '../config/clientConfig';
 
 interface CreateQuickPostProps {
   sourcePost?: Post;
+  prefilledGroupIds?: string[];
   onSwitchToIdea: () => void;
 }
 
-export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostProps) {
+export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
-  const { store, getCurrentUser, getUserById, actions } = useEntityStoreSimple();
+  const { store, getCurrentUser, getUserById, getAllGroups, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
+  const allGroups = getAllGroups();
 
   // ✅ Utiliser unknownUser comme fallback pour les invités
   const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
@@ -33,6 +38,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     // Pré-remplir avec la localisation du store ou du post source
     return store.prefilledLocation || sourcePost?.location || '';
   });
+  const [groupIds, setGroupIds] = useState<string[]>(prefilledGroupIds || []);
   const [content, setContent] = useState(() => {
     if (!sourcePost) return '';
     const excerpt = sourcePost.content.slice(0, 100);
@@ -49,8 +55,10 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
     
     if (content.trim()) {
       const newPost = await actions.publishPost({
+        title: title.trim() || undefined,
         content: content.trim(),
         location: location.trim() || undefined,
+        groupIds: groupIds.length > 0 ? groupIds : undefined,
         sourcePostIds: sourcePost ? [sourcePost.id] : []
       });
       
@@ -63,6 +71,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
       setTitle('');
       setContent('');
       setLocation('');
+      setGroupIds([]);
     }
   };
 
@@ -84,7 +93,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Réflexion sur les réunions virtuelles..."
+                placeholder={clientConfig.examples.post.titlePlaceholder}
                 className="text-base"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -100,7 +109,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Partagez votre réflexion, observation, question ou idée avec la communauté..."
+                placeholder={clientConfig.examples.post.contentPlaceholder}
                 rows={4}
                 required
               />
@@ -108,6 +117,58 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 <span>Exprimez-vous librement</span>
                 <span>{getWordCount(content)} mots</span>
               </div>
+            </div>
+
+            {/* Groupes liés (optionnel) */}
+            <div className="space-y-2">
+              <Label htmlFor="post-group" className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>Groupes liés (optionnel)</span>
+              </Label>
+              {groupIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {groupIds.map((gId) => {
+                    const group = allGroups.find(g => g.id === gId);
+                    return group ? (
+                      <Badge key={gId} variant="secondary" className="flex items-center gap-1">
+                        {group.name}
+                        <button
+                          type="button"
+                          onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
+                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              <Select 
+                value="select" 
+                onValueChange={(value) => {
+                  if (value !== 'select' && !groupIds.includes(value)) {
+                    setGroupIds([...groupIds, value]);
+                  }
+                }}
+              >
+                <SelectTrigger id="post-group">
+                  <SelectValue placeholder="Ajouter un groupe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
+                  {allGroups
+                    .filter(group => !groupIds.includes(group.id))
+                    .map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Associez votre post à un ou plusieurs groupes pour le partager avec leurs membres
+              </p>
             </div>
 
             {/* Localisation optionnelle */}
@@ -120,7 +181,7 @@ export function CreateQuickPost({ sourcePost, onSwitchToIdea }: CreateQuickPostP
                 id="post-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ex: Place de la République, Quartier Centre-ville"
+                placeholder={clientConfig.examples.post.locationPlaceholder}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">

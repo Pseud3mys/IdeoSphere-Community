@@ -1,17 +1,17 @@
 import { User } from '../types';
 import logoImage from 'figma:asset/f40f0fed92c1933fc6e0d4bd7aad22c5b11f342d.png';
-import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { AuthButtons } from './AuthButtons';
 
 interface AppHeaderProps {
-  currentUserData: User;
+  currentUserData: User | null;
   onHomeClick: () => void;
   onProfileClick: () => void;
   onHelpClick: () => void;
+  onLogin: (email: string, password: string) => Promise<boolean>;
+  onSocialLogin: (provider: string) => Promise<boolean>;
 }
 
-export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelpClick }: AppHeaderProps) {
-  const { actions } = useEntityStoreSimple();
-  
+export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelpClick, onLogin, onSocialLogin }: AppHeaderProps) {
   return (
     <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-4xl mx-auto px-4 py-4">
@@ -34,7 +34,6 @@ export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelp
           </div>
           
           <div className="flex items-center space-x-4">
-
             {/* Bouton d'aide */}
             <button
               onClick={onHelpClick}
@@ -44,18 +43,14 @@ export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelp
               ?
             </button>
             
-            <div className="text-right hidden sm:block">
-              <div className="text-sm text-gray-900">{currentUserData?.name || 'Utilisateur'}</div>
-              <div className="text-xs text-muted-foreground">
-                {currentUserData?.location || 'Membre actif'}
-              </div>
-            </div>
-            <div 
-              className="w-12 h-12 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform shadow-sm"
-              onClick={onProfileClick}
-            >
-              {currentUserData?.name?.slice(0, 2) || 'U'}
-            </div>
+            {/* Composant réutilisable pour l'authentification */}
+            <AuthButtons
+              currentUser={currentUserData}
+              onLogin={onLogin}
+              onSocialLogin={onSocialLogin}
+              onProfileClick={onProfileClick}
+              compact={true}
+            />
           </div>
         </div>
       </div>

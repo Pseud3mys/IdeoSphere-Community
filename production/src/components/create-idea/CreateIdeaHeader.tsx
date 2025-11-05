@@ -66,6 +66,9 @@ export function CreateIdeaHeader({
                     {sourcePost.createdAt.toLocaleDateString('fr-FR')}
                   </span>
                 </div>
+                {sourcePost.title && (
+                  <p className="text-sm font-semibold text-gray-900 mb-1">{sourcePost.title}</p>
+                )}
                 <p className="text-sm text-gray-800 line-clamp-3">{sourcePost.content}</p>
               </div>
             </div>

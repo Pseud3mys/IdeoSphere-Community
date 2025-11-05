@@ -24,6 +24,9 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { ShareDialog } from './ShareDialog';
 import { getValidAvatar } from '../api/avatarService';
+import { GroupBadgeList } from './group/GroupBadgeList';
+import { RecommendToGroupDialog } from './group/RecommendToGroupDialog';
+import { Users } from 'lucide-react';
 
 interface PostDetailPageProps {
   post: Post;
@@ -208,6 +211,9 @@ export function PostDetailPage({
                         <span className="text-sm font-medium text-gray-900">{displayAuthor.name}</span>
                         <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
                       </div>
+                      {sourcePost?.title && (
+                        <p className="text-sm font-medium text-gray-900 mb-1">{sourcePost.title}</p>
+                      )}
                       <p className="text-sm text-gray-700 line-clamp-2">{sourcePost?.content}</p>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
@@ -265,15 +271,32 @@ export function PostDetailPage({
 
         {/* Contenu */}
         <div className="p-4">
+          {/* Titre du post si présent */}
+          {latestPost.title && (
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              {latestPost.title}
+            </h2>
+          )}
           <p className="text-lg text-gray-900 leading-relaxed whitespace-pre-line mb-4">
             {latestPost.content}
           </p>
 
-          {/* Tags */}
-          {latestPost.tags && latestPost.tags.length > 0 && (
+          {/* Tags et Groupes associés */}
+          {((latestPost.tags && latestPost.tags.length > 0) || (latestPost.groupIds && latestPost.groupIds.length > 0)) && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {latestPost.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-600 hover:bg-blue-100">
+              {/* Groupes associés - Plus visibles */}
+              {latestPost.groupIds && latestPost.groupIds.length > 0 && (
+                <GroupBadgeList 
+                  groupIds={latestPost.groupIds} 
+                  maxDisplay={10} 
+                  size="sm"
+                  showCount={false}
+                />
+              )}
+              
+              {/* Tags - Moins visibles */}
+              {latestPost.tags && latestPost.tags.length > 0 && latestPost.tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="bg-gray-50 text-gray-600 hover:bg-gray-100 border-gray-200">
                   #{tag}
                 </Badge>
               ))}
@@ -362,6 +385,22 @@ export function PostDetailPage({
                   <span className="text-sm">Partager</span>
                 </Button>
               </ShareDialog>
+              
+              <RecommendToGroupDialog 
+                contentId={latestPost.id} 
+                contentTitle={latestPost.title || latestPost.content.substring(0, 50) + '...'} 
+                contentType="post"
+                currentGroupIds={latestPost.groupIds}
+              >
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 text-gray-600 hover:bg-gray-50"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm">Recommander</span>
+                </Button>
+              </RecommendToGroupDialog>
             </div>
             
             <button

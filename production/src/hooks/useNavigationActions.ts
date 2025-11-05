@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEntityStoreSimple } from './useEntityStoreSimple';
+import { cleanGroupId } from '../utils/idUtils';
 
 /**
  * Hook personnalisé pour la navigation avec React Router
@@ -68,7 +69,9 @@ export function useNavigationActions() {
         
         // 5. Naviguer vers la page de détail avec React Router
         // Utiliser le format unifié /content/:id avec l'ID préfixé
-        navigate(`/content/${ideaId}`);
+        // Ajouter le préfixe 'ideas/' si ce n'est pas déjà présent
+        const prefixedId = ideaId.startsWith('ideas/') ? ideaId : `ideas/${ideaId}`;
+        navigate(`/content/${prefixedId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
       }
@@ -96,7 +99,9 @@ export function useNavigationActions() {
         
         // 3. Naviguer vers la page de détail avec React Router
         // Utiliser le format unifié /content/:id avec l'ID préfixé
-        navigate(`/content/${postId}`);
+        // Ajouter le préfixe 'posts/' si ce n'est pas déjà présent
+        const prefixedId = postId.startsWith('posts/') ? postId : `posts/${postId}`;
+        navigate(`/content/${prefixedId}`);
       } catch (error) {
         console.error(`❌ Erreur lors du chargement du post ${postId}:`, error);
       }
@@ -117,9 +122,11 @@ export function useNavigationActions() {
 
     /**
      * Navigation vers un groupe
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToGroup: (groupId: string) => {
-      navigate(`/groups/${groupId}`);
+      const cleanId = cleanGroupId(groupId);
+      navigate(`/groups/${cleanId}`);
     },
 
     /**
@@ -138,16 +145,20 @@ export function useNavigationActions() {
 
     /**
      * Navigation vers un groupe pending (Phase 2)
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToPendingGroup: (pendingId: string) => {
-      navigate(`/groups/pending/${pendingId}`);
+      const cleanId = cleanGroupId(pendingId);
+      navigate(`/groups/pending/${cleanId}`);
     },
 
     /**
      * Navigation vers la page de gestion d'un groupe (Phase 3)
+     * Nettoie l'ID pour ne garder que la partie courte dans l'URL
      */
     goToGroupManage: (groupId: string) => {
-      navigate(`/groups/${groupId}/manage`);
+      const cleanId = cleanGroupId(groupId);
+      navigate(`/groups/${cleanId}/manage`);
     },
 
     /**
@@ -161,5 +172,14 @@ export function useNavigationActions() {
     goToCommunities: () => navigate('/communities'),
     goToHome: () => navigate('/'),
     goToSignup: () => navigate('/signup'),
+    
+    /**
+     * Navigation vers la création avec des groupes pré-remplis
+     * @param groupIds - IDs des groupes à pré-remplir
+     * @param mode - Mode de création : 'post' (discussion rapide) ou 'idea' (projet complet)
+     */
+    goToCreateWithGroups: (groupIds: string[], mode: 'post' | 'idea' = 'post') => {
+      navigate('/create-idea', { state: { prefilledGroupIds: groupIds, creationMode: mode } });
+    },
   };
 }

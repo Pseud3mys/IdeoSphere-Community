@@ -59,10 +59,8 @@ export function CreateCompleteIdea({
 
   // Les utilisateurs sont déjà chargés au démarrage de l'app via loadInitialData
 
-  // Si currentUser est null, ne pas afficher le composant
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Utiliser unknownUser comme fallback pour les invités
+  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   // Obtenir l'idée source si elle existe
   const sourceIdea = prefilledSourceIdea ? ideas.find(i => i.id === prefilledSourceIdea) : null;
@@ -92,7 +90,18 @@ export function CreateCompleteIdea({
     if (sourceIdea) {
       return `[À modifier] ${sourceIdea.summary}`;
     }
-    return derivedSourcePost && derivedSourcePostAuthor ? `Inspiré par le post de ${derivedSourcePostAuthor.name}...` : '';
+    // Utiliser le titre ou le contenu du post comme base pour le résumé
+    if (derivedSourcePost) {
+      // Si le post a un titre, l'utiliser comme résumé de base
+      if (derivedSourcePost.title) {
+        return derivedSourcePost.title;
+      }
+      // Sinon, prendre les 200 premiers caractères du post comme résumé
+      const postContent = derivedSourcePost.content;
+      const truncated = postContent.length > 200 ? postContent.substring(0, 200) + '...' : postContent;
+      return truncated;
+    }
+    return '';
   });
   
   const [description, setDescription] = useState(() => {
@@ -117,11 +126,36 @@ export function CreateCompleteIdea({
 
 *Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceCreatorName}.*`;
     }
-    return derivedSourcePost && derivedSourcePostAuthor ? `En me basant sur le post de ${derivedSourcePostAuthor.name}:
+    if (derivedSourcePost) {
+      const authorName = derivedSourcePostAuthor?.name || 'un membre';
+      const postIntro = derivedSourcePost.title ? `**${derivedSourcePost.title}**\n\n${derivedSourcePost.content}` : derivedSourcePost.content;
+      return `## 💭 Contexte
 
-"${derivedSourcePost.content}"
+${postIntro}
 
-Je propose de développer cette idée...` : '';
+*(Post original de ${authorName})*
+
+---
+
+## 📋 Description du projet
+
+[Développez ici votre projet en détaillant les aspects pratiques, les objectifs, et les étapes de mise en œuvre...]
+
+## 🎯 Objectifs
+
+- 
+- 
+
+## 📅 Prochaines étapes
+
+1. 
+2. 
+
+---
+
+*N'hésitez pas à modifier complètement cette structure pour l'adapter à votre projet !*`;
+    }
+    return '';
   });
 
   const [location, setLocation] = useState(() => {

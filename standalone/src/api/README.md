@@ -5,12 +5,12 @@
 Les services API simulent un backend en utilisant des données mockées. Ils sont conçus pour être facilement remplaçables par de vraies API.
 
 ```
-Hooks → API Services → dataService → Données mockées
+Hooks → API Services → dataService → Données mockées + Cache dynamique
    ↑                                         ↓
    └──────── STORE (source de vérité) ──────┘
 ```
 
-**Règle Clé** : Les services API ne connaissent QUE les données mockées. Les entités créées dynamiquement existent UNIQUEMENT dans le store.
+**Règle Clé** : Les services API accèdent aux données mockées ET au cache dynamique. Les entités créées (posts, idées, utilisateurs) sont ajoutées au cache dynamique ET au store.
 
 ## Services
 
@@ -57,8 +57,8 @@ createPostOnApi(payload: {...}): Promise<Post>
 createUserAccountOnApi(userData: {...}): Promise<User>
 
 // Récupération détaillée
-fetchIdeaDetails(ideaId: string): Promise<Idea | null>
-fetchPostDetails(postId: string): Promise<Post | null>
+fetchIdeaDetails(ideaId: string): Promise<{ idea: Idea; users: User[] } | null>
+fetchPostDetails(postId: string): Promise<{ post: Post; users: User[] } | null>
 fetchUserProfileFromApi(userId: string): Promise<User | null>
 
 // Mise à jour
@@ -67,14 +67,19 @@ updateUserProfileOnApi(userId: string, updates: Partial<User>): Promise<User | n
 
 ### dataService.ts
 
-**Point d'accès unique aux données mockées**
+**Point d'accès unique aux données mockées + cache dynamique**
 
 ```typescript
 // Chargement initial (UNE SEULE fonction qui charge TOUT)
 loadMockDataSet(): Promise<MockDataSet>
 invalidateMockDataCache(): void
 
-// Recherche par ID
+// Cache dynamique pour les contenus créés pendant la session
+addDynamicIdea(idea: Idea): void
+addDynamicPost(post: Post): void
+addDynamicUser(user: User): void
+
+// Recherche par ID (cherche d'abord dans le cache dynamique, puis dans les données mockées)
 getUserById(userId: string): Promise<User | null>
 getUserByEmail(email: string): Promise<User | null>
 getIdeaById(ideaId: string): Promise<Idea | null>
@@ -188,6 +193,34 @@ fetchLineage(itemId: string, itemType: 'idea' | 'post', maxDepth?: number):
 - `lineage.parents` : Sources (idées et posts parents)
 - `lineage.children` : Dérivées (idées et posts enfants)
 - `users` : Utilisateurs associés
+
+### communityService.ts
+
+**Gestion des communautés/groupes de travail** ⭐ NOUVEAU
+
+```typescript
+// Récupération
+fetchAllCommunities(): Promise<{ communities: Community[], users: User[] }>
+fetchCommunityById(communityId: string): Promise<{ community: Community, members: Array<{user: User, membership: CommunityMembership}> } | null>
+fetchUserCommunities(userId: string): Promise<{ communities: Community[], users: User[] }>
+searchCommunities(query: string): Promise<{ communities: Community[], users: User[] }>
+fetchCommunitiesByType(type: Community['type']): Promise<{ communities: Community[], users: User[] }>
+fetchPublicCommunities(): Promise<{ communities: Community[], users: User[] }>
+
+// Actions
+joinCommunity(userId: string, communityId: string): Promise<CommunityMembership | null>
+leaveCommunity(userId: string, communityId: string): Promise<boolean>
+checkUserMembership(userId: string, communityId: string): Promise<boolean>
+getUserCommunityRole(userId: string, communityId: string): Promise<CommunityMembership | null>
+
+// Statistiques
+fetchCommunityStats(communityId: string): Promise<{ memberCount, ideaCount, activeMembers, adminsCount, moderatorsCount } | null>
+```
+
+**Principe** : 
+- Toutes les fonctions retournent à la fois les communautés ET les utilisateurs associés
+- Les membres sont triés par rôle (admin > moderator > member) puis par date d'adhésion
+- Compatible avec le hook `useCommunityActions` pour mise à jour automatique du store
 
 ### transformService.ts
 

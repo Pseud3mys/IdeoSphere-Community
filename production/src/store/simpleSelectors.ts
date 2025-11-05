@@ -6,6 +6,11 @@ import { unknownUser } from '../data/users';
  * Selectors simples pour extraire des données du store
  */
 
+// System selectors
+export const isStoreInitialized = (store: SimpleEntityStore): boolean => {
+  return store.isInitialized;
+};
+
 // User selectors
 export const getCurrentUser = (store: SimpleEntityStore): User | null => {
   if (!store.currentUserId) return null;
@@ -292,12 +297,17 @@ export const searchGroups = (store: SimpleEntityStore) => (query: string): Group
 };
 
 // Sélecteurs pour le feed d'un groupe
+// NOTE: Support pour groupIds (tableau) - Migration Phase 5
 export const getGroupIdeas = (store: SimpleEntityStore) => (groupId: string): Idea[] => {
-  return Object.values(store.ideas).filter(idea => idea.groupId === groupId);
+  return Object.values(store.ideas).filter(idea => 
+    idea.groupIds?.includes(groupId) || idea.groupId === groupId
+  );
 };
 
 export const getGroupPosts = (store: SimpleEntityStore) => (groupId: string): Post[] => {
-  return Object.values(store.posts).filter(post => post.groupId === groupId);
+  return Object.values(store.posts).filter(post => 
+    post.groupIds?.includes(groupId) || post.groupId === groupId
+  );
 };
 
 export const getGroupFeed = (store: SimpleEntityStore) => (groupId: string): { posts: Post[]; ideas: Idea[] } => {

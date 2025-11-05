@@ -8,7 +8,7 @@ import { PendingGroupCreation } from '../types';
 
 export const pendingGroups: PendingGroupCreation[] = [
   {
-    id: 'pg1',
+    id: 'groups/pg1',
     name: 'GT Mobilité Douce',
     description: 'Groupe de travail temporaire pour développer des solutions de mobilité douce dans notre territoire : vélos, trottinettes, piétons.',
     shortDescription: 'Développer la mobilité douce sur le territoire',
@@ -22,7 +22,7 @@ export const pendingGroups: PendingGroupCreation[] = [
     initiatorId: '1', // Marie Dubois
   },
   {
-    id: 'pg2',
+    id: 'groups/pg2',
     name: 'Quartier Sud',
     description: 'Antenne locale pour les habitants du quartier Sud. Espace de discussion et d\'organisation pour les projets et événements du quartier.',
     shortDescription: 'Antenne locale du quartier Sud',
@@ -36,7 +36,7 @@ export const pendingGroups: PendingGroupCreation[] = [
     initiatorId: '4', // Thomas Chen
   },
   {
-    id: 'pg3',
+    id: 'groups/pg3',
     name: 'Numérique Responsable',
     description: 'Communauté d\'intérêt autour du numérique responsable et de la sobriété numérique. Partage de bonnes pratiques et initiatives locales.',
     shortDescription: 'Pour un numérique plus responsable',

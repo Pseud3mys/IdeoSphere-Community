@@ -18,11 +18,18 @@ export function IdeaDetailPageWrapper() {
   // Récupérer l'ID depuis * (splat), contentId ou ideaId (pour supporter tous les formats)
   const params = useParams<{ ideaId?: string; contentId?: string; '*'?: string }>();
   const ideaId = params['*'] || params.contentId || params.ideaId;
+  
+  // ✅ Ne pas enlever le préfixe 'ideas/' car les IDs dans les données mockées l'incluent
+  // Les IDs sont au format 'ideas/1', 'ideas/2', etc.
+  
   const navigate = useNavigate();
   const navigation = useNavigationActions();
   const { getIdeaById, actions } = useEntityStoreSimple();
   const [isLoading, setIsLoading] = useState(true);
-  const [idea, setIdea] = useState<Idea | null>(null);
+  
+  // ✅ Utiliser directement le store au lieu d'un state local
+  // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
+  const idea = getIdeaById(ideaId || '');
 
   // Charger l'idée au montage du composant
   useEffect(() => {
@@ -42,18 +49,23 @@ export function IdeaDetailPageWrapper() {
         // 1. Vérifier si l'idée est déjà dans le store
         let ideaData = getIdeaById(ideaId);
 
-        // 2. Si pas dans le store, charger l'idée depuis l'API
-        if (!ideaData) {
-          const apiIdeaDetails = await fetchIdeaDetails(ideaId);
+        // 2. Charger l'idée complète depuis l'API si :
+        //    - Elle n'est pas dans le store OU
+        //    - Elle est dans le store mais sans description (provient du feed)
+        const needsFullLoad = !ideaData || !ideaData.description || ideaData.description.trim() === '';
+        
+        if (needsFullLoad) {
+          const apiResponse = await fetchIdeaDetails(ideaId);
 
-          if (!apiIdeaDetails) {
+          if (!apiResponse) {
             console.error(`❌ Idée ${ideaId} non trouvée`);
             navigate('/discovery');
             return;
           }
 
-          // Ajouter au store
-          actions.addIdea(apiIdeaDetails);
+          // ✅ Ajouter l'idée complète (avec description) ET les utilisateurs au store
+          actions.addIdea(apiResponse.idea);
+          apiResponse.users.forEach(user => actions.addUser(user));
           ideaData = getIdeaById(ideaId);
         }
 
@@ -90,9 +102,10 @@ export function IdeaDetailPageWrapper() {
           // Charger les sourceIdeas
           if (currentIdea.sourceIdeas && currentIdea.sourceIdeas.length > 0) {
             for (const sourceIdeaId of currentIdea.sourceIdeas) {
-              const sourceIdea = await fetchIdeaDetails(sourceIdeaId);
-              if (sourceIdea) {
-                actions.addIdea(sourceIdea);
+              const sourceIdeaResponse = await fetchIdeaDetails(sourceIdeaId);
+              if (sourceIdeaResponse) {
+                actions.addIdea(sourceIdeaResponse.idea);
+                sourceIdeaResponse.users.forEach(user => actions.addUser(user));
               }
             }
           }
@@ -101,17 +114,18 @@ export function IdeaDetailPageWrapper() {
           if (currentIdea.sourcePosts && currentIdea.sourcePosts.length > 0) {
             const { fetchPostDetails } = await import('../api/contentService');
             for (const sourcePostId of currentIdea.sourcePosts) {
-              const sourcePost = await fetchPostDetails(sourcePostId);
-              if (sourcePost) {
-                actions.addPost(sourcePost);
+              const sourcePostResponse = await fetchPostDetails(sourcePostId);
+              if (sourcePostResponse) {
+                actions.addPost(sourcePostResponse.post);
+                sourcePostResponse.users.forEach(user => actions.addUser(user));
               }
             }
           }
         }
 
-        // 6. Récupérer l'idée finale mise à jour depuis le store
+        // 6. Vérifier que l'idée est bien dans le store
         ideaData = getIdeaById(ideaId);
-        setIdea(ideaData || null);
+        // ✅ Plus besoin de setIdea car on utilise directement le store
       } catch (error) {
         console.error(`❌ Erreur lors du chargement de l'idée ${ideaId}:`, error);
         navigate('/discovery');
