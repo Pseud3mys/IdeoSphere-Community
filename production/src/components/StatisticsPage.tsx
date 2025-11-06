@@ -47,6 +47,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
+import { clientConfig } from '../config/clientConfig';
 
 interface StatisticsPageProps {
   onNavigateBack?: () => void;
@@ -460,14 +461,55 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
           
           {/* Tab 2: Visualisation Kumu */}
           <TabsContent value="kumu" className="space-y-6">
+            {/* Visualisation Kumu iframe */}
+            {clientConfig.integrations.kumu.enabled && clientConfig.integrations.kumu.embedUrl && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Share2 className="h-5 w-5" />
+                        Graphe de réseau - Kumu.io
+                      </CardTitle>
+                      <CardDescription>
+                        Visualisation interactive des connexions entre les entités de la plateforme
+                      </CardDescription>
+                    </div>
+                    {clientConfig.integrations.kumu.projectUrl && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={clientConfig.integrations.kumu.projectUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Ouvrir dans Kumu
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full overflow-hidden rounded-lg border border-gray-200">
+                    <iframe
+                      src={clientConfig.integrations.kumu.embedUrl}
+                      width={clientConfig.integrations.kumu.width}
+                      height={clientConfig.integrations.kumu.height}
+                      style={{ border: 0, display: 'block' }}
+                      title="Visualisation Kumu"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    Interagissez avec le graphe : cliquez et glissez les nœuds, zoomez, explorez les connexions.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5" />
-                  Visualisation Kumu.io
+                  <Download className="h-5 w-5" />
+                  Exporter les données pour Kumu
                 </CardTitle>
                 <CardDescription>
-                  Explorez les connexions entre idées, posts, utilisateurs et groupes
+                  Téléchargez les données au format JSON pour les importer dans votre propre visualisation Kumu
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

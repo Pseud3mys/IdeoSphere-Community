@@ -371,7 +371,31 @@ Quels bénéfices concrets pour les membres de la communauté ?`,
   },
 
   // ============================================================================
-  // 10. CONFIGURATION AVANCÉE
+  // 10. INTÉGRATIONS EXTERNES
+  // ============================================================================
+  
+  integrations: {
+    // Kumu.io - Visualisation de réseaux
+    kumu: {
+      // URL de l'iframe d'embed Kumu (si disponible)
+      // Format: https://embed.kumu.io/{project-id}
+      embedUrl: 'https://embed.kumu.io/ebbde99e9ffca65e546449f1df8086a8',
+      
+      // URL directe vers le projet Kumu
+      // Format: https://kumu.io/{username}/{project-name}
+      projectUrl: 'https://embed.kumu.io/4b1560a7d6213293340bf979098d9db3#beta-export',
+      
+      // Activer l'affichage de l'iframe
+      enabled: true,
+      
+      // Dimensions par défaut de l'iframe
+      width: '100%',
+      height: '600px',
+    },
+  },
+
+  // ============================================================================
+  // 11. CONFIGURATION AVANCÉE
   // ============================================================================
   
   features: {
