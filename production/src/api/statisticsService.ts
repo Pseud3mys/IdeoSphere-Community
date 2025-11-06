@@ -71,10 +71,6 @@ export interface KumuData {
   connections: KumuConnection[];
 }
 
-//
-// TOUTES LES FONCTIONS DE CALCUL (calculateGini, etc.) SONT SUPPRIMÉES
-// ELLES SONT MAINTENANT CÔTÉ BACKEND
-//
 
 /**
  * Calcule les statistiques globales de santé de la plateforme
@@ -114,7 +110,8 @@ export async function fetchGroupHealthStats(
  */
 export async function fetchKumuData(): Promise<KumuData> {
   try {
-    const response = await apiClient.get<KumuData>('/stats/kumu');
+    // MODIFIÉ: Appel du nouvel endpoint statique
+    const response = await apiClient.get<KumuData>('/kumu-export');
     return response.data;
   } catch (error) {
     console.error("Erreur lors de la récupération des données Kumu:", error);

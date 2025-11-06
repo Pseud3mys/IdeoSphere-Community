@@ -474,103 +474,76 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Kumu.io est une plateforme de visualisation de réseaux. L'import des données est automatisé via l'URL ci-dessous.
+                    Kumu.io est une plateforme de visualisation de réseaux. Téléchargez les données au format JSON pour les importer dans Kumu.
                   </AlertDescription>
                 </Alert>
                 
-                {kumuData && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl">{kumuData.nodes.length}</div>
-                        <div className="text-sm text-gray-600">Nœuds (entités)</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {kumuData.nodes.filter(n => n.type === 'user').length} utilisateurs,{' '}
-                          {kumuData.nodes.filter(n => n.type === 'idea').length} idées,{' '}
-                          {kumuData.nodes.filter(n => n.type === 'post').length} posts,{' '}
-                          {kumuData.nodes.filter(n => n.type === 'group').length} groupes
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl">{kumuData.connections.length}</div>
-                        <div className="text-sm text-gray-600">Connexions</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {kumuData.connections.filter(c => c.type === 'created').length} créations,{' '}
-                          {kumuData.connections.filter(c => c.type === 'supports').length} soutiens,{' '}
-                          {kumuData.connections.filter(c => c.type === 'derived_from').length} dérivations
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 bg-green-50 rounded-lg flex items-center justify-center">
-                        <div className="text-center w-full">
-                          <div className="text-sm text-gray-600 mb-2">Format JSON compatible</div>
-                          <Button
-                            className="w-full"
-                            onClick={() => {
-                              const blob = new Blob([JSON.stringify(kumuData, null, 2)], { type: 'application/json' });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `kumu-data-${new Date().toISOString().split('T')[0]}.json`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Télécharger pour Kumu
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    {/* URL d'import automatique */}
-                    <div className="space-y-2">
-                      <Label>URL d'import automatique Kumu</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          readOnly 
-                          value={`${window.location.origin}/api/export_kumu.json`}
-                          className="font-mono text-sm"
-                        />
-                        <Button 
-                          variant="outline"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/api/export_kumu.json`);
-                            toast.success('URL copiée dans le presse-papier !');
-                          }}
-                        >
-                          Copier
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        Utilisez cette URL dans Kumu pour importer automatiquement vos données.
-                      </p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-2">
-                      <h4>Structure des données</h4>
-                      <p className="text-sm text-gray-600">
-                        Les données exportées contiennent deux tableaux :
-                      </p>
-                      <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                        <li><strong>nodes</strong> : chaque entité (utilisateur, idée, post, groupe)</li>
-                        <li><strong>connections</strong> : les relations entre entités</li>
-                      </ul>
-                    </div>
-                    
-                    <Button variant="outline" asChild>
-                      <a href="https://docs.kumu.io/guides/import.html" target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Documentation Kumu
-                      </a>
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => {
+                        if (kumuData) {
+                          const blob = new Blob([JSON.stringify(kumuData, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `kumu-data-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Télécharger pour Kumu
                     </Button>
                   </div>
-                )}
+                  
+                  <Separator />
+                  
+                  {/* URL d'import automatique */}
+                  <div className="space-y-2">
+                    <Label>URL d'import automatique Kumu</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        readOnly 
+                        value={`${window.location.origin}/api/export_kumu.json`}
+                        className="font-mono text-sm"
+                      />
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/api/export_kumu.json`);
+                          toast.success('URL copiée dans le presse-papier !');
+                        }}
+                      >
+                        Copier
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Utilisez cette URL dans Kumu pour importer automatiquement vos données (nécessite configuration backend).
+                    </p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <h4>Structure des données</h4>
+                    <p className="text-sm text-gray-600">
+                      Les données exportées contiennent deux tableaux :
+                    </p>
+                    <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                      <li><strong>nodes</strong> : chaque entité (utilisateur, idée, post, groupe)</li>
+                      <li><strong>connections</strong> : les relations entre entités</li>
+                    </ul>
+                  </div>
+                  
+                  <Button variant="outline" asChild>
+                    <a href="https://docs.kumu.io/guides/import.html" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Documentation Kumu
+                    </a>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
             
