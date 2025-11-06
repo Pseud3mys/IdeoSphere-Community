@@ -29,10 +29,13 @@ import {
   Shield,
   Camera,
   Upload,
-  Loader2
+  Loader2,
+  BarChart3
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { resizeImageTo200x200, validateImageFile, uploadUserAvatar } from '../api/avatarService';
+import { useNavigationActions } from '../hooks/useNavigationActions';
+import { clientConfig } from '../config/clientConfig';
 
 interface UserProfilePageProps {
   user: User;
@@ -178,6 +181,8 @@ export function UserProfilePage({
     toast.success('Compte supprimé avec succès');
     onBack();
   };
+  
+  const { goToStatistics } = useNavigationActions();
 
   const currentUser = user; // Assuming current user for contact dialog
 
@@ -396,6 +401,31 @@ export function UserProfilePage({
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {/* Section Statistiques de la plateforme */}
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <BarChart3 className="w-4 h-4 text-blue-600" />
+                    <Label className="font-medium text-blue-800">Statistiques de la plateforme</Label>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Consultez les statistiques de santé et d'engagement de la plateforme, explorez les visualisations réseau et exportez les données.
+                  </p>
+                </div>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={goToStatistics}
+                className="bg-white hover:bg-blue-100 border-blue-300"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Voir les statistiques
+              </Button>
+            </div>
+
             {/* Section Suppression de compte */}
             <div className="border border-red-200 rounded-lg p-4 bg-red-50">
               <div className="flex items-center space-x-2 mb-4">

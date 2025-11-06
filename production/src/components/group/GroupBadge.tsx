@@ -19,11 +19,8 @@ export function GroupBadge({
   size = 'sm', 
   interactive = true 
 }: GroupBadgeProps) {
-  const { getGroupById, isStoreInitialized } = useEntityStoreSimple();
+  const { getGroupById } = useEntityStoreSimple();
   const { goToGroup } = useNavigationActions();
-  
-  // Ne rien afficher si le store n'est pas encore initialisé
-  if (!isStoreInitialized()) return null;
   
   const group = getGroupById(groupId);
   
