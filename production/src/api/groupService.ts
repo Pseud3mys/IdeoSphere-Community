@@ -263,3 +263,19 @@ export async function fetchPendingGroupDetails(pendingId: string): Promise<{
     return { pendingGroup: null, founders: [] };
   }
 }
+
+// useGroupActions.recommendContentToGroups
+export async function recommendContentToGroups(
+  userId: string,
+  groupIds: string[]
+): Promise<boolean> {
+  try {
+    const payload = { userId, groupIds };
+    //TODO await apiClient.post('/groups/recommend-content', payload);
+    console.log(`📦 [API groupService.recommendContentToGroups] Recommandation de contenu par ${userId} aux groupes: ${groupIds.join(', ')}`);
+    return true;
+    } catch (error) {
+      console.error(`❌ [API groupService.recommendContentToGroups] ${userId} / ${groupIds.join(', ')}`, error);
+      return false;
+    }
+}

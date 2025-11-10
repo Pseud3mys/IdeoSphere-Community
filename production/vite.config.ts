@@ -56,5 +56,17 @@
     server: {
       port: 3000,
       open: true,
-    },
+      
+      // 1. Permet à Vite d'écouter sur d'autres noms d'hôte (comme test-tenant.localhost)
+      host: true, 
+
+      // 2. Configure le proxy pour les appels API
+      proxy: {
+        // Si le frontend fait un appel à '/api/...'
+        '/api': {
+          // Redirige-le vers votre backend
+          target: 'http://localhost:5000',
+        }
+      }
+    }
   });
