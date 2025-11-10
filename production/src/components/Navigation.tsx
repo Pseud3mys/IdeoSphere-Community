@@ -13,6 +13,7 @@ export function Navigation() {
   // Déterminer la page active depuis l'URL
   const getActivePath = () => {
     const path = location.pathname;
+    if (path.startsWith('/my-contributions')) return '/my-contributions';
     if (path.startsWith('/my-ideas')) return '/my-ideas';
     if (path.startsWith('/create-idea')) return '/create-idea';
     if (path.startsWith('/groups')) return '/groups';
@@ -30,7 +31,7 @@ export function Navigation() {
       description: 'Découvrir les idées de la communauté',
     },
     {
-      path: '/my-ideas',
+      path: '/my-contributions',
       label: 'Mes contributions',
       icon: User,
       description: 'Gérer vos idées et collaborations',

@@ -38,6 +38,7 @@ import { GroupLinksModule } from './group/GroupLinksModule';
 import { UserLink } from './UserLink';
 import { toast } from 'sonner@2.0.3';
 import { Group } from '../types';
+import { getGroupTypes } from '../config/clientConfig';
 
 interface GroupManagePageProps {
   groupId: string;
@@ -273,10 +274,9 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as Group['type'] })}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="community">Communauté</option>
-                  <option value="team">Équipe / Service</option>
-                  <option value="project">GT / Projet</option>
-                  <option value="local">Antenne Locale</option>
+                  {getGroupTypes().map(type => (
+                    <option key={type.id} value={type.id}>{type.label}</option>
+                  ))}
                 </select>
               </div>
 

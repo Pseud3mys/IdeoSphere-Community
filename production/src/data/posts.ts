@@ -301,6 +301,130 @@ export function getMockPosts(): Post[] {
           likes: ['1', '3']
         }
       ]
+    },
+    // ========================================================
+    // HISTOIRE : Du Mur Gris à la Fresque Collective
+    // Post initial → Réactions → Idée structurée → Groupe projet
+    // ========================================================
+    {
+      id: 'posts/fresque-1',
+      title: 'Le mur de l\'école est vraiment trop gris...',
+      content: 'Hier en allant chercher ma fille à l\'école Paul Langevin, je me suis encore fait la réflexion : ce grand mur gris à côté de la cour est vraiment triste... 😔 Les enfants passent devant tous les jours, ça manque tellement de couleurs et de vie ! On pourrait pas imaginer quelque chose de plus joyeux ?',
+      authorId: users[2].id, // Sophie Laurent (enseignante)
+      createdAt: new Date('2024-02-15T16:30:00'),
+      supporters: ['3', '1', '2', '13', '14'],
+      tags: ['école', 'aménagement', 'art'],
+      groupIds: [],
+      derivedIdeas: ['ideas/fresque'], // L'idée de la fresque viendra de ce post
+      derivedPosts: ['posts/fresque-2', 'posts/fresque-3'],
+      sourcePosts: [],
+      replies: [
+        {
+          id: 'reply-fresque-1',
+          authorId: users[0].id, // Marie
+          content: 'C\'est vrai qu\'il est sinistre ce mur ! Mes petits-enfants disent toujours "le mur qui fait peur" 😅',
+          createdAt: new Date('2024-02-15T17:00:00'),
+          likes: ['3', '2']
+        },
+        {
+          id: 'reply-fresque-2',
+          authorId: users[1].id, // Pierre
+          content: 'Une fresque colorée peut-être ? J\'ai vu ça dans d\'autres communes, c\'est super joli !',
+          createdAt: new Date('2024-02-15T17:45:00'),
+          likes: ['3', '1', '13']
+        },
+        {
+          id: 'reply-fresque-3',
+          authorId: '13', // Léa Dumont (étudiante)
+          content: 'Excellente idée ! Et si on impliquait les élèves dans le projet ? Ça pourrait être un super projet pédagogique 🎨',
+          createdAt: new Date('2024-02-15T18:20:00'),
+          likes: ['3', '2', '14']
+        }
+      ]
+    },
+    {
+      id: 'posts/fresque-2',
+      content: 'Suite à mon post sur le mur de l\'école... J\'ai parlé avec quelques parents et les enfants adorent l\'idée d\'une fresque ! 🎨 Certains ont même déjà des idées de dessins. Et si on lançait vraiment le projet ?',
+      authorId: users[2].id, // Sophie
+      createdAt: new Date('2024-02-18T14:00:00'),
+      supporters: ['3', '1', '2', '13', '14', '12'],
+      tags: ['école', 'art', 'participatif'],
+      groupIds: [],
+      derivedIdeas: ['ideas/fresque'],
+      derivedPosts: ['posts/fresque-3', 'posts/fresque-4'],
+      sourcePosts: ['posts/fresque-1'],
+      replies: [
+        {
+          id: 'reply-fresque-4',
+          authorId: '14', // Camille Artois (artiste)
+          content: 'Hello ! Je suis muraliste et j\'adore ce genre de projets participatifs. Je serais ravie de vous accompagner techniquement si vous voulez ! 🖌️',
+          createdAt: new Date('2024-02-18T15:30:00'),
+          likes: ['3', '2', '13', '1']
+        },
+        {
+          id: 'reply-fresque-5',
+          authorId: users[1].id, // Pierre
+          content: 'Super Camille ! Et il faudrait voir avec la mairie pour l\'autorisation non ?',
+          createdAt: new Date('2024-02-18T16:00:00'),
+          likes: ['3', '14']
+        }
+      ]
+    },
+    {
+      id: 'posts/fresque-3',
+      content: 'Update projet fresque école ! 🎉 Camille (artiste) est partante pour nous accompagner. On a besoin de contacter la mairie pour l\'autorisation. Quelqu\'un a un contact au service culture ?',
+      authorId: users[2].id, // Sophie
+      createdAt: new Date('2024-02-22T10:00:00'),
+      supporters: ['3', '1', '2', '13', '14', '12', '15'],
+      tags: ['école', 'art', 'administratif'],
+      groupIds: [],
+      derivedIdeas: ['ideas/fresque'],
+      derivedPosts: ['posts/fresque-4'],
+      sourcePosts: ['posts/fresque-2'],
+      replies: [
+        {
+          id: 'reply-fresque-6',
+          authorId: '15', // Marc Lefèvre (service Culture mairie)
+          content: 'Bonjour ! Je suis responsable Culture à la mairie. Super projet ! 👍 On peut vous aider pour l\'autorisation et peut-être même un petit budget. Contactez-moi par email.',
+          createdAt: new Date('2024-02-22T11:00:00'),
+          likes: ['3', '2', '13', '14', '1']
+        },
+        {
+          id: 'reply-fresque-7',
+          authorId: '13', // Léa
+          content: 'Génial ! Le projet prend forme 🚀',
+          createdAt: new Date('2024-02-22T12:00:00'),
+          likes: ['3', '2']
+        }
+      ]
+    },
+    {
+      id: 'posts/fresque-4',
+      content: 'Le projet de fresque avance bien ! 🎨 On a rencontré Marc de la mairie qui nous soutient, Camille l\'artiste est avec nous, et on a déjà 15 parents + élèves intéressés. On va créer un groupe dédié pour mieux s\'organiser. Qui veut participer ?',
+      authorId: users[2].id, // Sophie
+      createdAt: new Date('2024-03-05T15:00:00'),
+      supporters: ['3', '1', '2', '13', '14', '12', '15', '4', '5'],
+      tags: ['école', 'art', 'participatif', 'groupe'],
+      groupIds: ['groups/g6'], // Le groupe a été créé suite à ce post
+      derivedIdeas: ['ideas/fresque'],
+      derivedPosts: [],
+      sourcePosts: ['posts/fresque-3'],
+      replies: [
+        {
+          id: 'reply-fresque-8',
+          authorId: users[4].id, // Thomas
+          content: 'Je peux aider pour la comm\' et créer un visuel du projet si vous voulez ! 📱',
+          createdAt: new Date('2024-03-05T16:00:00'),
+          likes: ['3', '13']
+        },
+        {
+          id: 'reply-fresque-9',
+          authorId: users[0].id, // Marie
+          content: 'Moi je peux apporter des goûters pour les ateliers avec les enfants ! 🍪',
+          createdAt: new Date('2024-03-05T16:30:00'),
+          likes: ['3', '2', '13']
+        }
+      ]
     }
   ];
 }

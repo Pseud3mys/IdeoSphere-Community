@@ -425,6 +425,190 @@ export const discussionTopics: DiscussionTopic[] = [
         isAnswer: false
       }
     ]
+  },
+  // ========================================================
+  // DISCUSSIONS GROUPE : Du Mur Gris à la Fresque Collective
+  // Discussions dans le groupe projet dédié
+  // ========================================================
+  {
+    id: 'dt-fresque-1',
+    title: 'Quelles thématiques pour la fresque ?',
+    type: 'question',
+    authorId: '3', // Sophie Laurent
+    content: 'On a fait un premier tour avec les enfants et plusieurs thèmes ressortent : la nature en ville, les 4 saisons, l\'histoire de l\'école, l\'imaginaire des enfants... Comment faire un choix cohérent qui raconte une vraie histoire ?',
+    timestamp: new Date('2024-03-22T15:00:00'),
+    upvotes: ['3', '2', '13', '14', '1'],
+    groupId: 'groups/g6',
+    posts: [
+      {
+        id: 'dp-fresque-1',
+        authorId: '14', // Camille Artois (artiste)
+        content: 'Super question ! Artistiquement, je propose qu\'on mixe plusieurs thèmes dans une composition fluide. Par exemple : les 4 saisons comme structure générale, avec des éléments d\'histoire locale intégrés, et l\'imaginaire des enfants qui "habite" chaque saison. Ça raconte le cycle de la vie à l\'école !',
+        timestamp: new Date('2024-03-22T16:30:00'),
+        upvotes: ['3', '2', '13', '1'],
+        isAnswer: true
+      },
+      {
+        id: 'dp-fresque-2',
+        authorId: '13', // Léa Dumont
+        content: 'J\'adore cette idée ! Et si chaque saison correspondait aussi à une classe ? Genre le printemps avec les CP, l\'été avec les CE1... ça implique tout le monde et chaque classe a son "morceau" de fresque 🎨',
+        timestamp: new Date('2024-03-22T17:00:00'),
+        upvotes: ['3', '14', '2'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-3',
+        authorId: '2', // Pierre Martin
+        content: 'Pratiquement, ça fait 4 sections de 3,75m chacune. C\'est pile la bonne taille pour travailler en petits groupes sans se marcher dessus !',
+        timestamp: new Date('2024-03-22T18:00:00'),
+        upvotes: ['3', '14'],
+        isAnswer: false
+      }
+    ]
+  },
+  {
+    id: 'dt-fresque-2',
+    title: 'Autorisation mairie : quelles démarches exactement ?',
+    type: 'question',
+    authorId: '2', // Pierre Martin
+    content: 'Marc de la mairie nous a dit que le principe était OK, mais il faut monter un dossier. Quelqu\'un connaît les documents nécessaires ? Assurance, plan, convention avec l\'école... ?',
+    timestamp: new Date('2024-03-25T10:00:00'),
+    upvotes: ['2', '3', '13', '15'],
+    groupId: 'groups/g6',
+    posts: [
+      {
+        id: 'dp-fresque-4',
+        authorId: '15', // Marc Lefèvre (mairie)
+        content: 'Voici ce qu\'il nous faut pour valider : 1) Esquisse du projet avec dimensions, 2) Accord écrit de la direction d\'école, 3) Attestation d\'assurance de l\'artiste, 4) Planning prévisionnel. Je peux vous envoyer le modèle de convention à signer entre la mairie, l\'école et l\'association de parents.',
+        timestamp: new Date('2024-03-25T11:00:00'),
+        upvotes: ['2', '3', '13', '14'],
+        isAnswer: true
+      },
+      {
+        id: 'dp-fresque-5',
+        authorId: '3', // Sophie
+        content: 'Merci Marc ! Je m\'occupe de l\'accord de la directrice (elle est déjà super enthousiaste). Camille, tu peux nous faire l\'esquisse pour fin mars ?',
+        timestamp: new Date('2024-03-25T14:00:00'),
+        upvotes: ['2', '14'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-6',
+        authorId: '14', // Camille
+        content: 'Oui ! Je vais faire 2-3 propositions basées sur les thèmes qu\'on a définis. Je vous les partage semaine prochaine pour qu\'on vote tous ensemble 🎨',
+        timestamp: new Date('2024-03-25T15:30:00'),
+        upvotes: ['3', '2', '13'],
+        isAnswer: false
+      }
+    ]
+  },
+  {
+    id: 'dt-fresque-3',
+    title: 'Organisation des ateliers avec les enfants',
+    type: 'suggestion',
+    authorId: '13', // Léa Dumont
+    content: 'Pour que chaque élève puisse participer, je propose des rotations par demi-classe sur 2 semaines. Matin : travail sur la fresque, après-midi : ateliers préparatoires (croquis, test couleurs...). Qu\'en pensez-vous ?',
+    timestamp: new Date('2024-03-28T09:00:00'),
+    upvotes: ['13', '3', '2', '14', '1'],
+    groupId: 'groups/g6',
+    posts: [
+      {
+        id: 'dp-fresque-7',
+        authorId: '3', // Sophie
+        content: 'Super organisation ! Côté école on peut bloquer les créneaux d\'arts plastiques pendant 2 semaines en juin. Par contre il faut prévoir des activités alternatives pour l\'autre moitié de classe... Des parents peuvent encadrer ?',
+        timestamp: new Date('2024-03-28T10:30:00'),
+        upvotes: ['13', '2', '1'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-8',
+        authorId: '1', // Marie Dubois
+        content: 'Moi je peux ! Je propose des ateliers "histoire de l\'école" avec photos anciennes et témoignages. Les enfants adorent et ça nourrit aussi le projet fresque 📚',
+        timestamp: new Date('2024-03-28T11:00:00'),
+        upvotes: ['3', '13', '2'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-9',
+        authorId: '4', // Thomas Chen
+        content: 'Je peux faire des ateliers "communication du projet" : les enfants créent des affiches, prennent des photos, font de petites vidéos... On aura un super contenu pour partager le projet !',
+        timestamp: new Date('2024-03-28T14:00:00'),
+        upvotes: ['13', '3'],
+        isAnswer: false
+      }
+    ]
+  },
+  {
+    id: 'dt-fresque-4',
+    title: 'Budget : on cherche encore 500€',
+    type: 'discussion',
+    authorId: '2', // Pierre Martin
+    content: 'Petit point budget : la mairie finance 1500€ ✅, les parents d\'élèves 500€ ✅, mais il nous manque encore 500€ pour boucler (peintures de qualité + matériel de protection). Des idées de financement ?',
+    timestamp: new Date('2024-04-02T16:00:00'),
+    upvotes: ['2', '3', '13', '1', '15'],
+    groupId: 'groups/g6',
+    posts: [
+      {
+        id: 'dp-fresque-10',
+        authorId: '13', // Léa
+        content: 'On pourrait lancer un financement participatif en ligne ? Genre 20-25€ par famille, ça fait vite grimper. Et on ouvre aussi aux habitants du quartier qui ne sont pas parents d\'élèves !',
+        timestamp: new Date('2024-04-02T17:00:00'),
+        upvotes: ['2', '3', '14'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-11',
+        authorId: '1', // Marie
+        content: 'Bonne idée ! Et pourquoi pas une vente de gâteaux à l\'école aussi ? Traditionnel mais efficace. On l\'a déjà fait pour la classe verte, on a récolté 380€ !',
+        timestamp: new Date('2024-04-02T18:00:00'),
+        upvotes: ['3', '13'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-12',
+        authorId: '15', // Marc Lefèvre (mairie)
+        content: 'Je peux peut-être débloquer 200€ supplémentaires du budget "participation citoyenne" si vous montez un bon dossier. Contactez-moi pour voir les modalités !',
+        timestamp: new Date('2024-04-03T09:00:00'),
+        upvotes: ['2', '3', '13', '14'],
+        isAnswer: true
+      }
+    ]
+  },
+  {
+    id: 'dt-fresque-5',
+    title: 'Sécurité : protections et organisation du chantier',
+    type: 'question',
+    authorId: '14', // Camille Artois
+    content: 'Question importante : la sécurité pendant les ateliers. On travaille en hauteur (échafaudage), avec des produits (peinture), et des enfants. Il faut qu\'on soit carrés sur l\'organisation. Qui gère quoi ?',
+    timestamp: new Date('2024-04-05T14:00:00'),
+    upvotes: ['14', '3', '2', '15', '13'],
+    groupId: 'groups/g6',
+    posts: [
+      {
+        id: 'dp-fresque-13',
+        authorId: '2', // Pierre Martin
+        content: 'Je m\'occupe de l\'échafaudage (j\'ai le matos pro et les certifs). Zone interdite bien balisée, harnais pour les adultes en hauteur. Les enfants ne montent PAS, ils travaillent au sol sur les parties basses.',
+        timestamp: new Date('2024-04-05T15:00:00'),
+        upvotes: ['14', '3', '15'],
+        isAnswer: true
+      },
+      {
+        id: 'dp-fresque-14',
+        authorId: '14', // Camille
+        content: 'Parfait ! De mon côté : peintures acryliques non-toxiques uniquement, gants et tabliers pour tous, zone de lavage des pinceaux avec bacs dédiés. Et jamais plus de 10 enfants en même temps sur le chantier.',
+        timestamp: new Date('2024-04-05T16:00:00'),
+        upvotes: ['3', '2', '13'],
+        isAnswer: false
+      },
+      {
+        id: 'dp-fresque-15',
+        authorId: '3', // Sophie
+        content: 'Côté école : 2 adultes encadrants minimum par groupe d\'enfants (1 enseignant + 1 parent). Trousse de premiers secours sur place. Et briefing sécurité obligatoire avant chaque session !',
+        timestamp: new Date('2024-04-05T17:00:00'),
+        upvotes: ['14', '2', '13'],
+        isAnswer: false
+      }
+    ]
   }
 ];
 

@@ -1,5 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { GroupType } from "../../types";
+import { getGroupTypes } from "../../config/clientConfig";
 
 interface GroupTypeFilterProps {
   selectedType: GroupType | "all";
@@ -7,6 +8,8 @@ interface GroupTypeFilterProps {
 }
 
 export function GroupTypeFilter({ selectedType, onFilterChange }: GroupTypeFilterProps) {
+  const groupTypes = getGroupTypes();
+
   return (
     <Tabs value={selectedType} onValueChange={(value) => onFilterChange(value as GroupType | "all")}>
       {/* Conteneur avec scroll horizontal sur mobile */}
@@ -15,19 +18,16 @@ export function GroupTypeFilter({ selectedType, onFilterChange }: GroupTypeFilte
           <TabsTrigger value="all" className="whitespace-nowrap px-2 md:px-3">
             Tous
           </TabsTrigger>
-          <TabsTrigger value="community" className="whitespace-nowrap px-2 md:px-3">
-            <span className="hidden md:inline">Communauté</span>
-            <span className="md:hidden">Comm.</span>
-          </TabsTrigger>
-          <TabsTrigger value="team" className="whitespace-nowrap px-2 md:px-3">
-            Équipe
-          </TabsTrigger>
-          <TabsTrigger value="project" className="whitespace-nowrap px-2 md:px-3">
-            Projet
-          </TabsTrigger>
-          <TabsTrigger value="local" className="whitespace-nowrap px-2 md:px-3">
-            Locale
-          </TabsTrigger>
+          {groupTypes.map((groupType) => (
+            <TabsTrigger 
+              key={groupType.id} 
+              value={groupType.id} 
+              className="whitespace-nowrap px-2 md:px-3"
+            >
+              <span className="hidden md:inline">{groupType.label}</span>
+              <span className="md:hidden">{groupType.icon}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
       </div>
     </Tabs>

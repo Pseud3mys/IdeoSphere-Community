@@ -8,6 +8,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5d3?w=64',
     bio: "Commerçante retraitée passionnée par l'amélioration du cadre de vie à Le Blanc.",
     createdAt: new Date('2023-06-15'),
+    lastLoginDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Il y a 3 jours
     address: '12 rue du Commerce, Le Blanc',
     birthYear: 1965,
     isRegistered: true
@@ -19,6 +20,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64',
     bio: "Artisan et conseiller municipal sortant, investi dans les projets locaux concrets.",
     createdAt: new Date('2023-08-22'),
+    lastLoginDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // Il y a 5 jours
     address: '45 avenue des Chaumettes, Le Blanc',
     birthYear: 1972,
     isRegistered: true
@@ -30,6 +32,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64',
     bio: "Enseignante et mère de famille, engagée pour l'éducation et la famille à Le Blanc.",
     createdAt: new Date('2023-09-10'),
+    lastLoginDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // Hier
     address: '8 rue Saint-Genitou, Le Blanc',
     birthYear: 1985,
     isRegistered: true
@@ -41,6 +44,7 @@ export const users: User[] = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64',
     bio: "Jeune entrepreneur local spécialisé dans le numérique et l'innovation.",
     createdAt: new Date('2023-07-05'),
+    lastLoginDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // Il y a 2 heures
     address: '23 rue des Vignes, Le Blanc',
     birthYear: 1992,
     isRegistered: true
@@ -77,6 +81,28 @@ export const users: User[] = [
     address: '5 place de la Mairie, Saint-Laurent',
     birthYear: 2001,
     isRegistered: true
+  },
+  { 
+    id: '14', 
+    name: 'Camille Artois', 
+    email: 'camille.artois@email.com',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64',
+    bio: "Artiste muraliste et graphiste, spécialisée dans l'art urbain participatif et les fresques collectives.",
+    createdAt: new Date('2024-02-28'),
+    address: '22 rue des Arts, Le Blanc',
+    birthYear: 1987,
+    isRegistered: true
+  },
+  { 
+    id: '15', 
+    name: 'Marc Lefèvre', 
+    email: 'marc.lefevre@mairie-leblanc.fr',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64',
+    bio: "Responsable du service Culture et Patrimoine à la mairie du Blanc. Accompagne les projets culturels sur le territoire.",
+    createdAt: new Date('2024-01-10'),
+    address: 'Mairie du Blanc',
+    birthYear: 1976,
+    isRegistered: true
   }
 ];
 
@@ -111,6 +137,7 @@ export const currentUser: User = {
   avatar: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=64',
   bio: "Membre active du COLLECTIF BLANCOIS CITOYEN, passionnée par l'amélioration de notre commune.",
   createdAt: new Date('2023-04-12'),
+  lastLoginDate: new Date(Date.now() - 6 * 60 * 60 * 1000), // Il y a 6 heures
   address: '15 rue de la République, Le Blanc',
   birthYear: 1988,
   isRegistered: true

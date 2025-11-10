@@ -9,6 +9,7 @@ import { Group, GroupMembership } from "../types";
  * - g3 : GT Mobilités 2025 (project) - Partenaire de g4
  * - g4 : Commission Environnement (team) - Partenaire de g3
  * - g5 : Quartier Nord (local)
+ * - g6 : Du Mur Gris à la Fresque Collective (project)
  */
 
 export const groups: Group[] = [
@@ -97,6 +98,24 @@ export const groups: Group[] = [
     animators: ['12'], // Jean-Claude
     isActive: true,
   },
+  {
+    id: 'groups/g6',
+    name: 'Du Mur Gris à la Fresque Collective',
+    description: 'Projet participatif né d\'une simple observation : le mur de l\'école Paul Langevin était tristement gris. Ce groupe réunit habitants, artistes, élèves, parents et services municipaux pour transformer ce mur en une œuvre collective colorée qui raconte notre vie de quartier. Un bel exemple de comment une idée citoyenne devient un projet concret !',
+    shortDescription: 'Transformation du mur de l\'école en fresque collective',
+    type: 'project',
+    avatar: '🎨',
+    banner: 'https://images.unsplash.com/photo-1561677843-39dee7a319ca?w=1200',
+    location: 'École Paul Langevin, Le Blanc',
+    tags: ['art', 'école', 'quartier', 'participatif', 'culture'],
+    memberCount: 9,
+    ideaCount: 1,
+    projectCount: 1,
+    createdAt: new Date('2024-03-20'),
+    createdBy: ['3', '2', '13'], // Sophie Laurent (enseignante), Pierre Martin (artisan), Léa Dumont (étudiante)
+    animators: ['3', '2', '13'],
+    isActive: true,
+  },
 ];
 
 /**
@@ -109,6 +128,7 @@ export const groups: Group[] = [
  * - Thomas Chen (4) : g2 (animateur), g4 (membre)
  * - Emma Rodriguez (5) : g2 (membre), g4 (animateur)
  * - Jean-Claude Perrin (12) : g3 (membre), g5 (animateur)
+ * - Léa Dumont (13) : g6 (animateur)
  */
 export const groupMemberships: GroupMembership[] = [
   // Groupe g1 - Commission Culture
@@ -136,6 +156,17 @@ export const groupMemberships: GroupMembership[] = [
   { userId: '12', groupId: 'groups/g5', role: 'animator', joinedAt: new Date('2024-02-15'), isActive: true },
   { userId: '1', groupId: 'groups/g5', role: 'member', joinedAt: new Date('2024-02-16'), isActive: true },
   { userId: '3', groupId: 'groups/g5', role: 'member', joinedAt: new Date('2024-02-17'), isActive: true },
+
+  // Groupe g6 - Du Mur Gris à la Fresque Collective
+  { userId: '3', groupId: 'groups/g6', role: 'animator', joinedAt: new Date('2024-03-20'), isActive: true },
+  { userId: '2', groupId: 'groups/g6', role: 'animator', joinedAt: new Date('2024-03-20'), isActive: true },
+  { userId: '13', groupId: 'groups/g6', role: 'animator', joinedAt: new Date('2024-03-20'), isActive: true },
+  { userId: '1', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-21'), isActive: true },
+  { userId: '4', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-22'), isActive: true },
+  { userId: '5', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-23'), isActive: true },
+  { userId: '12', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-24'), isActive: true },
+  { userId: '14', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-25'), isActive: true }, // Camille Artois - artiste
+  { userId: '15', groupId: 'groups/g6', role: 'member', joinedAt: new Date('2024-03-26'), isActive: true }, // Marc Lefèvre - service municipal
 ];
 
 export default groups;

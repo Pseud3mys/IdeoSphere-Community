@@ -2,6 +2,7 @@ import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { SimpleEntityStoreProvider } from './store/SimpleEntityStore';
 import { ErrorBoundary } from 'react-error-boundary';
 import { routes } from './router/routes';
+import { ScrollToTop } from './components/ScrollToTop';
 
 // Composant d'erreur pour l'error boundary
 function ErrorFallback({error, resetErrorBoundary}: {error: Error, resetErrorBoundary: () => void}) {
@@ -38,7 +39,12 @@ function ErrorFallback({error, resetErrorBoundary}: {error: Error, resetErrorBou
  */
 function AppRouter() {
   const element = useRoutes(routes);
-  return element;
+  return (
+    <>
+      <ScrollToTop />
+      {element}
+    </>
+  );
 }
 
 /**

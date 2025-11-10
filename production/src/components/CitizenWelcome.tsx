@@ -236,6 +236,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                 onSocialLogin={onSocialLogin}
                 onProfileClick={handleProfileClick}
                 onEnterPlatform={onEnterPlatform}
+                onLoginSSO={onLoginSSO}
                 compact={false}
               />
             </div>

@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { MyIdeasPage } from '../components/MyIdeasPage';
+import { MyContributionsPage } from '../components/MyContributionsPage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 
 /**
  * MyIdeasPageWrapper
- * Wrapper pour MyIdeasPage qui connecte tous les handlers depuis le store
+ * Wrapper pour MyContributionsPage qui connecte tous les handlers depuis le store
  * Utilise useNavigationActions pour la navigation avec React Router
  * Charge automatiquement les contributions de l'utilisateur au montage
  */
@@ -40,7 +40,7 @@ export function MyIdeasPageWrapper() {
   }, []); // Pas de dépendances pour ne charger qu'une fois
 
   return (
-    <MyIdeasPage
+    <MyContributionsPage
       onIdeaClick={navigation.goToIdea}
       onPostClick={navigation.goToPost}
       onLike={actions.togglePostLike}
@@ -50,6 +50,7 @@ export function MyIdeasPageWrapper() {
       onIgnorePost={actions.ignorePost}
       onReportPost={actions.reportPost}
       onCreateContent={navigation.goToCreateIdea}
+      onGroupClick={navigation.goToGroup}
     />
   );
 }

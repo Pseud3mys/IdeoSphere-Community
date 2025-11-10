@@ -371,7 +371,45 @@ Quels bénéfices concrets pour les membres de la communauté ?`,
   },
 
   // ============================================================================
-  // 10. INTÉGRATIONS EXTERNES
+  // 10. TYPES DE GROUPES
+  // ============================================================================
+  
+  groupTypes: {
+    // Types de groupes disponibles avec leurs labels et descriptions
+    types: [
+      {
+        id: 'community',
+        label: 'Communauté',
+        labelPlural: 'Communautés',
+        description: 'Un espace pour rassembler des personnes autour d\'un intérêt commun',
+        icon: '👥',
+      },
+      {
+        id: 'project',
+        label: 'Projet',
+        labelPlural: 'Projets',
+        description: 'Un groupe dédié à la réalisation d\'un projet spécifique',
+        icon: '🎯',
+      },
+      {
+        id: 'local',
+        label: 'Local',
+        labelPlural: 'Locaux',
+        description: 'Un groupe lié à un territoire géographique spécifique',
+        icon: '📍',
+      },
+      {
+        id: 'challenge',
+        label: 'Défi',
+        labelPlural: 'Défis',
+        description: 'Un espace pour trouver des solutions ensemble à un problème commun',
+        icon: '💡',
+      },
+    ],
+  },
+
+  // ============================================================================
+  // 11. INTÉGRATIONS EXTERNES
   // ============================================================================
   
   integrations: {
@@ -393,7 +431,7 @@ Quels bénéfices concrets pour les membres de la communauté ?`,
   },
 
   // ============================================================================
-  // 11. CONFIGURATION AVANCÉE
+  // 12. CONFIGURATION AVANCÉE
   // ============================================================================
   
   features: {
@@ -475,6 +513,36 @@ export function getPostShareText(preview: string) {
  */
 export function getSignupDescription() {
   return clientConfig.systemMessages.signupPage.description(getCityName());
+}
+
+/**
+ * Obtient tous les types de groupes disponibles
+ */
+export function getGroupTypes() {
+  return clientConfig.groupTypes.types;
+}
+
+/**
+ * Obtient les informations d'un type de groupe spécifique
+ */
+export function getGroupTypeInfo(typeId: string) {
+  return clientConfig.groupTypes.types.find(type => type.id === typeId);
+}
+
+/**
+ * Obtient le label d'un type de groupe
+ */
+export function getGroupTypeLabel(typeId: string, plural = false) {
+  const typeInfo = getGroupTypeInfo(typeId);
+  if (!typeInfo) return typeId;
+  return plural ? typeInfo.labelPlural : typeInfo.label;
+}
+
+/**
+ * Obtient les IDs de tous les types de groupes disponibles
+ */
+export function getGroupTypeIds(): string[] {
+  return clientConfig.groupTypes.types.map(type => type.id);
 }
 
 // Export par défaut

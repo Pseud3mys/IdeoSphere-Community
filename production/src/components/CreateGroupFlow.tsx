@@ -24,6 +24,7 @@ import { toast } from 'sonner@2.0.3';
 import { GroupTypeBadge } from './group/GroupTypeBadge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Users, Lightbulb, ArrowRight, ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react';
+import { getGroupTypes } from '../config/clientConfig';
 
 interface CreateGroupFlowProps {
   isOpen: boolean;
@@ -243,32 +244,19 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="community">
-                    <div className="flex items-center gap-2">
-                      <GroupTypeBadge type="community" />
-                      <span>Communauté d'intérêt</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="team">
-                    <div className="flex items-center gap-2">
-                      <GroupTypeBadge type="team" />
-                      <span>Équipe / Commission</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="project">
-                    <div className="flex items-center gap-2">
-                      <GroupTypeBadge type="project" />
-                      <span>Groupe de travail / Projet</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="local">
-                    <div className="flex items-center gap-2">
-                      <GroupTypeBadge type="local" />
-                      <span>Antenne locale</span>
-                    </div>
-                  </SelectItem>
+                  {getGroupTypes().map(groupType => (
+                    <SelectItem key={groupType.id} value={groupType.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{groupType.icon}</span>
+                        <span>{groupType.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {getGroupTypes().find(t => t.id === type)?.description}
+              </p>
             </div>
 
             <div>

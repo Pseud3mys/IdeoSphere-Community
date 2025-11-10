@@ -8,6 +8,7 @@ export interface User {
   address?: string; // Adresse complète de l'utilisateur (optionnelle)
   birthYear?: number; // Année de naissance (obligatoire pour les utilisateurs enregistrés)
   createdAt: Date;
+  lastLoginDate?: Date; // Date de dernière connexion (pour calculer les notifications)
   isRegistered: boolean; // true = utilisateur connecté, false = invité/anonyme
 }
 
@@ -167,7 +168,7 @@ export interface PrefilledContent {
 }
 
 // Groupes (anciennement Communautés)
-export type GroupType = 'community' | 'team' | 'project' | 'local';
+export type GroupType = 'community' | 'project' | 'local' | 'challenge';
 
 export interface Group {
   id: string;

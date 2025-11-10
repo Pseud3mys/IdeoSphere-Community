@@ -8,6 +8,7 @@ import { CitizenWelcomeWrapper } from './CitizenWelcomeWrapper';
 import { SignupPageWrapper } from './SignupPageWrapper';
 import { DiscoveryPageWrapper } from './DiscoveryPageWrapper';
 import { MyIdeasPageWrapper } from './MyIdeasPageWrapper';
+import { MyContributionsPageWrapper } from './MyContributionsPageWrapper';
 import { CreateIdeaPageWrapper } from './CreateIdeaPageWrapper';
 import { ContentDetailPageWrapper } from './ContentDetailPageWrapper';
 import { UserProfilePageWrapper } from './UserProfilePageWrapper';
@@ -93,6 +94,10 @@ export const routes: RouteObject[] = [
       {
         path: 'my-ideas',
         element: <MyIdeasPageWrapper />,
+      },
+      {
+        path: 'my-contributions',
+        element: <MyContributionsPageWrapper />,
       },
       {
         path: 'create-idea',

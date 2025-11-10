@@ -714,6 +714,147 @@ Un petit village qui innove et implique ses citoyens ! 💡📱🌙`,
       ],
       createdAt: new Date('2024-01-30'),
       tags: ['participatif', 'numérique', 'innovation']
+    },
+    // ========================================================
+    // HISTOIRE : Du Mur Gris à la Fresque Collective
+    // Idée structurée née des posts de discussion
+    // ========================================================
+    {
+      id: 'ideas/fresque',
+      title: 'Fresque participative sur le mur de l\'école Paul Langevin',
+      summary: 'Transformer le grand mur gris de l\'école en une fresque collective colorée, co-créée par les élèves, parents, artistes et habitants du quartier.',
+      groupIds: ['groups/g6'], // Groupe projet dédié
+      description: `## Contexte et enjeu
+
+Le mur de l'école Paul Langevin, visible depuis la rue principale, est un grand mur gris tristement neutre. Les enfants passent devant tous les jours, et ce mur pourrait devenir un véritable élément d'embellissement du quartier et un support pédagogique pour les élèves.
+
+Cette idée est née d'une simple observation partagée sur la plateforme par Sophie, enseignante et parent d'élève. Les réactions enthousiastes ont rapidement fait émerger un vrai projet collectif.
+
+## Solution proposée
+
+### Une fresque murale participative
+- **Création collective** : ateliers de co-création avec les élèves pour définir les thèmes
+- **Accompagnement artistique** : Camille Artois, muraliste professionnelle, encadrera techniquement le projet
+- **Thématiques envisagées** : la vie de quartier, les saisons, l'imaginaire des enfants, la nature en ville
+- **Format** : Fresque de 15m x 3m, techniques mixtes (peinture acrylique, pochoirs)
+
+### Un projet pédagogique
+- **Arts plastiques** : apprentissage des techniques de peinture murale
+- **Citoyenneté** : appropriation de l'espace public par les enfants
+- **Histoire locale** : intégration d'éléments du patrimoine blanc
+- **Travail collectif** : collaboration entre classes et générations
+
+### Soutien institutionnel
+- **Service Culture de la mairie** : autorisation obtenue, soutien budgétaire possible
+- **Direction de l'école** : accord de principe, intégration au projet d'établissement
+- **Association de parents d'élèves** : mobilisation et coordination
+
+## Mise en œuvre
+
+### Phase 1 : Conception (Mars 2024) ✅
+- ✅ Constitution du groupe projet
+- ✅ Contact avec l'artiste Camille Artois
+- ✅ Premiers échanges avec le service Culture (Marc Lefèvre)
+- ✅ Réunion de lancement avec parents volontaires
+
+### Phase 2 : Co-création (Avril 2024)
+- **Semaine 1-2** : Ateliers avec les classes pour définir les thèmes
+- **Semaine 3** : Esquisse collective avec Camille
+- **Semaine 4** : Validation par l'équipe enseignante et les services municipaux
+
+### Phase 3 : Préparation (Mai 2024)
+- Préparation du mur (nettoyage, sous-couche)
+- Achat du matériel (peintures, pinceaux, protections)
+- Organisation logistique (planning, groupes, sécurité)
+
+### Phase 4 : Réalisation (Juin 2024)
+- **Semaine des arts** : 5 journées de peinture collective
+- Matin : travail avec les élèves (par rotation de classes)
+- Après-midi : ateliers ouverts aux parents et habitants
+- Week-end : finitions avec les bénévoles
+
+### Phase 5 : Inauguration (Fin juin 2024)
+- Fête de fin d'année de l'école
+- Inauguration officielle avec élus
+- Goûter participatif organisé par les parents
+
+## Budget prévisionnel
+
+### Dépenses
+- **Matériel artistique** : 800€ (peintures, pinceaux, protections)
+- **Préparation du mur** : 400€ (nettoyage, sous-couche)
+- **Rémunération artiste** : 1200€ (encadrement et direction artistique)
+- **Assurance et sécurité** : 200€
+- **Communication** : 100€ (affiche, documentation)
+- **Total** : 2700€
+
+### Financements
+- **Mairie (service Culture)** : 1500€ (sous réserve de validation)
+- **Association parents d'élèves** : 500€
+- **Financement participatif** : 700€ (28 familles à 25€)
+
+## Impact attendu
+
+### Pour les enfants
+- **Fierté** : appropriation d'une œuvre collective visible
+- **Apprentissage** : techniques artistiques et travail en équipe
+- **Mémoire** : souvenir marquant de leur scolarité
+- **Expression** : leurs idées deviennent visibles dans l'espace public
+
+### Pour le quartier
+- **Embellissement** : transformation d'un point gris en œuvre colorée
+- **Identité** : création d'un nouveau repère visuel du quartier
+- **Lien social** : projet fédérateur entre générations
+- **Dynamique** : exemple de ce qu'on peut faire ensemble
+
+### Pour la commune
+- **Image** : valorisation de l'engagement citoyen et artistique
+- **Exemple** : modèle reproductible pour d'autres écoles
+- **Participation** : illustration concrète de la démocratie locale
+- **Culture** : soutien à la création artistique locale
+
+## Chiffres clés
+
+- **52 élèves** impliqués (2 classes de CM1-CM2)
+- **28 familles** engagées dans le projet
+- **1 artiste** professionnelle
+- **15m x 3m** : surface de la fresque
+- **5 jours** d'ateliers de réalisation
+- **2700€** : budget total
+
+## Communication et valorisation
+
+- **Pendant le projet** : photos et vidéos des étapes
+- **Inauguration** : article dans le journal local
+- **Documentation** : carnet de création avec dessins préparatoires
+- **Pérennité** : plaque explicative près de la fresque
+- **Inspiration** : partage de l'expérience avec d'autres écoles
+
+## Équipe projet
+
+- **Sophie Laurent** (enseignante) : coordination pédagogique
+- **Pierre Martin** (artisan) : logistique et préparation du mur
+- **Léa Dumont** (étudiante) : communication et mobilisation
+- **Camille Artois** (artiste) : direction artistique
+- **Marc Lefèvre** (mairie) : soutien institutionnel
+- **+ 20 parents bénévoles** : organisation et ateliers`,
+      creatorIds: ['3', '2', '13'], // Sophie, Pierre, Léa
+      supporters: ['3', '2', '13', '1', '14', '15', '12', '4', '5'],
+      sourcePostId: 'posts/fresque-1',
+      status: 'in-progress',
+      ratingCriteria: defaultRatingCriteria,
+      ratings: [
+        { criterionId: 'impact', value: 5, userId: '1' },
+        { criterionId: 'impact', value: 5, userId: '2' },
+        { criterionId: 'impact', value: 4, userId: '13' },
+        { criterionId: 'feasibility', value: 4, userId: '3' },
+        { criterionId: 'feasibility', value: 4, userId: '14' },
+        { criterionId: 'feasibility', value: 5, userId: '15' },
+        { criterionId: 'completion', value: 3, userId: '3' },
+        { criterionId: 'completion', value: 3, userId: '2' }
+      ],
+      createdAt: new Date('2024-02-28'),
+      tags: ['art', 'école', 'participatif', 'quartier', 'culture', 'enfance']
     }
   ];
 }
