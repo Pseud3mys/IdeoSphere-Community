@@ -71,6 +71,20 @@ export function RecommendToGroupDialog({
       return;
     }
     
+    // Vérification de sécurité : s'assurer que selectedGroupIds est un tableau
+    if (!Array.isArray(selectedGroupIds)) {
+      console.error('❌ [RecommendToGroupDialog] selectedGroupIds n\'est pas un tableau:', selectedGroupIds);
+      toast.error('Erreur interne: sélection invalide');
+      return;
+    }
+    
+    console.log('🎯 [RecommendToGroupDialog] Recommandation vers:', {
+      contentId,
+      contentType,
+      selectedGroupIds,
+      isArray: Array.isArray(selectedGroupIds)
+    });
+    
     try {
       await recommendContentToGroups(contentId, contentType, selectedGroupIds);
       toast.success(`${contentType === 'idea' ? 'Projet' : 'Post'} recommandé dans ${selectedGroupIds.length} groupe${selectedGroupIds.length > 1 ? 's' : ''}`);
@@ -78,6 +92,7 @@ export function RecommendToGroupDialog({
       setSelectedGroupIds([]);
       setSearchQuery('');
     } catch (error) {
+      console.error('❌ [RecommendToGroupDialog] Erreur:', error);
       toast.error('Erreur lors de la recommandation');
     }
   };

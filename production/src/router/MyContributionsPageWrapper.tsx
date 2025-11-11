@@ -1,10 +1,35 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { MyContributionsPage } from '../components/MyContributionsPage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 export function MyContributionsPageWrapper() {
   const navigate = useNavigate();
-  const { actions } = useEntityStoreSimple();
+  const { actions, getCurrentUser } = useEntityStoreSimple();
+  
+  const currentUser = getCurrentUser();
+
+  // Charger les contributions au montage
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentUser) {
+        console.log('⏸️ [MyContributionsPageWrapper] Utilisateur non connecté, chargement différé');
+        return;
+      }
+      
+      console.log('🔄 [MyContributionsPageWrapper] Chargement des contributions...');
+      
+      try {
+        // Appeler fetchMyContributions depuis apiActions qui utilise fetchUserContributionsFromApi
+        await actions.fetchMyContributions(false);
+        console.log('✅ [MyContributionsPageWrapper] Contributions chargées');
+      } catch (error) {
+        console.error('❌ [MyContributionsPageWrapper] Erreur lors du chargement:', error);
+      }
+    };
+    
+    loadData();
+  }, [currentUser?.id, actions]); // Recharger si l'utilisateur change
 
   const handleIdeaClick = (ideaId: string) => {
     navigate(`/content/ideas/${ideaId}`);

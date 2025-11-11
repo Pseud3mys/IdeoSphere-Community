@@ -92,15 +92,13 @@ export function MyContributionsPage({
   const [relationFilter, setRelationFilter] = useState<RelationFilter>('all');
   const [groupFilter, setGroupFilter] = useState<GroupFilter>('all');
 
-  if (!currentUser) {
-    return <div className="p-8 text-center text-gray-500">Veuillez vous connecter pour voir vos contributions</div>;
-  }
-
   // ============================================================================
   // CALCUL DE TOUS MES CONTENUS
   // ============================================================================
 
   const allMyContent = useMemo(() => {
+    if (!currentUser) return [];
+    
     const content: Array<{ item: Post | Idea; type: 'post' | 'idea'; relation: 'created' | 'participated' | 'supported' }> = [];
 
     // Posts créés
@@ -156,7 +154,7 @@ export function MyContributionsPage({
     });
 
     return content;
-  }, [allPosts, allIdeas, currentUser.id]);
+  }, [allPosts, allIdeas, currentUser]);
 
   // ============================================================================
   // FILTRAGE DU CONTENU
@@ -220,6 +218,8 @@ export function MyContributionsPage({
   // ============================================================================
 
   const notifications = useMemo(() => {
+    if (!currentUser) return [];
+    
     // Map temporaire pour grouper: clé = type-contentId
     const groupedMap = new Map<string, Notification>();
 
@@ -421,7 +421,7 @@ export function MyContributionsPage({
     return Array.from(groupedMap.values()).sort((a, b) => 
       b.timestamp.getTime() - a.timestamp.getTime()
     );
-  }, [allMyContent, currentUser.id, getUserById, allPosts, allIdeas]);
+  }, [allMyContent, currentUser, getUserById, allPosts, allIdeas]);
 
   // ============================================================================
   // STATISTIQUES
@@ -513,6 +513,18 @@ export function MyContributionsPage({
   // ============================================================================
   // RENDER
   // ============================================================================
+
+  if (!currentUser) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Alert>
+          <AlertDescription>
+            Veuillez vous connecter pour voir vos contributions
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

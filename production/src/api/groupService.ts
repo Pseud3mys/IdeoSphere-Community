@@ -264,18 +264,32 @@ export async function fetchPendingGroupDetails(pendingId: string): Promise<{
   }
 }
 
-// useGroupActions.recommendContentToGroups
+/**
+ * Recommande un contenu (idée ou post) dans un ou plusieurs groupes
+ * Ajoute les groupes aux groupIds du contenu
+ * @param contentId - ID du contenu (ex: ideas/12345)
+ * @param groupIds - IDs des groupes dans lesquels recommander le contenu
+ * @param userId - ID de l'utilisateur qui recommande (pour vérifications futures)
+ * @returns true si succès, false sinon
+ */
 export async function recommendContentToGroups(
-  userId: string,
-  groupIds: string[]
+  contentId: string,
+  contentType: 'idea' | 'post', //pas utile, les id sont complet
+  groupIds: string[],
+  userId: string
 ): Promise<boolean> {
   try {
-    const payload = { userId, groupIds };
-    //TODO await apiClient.post('/groups/recommend-content', payload);
-    console.log(`📦 [API groupService.recommendContentToGroups] Recommandation de contenu par ${userId} aux groupes: ${groupIds.join(', ')}`);
+
+    await apiClient.post(`/groups/recommend-content`, {
+      contentId: contentId,
+      groupIds: groupIds,
+      userId
+    });
+    
+    console.log(`📦 [API groupService.recommendContentToGroups] Contenu ${contentId} recommandé dans ${groupIds.length} groupes`);
     return true;
-    } catch (error) {
-      console.error(`❌ [API groupService.recommendContentToGroups] ${userId} / ${groupIds.join(', ')}`, error);
-      return false;
-    }
+  } catch (error) {
+    console.error(`❌ [API groupService.recommendContentToGroups] ${contentId}`, error);
+    return false;
+  }
 }

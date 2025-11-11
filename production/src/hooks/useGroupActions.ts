@@ -356,6 +356,15 @@ export function useGroupActions() {
       throw new Error('Utilisateur non enregistré');
     }
 
+    console.log('🎯 [useGroupActions.recommendContentToGroups] Appel avec:', {
+      contentId,
+      contentType,
+      groupIds,
+      groupIdsType: typeof groupIds,
+      isArray: Array.isArray(groupIds),
+      userId: currentUser.id
+    });
+
     try {
       // Appeler le service API qui contient toute la logique
       const success = await groupService.recommendContentToGroups(
