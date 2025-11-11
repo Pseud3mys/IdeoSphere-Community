@@ -44,7 +44,7 @@ export function MyContributionsPageWrapper() {
   };
 
   const handleLike = async (postId: string) => {
-    await actions.togglePostSupport(postId);
+    await actions.togglePostLike(postId);
   };
 
   const handleSupport = async (ideaId: string) => {

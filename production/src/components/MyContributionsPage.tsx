@@ -418,9 +418,12 @@ export function MyContributionsPage({
     });
 
     // Convertir en array et trier par date décroissante (plus récent d'abord)
-    return Array.from(groupedMap.values()).sort((a, b) => 
-      b.timestamp.getTime() - a.timestamp.getTime()
-    );
+    return Array.from(groupedMap.values()).sort((a, b) => {
+      // Sécurité : vérifier que les timestamps existent et sont valides
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : 0;
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : 0;
+      return timeB - timeA;
+    });
   }, [allMyContent, currentUser, getUserById, allPosts, allIdeas]);
 
   // ============================================================================
