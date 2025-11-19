@@ -38,6 +38,8 @@ function AppInitializer() {
     };
   }, []); // Le tableau de dépendances vide garantit une seule exécution
 
+  /*
+  désactivé pour l'instant
   if (!isInitialized) {
     // Affiche un état de chargement React, qui est plus propre
     return (
@@ -45,7 +47,7 @@ function AppInitializer() {
         Initialisation de la session...
       </div>
     );
-  }
+  }*/
 
   return (
     <AuthProvider isAuthenticated={isAuthenticated}>

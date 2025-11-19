@@ -8,8 +8,9 @@ Ce guide vous aide à configurer IdeoSphere pour votre organisation (mairie, ent
 
 1. [Contexte de l'application](#contexte-de-lapplication)
 2. [Architecture de la configuration](#architecture-de-la-configuration)
-3. [Guide de modification](#guide-de-modification)
-4. [Fonctions utilitaires](#fonctions-utilitaires)
+3. [Configuration basée sur l'URL](#configuration-basée-sur-lurl)
+4. [Guide de modification](#guide-de-modification)
+5. [Fonctions utilitaires](#fonctions-utilitaires)
 
 ---
 
@@ -201,21 +202,131 @@ Ce pattern garantit :
 
 ## Architecture de la configuration
 
-### Principe : Configuration centralisée et contextuelle
+### Principe : Configuration multi-client basée sur l'URL
 
-Le fichier `/config/clientConfig.ts` centralise **tous les textes et paramètres** qui varient selon le type d'organisation. Cela permet de déployer la même application avec des vocabulaires et contextes différents sans toucher au code métier.
+IdeoSphere utilise maintenant un **système de configuration multi-client** qui permet de servir différentes configurations selon l'URL d'accès. Cela permet de déployer une seule instance de l'application pour plusieurs clients différents.
+
+### Structure des fichiers
+
+```
+/config
+├── types.ts                    # Interface TypeScript pour toutes les configs
+├── clientConfig.ts             # Gestionnaire de configuration (routage URL → config)
+└── clients/
+    ├── default.ts              # Configuration par défaut
+    └── listeCitoyenne.ts       # Configuration pour listes citoyennes
+```
+
+### Fonctionnement
+
+Le fichier **`clientConfig.ts`** charge automatiquement la bonne configuration selon le sous-domaine de l'URL :
+
+```typescript
+// Mapping sous-domaine → configuration
+const configs = {
+  'default': defaultConfig,          // localhost, alpha.ideosphere.community
+  'localhost': defaultConfig,
+  'alpha': defaultConfig,
+  
+  'liste': listeCitoyenneConfig,     // liste.ideosphere.community
+  'demo-liste': listeCitoyenneConfig,
+  'liste-citoyenne': listeCitoyenneConfig,
+};
+```
+
+**Exemples d'URLs** :
+- `http://localhost:3000` → Configuration par défaut
+- `https://alpha.ideosphere.community` → Configuration par défaut
+- `https://liste.ideosphere.community` → Configuration liste citoyenne
+- `https://demo-liste.ideosphere.community` → Configuration liste citoyenne
+
+---
+
+## Configuration basée sur l'URL
+
+### Ajouter une nouvelle configuration client
+
+**Étape 1 : Créer un nouveau fichier de configuration**
+
+Créez un fichier dans `/config/clients/monClient.ts` :
+
+```typescript
+import { ClientConfig } from '../types';
+
+export const monClientConfig: ClientConfig = {
+  identity: {
+    appName: 'MonApp',
+    appTagline: 'Ma tagline personnalisée',
+    // ... reste de la config
+  },
+  // ... toutes les sections requises par l'interface ClientConfig
+};
+```
+
+**Étape 2 : Importer et mapper la configuration**
+
+Dans `/config/clientConfig.ts`, ajoutez votre configuration :
+
+```typescript
+import { monClientConfig } from './clients/monClient';
+
+const configs: Record<string, ClientConfig> = {
+  'default': defaultConfig,
+  // ... configs existantes
+  
+  // Nouvelle configuration
+  'mon-sous-domaine': monClientConfig,
+  'demo-client': monClientConfig,
+};
+```
+
+**Étape 3 : Tester**
+
+Accédez à `http://mon-sous-domaine.ideosphere.community` et votre configuration sera automatiquement chargée !
+
+### Configurations disponibles
+
+#### 1. **Configuration par défaut** (`/config/clients/default.ts`)
+- Type de client : **Mairie**
+- Terminologie : citoyens, commune, participation citoyenne
+- Localisation : activée (Le Blanc)
+- Utilisation : Collectivités territoriales, mairies, conseils citoyens
+
+#### 2. **Configuration Liste Citoyenne** (`/config/clients/listeCitoyenne.ts`)
+- Type de client : **Liste citoyenne**
+- Terminologie : membres, liste citoyenne, participation collective
+- Localisation : activée (Notre Commune)
+- Utilisation : Listes citoyennes, mouvements politiques locaux
+- Spécificités :
+  - Accent sur la co-construction du programme
+  - Vocabulaire politique et démocratique
+  - Groupes de type "commission thématique" et "action collective"
+
+---
+
+## Guide de modification
+
+### Démarche pour personnaliser une configuration existante
+
+1. **Identifier le fichier de configuration** : `/config/clients/default.ts` ou `/config/clients/listeCitoyenne.ts`
+2. **Adapter la terminologie** : Remplacer "citoyen" par "collaborateur", "commune" par "entreprise", etc.
+3. **Personnaliser les textes** : Hero, descriptions, exemples, placeholders
+4. **Configurer les contacts** : Email, Discord, GitHub, etc.
+5. **Activer/désactiver les features** : Localisation, bannière bêta, newsletters, etc.
 
 ### Structure de la configuration
 
+Chaque configuration suit l'interface `ClientConfig` définie dans `/config/types.ts` :
+
 ```typescript
-export const clientConfig = {
+export interface ClientConfig {
   // Identité et branding
   identity: {
     appName, appTagline, appMission, copyright, projectStatus
   },
   
   // Type de client et terminologie contextuelle
-  clientType: 'mairie' | 'entreprise' | 'association' | 'ong',
+  clientType: 'mairie' | 'entreprise' | 'association' | 'ong' | 'listeCitoyenne',
   terminology: {
     member: { singular, singularFeminine, plural },
     organization: { singular, plural },
@@ -226,7 +337,7 @@ export const clientConfig = {
   
   // Contenus de la page d'accueil
   welcome: {
-    hero, betaBanner (sans enabled), quickIdea, howItWorks, 
+    hero, betaBanner, quickIdea, howItWorks, 
     stats, recentPropositions, cta, discover
   },
   
@@ -239,9 +350,19 @@ export const clientConfig = {
   // Messages système
   systemMessages: { shareDialog, signupPage },
   
-  // Exemples et placeholders (inspire le ton d'usage)
+  // Exemples et placeholders
   examples: {
     post, idea, group, discussion, profile, collaboration
+  },
+  
+  // Types de groupes (personnalisables par client)
+  groupTypes: {
+    types: GroupType[]
+  },
+  
+  // Intégrations externes
+  integrations: {
+    kumu: { embedUrl, projectUrl, enabled, width, height }
   },
   
   // Activation/désactivation de fonctionnalités
@@ -249,7 +370,7 @@ export const clientConfig = {
     showBetaBanner,      // Afficher la bannière bêta
     enableNewsletters,   // Afficher la section newsletter
   }
-};
+}
 ```
 
 ### Composants intégrés à la configuration
@@ -268,221 +389,6 @@ export const clientConfig = {
 | **DetailedDescriptionSection.tsx** | Template description détaillée |
 | **CreateGroupFlow.tsx** | Placeholders groupes (nom, localisation, tags) |
 | **IdeaDiscussionsTab.tsx** | Placeholder topic de discussion |
-
----
-
-## Guide de modification
-
-### Démarche générale
-
-1. **Identifier votre contexte** : Mairie, entreprise, association, ONG ?
-2. **Adapter la terminologie** : Remplacer "citoyen" par "collaborateur", "commune" par "entreprise", etc.
-3. **Personnaliser les textes** : Hero, descriptions, exemples, placeholders
-4. **Configurer les contacts** : Email, Discord, GitHub, etc.
-5. **Activer/désactiver les features** : Localisation, QR codes, newsletters, etc.
-
-### Les clés de la personnalisation
-
-#### **1. Terminologie contextuelle** (le plus important)
-
-La terminologie change radicalement l'expérience selon le contexte :
-
-**Mairie** :
-- Membres → citoyens
-- Organisation → commune
-- Territoire local → village/quartier
-- Participation → participation citoyenne
-- Budget → budget municipal
-
-**Entreprise** :
-- Membres → collaborateurs
-- Organisation → entreprise
-- Territoire local → département/site
-- Participation → innovation collaborative
-- Budget → budget innovation
-
-**Association** :
-- Membres → membres/bénévoles
-- Organisation → association
-- Territoire local → communauté/section
-- Participation → engagement militant
-- Budget → budget projets
-
-#### **2. Identité et branding**
-
-Adaptez le nom, le slogan, la mission selon votre organisation.
-
-**Exemple** :
-```typescript
-identity: {
-  appName: 'MaMairie Participe',           // ou 'Innovation Lab', 'Éco-Collectif'
-  appTagline: 'Ensemble, construisons notre commune',
-  appMission: 'Notre mission est de...',
-  copyright: '© 2025 Votre Organisation.',
-}
-```
-
-#### **3. Page d'accueil**
-
-La page d'accueil est le premier contact. Personnalisez :
-- Le **titre hero** selon votre message
-- Les **thématiques** pertinentes pour votre contexte
-- Les **exemples** de posts/idées (placeholders)
-- Les **valeurs** mises en avant (CTA)
-
-**Exemple mairie** : "Aménagement, Services publics, Environnement"  
-**Exemple entreprise** : "Produit, Process, RH, RSE, IT"  
-**Exemple association** : "Climat, Biodiversité, Mobilité, Alimentation"
-
-#### **4. Localisation**
-
-Activez ou désactivez selon le besoin :
-- **Mairie** : Localisation activée (quartiers, rues, places)
-- **Entreprise** : Localisation désactivée (pas pertinent)
-- **Association** : Localisation activée si actions terrain
-
-```typescript
-terminology: {
-  location: {
-    cityName: 'Le Blanc',    // ou nom de votre ville/organisation
-    enabled: true,           // false pour désactiver complètement
-  },
-}
-```
-
-#### **5. Contacts et communauté**
-
-Configurez vos canaux de communication :
-
-```typescript
-footer: {
-  contact: {
-    discord: { url: '...', label: 'Discord' },
-    email: { url: 'mailto:...', address: '...' },
-    github: { url: '...', label: 'GitHub' },
-  },
-}
-```
-
-#### **6. Exemples et placeholders** (Crucial pour le ton d'usage)
-
-Les exemples et placeholders donnent le ton et inspirent vos utilisateurs. Adaptez-les à votre contexte :
-
-**Mairie** :
-```typescript
-examples: {
-  post: {
-    titlePlaceholder: 'Ex: Réflexion sur les horaires de la bibliothèque...',
-    contentPlaceholder: 'Partagez votre observation ou idée citoyenne...',
-  },
-  idea: {
-    titlePlaceholder: 'Ex: Jardin partagé rue de la Mairie',
-  },
-  group: {
-    namePlaceholder: 'Ex: Commission Culture',
-    locationPlaceholder: 'Ex: Le Blanc',
-  },
-}
-```
-
-**Entreprise** :
-```typescript
-examples: {
-  post: {
-    titlePlaceholder: 'Ex: Amélioration du processus de validation...',
-    locationPlaceholder: 'Ex: Service RH, Pôle Innovation',
-  },
-  idea: {
-    titlePlaceholder: 'Ex: Plateforme de partage de compétences',
-  },
-  profile: {
-    bioPlaceholder: 'Ex: Chef de projet IT, passionné d\'innovation...',
-  },
-}
-```
-
-#### **7. Fonctionnalités activables**
-
-Selon votre besoin et votre phase de déploiement :
-
-```typescript
-features: {
-  showBetaBanner: false,     // true en phase test/bêta
-  enableNewsletters: true,   // Afficher la section newsletter
-}
-```
-
-### Exemple de configuration complète
-
-**Pour une entreprise tech sans localisation** :
-
-```typescript
-export const clientConfig = {
-  clientType: 'entreprise',
-  
-  identity: {
-    appName: 'InnoLab',
-    appTagline: 'L\'innovation par tous, pour tous',
-    copyright: '© 2025 TechCorp. Usage interne.',
-  },
-  
-  terminology: {
-    member: {
-      singular: 'collaborateur',
-      singularFeminine: 'collaboratrice',
-      plural: 'collaborateurs',
-    },
-    organization: {
-      singular: 'entreprise',
-      plural: 'entreprises',
-    },
-    territory: {
-      local: 'équipe',
-    },
-    participation: {
-      adjective: 'collaborative',
-    },
-    location: {
-      enabled: false,
-    },
-  },
-  
-  welcome: {
-    hero: {
-      title: 'Partagez vos idées d\'innovation',
-      description: 'Améliorations produit, process, RH, IT...',
-      themes: ['Produit', 'Process', 'RH', 'IT', 'RSE'],
-    },
-    cta: {
-      values: ['Innovation collaborative', 'Amélioration continue', 'Budget innovation'],
-    },
-  },
-  
-  examples: {
-    post: {
-      titlePlaceholder: 'Ex: Amélioration du processus de validation...',
-      contentPlaceholder: 'Partagez votre observation ou suggestion...',
-      locationPlaceholder: 'Ex: Service RH, Pôle Innovation',
-    },
-    idea: {
-      titlePlaceholder: 'Ex: Plateforme de partage de compétences',
-      summaryPlaceholder: 'Résumez votre proposition d\'innovation...',
-    },
-    group: {
-      namePlaceholder: 'Ex: Task Force Innovation Produit',
-      tagsPlaceholder: 'Ex: innovation, produit, amélioration',
-    },
-    profile: {
-      bioPlaceholder: 'Ex: Chef de projet IT, passionné d\'innovation et d\'agilité...',
-    },
-  },
-  
-  features: {
-    showBetaBanner: false,
-    enableNewsletters: true,
-  },
-};
-```
 
 ---
 
@@ -527,12 +433,12 @@ getSignupDescription()
 ### Exemple d'utilisation dans un composant
 
 ```tsx
-import { getMemberTerm, getCityName, clientConfig } from '../config/clientConfig';
+import { getMemberTerm, getCityName, currentConfig } from '../config/clientConfig';
 
 function MonComposant() {
   return (
     <div>
-      <h1>{clientConfig.identity.appName}</h1>
+      <h1>{currentConfig.identity.appName}</h1>
       <p>
         Ici, vous découvrirez les idées de vos {getMemberTerm({ plural: true })} 
         de {getCityName()}.
@@ -541,6 +447,8 @@ function MonComposant() {
   );
 }
 ```
+
+**Note importante** : Utilisez `currentConfig` au lieu de `clientConfig` pour accéder à la configuration active. Les deux fonctionnent, mais `currentConfig` est plus explicite.
 
 ---
 

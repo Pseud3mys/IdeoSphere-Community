@@ -1,0 +1,449 @@
+/**
+ * TEMPLATE - Nouvelle Configuration Client - IdeoSphere
+ * 
+ * Ce fichier est un template pour créer une nouvelle configuration client.
+ * 
+ * INSTRUCTIONS :
+ * 1. Copiez ce fichier et renommez-le (ex: entreprise.ts, association.ts)
+ * 2. Modifiez tous les champs selon votre contexte
+ * 3. Importez et mappez cette config dans /config/clientConfig.ts
+ * 
+ * IMPORTANT : Tous les champs sont OBLIGATOIRES pour respecter l'interface ClientConfig.
+ */
+
+import { ClientConfig } from '../types';
+
+export const templateConfig: ClientConfig = {
+  // ============================================================================
+  // 1. IDENTITÉ ET BRANDING
+  // ============================================================================
+  
+  identity: {
+    // Nom de l'application (affiché dans le header)
+    appName: 'MonApp',
+    
+    // Tagline / Sous-titre (affiché sous le nom)
+    appTagline: 'Ma tagline personnalisée',
+    
+    // Description courte (utilisée dans le footer)
+    appDescriptionShort: 'Description courte de votre plateforme en 1-2 phrases.',
+    
+    // Mission principale (utilisée dans la page À propos)
+    appMission: 'Mission complète de votre plateforme. Expliquez son objectif, son utilité, sa vision...',
+    
+    // Statut du projet (affiché dans le footer)
+    projectStatus: 'Projet open source',
+    
+    // Copyright (affiché dans le footer)
+    copyright: '© 2025 Votre Organisation. Tous droits réservés.',
+  },
+
+  // ============================================================================
+  // 2. TERMINOLOGIE CONTEXTUELLE
+  // ============================================================================
+  
+  // Type de client : 'mairie' | 'entreprise' | 'association' | 'ong' | 'listeCitoyenne'
+  clientType: 'mairie',
+  
+  terminology: {
+    // Membre (varie selon le contexte)
+    // Exemples : citoyen, collaborateur, membre, bénévole, adhérent
+    member: {
+      singular: 'citoyen',
+      singularFeminine: 'citoyenne',
+      plural: 'citoyens',
+    },
+    
+    // Organisation (varie selon le contexte)
+    // Exemples : commune, entreprise, association, ONG
+    organization: {
+      singular: 'commune',
+      plural: 'communes',
+    },
+    
+    // Territoire local (varie selon le contexte)
+    // Exemples : village, quartier, département, site, équipe
+    territory: {
+      local: 'village',
+    },
+    
+    // Type de participation (adjectif qualifiant la participation)
+    // Exemples : citoyenne, collaborative, militante, collective
+    participation: {
+      adjective: 'citoyenne',
+    },
+    
+    // Localisation géographique
+    location: {
+      cityName: 'Nom de votre ville/organisation',
+      enabled: true, // false pour désactiver les champs de localisation (ex: entreprises)
+    },
+  },
+
+  // ============================================================================
+  // 3. PAGE D'ACCUEIL (CITIZENWELCOME)
+  // ============================================================================
+  
+  welcome: {
+    // Bannière version Bêta
+    betaBanner: {
+      title: 'Titre de la bannière bêta',
+      description: 'Description HTML de la bannière (utilisez <strong> pour mise en avant)',
+      feedbackInstructions: 'Instructions pour le feedback (ex: ajoutez #bug dans vos posts)',
+    },
+    
+    // Section Hero (titre principal de la page d\'accueil)
+    hero: {
+      title: 'Titre principal de votre page d\'accueil',
+      description: 'Description détaillée de ce que propose votre plateforme...',
+      
+      // Thématiques suggérées (affichées dans la description)
+      themes: [
+        'Thématique 1',
+        'Thématique 2',
+        'Thématique 3',
+        'Thématique 4',
+        'Thématique 5',
+      ],
+    },
+    
+    // Section "Partagez votre idée" (formulaire rapide)
+    quickIdea: {
+      sectionTitle: 'Titre de la section de partage rapide',
+      placeholder: 'Ex: Placeholder d\'exemple pour inspirer les utilisateurs...',
+      buttonText: 'Continuer',
+      
+      // Étape de finalisation
+      finalizationTitle: 'Finalisation de votre proposition',
+      locationSectionTitle: 'Localisation (optionnelle)',
+      locationPlaceholder: 'Ex: Lieu, Ville',
+      followUpSectionTitle: 'Souhaitez-vous suivre l\'évolution ? (optionnel)',
+      followUpDescription: 'Ces informations nous permettront de vous tenir informé.',
+      namePlaceholder: 'Votre nom',
+      emailPlaceholder: 'Votre email',
+      submitButtonText: 'Partager',
+      skipButtonText: 'Partager anonymement',
+    },
+    
+    // Section "Comment ça marche"
+    howItWorks: {
+      title: 'Comment ça marche ?',
+      steps: [
+        'Étape 1 : Description...',
+        'Étape 2 : Description...',
+        'Étape 3 : Description...',
+        'Étape 4 : Description...',
+      ],
+    },
+    
+    // Statistiques (labels)
+    stats: {
+      totalContributions: 'contributions totales',
+      totalIdeas: 'idées partagées',
+      totalSupports: 'soutiens reçus',
+    },
+    
+    // Section propositions récentes
+    recentPropositions: {
+      title: 'Propositions récentes',
+      fallbackCategoryIdea: 'Idée',
+      fallbackCategoryPost: 'Discussion',
+      loadingText: 'Chargement...',
+      emptyText: 'Aucune proposition récente.',
+    },
+    
+    // Call-to-Action principal
+    cta: {
+      buttonText: 'Explorer toutes les propositions',
+      
+      // Badges de valeurs (affichés sous le CTA)
+      values: [
+        'Valeur 1',
+        'Valeur 2',
+        'Valeur 3',
+      ],
+    },
+    
+    // Section "Envie de découvrir"
+    discover: {
+      title: 'Envie de découvrir la plateforme ?',
+      description: 'Description de l\'invitation à découvrir...',
+      buttonText: 'Accès démo instantané',
+      features: [
+        'Feature 1',
+        'Feature 2',
+        'Feature 3',
+      ],
+    },
+  },
+
+  // ============================================================================
+  // 4. NAVIGATION ET HEADER
+  // ============================================================================
+  
+  navigation: {
+    // Bouton "Comment ça marche"
+    howItWorksButton: 'Comment ça marche ?',
+    
+    // Bouton d'aide
+    helpButton: {
+      title: 'Aide et visite guidée',
+      icon: '?',
+    },
+  },
+
+  // ============================================================================
+  // 6. FOOTER
+  // ============================================================================
+  
+  footer: {
+    // Titre de la section "En savoir plus"
+    learnMoreTitle: 'En savoir plus',
+    
+    // Titre de la section "Nous rejoindre"
+    joinUsTitle: 'Nous rejoindre',
+    
+    // Liens de navigation
+    links: {
+      about: 'À propos',
+      howItWorks: 'Comment ça marche',
+      faq: 'FAQ',
+      privacy: 'Confidentialité',
+      terms: 'CGU',
+    },
+    
+    // Contact et communauté
+    contact: {
+      discord: {
+        url: 'https://discord.gg/VOTRE_LIEN',
+        label: 'Discord',
+      },
+      email: {
+        url: 'mailto:contact@votre-organisation.org',
+        address: 'contact@votre-organisation.org',
+        label: 'Email',
+      },
+      github: {
+        url: 'https://github.com/VOTRE_ORGANISATION/VOTRE_REPO',
+        label: 'GitHub',
+      },
+    },
+  },
+
+  // ============================================================================
+  // 9. MESSAGES SYSTÈME
+  // ============================================================================
+  
+  systemMessages: {
+    // ShareDialog
+    shareDialog: {
+      // Texte pour partager une idée (fonction qui prend le titre en paramètre)
+      ideaShareText: (title: string) => `Découvrez cette idée : ${title}`,
+      
+      // Texte pour partager un post (fonction qui prend un extrait en paramètre)
+      postShareText: (preview: string) => `Découvrez ce post : ${preview}`,
+      
+      // Titres de dialogue
+      ideaDialogTitle: 'Partager cette idée',
+      postDialogTitle: 'Partager ce post',
+    },
+    
+    // SignupPage
+    signupPage: {
+      // Titre de la page
+      title: 'Créer un compte',
+      
+      // Description avec nom de ville (fonction qui prend le nom de ville en paramètre)
+      description: (cityName: string) => `Créez votre compte pour participer à ${cityName}`,
+      
+      // Helper text pour la bio
+      bioHelperText: 'Cela aide les autres à mieux comprendre vos motivations',
+      
+      // Labels de formulaire
+      labels: {
+        name: 'Nom complet',
+        email: 'Email',
+        password: 'Mot de passe',
+        confirmPassword: 'Confirmer le mot de passe',
+        location: 'Localisation',
+        bio: 'Bio (optionnel)',
+        interests: 'Centres d\'intérêt',
+      },
+      
+      // Placeholders
+      placeholders: {
+        name: 'Jean Dupont',
+        email: 'jean.dupont@example.com',
+        password: '••••••••',
+        location: 'Votre ville',
+        bio: 'Parlez de vous...',
+      },
+      
+      // Boutons
+      buttons: {
+        submit: 'Créer mon compte',
+        login: 'Se connecter',
+      },
+      
+      // Messages
+      messages: {
+        alreadyHaveAccount: 'Vous avez déjà un compte ?',
+      },
+    },
+  },
+
+  // ============================================================================
+  // 9. EXEMPLES ET PLACEHOLDERS
+  // ============================================================================
+  
+  examples: {
+    // Posts (messages courts)
+    post: {
+      titlePlaceholder: 'Ex: Titre d\'exemple pour un post...',
+      contentPlaceholder: 'Partagez votre réflexion...',
+      locationPlaceholder: 'Ex: Lieu, Ville',
+    },
+    
+    // Idées (projets structurés)
+    idea: {
+      titlePlaceholder: 'Ex: Titre d\'exemple pour une idée...',
+      summaryPlaceholder: 'Résumez votre idée en une phrase...',
+      locationPlaceholder: 'Ex: Lieu, Ville',
+      
+      // Template de description détaillée
+      descriptionTemplate: {
+        // Avec post source
+        withSourcePost: (authorName: string) => `## Contexte et enjeu
+
+Suite au post de ${authorName}, je pense que...
+
+## Solution proposée
+
+Expliquez en détail votre idée...
+
+## Mise en œuvre
+
+- Étape 1 : ...
+- Étape 2 : ...
+
+## Impact attendu
+
+Quels bénéfices concrets ?`,
+        
+        // Sans post source
+        withoutSourcePost: `## Contexte et enjeu
+
+Décrivez le problème ou l'opportunité...
+
+## Solution proposée
+
+Expliquez en détail votre idée...
+
+## Mise en œuvre
+
+- Étape 1 : ...
+- Étape 2 : ...
+
+## Impact attendu
+
+Quels bénéfices concrets ?`,
+      },
+    },
+    
+    // Groupes
+    group: {
+      namePlaceholder: 'Ex: Nom du groupe',
+      locationPlaceholder: 'Ex: Ville',
+      tagsPlaceholder: 'Ex: tag1, tag2, tag3',
+    },
+    
+    // Discussions
+    discussion: {
+      topicTitlePlaceholder: 'Ex: Question sur...',
+    },
+    
+    // Profil utilisateur
+    profile: {
+      birthYearPlaceholder: 'Ex: 1985',
+      bioPlaceholder: 'Ex: Passionné(e) de...',
+    },
+    
+    // Collaboration
+    collaboration: {
+      searchPlaceholder: 'Rechercher un membre...',
+    },
+  },
+
+  // ============================================================================
+  // 10. TYPES DE GROUPES
+  // ============================================================================
+  
+  groupTypes: {
+    // Types de groupes disponibles avec leurs labels et descriptions
+    // ATTENTION : Adaptez les types selon votre contexte !
+    types: [
+      {
+        id: 'community',
+        label: 'Communauté',
+        labelPlural: 'Communautés',
+        description: 'Un espace pour rassembler des personnes autour d\'un intérêt commun',
+        icon: '👥',
+      },
+      {
+        id: 'project',
+        label: 'Projet',
+        labelPlural: 'Projets',
+        description: 'Un groupe dédié à la réalisation d\'un projet spécifique',
+        icon: '🎯',
+      },
+      {
+        id: 'local',
+        label: 'Local',
+        labelPlural: 'Locaux',
+        description: 'Un groupe lié à un territoire géographique spécifique',
+        icon: '📍',
+      },
+      {
+        id: 'challenge',
+        label: 'Défi',
+        labelPlural: 'Défis',
+        description: 'Un espace pour trouver des solutions ensemble',
+        icon: '💡',
+      },
+    ],
+  },
+
+  // ============================================================================
+  // 11. INTÉGRATIONS EXTERNES
+  // ============================================================================
+  
+  integrations: {
+    // Kumu.io - Visualisation de réseaux
+    kumu: {
+      // URL de l'iframe d'embed Kumu (si disponible)
+      embedUrl: 'https://embed.kumu.io/VOTRE_ID',
+      
+      // URL directe vers le projet Kumu
+      projectUrl: 'https://embed.kumu.io/VOTRE_ID',
+      
+      // Activer l'affichage de l'iframe
+      enabled: true,
+      
+      // Dimensions par défaut de l'iframe
+      width: '100%',
+      height: '600px',
+    },
+  },
+
+  // ============================================================================
+  // 12. CONFIGURATION AVANCÉE
+  // ============================================================================
+  
+  features: {
+    // Afficher ou non la bannière bêta
+    showBetaBanner: true,
+    
+    // Activer les newsletters
+    enableNewsletters: false,
+  },
+};
