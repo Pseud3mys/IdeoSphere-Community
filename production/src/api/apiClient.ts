@@ -1,6 +1,6 @@
 // apiClient.ts
 import axios from 'axios';
-import { getToken } from './authService'; // Importer la nouvelle fonction
+import { getToken } from './keycloak'; // Import direct, pas de boucle
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 

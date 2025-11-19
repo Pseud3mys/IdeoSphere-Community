@@ -5,7 +5,7 @@ import Keycloak from 'keycloak-js';
 const keycloakConfig = {
   url: 'http://localhost:8080',
   realm: 'ideosphere',
-  clientId: 'ideosphere-frontend'
+  clientId: 'ideosphere-front'
 };
 
 class KeycloakService {
@@ -20,3 +20,11 @@ class KeycloakService {
 }
 
 export const keycloak = KeycloakService.getInstance();
+
+/**
+ * Helper pour récupérer le token sans passer par authService.
+ * Permet de briser les dépendances circulaires avec apiClient.
+ */
+export function getToken(): string | undefined {
+  return keycloak.token;
+}
