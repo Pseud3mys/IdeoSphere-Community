@@ -446,11 +446,11 @@ Quels bénéfices concrets pour notre commune et ses habitants ?`,
     
     // Utilisateur mock pour le développement (utilisé en mode 'mock')
     mockUser: {
-      id: 'user-beta',
-      email: 'beta@ideosphere.community',
-      name: 'Membre Beta',
-      location: 'Paris',
-      bio: 'Testeur de la version Beta',
+      id: 'user-1',
+      email: 'marie.dubois@email.com',
+      name: 'Marie Dubois',
+      location: 'Le Blanc',
+      bio: 'Commerçante retraitée passionnée par l\'amélioration du cadre de vie à Le Blanc',
     },
   },
 };

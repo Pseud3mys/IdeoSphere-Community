@@ -15,18 +15,17 @@ export function AuthSyncBridge() {
         
         const safeUser = {
           ...user,
-          isRegistered: true // Force l'état enregistré pour l'UI
         };
         
         // Ajouter l'utilisateur au store s'il n'existe pas
-        if (!store.users[safeUser.id]) {
-          actions.addUser(safeUser);
+        if (!store.users[user.id]) {
+          actions.addUser(user);
         }
         
         // Définir comme utilisateur courant
-        actions.setCurrentUserId(safeUser.id);
+        actions.setCurrentUserId(user.id);
         
-        console.log('✅ [AuthSync] Utilisateur synchronisé:', safeUser.id);
+        console.log('✅ [AuthSync] Utilisateur synchronisé:', user.id);
       }
     } else if (!isLoading && !isAuthenticated) {
       // Utilisateur déconnecté

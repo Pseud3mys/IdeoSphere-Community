@@ -14,6 +14,9 @@ import {
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
+import { currentConfig } from '../../config/clientConfig';
+import { MockAuthService } from '../../auth/MockAuthService';
+import { MockLoginDialog } from './MockLoginDialog';
 
 // SVG Icons pour les connexions sociales
 const GoogleIcon = () => (
@@ -48,6 +51,25 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ isOpen, onClose, onLogin, onSocialLogin, onSwitchToSignup, onEnterPlatform, onLoginSSO }: LoginDialogProps) {
+  // En mode mock, afficher le MockLoginDialog
+  if (currentConfig.auth?.mode === 'mock') {
+    const availableUsers = MockAuthService.getAvailableUsers();
+    
+    const handleSelectUser = async (email: string) => {
+      await MockAuthService.login(email);
+    };
+    
+    return (
+      <MockLoginDialog
+        isOpen={isOpen}
+        onClose={onClose}
+        onSelectUser={handleSelectUser}
+        availableUsers={availableUsers}
+      />
+    );
+  }
+
+  // Mode Keycloak ou standard - dialog classique
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

@@ -30,10 +30,12 @@ import {
   Camera,
   Upload,
   Loader2,
-  BarChart3
+  BarChart3,
+  LogOut
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { resizeImageTo200x200, validateImageFile, uploadUserAvatar } from '../api/avatarService';
+import { logout } from '../api/authService';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { clientConfig } from '../config/clientConfig';
 
@@ -423,6 +425,28 @@ export function UserProfilePage({
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Voir les statistiques
+              </Button>
+            </div>
+
+            {/* Section Déconnexion */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center space-x-2 mb-3">
+                <LogOut className="w-4 h-4 text-gray-600" />
+                <Label className="font-medium text-gray-800">Déconnexion</Label>
+              </div>
+              
+              <p className="text-sm text-gray-700 mb-3">
+                Vous serez déconnecté de votre compte et redirigé vers la page d'accueil.
+              </p>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={logout}
+                className="bg-white hover:bg-gray-100 border-gray-300"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Se déconnecter
               </Button>
             </div>
 

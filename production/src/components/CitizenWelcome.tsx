@@ -102,7 +102,24 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   };
 
   const handleSkipLocation = async () => {
-    // 1. Créer un utilisateur temporaire via le service API avec les données saisies
+    // ✅ Si l'utilisateur est connecté et enregistré, publier directement sans créer de compte invité
+    if (currentUser && currentUser.isRegistered) {
+      console.log('✅ [CitizenWelcome] Utilisateur connecté, publication directe du post...');
+      
+      // Publier le post directement avec l'utilisateur actuel
+      const newPost = await actions.publishPost({
+        content: quickIdea,
+        location: guestLocation.trim() || undefined
+      });
+      
+      // Navigate to the created post
+      if (newPost) {
+        navigation.goToPost(newPost.id);
+      }
+      return;
+    }
+    
+    // ✅ Sinon, créer un utilisateur temporaire via le service API avec les données saisies
     const guestData = {
       name: guestName.trim() || undefined,
       email: guestEmail.trim() || undefined,
@@ -329,29 +346,32 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                       />
                     </div>
                     
-                    <div className="space-y-3 pt-4 border-t border-gray-200">
-                      <h3 className="text-base font-medium text-gray-900">
-                        {clientConfig.welcome.quickIdea.followUpSectionTitle}
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Input
-                          placeholder={clientConfig.welcome.quickIdea.namePlaceholder}
-                          className="text-base"
-                          value={guestName}
-                          onChange={(e) => setGuestName(e.target.value)}
-                        />
-                        <Input
-                          type="email"
-                          placeholder={clientConfig.welcome.quickIdea.emailPlaceholder}
-                          className="text-base"
-                          value={guestEmail}
-                          onChange={(e) => setGuestEmail(e.target.value)}
-                        />
+                    {/* ✅ Afficher cette section seulement si l'utilisateur n'est PAS connecté ou est un invité */}
+                    {(!currentUser || !currentUser.isRegistered) && (
+                      <div className="space-y-3 pt-4 border-t border-gray-200">
+                        <h3 className="text-base font-medium text-gray-900">
+                          {clientConfig.welcome.quickIdea.followUpSectionTitle}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Input
+                            placeholder={clientConfig.welcome.quickIdea.namePlaceholder}
+                            className="text-base"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                          />
+                          <Input
+                            type="email"
+                            placeholder={clientConfig.welcome.quickIdea.emailPlaceholder}
+                            className="text-base"
+                            value={guestEmail}
+                            onChange={(e) => setGuestEmail(e.target.value)}
+                          />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {clientConfig.welcome.quickIdea.followUpDescription}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {clientConfig.welcome.quickIdea.followUpDescription}
-                      </p>
-                    </div>
+                    )}
                     
                     <div className="flex flex-col sm:flex-row gap-3 pt-4">
                       <Button

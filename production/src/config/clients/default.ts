@@ -447,11 +447,11 @@ Quels bénéfices concrets pour la communauté ?`,
     
     // Utilisateur mock pour le développement (utilisé en mode 'mock')
     mockUser: {
-      id: 'user-demo',
-      email: 'demo@ideosphere.community',
-      name: 'Utilisateur Démo',
-      location: 'Paris',
-      bio: 'Compte de test pour Figma Make',
+      id: 'user-1',
+      email: 'marie.dubois@email.com',
+      name: 'Marie Dubois',
+      location: 'Le Blanc',
+      bio: 'Commerçante retraitée passionnée par l\'amélioration du cadre de vie à Le Blanc',
     },
   },
 };

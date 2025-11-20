@@ -12,7 +12,7 @@ import { toast } from 'sonner@2.0.3';
  */
 export function CitizenWelcomeWrapper() {
   const navigate = useNavigate();
-  const { actions } = useEntityStoreSimple();
+  const { actions, currentUser } = useEntityStoreSimple();
   const navigation = useNavigationActions();
 
   // Handlers d'authentification
@@ -50,7 +50,16 @@ export function CitizenWelcomeWrapper() {
   // Handler pour entrer sur la plateforme (après connexion ou en mode exploration)
   const handleEnterPlatform = async () => {
     try {
-      // Créer un compte invité via l'API
+      // Vérifier si un utilisateur est déjà connecté et enregistré
+      if (currentUser && currentUser.isRegistered) {
+        console.log('✅ [CitizenWelcomeWrapper] Utilisateur déjà connecté:', currentUser.name);
+        toast.success(`Bienvenue ${currentUser.name} !`);
+        actions.enterPlatform();
+        navigate('/discovery');
+        return;
+      }
+
+      // Sinon, créer un compte invité via l'API
       console.log('🔄 [CitizenWelcomeWrapper] Création d\'un compte invité via l\'API...');
       const guestUser = await actions.createTemporaryGuest();
       

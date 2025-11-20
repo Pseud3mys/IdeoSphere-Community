@@ -3,7 +3,7 @@ import { User } from '../types';
 import { Button } from './ui/button';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useNavigationActions } from '../hooks/useNavigationActions';
-import { LoginDialog } from './auth/LoginDialog';
+import { loginWithSSO, registerWithSSO } from '../api/authService';
 
 interface AuthButtonsProps {
   currentUser: User | null;
@@ -30,21 +30,18 @@ export function AuthButtons({
   compact = false
 }: AuthButtonsProps) {
   const navigation = useNavigationActions();
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
   
   // Vérifier si l'utilisateur est connecté et enregistré
   const isGuest = !currentUser || !currentUser.isRegistered;
 
-  const handleSignupClick = () => {
-    navigation.goToSignup();
+  const handleSignupClick = async () => {
+    // Rediriger directement vers le SSO pour créer un compte
+    await registerWithSSO();
   };
   
-  const handleLoginClick = () => {
-    setShowLoginDialog(true);
-  };
-
-  const handleLoginSuccess = () => {
-    setShowLoginDialog(false);
+  const handleLoginClick = async () => {
+    // Rediriger directement vers le SSO pour se connecter
+    await loginWithSSO();
   };
 
   // Si l'utilisateur est connecté, afficher le lien vers le profil
@@ -86,86 +83,38 @@ export function AuthButtons({
   if (compact) {
     // Version compacte pour le header - juste un bouton connexion
     return (
-      <>
-        <button
-          onClick={handleLoginClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          title="Se connecter"
-        >
-          <LogIn className="w-4 h-4" />
-          <span className="hidden sm:inline">Se connecter</span>
-        </button>
-        
-        <LoginDialog
-          isOpen={showLoginDialog}
-          onClose={() => setShowLoginDialog(false)}
-          onLogin={async (email, password) => {
-            const success = await onLogin(email, password);
-            if (success) {
-              handleLoginSuccess();
-            }
-            return success;
-          }}
-          onSocialLogin={async (provider) => {
-            const success = await onSocialLogin(provider);
-            if (success) {
-              handleLoginSuccess();
-            }
-            return success;
-          }}
-          onSwitchToSignup={handleSignupClick}
-          onEnterPlatform={onEnterPlatform || (() => {})}
-          onLoginSSO={onLoginSSO}
-        />
-      </>
+      <button
+        onClick={handleLoginClick}
+        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+        title="Se connecter"
+      >
+        <LogIn className="w-4 h-4" />
+        <span className="hidden sm:inline">Se connecter</span>
+      </button>
     );
   } else {
     // Version complète pour la page d'accueil - deux boutons côte à côte
     return (
-      <>
-        <div className="flex items-center justify-center space-x-4">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleLoginClick}
-            className="flex items-center space-x-2 px-8"
-          >
-            <LogIn className="w-4 h-4" />
-            <span>Se connecter</span>
-          </Button>
-          
-          <Button
-            size="lg"
-            onClick={handleSignupClick}
-            className="flex items-center space-x-2 px-8 bg-primary text-white hover:bg-primary/90"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Créer un compte</span>
-          </Button>
-        </div>
+      <div className="flex items-center justify-center space-x-4">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={handleLoginClick}
+          className="flex items-center space-x-2 px-8"
+        >
+          <LogIn className="w-4 h-4" />
+          <span>Se connecter</span>
+        </Button>
         
-        <LoginDialog
-          isOpen={showLoginDialog}
-          onClose={() => setShowLoginDialog(false)}
-          onLogin={async (email, password) => {
-            const success = await onLogin(email, password);
-            if (success) {
-              handleLoginSuccess();
-            }
-            return success;
-          }}
-          onSocialLogin={async (provider) => {
-            const success = await onSocialLogin(provider);
-            if (success) {
-              handleLoginSuccess();
-            }
-            return success;
-          }}
-          onSwitchToSignup={handleSignupClick}
-          onEnterPlatform={onEnterPlatform || (() => {})}
-          onLoginSSO={onLoginSSO}
-        />
-      </>
+        <Button
+          size="lg"
+          onClick={handleSignupClick}
+          className="flex items-center space-x-2 px-8 bg-primary text-white hover:bg-primary/90"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Créer un compte</span>
+        </Button>
+      </div>
     );
   }
 }

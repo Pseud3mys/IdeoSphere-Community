@@ -29,15 +29,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const init = async () => {
       try {
-        // Lancement de la vérification SSO
-        const isAuth = await authService.initAuth();
+        console.log('🔄 [AuthContext] Vérification de la session...');
         
+        // 1. Initialisation technique (Keycloak ou Mock)
+        const isAuth = await authService.initAuth();
         setIsAuthenticated(isAuth);
+
         if (isAuth) {
-          setUser(authService.getUserProfile());
+          // 2. ÉTAPE CLÉ : On synchronise pour avoir le profil COMPLET (avec createdAt...)
+          // Au lieu de setUser(authService.getUserProfile()) qui était incomplet
+          const fullUser = await authService.syncUserSession();
+          
+          if (fullUser) {
+            setUser(fullUser);
+            console.log('✅ [AuthContext] Session active pour :', fullUser.name);
+          }
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('[AuthProvider] Erreur lors de l\'initialisation:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }

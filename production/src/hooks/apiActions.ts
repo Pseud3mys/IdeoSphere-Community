@@ -943,17 +943,27 @@ export function createApiActions(
     }) => {
       try {
         const currentUser = boundSelectors.getCurrentUser();
-        if (!currentUser) {
+        
+        // ✅ Si un authorId est fourni, on vérifie que cet utilisateur existe
+        // Sinon, on vérifie qu'un utilisateur est connecté
+        if (payload.authorId) {
+          const author = boundSelectors.getUserById(payload.authorId);
+          if (!author) {
+            console.error('❌ [hook/apiActions] publishPost: Utilisateur authorId non trouvé:', payload.authorId);
+            toast.error('Erreur: utilisateur introuvable');
+            return null;
+          }
+        } else if (!currentUser) {
           console.error('❌ [hook/apiActions] publishPost: Aucun utilisateur connecté');
           toast.error('Vous devez être connecté pour publier un post');
           return null;
         }
 
         // ✅ Déterminer l'auteur réel : si authorId est fourni, le récupérer du store
-        const finalAuthorId = payload.authorId || currentUser.id;
+        const finalAuthorId = payload.authorId || currentUser?.id;
         const finalAuthor = payload.authorId 
-          ? boundSelectors.getUserById(payload.authorId) || currentUser
-          : currentUser;
+          ? boundSelectors.getUserById(payload.authorId)!
+          : currentUser!;
         
         console.log(`✅ [hook/apiActions] publishPost - Auteur: ${finalAuthor.id} ${finalAuthor.name}`);
 
