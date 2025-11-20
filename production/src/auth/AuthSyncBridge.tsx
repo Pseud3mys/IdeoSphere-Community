@@ -5,7 +5,7 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 export function AuthSyncBridge() {
   const { isAuthenticated, user, isLoading } = useAuth();
-  const { actions, store } = useEntityStoreSimple();
+  const { actions, store, getCurrentUser } = useEntityStoreSimple();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
@@ -15,6 +15,7 @@ export function AuthSyncBridge() {
         
         const safeUser = {
           ...user,
+          isRegistered: true // Force l'état enregistré pour l'UI
         };
         
         // Ajouter l'utilisateur au store s'il n'existe pas
@@ -28,13 +29,20 @@ export function AuthSyncBridge() {
         console.log('✅ [AuthSync] Utilisateur synchronisé:', user.id);
       }
     } else if (!isLoading && !isAuthenticated) {
-      // Utilisateur déconnecté
+      // Utilisateur déconnecté - MAIS ne pas clear si c'est un invité
       if (store.currentUserId) {
-        console.log('🚪 [AuthSync] Déconnexion détectée, clear du currentUserId');
-        actions.setCurrentUserId(null);
+        const currentUser = getCurrentUser();
+        const isGuestUser = currentUser?.id.startsWith('guest-') || currentUser?.isRegistered === false;
+        
+        if (!isGuestUser) {
+          console.log('🚪 [AuthSync] Déconnexion détectée, clear du currentUserId');
+          actions.setCurrentUserId(null);
+        } else {
+          console.log('👤 [AuthSync] Utilisateur invité détecté, conservation du currentUserId');
+        }
       }
     }
-  }, [isAuthenticated, user, isLoading, actions, store.currentUserId, store.users]);
+  }, [isAuthenticated, user, isLoading, actions, store.currentUserId, store.users, getCurrentUser]);
 
   return null;
 }

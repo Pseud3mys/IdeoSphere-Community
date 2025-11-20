@@ -550,40 +550,48 @@ export function PostDetailPage({
           </div>
 
           {/* Formulaire nouveau commentaire - simplifié */}
-          <div className="p-4 border-b border-gray-100 bg-gray-50/30">
-            <div className="flex space-x-3">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                  {currentUser.name.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-2">
-                <Textarea
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Une réaction rapide, un mot d'encouragement..."
-                  rows={2}
-                  className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
-                />
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-gray-500">
-                    Pour un argument construit, utilisez "Post de réponse" ↑
-                  </p>
-                  <Button 
-                    onClick={handleReply}
-                    disabled={!newReply.trim()}
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                  >
-                    <Send className="w-3 h-3 mr-2" />
-                    Réagir
-                  </Button>
+          {currentUser ? (
+            <div className="p-4 border-b border-gray-100 bg-gray-50/30">
+              <div className="flex space-x-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                    {currentUser.name.slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <Textarea
+                    value={newReply}
+                    onChange={(e) => setNewReply(e.target.value)}
+                    placeholder="Une réaction rapide, un mot d'encouragement..."
+                    rows={2}
+                    className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
+                  />
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-500">
+                      Pour un argument construit, utilisez "Post de réponse" ↑
+                    </p>
+                    <Button 
+                      onClick={handleReply}
+                      disabled={!newReply.trim()}
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full"
+                    >
+                      <Send className="w-3 h-3 mr-2" />
+                      Réagir
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 border-b border-gray-100 bg-gray-50/30">
+              <p className="text-sm text-muted-foreground text-center">
+                Vous devez être connecté pour commenter
+              </p>
+            </div>
+          )}
 
           {/* Liste des commentaires */}
           <div className="divide-y divide-gray-100">

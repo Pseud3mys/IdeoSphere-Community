@@ -44,7 +44,7 @@ export function AppLayout() {
 
   // Handlers pour le header
   const handleHomeClick = () => {
-    navigate('/discovery');
+    navigate('/'); // Retour à la page welcome
   };
 
   const handleProfileClick = () => {
