@@ -431,9 +431,27 @@ Quels bénéfices concrets pour la communauté ?`,
   
   features: {
     // Afficher ou non la bannière bêta
-    showBetaBanner: false,
+    showBetaBanner: true,
     
     // Activer les newsletters
-    enableNewsletters: true,
+    enableNewsletters: false,
+  },
+
+  // ============================================================================
+  // 13. AUTHENTIFICATION
+  // ============================================================================
+  
+  auth: {
+    // Mode d'authentification : 'mock' pour dev/demo, 'keycloak' pour production
+    mode: 'mock',
+    
+    // Utilisateur mock pour le développement (utilisé en mode 'mock')
+    mockUser: {
+      id: 'user-demo',
+      email: 'demo@ideosphere.community',
+      name: 'Utilisateur Démo',
+      location: 'Paris',
+      bio: 'Compte de test pour Figma Make',
+    },
   },
 };

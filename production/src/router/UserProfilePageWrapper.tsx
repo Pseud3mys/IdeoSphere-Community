@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserProfilePage } from '../components/UserProfilePage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useAuth } from '../context/authContext';
 
 /**
  * UserProfilePageWrapper
@@ -10,8 +11,18 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 export function UserProfilePageWrapper() {
   const navigate = useNavigate();
   const { getCurrentUser, actions } = useEntityStoreSimple();
+  const { isLoading: authLoading } = useAuth();
   
   const currentUser = getCurrentUser();
+
+  // Afficher un loader pendant le chargement de l'auth
+  if (authLoading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <p className="text-gray-500">Chargement du profil...</p>
+      </div>
+    );
+  }
 
   // Si pas d'utilisateur connecté, rediriger vers l'accueil
   if (!currentUser) {

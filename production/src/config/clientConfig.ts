@@ -195,6 +195,30 @@ export function getGroupTypeIds(): string[] {
   return config.groupTypes.types.map(type => type.id);
 }
 
+/**
+ * Obtient le mode d'authentification configuré
+ */
+export function getAuthMode() {
+  const config = getClientConfig();
+  return config.auth.mode;
+}
+
+/**
+ * Obtient la configuration Keycloak (si mode Keycloak)
+ */
+export function getKeycloakConfig() {
+  const config = getClientConfig();
+  return config.auth.keycloak;
+}
+
+/**
+ * Obtient l'utilisateur mock (si mode mock)
+ */
+export function getMockUser() {
+  const config = getClientConfig();
+  return config.auth.mockUser;
+}
+
 // ============================================================================
 // 5. EXPORTS
 // ============================================================================

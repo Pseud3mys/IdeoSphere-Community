@@ -396,7 +396,7 @@ Quels bénéfices concrets pour notre commune et ses habitants ?`,
         id: 'working-group',
         label: 'Groupe de travail',
         labelPlural: 'Groupes de travail',
-        description: 'Un groupe pour travailler sur un sujet ou une problématique spécifique',
+        description: 'Un groupe pour travailler sur un sujet ou une problmatique spécifique',
         icon: '💼',
       },
     ],
@@ -433,6 +433,24 @@ Quels bénéfices concrets pour notre commune et ses habitants ?`,
     showBetaBanner: true,
     
     // Activer les newsletters
-    enableNewsletters: false,
+    enableNewsletters: true,
+  },
+
+  // ============================================================================
+  // 13. AUTHENTIFICATION
+  // ============================================================================
+  
+  auth: {
+    // Mode d'authentification : 'mock' pour dev/demo, 'keycloak' pour production
+    mode: 'keycloak',
+    
+    // Utilisateur mock pour le développement (utilisé en mode 'mock')
+    mockUser: {
+      id: 'user-beta',
+      email: 'beta@ideosphere.community',
+      name: 'Membre Beta',
+      location: 'Paris',
+      bio: 'Testeur de la version Beta',
+    },
   },
 };

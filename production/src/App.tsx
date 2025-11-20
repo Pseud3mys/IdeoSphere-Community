@@ -1,8 +1,10 @@
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { SimpleEntityStoreProvider } from './store/SimpleEntityStore';
+import { AuthProvider } from './context/authContext';
 import { ErrorBoundary } from 'react-error-boundary';
 import { routes } from './router/routes';
 import { ScrollToTop } from './components/ScrollToTop';
+import { AuthSyncBridge } from './auth/AuthSyncBridge';
 
 // Composant d'erreur pour l'error boundary
 function ErrorFallback({error, resetErrorBoundary}: {error: Error, resetErrorBoundary: () => void}) {
@@ -42,6 +44,7 @@ function AppRouter() {
   return (
     <>
       <ScrollToTop />
+      <AuthSyncBridge />
       {element}
     </>
   );
@@ -52,13 +55,13 @@ function AppRouter() {
  * Composant racine de l'application
  * 
  * Architecture :
- * ErrorBoundary > SimpleEntityStoreProvider > MemoryRouter > Routes
+ * ErrorBoundary > SimpleEntityStoreProvider > AuthProvider > MemoryRouter > AuthSyncBridge + Routes
  * 
  * NOTE : Utilise MemoryRouter pour la compatibilité avec Figma Make.
  * Pour un déploiement réel, remplacer MemoryRouter par BrowserRouter.
  */
 export default function App() {
-  console.log('🚀 [App] Initialisation avec React Router');
+  console.log('🚀 [App] Initialisation avec React Router + Auth Hybride (Mock/Keycloak)');
   
   return (
     <ErrorBoundary
@@ -72,9 +75,11 @@ export default function App() {
       }}
     >
       <SimpleEntityStoreProvider>
-        <BrowserRouter initialEntries={['/']}>
-          <AppRouter />
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter initialEntries={['/']}>
+            <AppRouter />
+          </BrowserRouter>
+        </AuthProvider>
       </SimpleEntityStoreProvider>
     </ErrorBoundary>
   );

@@ -7,6 +7,16 @@
 // Types de clients supportés
 export type ClientType = 'mairie' | 'entreprise' | 'association' | 'ong' | 'listeCitoyenne';
 
+// Types d'authentification supportés
+export type AuthMode = 'mock' | 'keycloak';
+
+// Configuration Keycloak
+export interface KeycloakConfig {
+  url: string;
+  realm: string;
+  clientId: string;
+}
+
 // Type pour un type de groupe
 export interface GroupType {
   id: string;
@@ -255,5 +265,18 @@ export interface ClientConfig {
   features: {
     showBetaBanner: boolean;
     enableNewsletters: boolean;
+  };
+
+  // ============================================================================
+  // 13. AUTHENTIFICATION
+  // ============================================================================
+  auth: {
+    mode: AuthMode;
+    keycloak?: KeycloakConfig;
+    mockUser?: {
+      id: string;
+      email: string;
+      name: string;
+    };
   };
 }
