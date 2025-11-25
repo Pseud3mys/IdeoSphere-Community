@@ -41,51 +41,37 @@ export interface UserGroupsResult {
 }
 
 /**
- * Récupère les groupes d'un utilisateur avec leurs memberships
- * Adapte la réponse du backend pour correspondre à la structure UI demandée.
- * * @param userId - ID de l'utilisateur
- * @returns Groupes actifs avec leurs memberships et groupes pending
+ * Récupère les groupes d'un utilisateur avec leurs memberships.
+ * Appelle la route unifiée côté User.
+ * GET /api/users/<key>/groups
  */
 export async function fetchMyGroups(userId: string): Promise<{
   groupsWithMemberships: Array<{ group: Group; membership: GroupMembership }>;
   pendingGroups: PendingGroupCreation[];
 }> {
   try {
-    // Extraction de la clé pour l'appel API (ex: "users/123" -> "123")
     const userKey = userId.includes('/') ? userId.split('/')[1] : userId;
 
-    // Appel à la route existante (qui utilise maintenant le nouveau get_user_groups_normalized)
+    // ✅ CHANGEMENT D'URL ICI : on tape sur la ressource 'users'
     const response = await apiClient.get<{ 
       activeGroups: Array<{ group: RawGroup, membership: RawMembership }>, 
       pendingGroups: RawPendingGroup[] 
-    }>('/groups/my-groups', { params: { userId: userKey } });
+    }>(`/users/${userKey}/my-groups`); // Renommé de 'memberships' à 'groups' pour clarté
 
-    // 1. Transformation des Groupes Actifs + Memberships
-    const groupsWithMemberships = response.data.activeGroups.map(item => {
-      // Transformation sécurisée via le service dédié
-      const group = transformGroup(item.group);
-      const membership = transformMembership(item.membership);
-      
-      return { group, membership };
-    });
+    const groupsWithMemberships = response.data.activeGroups.map(item => ({
+      group: transformGroup(item.group),
+      membership: transformMembership(item.membership)
+    }));
 
-    // 2. Transformation des Groupes Pending
     const pendingGroups = response.data.pendingGroups.map(transformPendingGroup);
 
-    console.log(`📦 [groupService.fetchMyGroups] ${groupsWithMemberships.length} actifs, ${pendingGroups.length} pending pour ${userId}`);
+    console.log(`📦 [groupService] ${groupsWithMemberships.length} actifs, ${pendingGroups.length} pending chargés via User API`);
 
-    return {
-      groupsWithMemberships,
-      pendingGroups
-    };
+    return { groupsWithMemberships, pendingGroups };
 
   } catch (error) {
-    console.error(`❌ [groupService.fetchMyGroups] Erreur pour ${userId}`, error);
-    // En cas d'erreur, on retourne des tableaux vides pour ne pas bloquer l'UI
-    return {
-      groupsWithMemberships: [],
-      pendingGroups: []
-    };
+    console.error(`❌ [groupService] Erreur fetchMyGroups pour ${userId}`, error);
+    return { groupsWithMemberships: [], pendingGroups: [] };
   }
 }
 
@@ -201,31 +187,6 @@ export async function leaveGroup(userId: string, groupId: string): Promise<boole
     return false;
   }
 }
-
-/**
- * Récupère les adhésions (memberships) actives d'un utilisateur.
- * GET /api/users/<key>/memberships
-
-export async function fetchUserGroupMemberships(userId: string): Promise<GroupMembership[]> {
-  try {
-    // Extrait la clé de l'ID (ex: "users/123" -> "123")
-    const userKey = userId.split('/')[1];
-    
-    // Appelle la nouvelle route backend
-    const response = await apiClient.get<RawMembership[]>(`/users/${userKey}/memberships`);
-    
-    // Transforme les données brutes en objets GroupMembership
-    const memberships = response.data.map(transformMembership);
-    
-    console.log(`📦 [API groupService.fetchUserGroupMemberships] ${memberships.length} memberships actifs chargés pour ${userId}`);
-    return memberships;
-    
-  } catch (error) {
-    console.error(`❌ [API groupService.fetchUserGroupMemberships] ${userId}`, error);
-    return [];
-  }
-}*/
-
 
 /**
  * Crée un groupe en attente (pending) avec noyau initial.

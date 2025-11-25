@@ -47,7 +47,8 @@ export function IdeaDetailPage({
     getAllIdeas,
     getAllDiscussionTopics,
     getIdeaById,
-    actions
+    actions,
+    store // ✅ Ajouter store pour forcer le re-render quand le store change
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -56,8 +57,9 @@ export function IdeaDetailPage({
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
   
-  // ✅ Récupérer les discussions directement (pas de useMemo car getAllDiscussionTopics() renvoie déjà les données à jour du store)
-  const discussions = getAllDiscussionTopics();
+  // ✅ Récupérer les discussions directement depuis le store
+  // Le composant se re-rendra automatiquement quand store.discussionTopics change
+  const discussions = useMemo(() => getAllDiscussionTopics(), [store.discussionTopics]);
   
   // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 

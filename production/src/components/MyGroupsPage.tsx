@@ -6,7 +6,7 @@
  * - Groupes en Attente (pending où je suis fondateur)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useGroupActions } from '../hooks/useGroupActions';
 import { useNavigationActions } from '../hooks/useNavigationActions';
@@ -47,9 +47,16 @@ export function MyGroupsPage() {
     loadData();
   }, [currentUser?.id]);
 
-  // Récupérer les données directement du store (mis à jour automatiquement par React Context)
-  const myActiveGroups = currentUser ? getUserGroups(currentUser.id) : [];
-  const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
+  // ✅ Récupérer les données directement du store (se met à jour automatiquement)
+  const myActiveGroups = useMemo(() => 
+    currentUser ? getUserGroups(currentUser.id) : [],
+    [currentUser?.id, store.groups, store.groupMemberships]
+  );
+  
+  const myPendingGroups = useMemo(() => 
+    currentUser ? getUserPendingGroupCreations(currentUser.id) : [],
+    [currentUser?.id, store.pendingGroupCreations]
+  );
 
   const handleJoinGroup = async (groupId: string) => {
     try {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEntityStoreSimple, useGroupActions, useNavigationActions } from "../hooks";
 import { GroupCard } from "./group/GroupCard";
@@ -22,6 +22,7 @@ export function GroupsExplorerPage() {
     isUserMemberOfGroup,
     getCurrentUser,
     getUserPendingGroupCreations,
+    store // ✅ Ajouter store pour forcer le re-render
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -87,8 +88,11 @@ export function GroupsExplorerPage() {
 
   const filteredGroups = getFilteredGroups();
   
-  // Récupérer les groupes en attente
-  const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
+  // ✅ Récupérer les groupes en attente - Se met à jour automatiquement quand store.pendingGroupCreations change
+  const myPendingGroups = useMemo(() => 
+    currentUser ? getUserPendingGroupCreations(currentUser.id) : [],
+    [currentUser?.id, store.pendingGroupCreations]
+  );
   
   // Filtrer les pending selon la recherche
   const filteredPendingGroups = searchQuery.trim()
