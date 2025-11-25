@@ -22,13 +22,6 @@ import {
   RawMembership
 } from './transformService';
 
-
-/*
-  NOTE: Les fonctions 'updateGroup' et 'promoteToAnimator' 
-  ont été omises car elles n'ont pas de route correspondante 
-  dans le backend 'group_routes.py' fourni.
-*/
-
 /**
  * Interface de retour combinée
  */
@@ -288,5 +281,72 @@ export async function recommendContentToGroups(
   } catch (error) {
     console.error(`❌ [API groupService.recommendContentToGroups] ${contentId}`, error);
     return false;
+  }
+}
+
+/**
+ * Met à jour les informations d'un groupe.
+ * PATCH /api/groups/<key>
+ */
+export async function updateGroup(
+  groupId: string,
+  updates: Partial<Pick<Group, 'name' | 'description' | 'shortDescription' | 'type' | 'avatar' | 'banner' | 'location' | 'tags'>>,
+  updatedBy: string
+): Promise<Group | null> {
+  try {
+    const groupKey = groupId.split('/')[1];
+
+    // On inclut 'updatedBy' dans le body pour la vérification côté serveur
+    const payload = { ...updates, updatedBy };
+
+    const response = await apiClient.patch<RawGroup>(`/groups/${groupKey}`, payload);
+    
+    const updatedGroup = transformGroup(response.data);
+    
+    // Note : Le backend ne renvoie pas forcément les animateurs dans l'objet RawGroup standard
+    // mais le frontend risque d'en avoir besoin. Idéalement, on fusionne ou on recharge, 
+    // mais ici on retourne le groupe mis à jour tel quel.
+    console.log(`✅ [groupService] Groupe ${groupId} mis à jour par ${updatedBy}`);
+    return updatedGroup;
+
+  } catch (error) {
+    console.error(`❌ [groupService.updateGroup] Erreur mise à jour ${groupId}`, error);
+    // Gestion d'erreur spécifique (ex: 403 Forbidden)
+    if ((error as any)?.response?.status === 403) {
+      throw new Error("Vous devez être animateur pour modifier ce groupe (Refusé par le serveur)");
+    }
+    return null;
+  }
+}
+
+/**
+ * Promeut un membre en animateur.
+ * POST /api/groups/<key>/members/<userKey>/promote
+ */
+export async function promoteToAnimator(
+  groupId: string,
+  userId: string,
+  promotedBy: string
+): Promise<GroupMembership | null> {
+  try {
+    const groupKey = groupId.split('/')[1];
+    const userKey = userId.split('/')[1];
+
+    const response = await apiClient.post<RawMembership>(
+      `/groups/${groupKey}/members/${userKey}/promote`,
+      { promotedBy }
+    );
+
+    const membership = transformMembership(response.data);
+    console.log(`✅ [groupService] ${userId} promu animateur dans ${groupId}`);
+    return membership;
+
+  } catch (error) {
+    console.error(`❌ [groupService.promoteToAnimator] Erreur pour ${userId}`, error);
+    
+    if ((error as any)?.response?.status === 403) {
+      throw new Error("Vous devez être animateur pour effectuer cette promotion");
+    }
+    return null;
   }
 }
