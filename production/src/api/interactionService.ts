@@ -261,9 +261,38 @@ export async function toggleUserFollowOnApi(targetUserId: string, currentUserId:
   return Promise.resolve(true);
 }
 
-// jamais utilisée.
-/*export async function upvoteDiscussionTopicOnApi(topicId: string, userId: string): Promise<boolean> {
-  console.log(`LOG: upvoteDiscussionTopicOnApi a été appelé pour le topic ${topicId} par ${userId}. Ce service nécessite un endpoint API dédié.`);
-  // Simuler une réussite
-  return Promise.resolve(true);
-}*/
+/**
+ * Gère le vote pour un sujet de discussion.
+ * NOTE : Sur le backend, les topics sont traités comme des Posts.
+ * On utilise donc l'endpoint de like/support des posts.
+ */
+export async function upvoteDiscussionTopicOnApi(
+  topicId: string, 
+  userId: string, 
+  isCurrentlyUpvoted: boolean
+): Promise<boolean> {
+  console.log(`🔄 [API] Toggle upvote (soutien) pour le topic ${topicId}. État actuel: ${isCurrentlyUpvoted}`);
+  
+  try {
+    if (isCurrentlyUpvoted) {
+      // Si déjà voté, on RETIRE le soutien (DELETE)
+      await apiClient.delete('/feedback', { 
+        params: { userId, contentId: topicId } 
+      });
+    } else {
+      // Si pas encore voté, on AJOUTE le soutien (POST)
+      await apiClient.post('/feedback', { 
+        userId, 
+        contentId: topicId, 
+        type: 'supports' 
+      });
+    }
+    
+    // Si pas d'erreur, l'opération a réussi
+    return true;
+    
+  } catch (error) {
+    console.error(`❌ [API] Erreur lors du toggle upvote pour le topic ${topicId}:`, error);
+    return false;
+  }
+}

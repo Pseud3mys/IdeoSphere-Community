@@ -183,7 +183,7 @@ export function getUserProfileFromToken(): User | null {
   if (keycloak.tokenParsed) {
     return {
       id: keycloak.tokenParsed.sub,
-      name: keycloak.tokenParsed.preferred_username || keycloak.tokenParsed.name,
+      name: keycloak.tokenParsed.name, // keycloak.tokenParsed.preferred_username est le mail.
       email: keycloak.tokenParsed.email,
     } as User;
   }
