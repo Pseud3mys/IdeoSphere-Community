@@ -48,7 +48,7 @@ export function IdeaDetailPage({
     getAllDiscussionTopics,
     getIdeaById,
     actions,
-    store // ✅ Ajouter store pour forcer le re-render quand le store change
+    store
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -57,9 +57,18 @@ export function IdeaDetailPage({
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
   
-  // ✅ Récupérer les discussions directement depuis le store
-  // Le composant se re-rendra automatiquement quand store.discussionTopics change
-  const discussions = useMemo(() => getAllDiscussionTopics(), [store.discussionTopics]);
+  // ✅ Lire le store.discussionTopics pour forcer le re-render quand il change
+  const _ = store.discussionTopics;
+  
+  // ✅ Appeler le sélecteur directement - il lit toujours la dernière valeur du store
+  const discussions = getAllDiscussionTopics();
+  
+  console.log('🔍 [IdeaDetailPage] Render:', {
+    ideaId: idea.id,
+    discussionIds: latestIdea.discussionIds,
+    allDiscussionsCount: discussions.length,
+    storeHasDiscussions: Object.keys(store.discussionTopics).length
+  });
   
   // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 

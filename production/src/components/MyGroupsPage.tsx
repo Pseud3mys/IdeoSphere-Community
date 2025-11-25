@@ -47,16 +47,19 @@ export function MyGroupsPage() {
     loadData();
   }, [currentUser?.id]);
 
-  // ✅ Récupérer les données directement du store (se met à jour automatiquement)
-  const myActiveGroups = useMemo(() => 
-    currentUser ? getUserGroups(currentUser.id) : [],
-    [currentUser?.id, store.groups, store.groupMemberships]
-  );
+  // ✅ Lire le store.pendingGroupCreations pour forcer le re-render quand il change
+  // Cette ligne force React à re-rendre le composant quand pendingGroupCreations change
+  const _ = store.pendingGroupCreations;
   
-  const myPendingGroups = useMemo(() => 
-    currentUser ? getUserPendingGroupCreations(currentUser.id) : [],
-    [currentUser?.id, store.pendingGroupCreations]
-  );
+  // ✅ Appeler les sélecteurs directement - ils lisent toujours la dernière valeur du store
+  const myActiveGroups = currentUser ? getUserGroups(currentUser.id) : [];
+  const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
+  
+  console.log('🔍 [MyGroupsPage] Render:', {
+    pendingCount: myPendingGroups.length,
+    activeCount: myActiveGroups.length,
+    storeHasPending: Object.keys(store.pendingGroupCreations).length
+  });
 
   const handleJoinGroup = async (groupId: string) => {
     try {

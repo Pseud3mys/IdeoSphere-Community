@@ -97,22 +97,42 @@ export async function fetchAllGroups(): Promise<{ groups: Group[], users: User[]
 }
 
 /**
- * Récupère un groupe par son ID et la liste de ses membres.
+ * Récupère un groupe, ses membres et les memberships réels.
  * GET /api/groups/<key>
  */
-export async function fetchGroupById(groupId: string): Promise<{ group: Group | null, members: User[] }> {
+export async function fetchGroupById(groupId: string): Promise<{ 
+  group: Group | null; 
+  members: User[];
+  memberships: GroupMembership[];
+}> {
   try {
-    const groupKey = groupId.split('/')[1];
-    const response = await apiClient.get<{ group: RawGroup, users: RawUser[] }>(`/groups/${groupKey}`);
+    const groupKey = groupId.includes('/') ? groupId.split('/')[1] : groupId;
     
+    // Le backend renvoie maintenant { group, users, memberships }
+    const response = await apiClient.get<{ 
+      group: RawGroup, 
+      users: RawUser[],
+      memberships: RawMembership[] 
+    }>(`/groups/${groupKey}`);
+    
+    if (!response.data || !response.data.group) {
+      console.warn(`⚠️ [API groupService] Groupe ${groupId} introuvable`);
+      return { group: null, members: [], memberships: [] };
+    }
+    
+    // Transformation simple et directe (Unifiée)
     const group = transformGroup(response.data.group);
     const members = response.data.users.map(transformUser);
+    // On utilise les vraies données du backend (rôle, joinedAt exacts)
+    const memberships = response.data.memberships.map(transformMembership);
     
-    console.log(`📦 [API groupService.fetchGroupById] Groupe ${groupId} avec ${members.length} membres`);
-    return { group, members };
+    console.log(`📦 [API groupService] Groupe ${groupId} chargé: ${members.length} membres, ${memberships.length} adhésions`);
+    
+    return { group, members, memberships };
+
   } catch (error) {
-    console.error(`❌ [API groupService.fetchGroupById] Groupe ${groupId}`, error);
-    return { group: null, members: [] };
+    console.error(`❌ [API groupService] Erreur fetchGroupById ${groupId}`, error);
+    return { group: null, members: [], memberships: [] };
   }
 }
 

@@ -22,7 +22,7 @@ export function GroupsExplorerPage() {
     isUserMemberOfGroup,
     getCurrentUser,
     getUserPendingGroupCreations,
-    store // ✅ Ajouter store pour forcer le re-render
+    store
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
@@ -88,11 +88,17 @@ export function GroupsExplorerPage() {
 
   const filteredGroups = getFilteredGroups();
   
-  // ✅ Récupérer les groupes en attente - Se met à jour automatiquement quand store.pendingGroupCreations change
-  const myPendingGroups = useMemo(() => 
-    currentUser ? getUserPendingGroupCreations(currentUser.id) : [],
-    [currentUser?.id, store.pendingGroupCreations]
-  );
+  // ✅ Lire le store.pendingGroupCreations pour forcer le re-render quand il change
+  const _ = store.pendingGroupCreations;
+  
+  // ✅ Appeler le sélecteur directement - il lit toujours la dernière valeur du store
+  const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
+  
+  console.log('🔍 [GroupsExplorerPage] Render:', {
+    pendingCount: myPendingGroups.length,
+    storeHasPending: Object.keys(store.pendingGroupCreations).length,
+    currentUserId: currentUser?.id
+  });
   
   // Filtrer les pending selon la recherche
   const filteredPendingGroups = searchQuery.trim()

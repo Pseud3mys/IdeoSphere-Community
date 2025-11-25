@@ -49,7 +49,8 @@ export function CreateGroupLinkDialog({
     getGroupById, 
     getAllGroups,
     getGroupLinks,
-    getCurrentUser 
+    getCurrentUser,
+    store // ✅ Ajouter store pour forcer le re-render
   } = useEntityStoreSimple();
   const { createVerticalLink, createHorizontalLink } = useGroupLinkActions();
 
@@ -63,8 +64,19 @@ export function CreateGroupLinkDialog({
 
   const currentUser = getCurrentUser();
   const currentGroup = getGroupById(groupId);
+  
+  // ✅ Lire le store.groups pour forcer le re-render quand il change
+  const _ = store.groups;
+  
   const allGroups = getAllGroups();
   const links = getGroupLinks(groupId);
+  
+  console.log('🔍 [CreateGroupLinkDialog] Render:', {
+    groupId,
+    allGroupsCount: allGroups.length,
+    storeHasGroups: Object.keys(store.groups).length,
+    currentUserId: currentUser?.id
+  });
 
   // Réinitialiser le formulaire quand le dialog s'ouvre/ferme
   useEffect(() => {
@@ -79,6 +91,16 @@ export function CreateGroupLinkDialog({
 
   // Filtrer les groupes disponibles
   const availableGroups = useMemo(() => {
+    console.log('🔍 [CreateGroupLinkDialog.availableGroups] Recalcul:', {
+      allGroupsCount: allGroups.length,
+      groupId,
+      linksCount: {
+        parents: links.parentLinks.length,
+        children: links.childLinks.length,
+        partners: links.partnerLinks.length
+      }
+    });
+    
     // IDs des groupes déjà liés
     const linkedGroupIds = new Set<string>();
     links.parentLinks.forEach(l => linkedGroupIds.add(l.parentGroupId));
@@ -88,7 +110,7 @@ export function CreateGroupLinkDialog({
       linkedGroupIds.add(l.groupId2);
     });
 
-    return allGroups
+    const filtered = allGroups
       .filter(g => g.id !== groupId) // Exclure le groupe actuel
       .filter(g => !linkedGroupIds.has(g.id)) // Exclure les groupes déjà liés
       .filter(g => g.isActive) // Seulement les groupes actifs
@@ -102,6 +124,14 @@ export function CreateGroupLinkDialog({
           g.tags.some(tag => tag.toLowerCase().includes(query))
         );
       });
+      
+    console.log('🔍 [CreateGroupLinkDialog.availableGroups] Résultat:', {
+      filteredCount: filtered.length,
+      linkedGroupIds: Array.from(linkedGroupIds),
+      sampleGroups: filtered.slice(0, 3).map(g => ({ id: g.id, name: g.name }))
+    });
+    
+    return filtered;
   }, [allGroups, groupId, links, searchQuery]);
 
   // Gérer la création du lien
