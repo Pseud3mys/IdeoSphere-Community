@@ -443,7 +443,7 @@ Quels bénéfices concrets pour la communauté ?`,
   
   auth: {
     // Mode d'authentification : 'mock' pour dev/demo, 'keycloak' pour production
-    mode: 'mock',
+    mode: 'keycloak',
     
     // Utilisateur mock pour le développement (utilisé en mode 'mock')
     mockUser: {

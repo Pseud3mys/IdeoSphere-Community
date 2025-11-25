@@ -192,58 +192,7 @@ export function getUserProfileFromToken(): User | null {
 
 
 // --- FONCTIONS UTILITAIRES (Inchangées, à supprimer ?) ---
-
-export function getToken(): string | undefined {
-  return keycloak.token;
-}
-
-export function isAuthenticated(): boolean {
-  return !!keycloak.authenticated;
-}
-
-// Garder les autres fonctions API pour la compatibilité (mode invité, etc.)
-export async function loginWithEmail(email: string): Promise<User | null> {
-  console.log('🔄 [AUTH] Tentative de connexion API avec email:', email);
-  try {
-    const response = await apiClient.post<RawUser>('/users/login', { email });
-    const user = transformUser(response.data);
-    if (user && user.isRegistered) return user;
-    return null;
-  } catch (error) {
-    console.error('❌ [AUTH] Erreur lors de la connexion:', error);
-    return null;
-  }
-}
-
-export async function createUserAccount(userData: Partial<User>): Promise<User | null> {
-  try {
-    const response = await apiClient.post<RawUser>('/users', { ...userData, isRegistered: true });
-    return transformUser(response.data);
-  } catch (error) {
-    console.error('❌ [AUTH] Erreur lors de la création du compte:', error);
-    return null;
-  }
-}
-
-export async function createUnfinalizedAccountOnApi(guestData?: any): Promise<User | null> {
-  try {
-    const tempEmail = `guest-${Date.now()}@temp.guest`;
-    const payload = {
-      name: guestData?.name || `Invité ${Math.floor(Math.random() * 1000)}`,
-      email: guestData?.email || tempEmail,
-      location: guestData?.address || '',
-      bio: guestData?.bio || '',
-      isRegistered: false,
-    };
-    const response = await apiClient.post<RawUser>('/users', payload);
-    return transformUser(response.data);
-  } catch (error) {
-    console.error('❌ [AUTH] Erreur compte temporaire:', error);
-    return null;
-  }
-}
-
 export async function loginWithSocialProvider(provider: string, userData: any): Promise<User | null> { return null; }
-export async function validateAuthToken(token: string): Promise<User | null> { return null; }
-export async function resetPassword(email: string): Promise<boolean> { return false; }
+
+// elle est utilisée dans hooks user action.
 export async function subscribeToNewsletterOnApi(email: string): Promise<void> {}
