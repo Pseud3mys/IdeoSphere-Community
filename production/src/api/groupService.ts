@@ -30,6 +30,77 @@ import {
 */
 
 /**
+ * Interface de retour combinée
+ */
+export interface UserGroupsResult {
+  groupsWithMemberships: {
+    group: Group;
+    membership: GroupMembership;
+  }[];
+  pendingGroups: Group[];
+}
+
+/**
+ * Récupère les groupes de l'utilisateur (Actifs ET En attente) en un seul appel.
+ * Trie la réponse brute de l'API pour structurer les données.
+ */
+export const fetchUserGroupsWithMemberships = async (userId: string): Promise<UserGroupsResult> => {
+  try {
+    const response = await apiClient.get(`/users/${userId}/memberships`);
+    const rawData = response.data;
+
+    const result: UserGroupsResult = {
+      groupsWithMemberships: [],
+      pendingGroups: []
+    };
+
+    if (Array.isArray(rawData)) {
+      rawData.forEach((item: any) => {
+        // 1. Extraction sécurisée du Groupe
+        // (S'adapte si le backend renvoie le groupe dans une sous-clé 'group' ou fusionné)
+        const group: Group = item.group || {
+          id: item.groupId || item.id,
+          name: item.name,
+          slug: item.slug,
+          description: item.description,
+          avatar: item.avatar,
+          privacy: item.privacy,
+          // ... autres props du groupe
+        };
+
+        // 2. Extraction du Membership (Infos de liaison)
+        const membership: GroupMembership = {
+          type: item.type || 'member', // 'creator', 'member'
+          role: item.role || 'member', // 'admin', 'moderator', 'member'
+          status: item.status || 'active', // 'active', 'pending'
+          joinedAt: item.joinedAt || new Date().toISOString()
+        };
+
+        // 3. Tri selon le statut
+        if (membership.status === 'pending') {
+          // Pour les pending, on renvoie souvent juste le groupe, 
+          // mais on pourrait aussi renvoyer l'objet membership si nécessaire
+          result.pendingGroups.push(group);
+        } else {
+          // Adhésions actives
+          result.groupsWithMemberships.push({
+            group,
+            membership
+          });
+        }
+      });
+    }
+
+    return result;
+
+  } catch (error) {
+    console.error("❌ [API] Erreur fetchUserGroupsWithMemberships:", error);
+    // En cas d'erreur, on retourne des tableaux vides pour ne pas casser l'UI
+    return { groupsWithMemberships: [], pendingGroups: [] };
+  }
+};
+
+/**
  * Récupère tous les groupes actifs et leurs animateurs.
  * GET /api/groups
  */

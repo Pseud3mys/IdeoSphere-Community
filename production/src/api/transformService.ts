@@ -300,7 +300,8 @@ export const transformPostToDiscussion = (raw: RawContent, usersMap: Map<string,
     content: raw.content || '',
     timestamp: new Date(raw.createdAt),
     createdAt: new Date(raw.createdAt),
-    upvotes: raw.upvotes || [],
+    // CORRECTION ICI : Vérifier raw.supporters OU raw.upvotes
+    upvotes: raw.supporters || raw.upvotes || [], 
     posts: (raw.comments || []).map(c => transformComment(c, usersMap))
 });
 
