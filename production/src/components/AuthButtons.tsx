@@ -81,16 +81,26 @@ export function AuthButtons({
 
   // Si l'utilisateur n'est pas connecté, afficher les boutons de connexion/inscription
   if (compact) {
-    // Version compacte pour le header - juste un bouton connexion
+    // Version compacte pour le header - deux boutons côte à côte
     return (
-      <button
-        onClick={handleLoginClick}
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        title="Se connecter"
-      >
-        <LogIn className="w-4 h-4" />
-        <span className="hidden sm:inline">Se connecter</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleLoginClick}
+          className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+          title="Se connecter"
+        >
+          <LogIn className="w-4 h-4" />
+          <span className="hidden sm:inline">Se connecter</span>
+        </button>
+        <button
+          onClick={handleSignupClick}
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          title="Créer un compte"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span className="hidden sm:inline">Créer un compte</span>
+        </button>
+      </div>
     );
   } else {
     // Version complète pour la page d'accueil - deux boutons côte à côte

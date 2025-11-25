@@ -41,12 +41,17 @@ export interface UserGroupsResult {
 }
 
 /**
- * Récupère les groupes de l'utilisateur (Actifs ET En attente) en un seul appel.
- * Trie la réponse brute de l'API pour structurer les données.
+ * Récupère les groupes et les adhésions en un seul appel.
+ * Utilise strictement les transformateurs pour garantir la cohérence des données.
+ * * Attend de l'API une structure : 
+ * [ { group: RawGroup, membership: RawMembership }, ... ]
  */
 export const fetchUserGroupsWithMemberships = async (userId: string): Promise<UserGroupsResult> => {
   try {
-    const response = await apiClient.get(`/users/${userId}/memberships`);
+    // On extrait la clé si nécessaire (selon votre convention habituelle)
+    const userKey = userId.includes('/') ? userId.split('/')[1] : userId;
+
+    const response = await apiClient.get<any[]>(`/${userKey}/memberships`);
     const rawData = response.data;
 
     const result: UserGroupsResult = {
@@ -55,34 +60,24 @@ export const fetchUserGroupsWithMemberships = async (userId: string): Promise<Us
     };
 
     if (Array.isArray(rawData)) {
-      rawData.forEach((item: any) => {
-        // 1. Extraction sécurisée du Groupe
-        // (S'adapte si le backend renvoie le groupe dans une sous-clé 'group' ou fusionné)
-        const group: Group = item.group || {
-          id: item.groupId || item.id,
-          name: item.name,
-          slug: item.slug,
-          description: item.description,
-          avatar: item.avatar,
-          privacy: item.privacy,
-          // ... autres props du groupe
-        };
+      rawData.forEach((item) => {
+        // 1. Validation de la structure reçue
+        if (!item.group || !item.membership) {
+          console.warn("⚠️ [API] Structure invalide reçue dans fetchUserGroupsWithMemberships", item);
+          return;
+        }
 
-        // 2. Extraction du Membership (Infos de liaison)
-        const membership: GroupMembership = {
-          type: item.type || 'member', // 'creator', 'member'
-          role: item.role || 'member', // 'admin', 'moderator', 'member'
-          status: item.status || 'active', // 'active', 'pending'
-          joinedAt: item.joinedAt || new Date().toISOString()
-        };
+        // 2. Utilisation stricte des transformateurs existants
+        // Cela garantit que les IDs, les Dates et les statuts sont gérés exactement comme ailleurs
+        const group = transformGroup(item.group);
+        const membership = transformMembership(item.membership);
 
-        // 3. Tri selon le statut
-        if (membership.status === 'pending') {
-          // Pour les pending, on renvoie souvent juste le groupe, 
-          // mais on pourrait aussi renvoyer l'objet membership si nécessaire
+        // 3. Tri propre basé sur l'objet Group transformé
+        // Si le groupe n'est pas actif (status != 'active' dans la DB), on le met en attente
+        if (!group.isActive) {
           result.pendingGroups.push(group);
         } else {
-          // Adhésions actives
+          // Sinon, on ajoute la paire Groupe + Adhésion
           result.groupsWithMemberships.push({
             group,
             membership
@@ -91,11 +86,12 @@ export const fetchUserGroupsWithMemberships = async (userId: string): Promise<Us
       });
     }
 
+    console.log(`📦 [API groupService] Chargé pour ${userId}: ${result.groupsWithMemberships.length} actifs, ${result.pendingGroups.length} pending`);
     return result;
 
   } catch (error) {
     console.error("❌ [API] Erreur fetchUserGroupsWithMemberships:", error);
-    // En cas d'erreur, on retourne des tableaux vides pour ne pas casser l'UI
+    // Retourne un objet vide propre pour éviter de casser l'UI
     return { groupsWithMemberships: [], pendingGroups: [] };
   }
 };
