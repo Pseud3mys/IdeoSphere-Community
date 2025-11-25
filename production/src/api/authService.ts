@@ -49,6 +49,35 @@ export const initAuth = async (): Promise<boolean> => {
 };
 
 /**
+ * Crée un compte invité (non authentifié) via l'API.
+ * Utilisé par createTemporaryGuest dans userActions.ts
+ */
+export async function createUnfinalizedAccountOnApi(guestData?: { name?: string; email?: string; address?: string }): Promise<User> {
+  console.log('👤 [AUTH] Création compte invité...', guestData);
+  
+  // Générer des données par défaut si absentes pour satisfaire le backend qui veut name/email
+  const timestamp = new Date().getTime();
+  const name = guestData?.name || `Invité_${timestamp.toString().slice(-4)}`;
+  const email = guestData?.email || `guest_${timestamp}@temp.local`;
+
+  try {
+    const response = await apiClient.post<RawUser>('/users', {
+      name,
+      email,
+      address: guestData?.address || '',
+      isRegistered: false, // Marqueur important pour le backend
+      bio: 'Compte invité',
+      createdAt: new Date().toISOString()
+    });
+
+    return transformUser(response.data);
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur création invité:', error);
+    throw error;
+  }
+}
+
+/**
  * Connexion via SSO
  * Ajout CRUCIAL : redirectUri explicite
  */
@@ -121,6 +150,7 @@ export async function syncUserSession(): Promise<User | null> {
     
     return {
       ...dbUser, 
+      name: keycloakProfile.name, // On met à jour le nom depuis Keycloak
       isRegistered: true, // On force à true car maintenant il est authentifié
       keycloakId: keycloakProfile.id // On s'assure que l'ID technique est là
     };
