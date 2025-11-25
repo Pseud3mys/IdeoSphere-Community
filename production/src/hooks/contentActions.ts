@@ -539,7 +539,7 @@ export function createContentActions(
           if (replyIndex === -1) return {};
           
           const reply = post.replies[replyIndex];
-          const isLiked = reply.likes?.includes(currentUser.id);
+          const isLiked = reply.upvotes?.includes(currentUser.id);
           
           // Appeler l'API de manière asynchrone
           togglePostReplyLikeOnApi(postId, replyId, currentUser.id).then(success => {
@@ -551,15 +551,15 @@ export function createContentActions(
           });
           
           // Mettre à jour localement
-          const newLikes = isLiked
-            ? reply.likes.filter(id => id !== currentUser.id)
-            : [...reply.likes, currentUser.id];
+          const newUpvotes = isLiked
+            ? reply.upvotes.filter(id => id !== currentUser.id)
+            : [...reply.upvotes, currentUser.id];
           
           const updatedReplies = [...post.replies];
           updatedReplies[replyIndex] = {
             ...reply,
-            likes: newLikes,
-            likeCount: newLikes.length
+            upvotes: newUpvotes,
+            likeCount: newUpvotes.length
           };
           
           const updatedPost = {
