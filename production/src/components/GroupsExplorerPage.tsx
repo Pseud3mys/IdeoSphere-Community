@@ -94,12 +94,6 @@ export function GroupsExplorerPage() {
   // ✅ Appeler le sélecteur directement - il lit toujours la dernière valeur du store
   const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
   
-  console.log('🔍 [GroupsExplorerPage] Render:', {
-    pendingCount: myPendingGroups.length,
-    storeHasPending: Object.keys(store.pendingGroupCreations).length,
-    currentUserId: currentUser?.id
-  });
-  
   // Filtrer les pending selon la recherche
   const filteredPendingGroups = searchQuery.trim()
     ? myPendingGroups.filter((pg) =>

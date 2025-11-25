@@ -39,7 +39,7 @@ export function useGroupActions() {
    */
   const loadGroupDetails = async (groupId: string) => {
     try {
-      const { group, members } = await groupService.fetchGroupById(groupId);
+      const { group, members, memberships } = await groupService.fetchGroupById(groupId);
       
       if (!group) {
         console.warn(`⚠️ [useGroupActions.loadGroupDetails] Groupe ${groupId} introuvable`);
@@ -52,7 +52,10 @@ export function useGroupActions() {
       // Ajouter les membres au store
       members.forEach(user => actions.addUser(user));
       
-      console.log(`✅ [useGroupActions.loadGroupDetails] Groupe ${groupId} et ${members.length} membres chargés`);
+      // ✅ Ajouter les memberships au store
+      memberships.forEach(membership => actions.addGroupMembership(membership));
+      
+      console.log(`✅ [useGroupActions.loadGroupDetails] Groupe ${groupId} avec ${members.length} membres et ${memberships.length} memberships chargés`);
     } catch (error) {
       console.error(`❌ [useGroupActions.loadGroupDetails] Erreur pour ${groupId}:`, error);
       throw error;

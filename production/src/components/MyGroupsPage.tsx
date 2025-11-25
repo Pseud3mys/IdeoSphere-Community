@@ -54,7 +54,16 @@ export function MyGroupsPage() {
   // ✅ Appeler les sélecteurs directement - ils lisent toujours la dernière valeur du store
   const myActiveGroups = currentUser ? getUserGroups(currentUser.id) : [];
   const myPendingGroups = currentUser ? getUserPendingGroupCreations(currentUser.id) : [];
-  
+
+  // Organiser les groupes par type
+  const groupsByType = myActiveGroups.reduce((acc, group) => {
+    if (group.type) {
+      acc[group.type] = acc[group.type] || [];
+      acc[group.type].push(group);
+    }
+    return acc;
+  }, {} as Record<string, Group[]>);
+
   console.log('🔍 [MyGroupsPage] Render:', {
     pendingCount: myPendingGroups.length,
     activeCount: myActiveGroups.length,

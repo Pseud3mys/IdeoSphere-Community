@@ -62,13 +62,10 @@ export function IdeaDetailPage({
   
   // ✅ Appeler le sélecteur directement - il lit toujours la dernière valeur du store
   const discussions = getAllDiscussionTopics();
-  
-  console.log('🔍 [IdeaDetailPage] Render:', {
-    ideaId: idea.id,
-    discussionIds: latestIdea.discussionIds,
-    allDiscussionsCount: discussions.length,
-    storeHasDiscussions: Object.keys(store.discussionTopics).length
-  });
+
+  const ideaDiscussions = latestIdea.discussionIds
+    .map(id => discussions.find(d => d.id === id))
+    .filter((d): d is NonNullable<typeof d> => d !== undefined);
   
   // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 
@@ -76,9 +73,6 @@ export function IdeaDetailPage({
       .map(id => getUserById(id))
       .filter(Boolean) as User[]
   , [latestIdea.creatorIds, getUserById]);
-
-  // ✅ Utiliser unknownUser comme fallback pour les invités
-  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   const [activeTab, setActiveTab] = useState('description');
   
@@ -129,23 +123,18 @@ export function IdeaDetailPage({
     return latestIdea.supporters?.length || 0;
   }, [latestIdea.supporters]);
   
-  // Récupérer les discussions liées à cette idée depuis le store
-  const discussionTopics = discussions.filter(discussion => 
-    latestIdea.discussionIds?.includes(discussion.id)
-  );
-  
   // Compter les versions (idées basées sur cette idée, pas les sources)
   const versionCount = allIdeas.filter(otherIdea => 
     otherIdea.sourceIdeas?.includes(latestIdea.id) && otherIdea.id !== latestIdea.id
   ).length;
 
   // Séparer les questions résolues des discussions actives
-  const resolvedQuestions = discussionTopics.filter(discussion => 
+  const resolvedQuestions = ideaDiscussions.filter(discussion => 
     discussion.type === 'question' && 
     discussion.posts?.some(post => post.isAnswer === true)
   );
   
-  const activeDiscussions = discussionTopics?.filter(topic => {
+  const activeDiscussions = ideaDiscussions?.filter(topic => {
     if (topic.type === 'question') {
       // Vérifier si cette question a une réponse résolue
       const hasResolvedAnswer = topic.posts?.some(post => post.isAnswer === true);
@@ -456,7 +445,7 @@ export function IdeaDetailPage({
           <IdeaDiscussionsTab
             idea={latestIdea}
             currentUser={currentUser}
-            discussions={discussionTopics}
+            discussions={ideaDiscussions}
             isSupported={isSupported}
             onSwitchToVersions={() => setActiveTab('versions')}
           />
