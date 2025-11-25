@@ -6,6 +6,14 @@ import { unknownUser } from '../data/users';
  * Selectors simples pour extraire des données du store
  */
 
+// Helper function to safely get timestamp from Date or string
+const getTimestamp = (date: Date | string): number => {
+  if (date instanceof Date) {
+    return date.getTime();
+  }
+  return new Date(date).getTime();
+};
+
 // System selectors
 export const isStoreInitialized = (store: SimpleEntityStore): boolean => {
   return store.isInitialized;
@@ -171,8 +179,8 @@ export const getFeedItems = (store: SimpleEntityStore): { posts: Post[]; ideas: 
       .filter(Boolean) as Post[];
     
     return {
-      posts: posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-      ideas: ideas.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      posts: posts.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt)),
+      ideas: ideas.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
     };
   }
   
@@ -181,8 +189,8 @@ export const getFeedItems = (store: SimpleEntityStore): { posts: Post[]; ideas: 
   const posts = getAllPosts(store);
   
   return {
-    posts: posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-    ideas: ideas.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    posts: posts.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt)),
+    ideas: ideas.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
   };
 };
 
@@ -196,7 +204,7 @@ export const getFeedItemsFlat = (store: SimpleEntityStore): (Idea & { type: 'ide
     ...ideas.map(idea => ({ ...idea, type: 'idea' as const }))
   ];
   
-  return combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return combined.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt));
 };
 
 // Home page selectors
@@ -211,7 +219,7 @@ export const getHomePageData = (store: SimpleEntityStore) => {
     ...posts.slice(0, 3).map(post => ({ ...post, type: 'post' as const })),
     ...ideas.slice(0, 3).map(idea => ({ ...idea, type: 'idea' as const }))
   ]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
     .slice(0, 5);
 
   // Calcul du total des soutiens (dynamique depuis le tableau supporters)
@@ -381,8 +389,8 @@ export const getGroupFeed = (store: SimpleEntityStore) => (groupId: string): { p
   const posts = getGroupPosts(store)(groupId);
   
   return {
-    posts: posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-    ideas: ideas.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    posts: posts.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt)),
+    ideas: ideas.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
   };
 };
 

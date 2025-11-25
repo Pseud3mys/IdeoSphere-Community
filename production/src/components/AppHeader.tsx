@@ -2,47 +2,72 @@ import { User } from '../types';
 import logoImage from '../assets/logo.png';
 import { AuthButtons } from './AuthButtons';
 import { clientConfig } from '../config/clientConfig';
+import { Button } from './ui/button';
 
 interface AppHeaderProps {
   currentUserData: User | null;
   onHomeClick: () => void;
   onProfileClick: () => void;
-  onHelpClick: () => void;
+  onHelpClick?: () => void;
   onLogin: (email: string, password: string) => Promise<boolean>;
   onSocialLogin: (provider: string) => Promise<boolean>;
+  onNavigateToHowItWorks?: () => void;
+  isWelcomePage?: boolean;
 }
 
-export function AppHeader({ currentUserData, onHomeClick, onProfileClick, onHelpClick, onLogin, onSocialLogin }: AppHeaderProps) {
+export function AppHeader({ 
+  currentUserData, 
+  onHomeClick, 
+  onProfileClick, 
+  onHelpClick, 
+  onLogin, 
+  onSocialLogin,
+  onNavigateToHowItWorks,
+  isWelcomePage = false
+}: AppHeaderProps) {
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className={`border-b ${isWelcomePage ? 'border-gray-100' : 'border-gray-200'} bg-white/80 backdrop-blur-sm sticky top-0 z-50`}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div 
-            className="cursor-pointer"
+            className="cursor-pointer min-w-0 flex-1"
             onClick={onHomeClick}
           >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
                 <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
               </div>
-              <div>
-                <h1 className="text-xl text-gray-900">{clientConfig.identity.appName}</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl text-gray-900 truncate">{clientConfig.identity.appName}</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">
                   {clientConfig.identity.appTagline}
                 </p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            {/* Bouton d'aide */}
-            <button
-              onClick={onHelpClick}
-              className="w-10 h-10 sm:w-8 sm:h-8 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center text-primary transition-colors text-sm"
-              title={clientConfig.navigation.helpButton.title}
-            >
-              {clientConfig.navigation.helpButton.icon}
-            </button>
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+            {/* Bouton "Comment ça marche" pour la page welcome */}
+            {isWelcomePage && onNavigateToHowItWorks && (
+              <Button 
+                variant="ghost" 
+                onClick={onNavigateToHowItWorks}
+                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4 whitespace-nowrap"
+              >
+                {clientConfig.navigation.howItWorksButton}
+              </Button>
+            )}
+            
+            {/* Bouton d'aide pour les pages internes */}
+            {!isWelcomePage && onHelpClick && (
+              <button
+                onClick={onHelpClick}
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center text-primary transition-colors text-sm sm:text-base"
+                title={clientConfig.navigation.helpButton.title}
+              >
+                {clientConfig.navigation.helpButton.icon}
+              </button>
+            )}
             
             {/* Composant réutilisable pour l'authentification */}
             <AuthButtons

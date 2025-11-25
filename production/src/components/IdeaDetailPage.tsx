@@ -234,8 +234,8 @@ export function IdeaDetailPage({
               open={isEditDialogOpenMobile}
               onOpenChange={setIsEditDialogOpenMobile}
               onIdeaUpdated={(updatedIdea) => {
-                actions.updateIdea(updatedIdea.id, updatedIdea);
-                toast.success('Projet modifié avec succès !');
+                // Utiliser addIdea pour une fusion intelligente des données
+                actions.addIdea(updatedIdea);
               }}
             >
               <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2 text-orange-600 hover:bg-orange-50 border-orange-200">
@@ -320,8 +320,8 @@ export function IdeaDetailPage({
                   open={isEditDialogOpenDesktop}
                   onOpenChange={setIsEditDialogOpenDesktop}
                   onIdeaUpdated={(updatedIdea) => {
-                    actions.updateIdea(updatedIdea.id, updatedIdea);
-                    toast.success('Projet modifié avec succès !');
+                    // Utiliser addIdea pour une fusion intelligente des données
+                    actions.addIdea(updatedIdea);
                   }}
                 >
                   <Button variant="outline" className="flex items-center space-x-2 text-orange-600 hover:bg-orange-50 border-orange-200">

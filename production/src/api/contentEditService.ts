@@ -1,44 +1,71 @@
 // src/api/contentEditService.ts
 import apiClient from './apiClient';
 import { Post, Idea } from '../types';
+import { transformPost, transformIdea } from './transformService';
 
 /**
  * Service API pour l'édition de contenu.
  * Gère les modifications de posts et d'idées via le backend.
- * Le backend applique strictement la règle des 5 minutes après création.
+ * Transforme les données brutes du backend en objets utilisables par le frontend.
  */
 
 /**
+ * Fonction utilitaire pour normaliser les erreurs d'édition.
+ */
+const handleEditError = (error: any, context: string) => {
+  console.error(`Erreur lors de la modification (${context}):`, error);
+
+  if (error.response) {
+    const { status, data } = error.response;
+    const backendMessage = (data?.message || '').toLowerCase();
+
+    // Gestion des erreurs 403 (Forbidden)
+    if (status === 403) {
+      if (backendMessage.includes('5 minutes') || backendMessage.includes('délai')) {
+        throw new Error("Le délai de 5 minutes pour modifier ce contenu est écoulé.");
+      }
+      if (backendMessage.includes('auteur') || backendMessage.includes('author')) {
+        throw new Error("Vous n'avez pas les droits nécessaires pour modifier ce contenu.");
+      }
+      throw new Error("Modification refusée par le serveur.");
+    }
+
+    if (status === 404) {
+      throw new Error("Le contenu est introuvable ou a été supprimé.");
+    }
+    
+    if (status === 400) {
+      throw new Error("Données invalides.");
+    }
+  }
+
+  throw new Error("Impossible de joindre le serveur ou erreur inconnue.");
+};
+
+/**
  * Édite un post existant.
- * @param postId - ID complet du post (ex: "posts/123") ou clé (ex: "123")
- * @param updates - Champs à modifier (content, tags, location)
  */
 export async function updatePost(
   postId: string,
   updates: Partial<Pick<Post, 'content' | 'tags' | 'location'>>
 ): Promise<Post | null> {
-  // Extraction de la clé si l'ID est au format ArangoDB (collection/key)
   const postKey = postId.includes('/') ? postId.split('/')[1] : postId;
 
   try {
-    // Note : L'authentification est gérée automatiquement par apiClient via le token interceptor
-    const response = await apiClient.put<Post>(`/posts/${postKey}`, updates);
-    return response.data;
-  } catch (error: any) {
-    console.error(`Erreur lors de la mise à jour du post ${postId}:`, error);
+    // On reçoit un objet brut (RawPost/RawContent) du backend
+    const response = await apiClient.put<any>(`/posts/${postKey}`, updates);
     
-    // Si l'erreur vient de la restriction des 5 minutes (403 Forbidden)
-    if (error.response?.status === 403) {
-      throw new Error("la modification a été interdite par le serveur.");
-    }
-    throw error;
+    // On le transforme en objet Post propre
+    // Note : on passe une Map vide pour les users car l'update ne renvoie pas les profils
+    // (ce n'est pas bloquant car transformPost utilise raw.creators[0] pour l'authorId)
+    return transformPost(response.data, new Map());
+  } catch (error: any) {
+    return handleEditError(error, `Post ${postId}`);
   }
 }
 
 /**
  * Édite une idée existante.
- * @param ideaId - ID complet de l'idée ou clé
- * @param updates - Champs à modifier (title, summary, description, tags, location)
  */
 export async function updateIdea(
   ideaId: string,
@@ -47,14 +74,12 @@ export async function updateIdea(
   const ideaKey = ideaId.includes('/') ? ideaId.split('/')[1] : ideaId;
 
   try {
-    const response = await apiClient.put<Idea>(`/ideas/${ideaKey}`, updates);
-    return response.data;
-  } catch (error: any) {
-    console.error(`Erreur lors de la mise à jour de l'idée ${ideaId}:`, error);
+    // On reçoit un objet brut (RawIdea/RawContent)
+    const response = await apiClient.put<any>(`/ideas/${ideaKey}`, updates);
     
-    if (error.response?.status === 403) {
-      throw new Error("la modification a été interdite par le serveur.");
-    }
-    throw error;
+    // On le transforme en objet Idea propre
+    return transformIdea(response.data);
+  } catch (error: any) {
+    return handleEditError(error, `Idea ${ideaId}`);
   }
 }

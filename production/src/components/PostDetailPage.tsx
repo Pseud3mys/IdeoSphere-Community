@@ -131,14 +131,6 @@ export function PostDetailPage({
     ?.map(sourceId => posts.find(p => p.id === sourceId))
     .filter(Boolean) || [];
   
-  // Debug: Afficher les infos sur les posts sources
-  console.log(`📍 [PostDetailPage] Post ${latestPost.id}:`, {
-    sourcePostIds: latestPost.sourcePosts,
-    sourcePostsFound: sourcePosts.length,
-    allPostsCount: posts.length,
-    sourcePosts: sourcePosts.map(p => ({ id: p?.id, authorId: p?.authorId }))
-  });
-  
   // Trouver les idées dérivées de ce post (utiliser derivedIdeas du post)
   const derivedIdeas = latestPost.derivedIdeas
     ?.map(ideaId => ideas.find(i => i.id === ideaId))
@@ -280,8 +272,8 @@ export function PostDetailPage({
                 open={isEditDialogOpen}
                 onOpenChange={setIsEditDialogOpen}
                 onPostUpdated={(updatedPost) => {
-                  actions.updatePost(updatedPost.id, updatedPost);
-                  toast.success('Post modifié avec succès !');
+                  // Utiliser addPost pour une fusion intelligente des données
+                  actions.addPost(updatedPost);
                 }}
               >
                 <Button 

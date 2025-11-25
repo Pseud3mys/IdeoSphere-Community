@@ -110,14 +110,14 @@ export function MyContributionsPage({
 
     // Idées créées
     allIdeas.forEach(idea => {
-      if (idea.creatorIds.includes(currentUser.id)) {
+      if (idea.creatorIds?.includes(currentUser.id)) {
         content.push({ item: idea, type: 'idea', relation: 'created' });
       }
     });
 
     // Posts participés (commentés)
     allPosts.forEach(post => {
-      const hasCommented = post.replies.some(reply => reply.authorId === currentUser.id);
+      const hasCommented = post.replies?.some(reply => reply.authorId === currentUser.id) || false;
       const notCreated = post.authorId !== currentUser.id;
       if (hasCommented && notCreated) {
         content.push({ item: post, type: 'post', relation: 'participated' });
@@ -126,8 +126,8 @@ export function MyContributionsPage({
 
     // Idées participées (évaluées)
     allIdeas.forEach(idea => {
-      const hasRated = idea.ratings?.some(rating => rating.userId === currentUser.id);
-      const notCreated = !idea.creatorIds.includes(currentUser.id);
+      const hasRated = idea.ratings?.some(rating => rating.userId === currentUser.id) || false;
+      const notCreated = !idea.creatorIds?.includes(currentUser.id);
       if (hasRated && notCreated) {
         content.push({ item: idea, type: 'idea', relation: 'participated' });
       }
@@ -135,9 +135,9 @@ export function MyContributionsPage({
 
     // Posts supportés (sans participation)
     allPosts.forEach(post => {
-      const hasSupported = post.supporters.includes(currentUser.id);
+      const hasSupported = post.supporters?.includes(currentUser.id) || false;
       const notCreated = post.authorId !== currentUser.id;
-      const notParticipated = !post.replies.some(reply => reply.authorId === currentUser.id);
+      const notParticipated = !post.replies?.some(reply => reply.authorId === currentUser.id);
       if (hasSupported && notCreated && notParticipated) {
         content.push({ item: post, type: 'post', relation: 'supported' });
       }
@@ -145,8 +145,8 @@ export function MyContributionsPage({
 
     // Idées supportées (sans participation)
     allIdeas.forEach(idea => {
-      const hasSupported = idea.supporters.includes(currentUser.id);
-      const notCreated = !idea.creatorIds.includes(currentUser.id);
+      const hasSupported = idea.supporters?.includes(currentUser.id) || false;
+      const notCreated = !idea.creatorIds?.includes(currentUser.id);
       const notParticipated = !idea.ratings?.some(rating => rating.userId === currentUser.id);
       if (hasSupported && notCreated && notParticipated) {
         content.push({ item: idea, type: 'idea', relation: 'supported' });

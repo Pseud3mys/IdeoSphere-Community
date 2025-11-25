@@ -4,12 +4,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
+import { AppHeader } from './AppHeader';
 import { AuthButtons } from './AuthButtons';
 import { NewsletterSubscription } from './NewsletterSubscription';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { fetchHomePageStats, HomePageData } from '../api/feedService';
-import logoImage from '../assets/logo.png';
 import { 
   ArrowRight, 
   MapPin, 
@@ -223,47 +223,20 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header simple */}
-      <header className="border-b border-gray-100 bg-white">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-xl text-gray-900 truncate">{clientConfig.identity.appName}</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{clientConfig.identity.appTagline}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
-              <Button 
-                variant="ghost" 
-                onClick={onNavigateToHowItWorks}
-                className="text-muted-foreground hover:text-gray-900 text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap"
-              >
-                {clientConfig.navigation.howItWorksButton}
-              </Button>
-              
-              {/* Composant réutilisable pour l'authentification */}
-              <AuthButtons
-                currentUser={currentUser}
-                onLogin={onLogin}
-                onSocialLogin={onSocialLogin}
-                onProfileClick={handleProfileClick}
-                onEnterPlatform={onEnterPlatform}
-                onLoginSSO={onLoginSSO}
-                compact={true}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header unifié */}
+      <AppHeader
+        currentUserData={currentUser}
+        onHomeClick={() => navigation.goToHome()}
+        onProfileClick={handleProfileClick}
+        onLogin={onLogin}
+        onSocialLogin={onSocialLogin}
+        onNavigateToHowItWorks={onNavigateToHowItWorks}
+        isWelcomePage={true}
+      />
 
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Section principale */}
-        <div className="py-12">
+        <div className="py-8 sm:py-12">
           {/* ✅ Bandeau d'avertissement démonstration */}
           {clientConfig.features.showBetaBanner && (
             <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
