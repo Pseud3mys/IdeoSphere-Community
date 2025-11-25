@@ -39,6 +39,16 @@ export async function loadMockDataSet(): Promise<MockDataSet> {
   });
 }
 
+export function addDynamicIdea(idea: Idea): void {
+  console.log(`[api] addDynamicIdea - ID: ${idea.id}`);
+  // Simuler l'ajout de l'idée dans un cache dynamique
+}
+
+export function addDynamicPost(post: Post): void {
+  console.log(`[api] addDynamicPost - ID: ${post.id}`);
+  // Simuler l'ajout du post dans un cache dynamique
+}
+
 /**
  * Ne fait rien.
  */

@@ -1,90 +1,60 @@
+// src/api/contentEditService.ts
+import apiClient from './apiClient';
+import { Post, Idea } from '../types';
+
 /**
- * Service API pour l'édition de contenu
- * Gère les modifications de posts et d'idées dans les 5 minutes suivant leur publication
+ * Service API pour l'édition de contenu.
+ * Gère les modifications de posts et d'idées via le backend.
+ * Le backend applique strictement la règle des 5 minutes après création.
  */
 
-import { Post, Idea } from '../types';
-import { mockPosts } from '../data/posts';
-import { mockIdeas } from '../data/ideas';
-
 /**
- * Édite un post existant
- * @param postId - ID du post à éditer
- * @param updates - Nouvelles données du post
- * @returns Le post mis à jour ou null si non trouvé
+ * Édite un post existant.
+ * @param postId - ID complet du post (ex: "posts/123") ou clé (ex: "123")
+ * @param updates - Champs à modifier (content, tags, location)
  */
 export async function updatePost(
   postId: string,
   updates: Partial<Pick<Post, 'content' | 'tags' | 'location'>>
 ): Promise<Post | null> {
-  // Simuler un délai réseau
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  const post = mockPosts.find(p => p.id === postId);
-  
-  if (!post) {
-    console.error(`❌ Post ${postId} non trouvé`);
-    return null;
+  // Extraction de la clé si l'ID est au format ArangoDB (collection/key)
+  const postKey = postId.includes('/') ? postId.split('/')[1] : postId;
+
+  try {
+    // Note : L'authentification est gérée automatiquement par apiClient via le token interceptor
+    const response = await apiClient.put<Post>(`/posts/${postKey}`, updates);
+    return response.data;
+  } catch (error: any) {
+    console.error(`Erreur lors de la mise à jour du post ${postId}:`, error);
+    
+    // Si l'erreur vient de la restriction des 5 minutes (403 Forbidden)
+    if (error.response?.status === 403) {
+      throw new Error("la modification a été interdite par le serveur.");
+    }
+    throw error;
   }
-  
-  // Appliquer les mises à jour
-  const updatedPost: Post = {
-    ...post,
-    ...(updates.content !== undefined && { content: updates.content }),
-    ...(updates.tags !== undefined && { tags: updates.tags }),
-    ...(updates.location !== undefined && { location: updates.location }),
-    // Ajouter un timestamp de dernière modification
-    updatedAt: new Date()
-  };
-  
-  // Mettre à jour dans les données mockées
-  const index = mockPosts.findIndex(p => p.id === postId);
-  if (index !== -1) {
-    mockPosts[index] = updatedPost;
-  }
-  
-  console.log(`✅ Post ${postId} mis à jour avec succès`);
-  return updatedPost;
 }
 
 /**
- * Édite une idée existante
- * @param ideaId - ID de l'idée à éditer
- * @param updates - Nouvelles données de l'idée
- * @returns L'idée mise à jour ou null si non trouvée
+ * Édite une idée existante.
+ * @param ideaId - ID complet de l'idée ou clé
+ * @param updates - Champs à modifier (title, summary, description, tags, location)
  */
 export async function updateIdea(
   ideaId: string,
   updates: Partial<Pick<Idea, 'title' | 'summary' | 'description' | 'tags' | 'location'>>
 ): Promise<Idea | null> {
-  // Simuler un délai réseau
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  const idea = mockIdeas.find(i => i.id === ideaId);
-  
-  if (!idea) {
-    console.error(`❌ Idée ${ideaId} non trouvée`);
-    return null;
+  const ideaKey = ideaId.includes('/') ? ideaId.split('/')[1] : ideaId;
+
+  try {
+    const response = await apiClient.put<Idea>(`/ideas/${ideaKey}`, updates);
+    return response.data;
+  } catch (error: any) {
+    console.error(`Erreur lors de la mise à jour de l'idée ${ideaId}:`, error);
+    
+    if (error.response?.status === 403) {
+      throw new Error("la modification a été interdite par le serveur.");
+    }
+    throw error;
   }
-  
-  // Appliquer les mises à jour
-  const updatedIdea: Idea = {
-    ...idea,
-    ...(updates.title !== undefined && { title: updates.title }),
-    ...(updates.summary !== undefined && { summary: updates.summary }),
-    ...(updates.description !== undefined && { description: updates.description }),
-    ...(updates.tags !== undefined && { tags: updates.tags }),
-    ...(updates.location !== undefined && { location: updates.location }),
-    // Ajouter un timestamp de dernière modification
-    updatedAt: new Date()
-  };
-  
-  // Mettre à jour dans les données mockées
-  const index = mockIdeas.findIndex(i => i.id === ideaId);
-  if (index !== -1) {
-    mockIdeas[index] = updatedIdea;
-  }
-  
-  console.log(`✅ Idée ${ideaId} mise à jour avec succès`);
-  return updatedIdea;
 }
