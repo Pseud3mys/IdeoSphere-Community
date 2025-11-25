@@ -1,11 +1,10 @@
-// api/keycloak.ts
-
 import Keycloak from 'keycloak-js';
 
+// On récupère les variables d'env, avec des valeurs par défaut pour le dév local
 const keycloakConfig = {
-  url: 'http://localhost:8080',
-  realm: 'ideosphere',
-  clientId: 'ideosphere-front'
+  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
+  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'ideosphere',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'ideosphere-front'
 };
 
 class KeycloakService {
