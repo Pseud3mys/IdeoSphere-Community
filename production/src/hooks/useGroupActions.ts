@@ -137,8 +137,9 @@ export function useGroupActions() {
   };
 
   /**
-   * Charge les memberships de l'utilisateur courant
-   * NOTE TEMPORAIRE: Protection désactivée, on vérifie seulement isRegistered
+   * Charge les memberships de l'utilisateur
+   * ⚠️ DEPRECATED: Utiliser loadMyGroups à la place
+   * Cette fonction charge maintenant groupes + memberships via fetchMyGroups
    */
   const loadMyMemberships = async () => {
     if (!currentUser || !currentUser.isRegistered) {
@@ -147,12 +148,15 @@ export function useGroupActions() {
     }
 
     try {
-      const memberships = await groupService.fetchUserGroupMemberships(currentUser.id);
+      const { groupsWithMemberships } = await groupService.fetchMyGroups(currentUser.id);
       
-      // Ajouter les memberships au store
-      memberships.forEach(membership => actions.addGroupMembership(membership));
+      // Ajouter les groupes et memberships au store
+      groupsWithMemberships.forEach(({ group, membership }) => {
+        actions.addGroup(group);
+        actions.addGroupMembership(membership);
+      });
       
-      console.log(`✅ [useGroupActions.loadMyMemberships] ${memberships.length} memberships chargés`);
+      console.log(`✅ [useGroupActions.loadMyMemberships] ${groupsWithMemberships.length} groupes et memberships chargés`);
     } catch (error) {
       console.error('❌ [useGroupActions.loadMyMemberships] Erreur:', error);
       throw error;
@@ -235,17 +239,20 @@ export function useGroupActions() {
     }
     
     try {
-      const { activeGroups, pendingGroups } = await groupService.fetchMyGroups(currentUser.id);
+      const { groupsWithMemberships, pendingGroups } = await groupService.fetchMyGroups(currentUser.id);
       
-      // Ajouter les groupes actifs au store
-      activeGroups.forEach(group => actions.addGroup(group));
+      // Ajouter les groupes actifs et memberships au store
+      groupsWithMemberships.forEach(({ group, membership }) => {
+        actions.addGroup(group);
+        actions.addGroupMembership(membership);
+      });
       
       // Ajouter les groupes pending au store
       pendingGroups.forEach(pg => actions.addPendingGroupCreation(pg));
       
-      console.log(`✅ [useGroupActions.loadMyGroups] ${activeGroups.length} actifs, ${pendingGroups.length} pending`);
+      console.log(`✅ [useGroupActions.loadMyGroups] ${groupsWithMemberships.length} actifs, ${pendingGroups.length} pending`);
       
-      return { activeGroups, pendingGroups };
+      return { activeGroups: groupsWithMemberships.map(({ group }) => group), pendingGroups };
     } catch (error) {
       console.error('❌ [useGroupActions.loadMyGroups] Erreur:', error);
       throw error;

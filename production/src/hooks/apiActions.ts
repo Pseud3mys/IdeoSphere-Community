@@ -1012,15 +1012,15 @@ export function createApiActions(
     },
     
     /**
-     * ✅ NOUVELLE: Charge les groupes de l'utilisateur avec leurs memberships
+     * Charge les groupes et memberships de l'utilisateur
      * À appeler après l'authentification
      */
     loadUserGroups: async (userId: string) => {
       try {
         console.log(`🔄 [apiActions] Chargement des groupes pour l'utilisateur ${userId}...`);
         
-        const { fetchUserGroupsWithMemberships } = await import('../api/groupService');
-        const { groupsWithMemberships, pendingGroups } = await fetchUserGroupsWithMemberships(userId);
+        const { fetchMyGroups } = await import('../api/groupService');
+        const { groupsWithMemberships, pendingGroups } = await fetchMyGroups(userId);
         
         console.log(`✅ [apiActions] Groupes chargés:`, {
           actifs: groupsWithMemberships.length,
