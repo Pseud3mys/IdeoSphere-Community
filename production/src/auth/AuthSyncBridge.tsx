@@ -5,7 +5,7 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
 export function AuthSyncBridge() {
   const { isAuthenticated, user, isLoading } = useAuth();
-  const { actions, store, getCurrentUser } = useEntityStoreSimple();
+  const { actions, apiActions, store, getCurrentUser } = useEntityStoreSimple();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
@@ -27,6 +27,16 @@ export function AuthSyncBridge() {
         actions.setCurrentUserId(user.id);
         
         console.log('✅ [AuthSync] Utilisateur synchronisé:', user.id);
+        
+        // ✅ Charger les groupes de l'utilisateur
+        apiActions.loadUserGroups(user.id).then(result => {
+          if (result) {
+            console.log(`✅ [AuthSync] Groupes chargés pour ${user.name}:`, {
+              actifs: result.groupsWithMemberships.length,
+              pending: result.pendingGroups.length
+            });
+          }
+        });
       }
     } else if (!isLoading && !isAuthenticated) {
       // Utilisateur déconnecté - MAIS ne pas clear si c'est un invité
@@ -42,7 +52,7 @@ export function AuthSyncBridge() {
         }
       }
     }
-  }, [isAuthenticated, user, isLoading, actions, store.currentUserId, store.users, getCurrentUser]);
+  }, [isAuthenticated, user, isLoading, actions, apiActions, store.currentUserId, store.users, getCurrentUser]);
 
   return null;
 }

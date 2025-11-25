@@ -84,8 +84,8 @@ export const betaConfig: ClientConfig = {
     
     // Section Hero (titre principal)
     hero: {
-      title: 'Co-construisons ensemble notre programme politique',
-      description: 'Éducation, environnement, mobilité, culture, social, économie locale, démocratie participative... Que vous soyez membre actif ou sympathisant, votre voix compte. Partagez vos propositions, débattez et participez à l\'élaboration de notre programme collectif.',
+      title: 'Partagez, explorez ou discutez d\'idées locales',
+      description: 'Éducation, environnement, mobilité, culture, social, économie locale, démocratie participative... Partagez vos propositions, débattez et participez à l\'élaboration de vos projets.',
       
       // Thématiques suggérées
       themes: [

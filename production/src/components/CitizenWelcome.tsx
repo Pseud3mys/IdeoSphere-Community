@@ -225,23 +225,23 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     <div className="min-h-screen bg-white">
       {/* Header simple */}
       <header className="border-b border-gray-100 bg-white">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
                 <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
               </div>
-              <div>
-                <h1 className="text-xl text-gray-900">{clientConfig.identity.appName}</h1>
-                <p className="text-sm text-muted-foreground">{clientConfig.identity.appTagline}</p>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-xl text-gray-900 truncate">{clientConfig.identity.appName}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{clientConfig.identity.appTagline}</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
               <Button 
                 variant="ghost" 
                 onClick={onNavigateToHowItWorks}
-                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4"
+                className="text-muted-foreground hover:text-gray-900 text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap"
               >
                 {clientConfig.navigation.howItWorksButton}
               </Button>
@@ -254,7 +254,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                 onProfileClick={handleProfileClick}
                 onEnterPlatform={onEnterPlatform}
                 onLoginSSO={onLoginSSO}
-                compact={false}
+                compact={true}
               />
             </div>
           </div>

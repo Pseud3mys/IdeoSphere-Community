@@ -53,9 +53,10 @@ export function createApiActions(
           ideas: mockData.ideas,
           posts: mockData.posts,
           discussionTopics: mockData.discussions,
-          groups: mockData.groups || [],
-          groupMemberships: mockData.groupMemberships || [],
-          pendingGroups: mockData.pendingGroups || [],
+          // ⚠️ Les groupes seront chargés via l'API après l'authentification
+          groups: [],
+          groupMemberships: [],
+          pendingGroups: [],
           currentUserId: 'anonymous' // ✅ Utilisateur anonyme par défaut pour la navigation
         });
         
@@ -1007,6 +1008,97 @@ export function createApiActions(
         console.error('❌ [hook/apiActions] publishPost:', error);
         toast.error('Une erreur est survenue lors de la publication');
         return null;
+      }
+    },
+    
+    /**
+     * ✅ NOUVELLE: Charge les groupes de l'utilisateur avec leurs memberships
+     * À appeler après l'authentification
+     */
+    loadUserGroups: async (userId: string) => {
+      try {
+        console.log(`🔄 [apiActions] Chargement des groupes pour l'utilisateur ${userId}...`);
+        
+        const { fetchUserGroupsWithMemberships } = await import('../api/groupService');
+        const { groupsWithMemberships, pendingGroups } = await fetchUserGroupsWithMemberships(userId);
+        
+        console.log(`✅ [apiActions] Groupes chargés:`, {
+          actifs: groupsWithMemberships.length,
+          pending: pendingGroups.length
+        });
+        
+        // Ajouter les groupes et memberships au store
+        storeUpdater(prevStore => {
+          const newGroups = { ...prevStore.groups };
+          const newMemberships = { ...prevStore.groupMemberships };
+          const newPendingGroups = { ...prevStore.pendingGroups };
+          
+          // Ajouter les groupes actifs
+          groupsWithMemberships.forEach(({ group, membership }) => {
+            newGroups[group.id] = group;
+            const membershipId = `${membership.userId}-${membership.groupId}`;
+            newMemberships[membershipId] = membership;
+          });
+          
+          // Ajouter les groupes pending
+          pendingGroups.forEach(pg => {
+            newPendingGroups[pg.id] = pg;
+          });
+          
+          return {
+            groups: newGroups,
+            groupMemberships: newMemberships,
+            pendingGroups: newPendingGroups
+          };
+        });
+        
+        console.log(`✅ [apiActions] ${groupsWithMemberships.length} groupes et ${pendingGroups.length} groupes pending ajoutés au store`);
+        
+        return { groupsWithMemberships, pendingGroups };
+      } catch (error) {
+        console.error('❌ [apiActions] Erreur lors du chargement des groupes:', error);
+        return null;
+      }
+    },
+    
+    /**
+     * ✅ NOUVELLE: Charge tous les groupes (pour l'onglet groupes)
+     * Lazy loading - à appeler seulement quand nécessaire
+     */
+    loadAllGroups: async () => {
+      try {
+        console.log(`🔄 [apiActions] Chargement de tous les groupes...`);
+        
+        const { fetchAllGroups } = await import('../api/groupService');
+        const { groups: allGroups, users: animators } = await fetchAllGroups();
+        
+        console.log(`✅ [apiActions] ${allGroups.length} groupes et ${animators.length} animateurs chargés`);
+        
+        // Ajouter au store
+        storeUpdater(prevStore => {
+          const newGroups = { ...prevStore.groups };
+          const newUsers = { ...prevStore.users };
+          
+          allGroups.forEach(group => {
+            newGroups[group.id] = group;
+          });
+          
+          animators.forEach(user => {
+            newUsers[user.id] = user;
+          });
+          
+          return {
+            groups: newGroups,
+            users: newUsers
+          };
+        });
+        
+        console.log(`✅ [apiActions] Tous les groupes ajoutés au store`);
+        
+        return allGroups;
+      } catch (error) {
+        console.error('❌ [apiActions] Erreur lors du chargement de tous les groupes:', error);
+        return [];
       }
     }
   };

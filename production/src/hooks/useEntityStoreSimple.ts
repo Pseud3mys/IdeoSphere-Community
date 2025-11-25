@@ -112,6 +112,7 @@ export function useEntityStoreSimple() {
     getActiveGroups: () => selectors.getActiveGroups(store),
     getGroupsByType: (type: string) => selectors.getGroupsByType(store)(type as any),
     getUserGroups: (userId: string) => selectors.getUserGroups(store)(userId),
+    getUserGroupsWithMemberships: (userId: string) => selectors.getUserGroupsWithMemberships(store)(userId),
     getGroupMembership: (userId: string, groupId: string) => selectors.getGroupMembership(store)(userId, groupId),
     isUserMemberOfGroup: (userId: string, groupId: string) => selectors.isUserMemberOfGroup(store)(userId, groupId),
     isUserAnimatorOfGroup: (userId: string, groupId: string) => selectors.isUserAnimatorOfGroup(store)(userId, groupId),
@@ -369,6 +370,9 @@ export function useEntityStoreSimple() {
     
     // Actions
     actions: simpleActions,
+    
+    // API Actions (exposé directement pour un accès plus clair)
+    apiActions,
     
     // Raw actions (for advanced use)
     rawActions: actions,

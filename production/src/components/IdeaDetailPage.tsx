@@ -52,11 +52,13 @@ export function IdeaDetailPage({
 
   const currentUser = getCurrentUser();
   const allIdeas = getAllIdeas();
-  const discussions = getAllDiscussionTopics();
   
   // Récupérer l'idée la plus récente depuis le store
   const latestIdea = getIdeaById(idea.id) || idea;
-
+  
+  // ✅ Récupérer les discussions directement (pas de useMemo car getAllDiscussionTopics() renvoie déjà les données à jour du store)
+  const discussions = getAllDiscussionTopics();
+  
   // ✅ Résoudre les créateurs depuis les IDs
   const resolvedCreators = useMemo(() => 
     (latestIdea.creatorIds || [])

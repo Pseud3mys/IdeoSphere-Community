@@ -594,8 +594,8 @@ export function createContentActions(
           
           const hasUpvoted = topic.upvotes.includes(currentUser.id);
           
-          // Appeler l'API de manière asynchrone
-          upvoteDiscussionTopicOnApi(topicId, currentUser.id).then(success => {
+          // ✅ Appeler l'API avec l'état actuel du vote
+          upvoteDiscussionTopicOnApi(topicId, currentUser.id, hasUpvoted).then(success => {
             if (!success) {
               console.error('❌ Échec de l\'API pour l\'upvote du topic');
             }

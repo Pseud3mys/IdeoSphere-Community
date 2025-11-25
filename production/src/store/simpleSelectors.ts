@@ -251,6 +251,23 @@ export const getUserGroups = (store: SimpleEntityStore) => (userId: string): Gro
     .filter(Boolean);
 };
 
+// ✅ NOUVELLE: Retourne les groupes ET les memberships de l'utilisateur
+export const getUserGroupsWithMemberships = (store: SimpleEntityStore) => (userId: string): Array<{
+  group: Group;
+  membership: GroupMembership;
+}> => {
+  const userMemberships = Object.values(store.groupMemberships)
+    .filter(membership => membership.userId === userId && membership.isActive);
+  
+  return userMemberships
+    .map(membership => {
+      const group = store.groups[membership.groupId];
+      if (!group) return null;
+      return { group, membership };
+    })
+    .filter(Boolean) as Array<{ group: Group; membership: GroupMembership }>;
+};
+
 export const getGroupMembership = (store: SimpleEntityStore) => (userId: string, groupId: string): GroupMembership | null => {
   const membershipId = `${userId}-${groupId}`;
   return store.groupMemberships[membershipId] || null;
