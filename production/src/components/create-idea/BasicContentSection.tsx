@@ -101,7 +101,7 @@ export function BasicContentSection({
               className="flex items-center space-x-2"
             >
               <Lightbulb className="w-4 h-4" />
-              <span>Développer en idée complète</span>
+              <span>Développer en projet complet</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

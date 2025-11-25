@@ -67,19 +67,6 @@ export async function rateIdeaOnApi(
 }
 
 /**
- * Enregistre un signalement de contenu inapproprié.
- * Corresponds à POST /feedback avec type='reports'
- */
-export async function reportContentOnApi(contentId: string, userId: string, reason: string): Promise<any> {
-  console.log(`🔄 [API] Signalement pour ${contentId} par ${userId} pour raison: ${reason}`);
-  try {
-    return await apiClient.post('/feedback', { userId, contentId, type: 'reports' });
-  } catch (error) {
-    console.error(`❌ Error reporting content ${contentId}:`, error);
-  }
-}
-
-/**
  * Ajoute une nouvelle réponse à un post.
  * Corresponds à POST /posts/{key}/comments
  */
@@ -245,20 +232,46 @@ export async function getIdeaRatingsOnApi(ideaId: string): Promise<Rating[] | nu
 }
 
 
+/**
+ * Ignore un contenu (crée une relation "ignores").
+ */
 export async function ignoreContentOnApi(contentType: 'idea' | 'post', contentId: string, userId: string): Promise<boolean> {
-  console.log(`LOG: ignoreContentOnApi a été appelé pour ${contentType} ${contentId} par ${userId}. Ce service nécessite un endpoint API dédié.`);
-  // Simulation d'une réussite
-  return Promise.resolve(true);
+  console.log(`🔄 [API] Ignore ${contentId} par ${userId}`);
+  try {
+    // On utilise la route générique /feedback avec le type 'ignores'
+    await apiClient.post('/feedback', { 
+        userId, 
+        contentId, 
+        type: 'ignores' 
+    });
+    return true;
+  } catch (error) {
+    console.error(`❌ Error ignoring content ${contentId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Enregistre un signalement (Correction : s'assurer que 'reason' est bien envoyé)
+ */
+export async function reportContentOnApi(contentId: string, userId: string, reason: string): Promise<any> {
+  console.log(`🔄 [API] Signalement pour ${contentId} : ${reason}`);
+  try {
+    // On ajoute le champ 'reason' dans le payload
+    return await apiClient.post('/feedback', { 
+        userId, 
+        contentId, 
+        type: 'reports',
+        reason: reason 
+    });
+  } catch (error) {
+    console.error(`❌ Error reporting content ${contentId}:`, error);
+  }
 }
 
 export async function shareContentOnApi(contentType: 'idea' | 'post', contentId: string, userId: string): Promise<string> {
   console.log(`LOG: shareContentOnApi a été appelé pour ${contentId}. Ce service ne nécessite pas d'API, il génère une URL côté client.`);
   return Promise.resolve(window.location.origin + `/${contentType}/${contentId}?ref=${userId}`);
-}
-
-export async function toggleUserFollowOnApi(targetUserId: string, currentUserId: string): Promise<boolean> {
-  console.log(`LOG: toggleUserFollowOnApi a été appelé par ${currentUserId} pour suivre/unfollow ${targetUserId}. Ce service nécessite un endpoint API dédié.`);
-  return Promise.resolve(true);
 }
 
 /**

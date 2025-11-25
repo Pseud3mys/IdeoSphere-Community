@@ -282,7 +282,9 @@ export function createContentActions(
         if (success) {
           console.log('✅ Idée ignorée:', ideaId);
           // Forcer la redirection immédiate vers discovery en nettoyant tout l'état
-          navigationActions.goToDiscovery();
+          if (navigate) {
+            navigate('/discovery');
+          }
         }
       } catch (error) {
         console.error('❌ Erreur lors de l\'ignore:', error);
@@ -300,7 +302,9 @@ export function createContentActions(
         if (success) {
           console.log('✅ Idée signalée:', ideaId);
           // Forcer la redirection immédiate vers discovery en nettoyant tout l'état
-          navigationActions.goToDiscovery();
+          if (navigate) {
+            navigate('/discovery');
+          }
         }
       } catch (error) {
         console.error('❌ Erreur lors du signalement:', error);
@@ -318,7 +322,9 @@ export function createContentActions(
         if (success) {
           console.log('✅ Post ignoré:', postId);
           // Forcer la redirection immédiate vers discovery en nettoyant tout l'état
-          navigationActions.goToDiscovery();
+          if (navigate) {
+            navigate('/discovery');
+          }
         }
       } catch (error) {
         console.error('❌ Erreur lors de l\'ignore:', error);
@@ -336,7 +342,9 @@ export function createContentActions(
         if (success) {
           console.log('✅ Post signalé:', postId);
           // Forcer la redirection immédiate vers discovery en nettoyant tout l'état
-          navigationActions.goToDiscovery();
+          if (navigate) {
+            navigate('/discovery');
+          }
         }
       } catch (error) {
         console.error('❌ Erreur lors du signalement:', error);

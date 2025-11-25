@@ -385,7 +385,7 @@ export function UserProfilePage({
               <div className="text-center py-8 text-muted-foreground">
                 <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Aucune activité récente</p>
-                <p className="text-sm">Commencez par créer une idée ou soutenir la communauté !</p>
+                <p className="text-sm">Commencez par créer un projet ou soutenir la communauté !</p>
               </div>
             )}
           </div>

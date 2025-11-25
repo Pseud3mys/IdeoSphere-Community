@@ -19,18 +19,67 @@ export const getCurrentUser = (store: SimpleEntityStore): User | null => {
 
 /**
  * ✅ Récupère un utilisateur par ID avec fallback automatique
+ * Essaie d'abord l'ID tel quel, puis avec le préfixe "users/" si nécessaire
  * @returns L'utilisateur trouvé, ou unknownUser si non trouvé (jamais null)
  */
 export const getUserById = (store: SimpleEntityStore) => (userId: string): User => {
-  return store.users[userId] || unknownUser;
+  // Vérifier si userId est défini
+  if (!userId) {
+    console.warn('[getUserById] userId est undefined ou vide');
+    return unknownUser;
+  }
+
+  // Essayer d'abord l'ID tel quel
+  if (store.users[userId]) {
+    return store.users[userId];
+  }
+  
+  // Essayer avec le préfixe "users/" si pas déjà présent
+  if (!userId.startsWith('users/')) {
+    const prefixedId = `users/${userId}`;
+    if (store.users[prefixedId]) {
+      return store.users[prefixedId];
+    }
+  }
+  
+  // Essayer sans le préfixe si présent
+  if (userId.startsWith('users/')) {
+    const cleanedId = userId.replace(/^users\//, '');
+    if (store.users[cleanedId]) {
+      return store.users[cleanedId];
+    }
+  }
+  
+  return unknownUser;
 };
 
 /**
  * ✅ Vérifie si un utilisateur existe réellement dans le store
+ * Essaie les deux formats (avec et sans préfixe "users/")
  * @returns true si l'utilisateur existe, false sinon
  */
 export const userExists = (store: SimpleEntityStore) => (userId: string): boolean => {
-  return userId in store.users;
+  if (userId in store.users) {
+    return true;
+  }
+  
+  // Essayer avec le préfixe
+  if (!userId.startsWith('users/')) {
+    const prefixedId = `users/${userId}`;
+    if (prefixedId in store.users) {
+      return true;
+    }
+  }
+  
+  // Essayer sans le préfixe
+  if (userId.startsWith('users/')) {
+    const cleanedId = userId.replace(/^users\//, '');
+    if (cleanedId in store.users) {
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 export const getAllUsers = (store: SimpleEntityStore): User[] => {

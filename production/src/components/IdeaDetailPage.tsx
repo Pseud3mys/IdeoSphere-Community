@@ -15,6 +15,8 @@ import { IdeaVersionsTab } from './IdeaVersionsTab';
 import { getValidAvatar } from '../api/avatarService';
 import { GroupBadgeList } from './group/GroupBadgeList';
 import { RecommendToGroupDialog } from './group/RecommendToGroupDialog';
+import { CreatorAvatar } from './CreatorAvatar';
+import { CreatorNames } from './CreatorNames';
 
 import { 
   ArrowLeft, 
@@ -25,9 +27,12 @@ import {
   FileText,
   Zap,
   Share,
-  Users
+  Users,
+  Edit
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { canEditIdea } from '../utils/contentEditUtils';
+import { EditIdeaDialog } from './EditIdeaDialog';
 
 interface IdeaDetailPageProps {
   idea: Idea;
@@ -75,6 +80,8 @@ export function IdeaDetailPage({
   , [latestIdea.creatorIds, getUserById]);
 
   const [activeTab, setActiveTab] = useState('description');
+  const [isEditDialogOpenMobile, setIsEditDialogOpenMobile] = useState(false);
+  const [isEditDialogOpenDesktop, setIsEditDialogOpenDesktop] = useState(false);
   
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
@@ -219,6 +226,24 @@ export function IdeaDetailPage({
               <span>Recommander dans un groupe</span>
             </Button>
           </RecommendToGroupDialog>
+          
+          {/* Bouton Éditer mobile - visible 5 minutes après création */}
+          {canEditIdea(latestIdea, currentUser) && (
+            <EditIdeaDialog 
+              idea={latestIdea}
+              open={isEditDialogOpenMobile}
+              onOpenChange={setIsEditDialogOpenMobile}
+              onIdeaUpdated={(updatedIdea) => {
+                actions.updateIdea(updatedIdea.id, updatedIdea);
+                toast.success('Projet modifié avec succès !');
+              }}
+            >
+              <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11 mt-2 text-orange-600 hover:bg-orange-50 border-orange-200">
+                <Edit className="w-4 h-4" />
+                <span>Modifier</span>
+              </Button>
+            </EditIdeaDialog>
+          )}
         </div>
 
         {/* Version desktop */}
@@ -287,6 +312,24 @@ export function IdeaDetailPage({
                   <span>Recommander</span>
                 </Button>
               </RecommendToGroupDialog>
+              
+              {/* Bouton Éditer desktop - visible 5 minutes après création */}
+              {canEditIdea(latestIdea, currentUser) && (
+                <EditIdeaDialog 
+                  idea={latestIdea}
+                  open={isEditDialogOpenDesktop}
+                  onOpenChange={setIsEditDialogOpenDesktop}
+                  onIdeaUpdated={(updatedIdea) => {
+                    actions.updateIdea(updatedIdea.id, updatedIdea);
+                    toast.success('Projet modifié avec succès !');
+                  }}
+                >
+                  <Button variant="outline" className="flex items-center space-x-2 text-orange-600 hover:bg-orange-50 border-orange-200">
+                    <Edit className="w-4 h-4" />
+                    <span>Modifier</span>
+                  </Button>
+                </EditIdeaDialog>
+              )}
             </div>
           </div>
         </div>
@@ -294,20 +337,10 @@ export function IdeaDetailPage({
         {/* Creator and co-creators - Version mobile */}
         <div className="block md:hidden mb-6">
           <div className="flex items-center space-x-3 mb-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
-              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
-            </Avatar>
+            <CreatorAvatar creatorIds={latestIdea.creatorIds} getUserById={getUserById} className="w-8 h-8" />
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {resolvedCreators.length === 0
-                  ? 'Créateur inconnu'
-                  : resolvedCreators.length === 1 
-                    ? resolvedCreators[0].name
-                    : resolvedCreators.length === 2
-                      ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
-                      : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
-                }
+                <CreatorNames creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
               </p>
               <p className="text-xs text-muted-foreground">
                 {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}
@@ -322,18 +355,10 @@ export function IdeaDetailPage({
         {/* Creator and co-creators - Version desktop */}
         <div className="hidden md:flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={getValidAvatar(resolvedCreators[0]?.name || '', resolvedCreators[0]?.avatar)} alt={resolvedCreators[0]?.name} />
-              <AvatarFallback>{resolvedCreators[0]?.name.slice(0, 2)}</AvatarFallback>
-            </Avatar>
+            <CreatorAvatar creatorIds={latestIdea.creatorIds} getUserById={getUserById} className="w-8 h-8" />
             <div>
               <p className="text-sm">
-                {resolvedCreators.length === 1 
-                  ? resolvedCreators[0].name
-                  : resolvedCreators.length === 2
-                    ? `${resolvedCreators[0].name} et ${resolvedCreators[1].name}`
-                    : `${resolvedCreators[0].name} et ${resolvedCreators.length - 1} autre${resolvedCreators.length > 2 ? 's' : ''}`
-                }
+                <CreatorNames creatorIds={latestIdea.creatorIds} getUserById={getUserById} />
               </p>
               <p className="text-xs text-muted-foreground">
                 {resolvedCreators.length === 1 ? 'Créateur' : 'Créateurs'}

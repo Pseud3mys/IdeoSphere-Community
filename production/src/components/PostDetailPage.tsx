@@ -19,7 +19,8 @@ import {
   Plus,
   ArrowUp,
   Reply,
-  Share
+  Share,
+  Edit
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { ShareDialog } from './ShareDialog';
@@ -27,6 +28,8 @@ import { getValidAvatar } from '../api/avatarService';
 import { GroupBadgeList } from './group/GroupBadgeList';
 import { RecommendToGroupDialog } from './group/RecommendToGroupDialog';
 import { Users } from 'lucide-react';
+import { canEditPost } from '../utils/contentEditUtils';
+import { EditPostDialog } from './EditPostDialog';
 
 interface PostDetailPageProps {
   post: Post;
@@ -90,6 +93,7 @@ export function PostDetailPage({
 
   const [newReply, setNewReply] = useState('');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const isSupporting = latestPost.supporters?.includes(effectiveUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
@@ -229,42 +233,66 @@ export function PostDetailPage({
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Header utilisateur */}
         <div className="p-4 border-b border-gray-100">
-          <div className="flex items-start space-x-3">
-            {postAuthor ? (
-              <>
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    {postAuthor.name.slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <UserLink user={postAuthor} className="font-semibold text-gray-900" />
-                    <span className="text-gray-500">•</span>
-                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3 flex-1">
+              {postAuthor ? (
+                <>
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      {postAuthor.name.slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <UserLink user={postAuthor} className="font-semibold text-gray-900" />
+                      <span className="text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
                   </div>
-                  <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <Avatar className="w-12 h-12">
-                  <AvatarFallback className="bg-gray-300 text-gray-600">
-                    ??
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-900">Utilisateur inconnu</span>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                </>
+              ) : (
+                <>
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback className="bg-gray-300 text-gray-600">
+                      ??
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold text-gray-900">Utilisateur inconnu</span>
+                      <span className="text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Chargement...</p>
                   </div>
-                  <p className="text-sm text-gray-500">Chargement...</p>
-                </div>
-              </>
+                </>
+              )}
+            </div>
+            
+            {/* Bouton Éditer - visible 5 minutes après création - dans l'en-tête */}
+            {canEditPost(latestPost, currentUser) && (
+              <EditPostDialog 
+                post={latestPost}
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                onPostUpdated={(updatedPost) => {
+                  actions.updatePost(updatedPost.id, updatedPost);
+                  toast.success('Post modifié avec succès !');
+                }}
+              >
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-orange-600 hover:bg-orange-50 border-orange-200 ml-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span className="text-sm">Modifier</span>
+                </Button>
+              </EditPostDialog>
             )}
           </div>
         </div>

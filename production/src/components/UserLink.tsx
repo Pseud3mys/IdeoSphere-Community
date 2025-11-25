@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { validateUser } from '../utils/userValidation';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { cleanId } from '../utils/idUtils';
 
 interface UserLinkProps {
   user?: User | string; // Peut être undefined, un User ou un ID (string)
@@ -29,9 +30,12 @@ export function UserLink({ user, userId, className = '', children }: UserLinkPro
     return <span className={className}>{children || 'Utilisateur inconnu'}</span>;
   }
 
+  // ✅ Nettoyer l'ID pour éviter les doublons de préfixe (users/users/123)
+  const cleanUserId = cleanId(resolvedUser.id);
+
   return (
     <Link
-      to={`/user/${resolvedUser.id}`}
+      to={`/user/${cleanUserId}`}
       className={`hover:text-primary transition-colors ${className}`}
       onClick={(e) => e.stopPropagation()}
     >

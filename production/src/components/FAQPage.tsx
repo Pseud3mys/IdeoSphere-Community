@@ -147,7 +147,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                     </p>
                     <ol className="list-decimal pl-5 space-y-1">
                       <li><strong>Pour un post :</strong> Cliquez sur "Créer un post" dans le feed principal</li>
-                      <li><strong>Pour un projet :</strong> Cliquez sur "Créer une idée" et choisissez "Projet détaillé"</li>
+                      <li><strong>Pour un projet :</strong> Cliquez sur "Créer un projet" et choisissez "Projet détaillé"</li>
                       <li>Rédigez votre contenu en étant clair et précis</li>
                       <li>Ajoutez des tags pertinents pour faciliter la découverte</li>
                       <li>Publiez et engagez la conversation avec la communauté</li>

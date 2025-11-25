@@ -92,6 +92,7 @@ export interface Post {
   content: string;
   authorId: string;
   createdAt: Date;
+  updatedAt?: Date; // Date de dernière modification (optionnel)
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];
   location?: string;
@@ -128,6 +129,7 @@ export interface Idea {
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   status: IdeaStatus;
   createdAt: Date;
+  updatedAt?: Date; // Date de dernière modification (optionnel)
   tags?: string[];
   location?: string;
   groupIds?: string[]; // Groupes auxquels appartient cette idée

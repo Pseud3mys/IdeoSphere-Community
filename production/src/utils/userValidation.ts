@@ -41,7 +41,13 @@ export function getFirstCreator(
     return null;
   }
 
-  const firstCreator = getUserById(creatorIds[0]);
+  const firstCreatorId = creatorIds[0];
+  if (!firstCreatorId) {
+    console.warn('[getFirstCreator] Premier creatorId est undefined ou vide');
+    return null;
+  }
+
+  const firstCreator = getUserById(firstCreatorId);
   return validateUser(firstCreator || null);
 }
 

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEntityStoreSimple } from './useEntityStoreSimple';
-import { cleanGroupId } from '../utils/idUtils';
+import { cleanGroupId, cleanId } from '../utils/idUtils';
 
 /**
  * Hook personnalisé pour la navigation avec React Router
@@ -68,7 +68,7 @@ export function useNavigationActions() {
         console.log(`✅ Idée ${ideaId} chargée avec succès`);
         
         // 5. Naviguer vers la page de détail avec React Router
-        // Utiliser le format unifié /content/:id avec l'ID préfixé
+        // Utiliser le format unifié /content/:id avec l'ID pr��fixé
         // Ajouter le préfixe 'ideas/' si ce n'est pas déjà présent
         const prefixedId = ideaId.startsWith('ideas/') ? ideaId : `ideas/${ideaId}`;
         navigate(`/content/${prefixedId}`);
@@ -117,7 +117,9 @@ export function useNavigationActions() {
         console.warn(`⚠️ Utilisateur ${userId} non trouvé dans le store`);
       }
       
-      navigate(`/user/${userId}`);
+      // ✅ Nettoyer l'ID pour éviter les doublons de préfixe (users/users/123)
+      const cleanUserId = cleanId(userId);
+      navigate(`/user/${cleanUserId}`);
     },
 
     /**

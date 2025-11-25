@@ -202,24 +202,24 @@ ${postIntro}
     
     // Vérifier si l'utilisateur peut créer des idées
     if (!actions.canCreateIdea()) {
-      toast.error('Vous devez créer un compte pour publier une idée');
+      toast.error('Vous devez créer un compte pour publier un projet');
       navigation.goToSignup();
       return;
     }
     
     // Validation avec messages d'erreur explicites
     if (!title.trim()) {
-      toast.error('Veuillez renseigner un titre pour votre idée');
+      toast.error('Veuillez renseigner un titre pour votre projet');
       return;
     }
     
     if (!summary.trim()) {
-      toast.error('Veuillez renseigner un résumé pour votre idée');
+      toast.error('Veuillez renseigner un résumé pour votre projet');
       return;
     }
     
     if (!description.trim()) {
-      toast.error('Veuillez renseigner une description détaillée pour votre idée');
+      toast.error('Veuillez renseigner une description détaillée pour votre projet');
       return;
     }
     
@@ -368,7 +368,7 @@ ${postIntro}
           )}
           <Button type="submit" className="flex items-center space-x-2">
             <Send className="w-4 h-4" />
-            <span>Publier l'idée</span>
+            <span>Publier le projet</span>
           </Button>
         </div>
       </form>

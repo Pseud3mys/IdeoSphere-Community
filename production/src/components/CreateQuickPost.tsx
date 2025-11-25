@@ -75,6 +75,10 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
     }
   };
 
+  const handleDevelopToIdea = () => {
+    onSwitchToIdea();
+  };
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -192,13 +196,13 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
             {/* Bouton d'expansion vers idée */}
             <div className="pt-2">
               <Button
-                type="button"
-                variant="outline"
-                onClick={onSwitchToIdea}
-                className="flex items-center space-x-2"
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                onClick={handleDevelopToIdea}
               >
                 <Lightbulb className="w-4 h-4" />
-                <span>Développer en idée complète</span>
+                <span>Développer en projet complet</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>

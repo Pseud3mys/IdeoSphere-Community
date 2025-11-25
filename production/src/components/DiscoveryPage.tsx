@@ -534,7 +534,7 @@ export function DiscoveryPage({
                 onClick={onCreateContent}
               >
                 <Lightbulb className="w-4 h-4 mr-2" />
-                Créer une idée
+                Créer un projet
               </Button>
             </div>
           </div>
