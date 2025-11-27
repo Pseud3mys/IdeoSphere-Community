@@ -410,10 +410,10 @@ Quels bénéfices concrets pour notre commune et ses habitants ?`,
     // Kumu.io - Visualisation de réseaux
     kumu: {
       // URL de l'iframe d'embed Kumu (si disponible)
-      embedUrl: 'https://embed.kumu.io/1cbf20d1300c3da2e0b1462b76a3f10b',
+      embedUrl: 'https://embed.kumu.io/51e016a9a70265594812a1c818dae057',
       
       // URL directe vers le projet Kumu
-      projectUrl: 'https://embed.kumu.io/1cbf20d1300c3da2e0b1462b76a3f10b#beta-export',
+      projectUrl: 'https://embed.kumu.io/51e016a9a70265594812a1c818dae057',
       
       // Activer l'affichage de l'iframe
       enabled: true,

@@ -8,7 +8,7 @@
 
 import { ClientConfig } from '../types';
 
-export const defaultConfig: ClientConfig = {
+export const leblancConfig: ClientConfig = {
   // ============================================================================
   // 1. IDENTITÉ ET BRANDING
   // ============================================================================
@@ -411,10 +411,10 @@ Quels bénéfices concrets pour la communauté ?`,
     // Kumu.io - Visualisation de réseaux
     kumu: {
       // URL de l'iframe d'embed Kumu (si disponible)
-      embedUrl: 'https://embed.kumu.io/a37729dc5b388cc85eeda000277b46c6',
+      embedUrl: 'https://embed.kumu.io/852bf56042119515499d5eecefc905a4',
       
       // URL directe vers le projet Kumu
-      projectUrl: 'https://embed.kumu.io/a37729dc5b388cc85eeda000277b46c6',
+      projectUrl: 'https://embed.kumu.io/852bf56042119515499d5eecefc905a4',
       
       // Activer l'affichage de l'iframe
       enabled: true,

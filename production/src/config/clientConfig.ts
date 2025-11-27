@@ -8,6 +8,7 @@
 import { ClientConfig } from './types';
 import { defaultConfig } from './clients/default';
 import { betaConfig } from './clients/beta';
+import { leblancConfig } from './clients/leblanc';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -30,6 +31,9 @@ const configs: Record<string, ClientConfig> = {
   // Configuration pour liste citoyenne (version beta)
   'beta': betaConfig,
   'test-tenant': betaConfig,
+
+  // leblanc.ideosphere.community
+  'leblanc': leblancConfig
 };
 
 // ============================================================================
