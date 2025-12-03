@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { User, Idea } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -63,6 +63,11 @@ export function UserProfilePage({
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Synchroniser editedBio avec user.bio quand user change
+  useEffect(() => {
+    setEditedBio(user.bio || '');
+  }, [user.bio]);
 
   // Statistiques élogieuses de l'utilisateur
   const userIdeas = ideas.filter(i => i.creatorIds?.includes(user.id));
@@ -496,19 +501,21 @@ export function UserProfilePage({
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Supprimer votre compte</AlertDialogTitle>
-                      <AlertDialogDescription className="space-y-3">
-                        <p>
-                          <strong>Cette action est irréversible.</strong> En supprimant votre compte :
-                        </p>
-                        <ul className="list-disc list-inside space-y-1 text-sm">
-                          <li>Toutes vos données personnelles seront effacées</li>
-                          <li>Vos idées et contributions resteront visibles mais anonymisées</li>
-                          <li>Vous ne pourrez plus accéder à votre compte</li>
-                          <li>Cette action ne peut pas être annulée</li>
-                        </ul>
-                        <p className="text-sm text-gray-600">
-                          Êtes-vous sûr(e) de vouloir continuer ?
-                        </p>
+                      <AlertDialogDescription>
+                        <div className="space-y-3">
+                          <p>
+                            <strong>Cette action est irréversible.</strong> En supprimant votre compte :
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            <li>Toutes vos données personnelles seront effacées</li>
+                            <li>Vos idées et contributions resteront visibles mais anonymisées</li>
+                            <li>Vous ne pourrez plus accéder à votre compte</li>
+                            <li>Cette action ne peut pas être annulée</li>
+                          </ul>
+                          <p className="text-sm text-gray-600">
+                            Êtes-vous sûr(e) de vouloir continuer ?
+                          </p>
+                        </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

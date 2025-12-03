@@ -2,10 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { MyContributionsPage } from '../components/MyContributionsPage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useNavigationActions } from '../hooks/useNavigationActions';
 
 export function MyContributionsPageWrapper() {
   const navigate = useNavigate();
   const { actions, getCurrentUser } = useEntityStoreSimple();
+  const navigation = useNavigationActions();
   
   const currentUser = getCurrentUser();
 
@@ -31,17 +33,7 @@ export function MyContributionsPageWrapper() {
     loadData();
   }, [currentUser?.id, actions]); // Recharger si l'utilisateur change
 
-  const handleIdeaClick = (ideaId: string) => {
-    navigate(`/content/ideas/${ideaId}`);
-  };
-
-  const handlePostClick = (postId: string) => {
-    navigate(`/content/posts/${postId}`);
-  };
-
-  const handleGroupClick = (groupId: string) => {
-    navigate(`/groups/${groupId}`);
-  };
+  // Utiliser les fonctions de navigation qui gèrent déjà les préfixes correctement
 
   const handleLike = async (postId: string) => {
     await actions.togglePostLike(postId);
@@ -77,9 +69,9 @@ export function MyContributionsPageWrapper() {
 
   return (
     <MyContributionsPage
-      onIdeaClick={handleIdeaClick}
-      onPostClick={handlePostClick}
-      onGroupClick={handleGroupClick}
+      onIdeaClick={navigation.goToIdea}
+      onPostClick={navigation.goToPost}
+      onGroupClick={navigation.goToGroup}
       onLike={handleLike}
       onSupport={handleSupport}
       onIgnoreIdea={handleIgnoreIdea}

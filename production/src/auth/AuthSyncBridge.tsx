@@ -12,6 +12,7 @@ export function AuthSyncBridge() {
       // Si l'user n'est pas encore dans le store ou si c'est un user différent
       if (store.currentUserId !== user.id) {
         console.log('🔄 [AuthSync] Synchro User -> Store:', user.name);
+        console.log('📝 [AuthSync] Bio de l\'utilisateur:', user.bio);
         
         const safeUser = {
           ...user,
@@ -20,7 +21,7 @@ export function AuthSyncBridge() {
         
         // Ajouter l'utilisateur au store s'il n'existe pas
         if (!store.users[user.id]) {
-          actions.addUser(user);
+          actions.addUser(safeUser);
         }
         
         // Définir comme utilisateur courant

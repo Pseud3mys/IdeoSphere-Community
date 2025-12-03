@@ -10,10 +10,11 @@ import { useAuth } from '../context/authContext';
  */
 export function UserProfilePageWrapper() {
   const navigate = useNavigate();
-  const { getCurrentUser, actions } = useEntityStoreSimple();
+  const { actions, store } = useEntityStoreSimple();
   const { isLoading: authLoading } = useAuth();
   
-  const currentUser = getCurrentUser();
+  // Récupérer l'utilisateur courant directement depuis le store pour que le composant se re-rende quand il change
+  const currentUser = store.currentUserId ? store.users[store.currentUserId] : null;
 
   // Afficher un loader pendant le chargement de l'auth
   if (authLoading) {

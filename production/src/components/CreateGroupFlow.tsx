@@ -58,7 +58,12 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
   const [createdPendingGroupId, setCreatedPendingGroupId] = useState<string | null>(null);
 
   const allUsers = getAllUsers();
-  const availableUsers = allUsers.filter(u => u.id !== currentUser?.id);
+  // Filtrer l'utilisateur courant et les comptes spéciaux (Visiteur, Utilisateur Inconnu)
+  const systemUserIds = ['guest', 'unknown'];
+  const availableUsers = allUsers.filter(u => 
+    u.id !== currentUser?.id && 
+    !systemUserIds.includes(u.id)
+  );
 
   const handleReset = () => {
     setStep(1);

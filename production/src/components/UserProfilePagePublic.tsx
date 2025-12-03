@@ -13,20 +13,22 @@ interface UserProfilePagePublicProps {
 export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicProps) {
   const { 
     getCurrentUser, 
-    getAllUsers, 
+    getUserById,
     getAllIdeas, 
     getAllPosts 
   } = useEntityStoreSimple();
 
   const currentUser = getCurrentUser();
-  const allUsers = getAllUsers();
   const ideas = getAllIdeas();
   const posts = getAllPosts();
 
-  // Trouver l'utilisateur
-  const user = allUsers.find(u => u.id === userId);
+  // Trouver l'utilisateur avec getUserById qui gère les préfixes automatiquement
+  const user = getUserById(userId);
 
-  if (!user) {
+  console.log('🔍 [UserProfilePagePublic] userId:', userId, 'user:', user);
+
+  // getUserById retourne unknownUser si non trouvé, vérifier si c'est un vrai utilisateur
+  if (!user || user.id === 'unknown') {
     return (
       <div className="max-w-2xl mx-auto px-4 py-6">
         <Button variant="ghost" onClick={onBack} className="mb-4">

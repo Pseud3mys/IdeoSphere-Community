@@ -228,13 +228,21 @@ export function createUserActions(
       }
       
       try {
-        // Mettre à jour dans le store local
-        actions.updateUser(currentUser.id, updates);
-        
-        // Si l'utilisateur est enregistré, mettre à jour via l'API
+        // Si l'utilisateur est enregistré, mettre à jour via l'API d'abord
         if (currentUser.isRegistered) {
           const { updateUserProfileOnApi } = await import('../api/contentService');
-          await updateUserProfileOnApi(currentUser.id, updates);
+          const updatedUser = await updateUserProfileOnApi(currentUser.id, updates);
+          
+          if (updatedUser) {
+            // Mettre à jour le store avec la réponse complète de l'API
+            actions.updateUser(currentUser.id, updatedUser);
+          } else {
+            console.error('❌ [hook/userActions] updateCurrentUser: L\'API a retourné null');
+            return false;
+          }
+        } else {
+          // Pour les utilisateurs non enregistrés, mettre à jour uniquement le store local
+          actions.updateUser(currentUser.id, updates);
         }
         
         return true;

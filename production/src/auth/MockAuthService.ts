@@ -59,16 +59,9 @@ export const MockAuthService = {
     
     if (mockUser) {
       console.log('✅ [MockAuth] Utilisateur trouvé:', mockUser.name, mockUser.email);
-      return {
-        ...mockUser,
-        // S'assurer que tous les champs requis sont présents
-        followedIdeas: mockUser.followedIdeas || [],
-        followedPosts: mockUser.followedPosts || [],
-        likedIdeas: mockUser.likedIdeas || [],
-        likedPosts: mockUser.likedPosts || [],
-        contributions: mockUser.contributions || [],
-        groups: mockUser.groups || [],
-      };
+      console.log('📝 [MockAuth] Bio de l\'utilisateur:', mockUser.bio);
+      // Retourner l'utilisateur tel quel, sans ajouter de champs qui n'existent pas dans le type User
+      return mockUser;
     }
 
     // Fallback sur la config si aucun email stocké ou utilisateur non trouvé
@@ -87,19 +80,17 @@ export const MockAuthService = {
       bio: (mockUserConfig as any).bio || 'Utilisateur de test',
       address: (mockUserConfig as any).location || '',
       birthYear: 1990,
-      createdAt: new Date().toISOString(),
-      followedIdeas: [],
-      followedPosts: [],
-      likedIdeas: [],
-      likedPosts: [],
-      contributions: [],
-      groups: [],
+      createdAt: new Date(),
       isRegistered: true
-    } as User;
+    };
   },
   
   getToken: (): string => 'mock-jwt-token',
 
   // Nouvelle méthode pour récupérer les utilisateurs disponibles
-  getAvailableUsers: (): User[] => users,
+  // Filtre les utilisateurs spéciaux (guest, unknown) qui ne doivent pas apparaître dans les listes
+  getAvailableUsers: (): User[] => {
+    const systemUserIds = ['guest', 'unknown'];
+    return users.filter(u => !systemUserIds.includes(u.id));
+  },
 };
