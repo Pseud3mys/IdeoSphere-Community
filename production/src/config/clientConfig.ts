@@ -10,6 +10,7 @@ import { defaultConfig } from './clients/default';
 import { betaConfig } from './clients/beta';
 import { leblancConfig } from './clients/leblanc';
 import { amdfConfig } from './clients/amdf';
+import { chesnayRocquencourtConfig } from './clients/chesnayRocquencourt';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -38,6 +39,10 @@ const configs: Record<string, ClientConfig> = {
 
   //AMDF
   'amdf': amdfConfig,
+
+  // chesnayRocquencourtConfig
+  'chesnay-rocquencourt': chesnayRocquencourtConfig,
+
 };
 
 // ============================================================================

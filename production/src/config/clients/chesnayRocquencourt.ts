@@ -8,17 +8,17 @@
 
 import { ClientConfig } from '../types';
 
-export const amdfConfig: ClientConfig = {
+export const chesnayRocquencourtConfig: ClientConfig = {
   // ============================================================================
   // 1. IDENTITÉ ET BRANDING
   // ============================================================================
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere AMDF',
+    appName: 'IdeoSphere Chesnay Rocquencourt',
     
     // Tagline / Sous-titre
-    appTagline: 'Plateforme collaborative d\'intelligence collective (AMDF)',
+    appTagline: 'Plateforme collaborative d\'intelligence collective',
     
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
@@ -411,10 +411,10 @@ Quels bénéfices concrets pour la communauté ?`,
     // Kumu.io - Visualisation de réseaux
     kumu: {
       // URL de l'iframe d'embed Kumu (si disponible)
-      embedUrl: 'https://embed.kumu.io/1ef3aafb7bdc5e106adde3b6bf6abc3c',
+      embedUrl: 'https://embed.kumu.io/c383a314a3e14cb07cf4218d2373c6a6',
       
       // URL directe vers le projet Kumu
-      projectUrl: 'https://embed.kumu.io/1ef3aafb7bdc5e106adde3b6bf6abc3c',
+      projectUrl: 'https://embed.kumu.io/c383a314a3e14cb07cf4218d2373c6a6',
       
       // Activer l'affichage de l'iframe
       enabled: true,
