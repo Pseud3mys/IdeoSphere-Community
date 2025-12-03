@@ -9,6 +9,7 @@ import { ClientConfig } from './types';
 import { defaultConfig } from './clients/default';
 import { betaConfig } from './clients/beta';
 import { leblancConfig } from './clients/leblanc';
+import { amdfConfig } from './clients/amdf';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -29,11 +30,14 @@ const configs: Record<string, ClientConfig> = {
   'localhost': defaultConfig,
   
   // Configuration pour liste citoyenne (version beta)
-  'beta': betaConfig,
-  'test-tenant': betaConfig,
+  'beta': defaultConfig, // betaConfig,
+  'test-tenant': defaultConfig,
 
   // leblanc.ideosphere.community
-  'leblanc': leblancConfig
+  'leblanc': leblancConfig,
+
+  //AMDF
+  'amdf': amdfConfig,
 };
 
 // ============================================================================
