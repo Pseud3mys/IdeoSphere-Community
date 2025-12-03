@@ -42,15 +42,36 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
 }
 
 /**
- * MOCK: Charge les statistiques (À implémenter côté backend plus tard si besoin)
+ * Charge les statistiques d'un utilisateur
  */
 export async function fetchUserStats(userId: string): Promise<{
   ideasCount: number;
-  postsCount: number;
+  postsCount: number; // Note: Le backend retourne "ideasCount" qui englobe tout pour l'instant
   supportsReceived: number;
   ideasSupported: number;
 } | null> {
-    // Pour l'instant, on laisse à null, le frontend calculera ça 
-    // ou on fera une route dédiée /users/<id>/stats plus tard.
+  // Nettoyage de l'ID si nécessaire (ex: "users/123" -> "123")
+  const cleanKey = userId.replace('users/', '');
+  
+  console.log(`🌐 [API] fetchUserStats - key: ${cleanKey}`);
+  
+  try {
+    const response = await apiClient.get<{
+        ideasCount: number;
+        ideasSupported: number;
+        supportsReceived: number;
+    }>(`/users/${cleanKey}/stats`);
+
+    const data = response.data;
+
+    return {
+      ideasCount: data.ideasCount, 
+      postsCount: 0, // Optionnel : si vous voulez séparer plus tard, il faudra adapter l'AQL
+      supportsReceived: data.supportsReceived,
+      ideasSupported: data.ideasSupported
+    };
+  } catch (error) {
+    console.error(`❌ [API] fetchUserStats - Erreur:`, error);
     return null;
+  }
 }

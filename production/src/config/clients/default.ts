@@ -434,7 +434,7 @@ Quels bénéfices concrets pour la communauté ?`,
     showBetaBanner: true,
     
     // Activer les newsletters
-    enableNewsletters: false,
+    enableNewsletters: true,
   },
 
   // ============================================================================
