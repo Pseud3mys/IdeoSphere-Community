@@ -158,3 +158,36 @@ export async function fetchUserProfileFromApi(userId: string): Promise<User | nu
     return null;
   }
 }
+
+/**
+ * Met à jour le profil de l'utilisateur.
+ * @param userId - L'ID interne de l'utilisateur (ex: '12345')
+ * @param data - Les données à mettre à jour (name, bio, location, avatar, etc.)
+ */
+export async function updateUserProfileOnApi(userId: string, data: Partial<User>): Promise<User> {
+  try {
+    // La route backend est PATCH /users/<user_key>
+    const response = await apiClient.patch(`/users/${userId}`, data);
+    return transformUser(response.data);
+  } catch (error) {
+    console.error("❌ Erreur lors de la mise à jour du profil:", error);
+    throw error;
+  }
+}
+
+/**
+ * Supprime le compte utilisateur.
+ * - Supprime le compte Keycloak (SSO)
+ * - Anonymise les données dans la base de données
+ * @param userId - L'ID interne de l'utilisateur
+ */
+export async function deleteUserAccountOnApi(userId: string): Promise<void> {
+  try {
+    // La route backend est DELETE /users/<user_key>
+    await apiClient.delete(`/users/${userId}`);
+    console.log("✅ Compte supprimé avec succès.");
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression du compte:", error);
+    throw error;
+  }
+}

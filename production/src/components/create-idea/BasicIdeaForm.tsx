@@ -39,9 +39,11 @@ export function BasicIdeaForm({
   sourcePost
 }: BasicIdeaFormProps) {
   // ✅ Résoudre l'auteur du post source
-  const { getUserById, getAllGroups } = useEntityStoreSimple();
+  const { getUserById, getUserGroups, getCurrentUser } = useEntityStoreSimple();
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
-  const allGroups = getAllGroups();
+  const currentUser = getCurrentUser();
+  // ✅ Récupérer uniquement les groupes dont l'utilisateur est membre
+  const userGroups = currentUser ? getUserGroups(currentUser.id) : [];
 
   const getWordCount = (text: string) => {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
@@ -102,7 +104,7 @@ export function BasicIdeaForm({
               {groupIds && groupIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {groupIds.map((gId) => {
-                    const group = allGroups.find(g => g.id === gId);
+                    const group = userGroups.find(g => g.id === gId);
                     return group ? (
                       <Badge key={gId} variant="secondary" className="flex items-center gap-1">
                         {group.name}
@@ -131,7 +133,7 @@ export function BasicIdeaForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
-                  {allGroups
+                  {userGroups
                     .filter(group => !groupIds?.includes(group.id))
                     .map((group) => (
                       <SelectItem key={group.id} value={group.id}>

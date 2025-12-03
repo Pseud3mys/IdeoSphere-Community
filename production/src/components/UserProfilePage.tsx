@@ -112,11 +112,24 @@ export function UserProfilePage({
     }
   ].slice(0, userIdeas.length > 0 ? 3 : 1);
 
-  const handleSaveProfile = () => {
-    if (onUpdateProfile) {
-      onUpdateProfile({ bio: editedBio });
-      setIsEditing(false);
-      toast.success('Profil mis à jour ! 👤');
+  const handleSaveProfile = async () => {
+    try {
+      // Utiliser l'action du store pour mettre à jour le profil
+      const success = await actions.updateCurrentUser({ bio: editedBio });
+      
+      if (success) {
+        // Appeler également le callback onUpdateProfile si fourni (pour la mise à jour locale)
+        if (onUpdateProfile) {
+          onUpdateProfile({ bio: editedBio });
+        }
+        setIsEditing(false);
+        toast.success('Profil mis à jour ! 👤');
+      } else {
+        toast.error('Erreur lors de la mise à jour du profil');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du profil:', error);
+      toast.error('Erreur lors de la mise à jour du profil');
     }
   };
 
@@ -141,14 +154,20 @@ export function UserProfilePage({
       // Simuler l'upload
       const avatarUrl = await uploadUserAvatar(user.id, resizedImageDataUrl);
       
-      // Mettre à jour le profil
-      if (onUpdateProfile) {
-        onUpdateProfile({ avatar: avatarUrl });
-        toast.success('Photo de profil mise à jour ! 📸');
-      }
+      // Mettre à jour le profil via l'action du store
+      const success = await actions.updateCurrentUser({ avatar: avatarUrl });
       
-      setIsEditingAvatar(false);
-      setPreviewAvatar(null);
+      if (success) {
+        // Appeler également le callback onUpdateProfile si fourni (pour la mise à jour locale)
+        if (onUpdateProfile) {
+          onUpdateProfile({ avatar: avatarUrl });
+        }
+        toast.success('Photo de profil mise à jour ! 📸');
+        setIsEditingAvatar(false);
+        setPreviewAvatar(null);
+      } else {
+        toast.error('Erreur lors de la mise à jour de la photo');
+      }
       
     } catch (error) {
       console.error('Erreur lors de l\'upload:', error);
@@ -171,17 +190,21 @@ export function UserProfilePage({
     fileInputRef.current?.click();
   };
 
-  const handleDeleteAccount = () => {
-    // Action de suppression via le store
-    actions.rawActions.removeUser(user.id);
-    
-    // Si c'est le compte actuel, déconnecter
-    if (isOwnProfile) {
-      actions.rawActions.setCurrentUserId(null);
+  const handleDeleteAccount = async () => {
+    try {
+      // Utiliser l'action du store pour supprimer le compte
+      const success = await actions.deleteCurrentUser();
+      
+      if (success) {
+        toast.success('Compte supprimé avec succès');
+        onBack();
+      } else {
+        toast.error('Erreur lors de la suppression du compte');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du compte:', error);
+      toast.error('Erreur lors de la suppression du compte');
     }
-    
-    toast.success('Compte supprimé avec succès');
-    onBack();
   };
   
   const { goToStatistics } = useNavigationActions();

@@ -244,6 +244,40 @@ export function createUserActions(
       }
     },
     
+    // Action de suppression du compte utilisateur
+    deleteCurrentUser: async () => {
+      const currentUser = boundSelectors.getCurrentUser();
+      if (!currentUser) {
+        console.error('❌ [hook/userActions] deleteCurrentUser: Aucun utilisateur actuel');
+        return false;
+      }
+      
+      try {
+        // Si l'utilisateur est enregistré, supprimer via l'API
+        if (currentUser.isRegistered) {
+          const { deleteUserAccountOnApi } = await import('../api/contentService');
+          const apiSuccess = await deleteUserAccountOnApi(currentUser.id);
+          
+          if (!apiSuccess) {
+            console.error('❌ [hook/userActions] deleteCurrentUser: Échec de la suppression via l\'API');
+            return false;
+          }
+        }
+        
+        // Supprimer du store local
+        actions.rawActions.removeUser(currentUser.id);
+        
+        // Déconnecter l'utilisateur
+        actions.rawActions.setCurrentUserId(null);
+        
+        console.log('✅ [hook/userActions] Compte utilisateur supprimé avec succès:', currentUser.name);
+        return true;
+      } catch (error) {
+        console.error('❌ [hook/userActions] deleteCurrentUser:', error);
+        return false;
+      }
+    },
+    
     // Actions de newsletter
     subscribeToNewsletter: async (email: string) => {
       try {

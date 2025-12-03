@@ -219,10 +219,3 @@ export function getUserProfileFromToken(): User | null {
   }
   return null;
 }
-
-
-// --- FONCTIONS UTILITAIRES (Inchangées, à supprimer ?) ---
-export async function loginWithSocialProvider(provider: string, userData: any): Promise<User | null> { return null; }
-
-// elle est utilisée dans hooks user action.
-export async function subscribeToNewsletterOnApi(email: string): Promise<void> {}

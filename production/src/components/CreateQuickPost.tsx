@@ -22,10 +22,11 @@ interface CreateQuickPostProps {
 
 export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
-  const { store, getCurrentUser, getUserById, getAllGroups, actions } = useEntityStoreSimple();
+  const { store, getCurrentUser, getUserById, getUserGroups, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
-  const allGroups = getAllGroups();
+  // ✅ Récupérer uniquement les groupes dont l'utilisateur est membre
+  const userGroups = currentUser ? getUserGroups(currentUser.id) : [];
 
   // ✅ Utiliser unknownUser comme fallback pour les invités
   const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
@@ -132,7 +133,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
               {groupIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {groupIds.map((gId) => {
-                    const group = allGroups.find(g => g.id === gId);
+                    const group = userGroups.find(g => g.id === gId);
                     return group ? (
                       <Badge key={gId} variant="secondary" className="flex items-center gap-1">
                         {group.name}
@@ -161,7 +162,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
-                  {allGroups
+                  {userGroups
                     .filter(group => !groupIds.includes(group.id))
                     .map((group) => (
                       <SelectItem key={group.id} value={group.id}>
