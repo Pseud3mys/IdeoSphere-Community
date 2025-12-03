@@ -167,7 +167,7 @@ export async function fetchUserProfileFromApi(userId: string): Promise<User | nu
 export async function updateUserProfileOnApi(userId: string, data: Partial<User>): Promise<User> {
   try {
     // La route backend est PATCH /users/<user_key>
-    const response = await apiClient.patch(`/users/${userId}`, data);
+    const response = await apiClient.patch(`/${userId}`, data);
     return transformUser(response.data);
   } catch (error) {
     console.error("❌ Erreur lors de la mise à jour du profil:", error);
@@ -184,7 +184,7 @@ export async function updateUserProfileOnApi(userId: string, data: Partial<User>
 export async function deleteUserAccountOnApi(userId: string): Promise<void> {
   try {
     // La route backend est DELETE /users/<user_key>
-    await apiClient.delete(`/users/${userId}`);
+    await apiClient.delete(`/${userId}`);
     console.log("✅ Compte supprimé avec succès.");
   } catch (error) {
     console.error("❌ Erreur lors de la suppression du compte:", error);
