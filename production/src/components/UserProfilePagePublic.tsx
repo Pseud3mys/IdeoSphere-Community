@@ -25,8 +25,6 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
   // Trouver l'utilisateur avec getUserById qui gère les préfixes automatiquement
   const user = getUserById(userId);
 
-  console.log('🔍 [UserProfilePagePublic] userId:', userId, 'user:', user);
-
   // getUserById retourne unknownUser si non trouvé, vérifier si c'est un vrai utilisateur
   if (!user || user.id === 'unknown') {
     return (

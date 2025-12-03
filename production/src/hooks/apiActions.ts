@@ -1100,6 +1100,44 @@ export function createApiActions(
         console.error('❌ [apiActions] Erreur lors du chargement de tous les groupes:', error);
         return [];
       }
+    },
+
+    /**
+     * Charge le profil COMPLET d'un utilisateur depuis l'API
+     * Cette fonction charge toutes les données du profil (bio, location, etc.)
+     * et met à jour le store avec les données complètes
+     * 
+     * @param userId - ID de l'utilisateur (avec ou sans préfixe)
+     * @returns true si succès, false sinon
+     */
+    loadUserProfile: async (userId: string): Promise<boolean> => {
+      try {
+        console.log(`🔄 [apiActions] loadUserProfile - userId: ${userId}`);
+        
+        const { fetchUserProfile } = await import('../api/userService');
+        const userProfile = await fetchUserProfile(userId);
+        
+        if (!userProfile) {
+          console.warn(`⚠️ [apiActions] loadUserProfile - Utilisateur ${userId} non trouvé`);
+          return false;
+        }
+        
+        // ✅ Mettre à jour le store avec le profil complet
+        // Le store a la vérité - cette fonction fait autorité
+        actions.addUser(userProfile);
+        
+        console.log(`✅ [apiActions] loadUserProfile - Profil complet ajouté au store:`, {
+          id: userProfile.id,
+          name: userProfile.name,
+          hasBio: !!userProfile.bio,
+          hasLocation: !!userProfile.location
+        });
+        
+        return true;
+      } catch (error) {
+        console.error('❌ [apiActions] Erreur lors du chargement du profil utilisateur:', error);
+        return false;
+      }
     }
   };
 }
