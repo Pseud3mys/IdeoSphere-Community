@@ -79,7 +79,7 @@ export async function fetchUserStats(userId: string): Promise<{
 /**
  * Inscription à la newsletter
  * @param email - Email pour l'inscription
- * @param frequency - Fréquence de la newsletter (daily, weekly, monthly)
+ * @param frequency - Fréquence de la newsletter (daily, weekly, monthly, important)
  * @param location - Localisation pour la newsletter
  * @returns true si l'inscription a réussi
  */
@@ -88,20 +88,30 @@ export async function subscribeToNewsletterOnApi(email: string, frequency: strin
   console.log(`🔄 [API] Inscription à la newsletter pour: ${email}, fréquence: ${frequency}, lieu: ${location}`);
   
   try {
-    // Validation basique de l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      console.log('❌ [API] Email invalide:', email);
+    // Appel API POST /newsletter/subscribe
+    const response = await apiClient.post('/newsletter/subscribe', {
+      email: email,
+      frequency: frequency,
+      location: location
+    });
+    
+    // Vérifier que le backend a retourné success: true
+    if (response.data && response.data.success) {
+      console.log(`✅ [API] Inscription à la newsletter réussie pour: ${email}`);
+      return true;
+    } else {
+      console.warn(`⚠️ [API] Inscription échouée: ${response.data?.message || 'Erreur inconnue'}`);
       return false;
     }
     
-    // Dans un vrai système, on ajouterait l'email à la liste de newsletter avec les préférences
-    // Ici on simule le succès
-    console.log(`✅ [API] Inscription à la newsletter réussie pour: ${email}`);
-    return true;
-    
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ [API] Erreur lors de l\'inscription à la newsletter:', error);
+    
+    // Afficher le message d'erreur du backend si disponible
+    if (error.response?.data?.message) {
+      console.error(`Message d'erreur: ${error.response.data.message}`);
+    }
+    
     return false;
   }
 }
