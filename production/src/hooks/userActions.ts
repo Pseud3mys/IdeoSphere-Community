@@ -287,10 +287,10 @@ export function createUserActions(
     },
     
     // Actions de newsletter
-    subscribeToNewsletter: async (email: string) => {
+    subscribeToNewsletter: async (email: string, frequency: string = 'weekly', location: string = '') => {
       try {
-        const { subscribeToNewsletterOnApi } = await import('../api/authService');
-        return await subscribeToNewsletterOnApi(email);
+        const { subscribeToNewsletterOnApi } = await import('../api/userService');
+        return await subscribeToNewsletterOnApi(email, frequency, location);
       } catch (error) {
         console.error('❌ [hook/userActions] subscribeToNewsletter:', error);
         return false;

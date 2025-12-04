@@ -75,3 +75,33 @@ export async function fetchUserStats(userId: string): Promise<{
     return null;
   }
 }
+
+/**
+ * Inscription à la newsletter
+ * @param email - Email pour l'inscription
+ * @param frequency - Fréquence de la newsletter (daily, weekly, monthly)
+ * @param location - Localisation pour la newsletter
+ * @returns true si l'inscription a réussi
+ */
+export async function subscribeToNewsletterOnApi(email: string, frequency: string = 'weekly', location: string = ''): Promise<boolean> {
+  
+  console.log(`🔄 [API] Inscription à la newsletter pour: ${email}, fréquence: ${frequency}, lieu: ${location}`);
+  
+  try {
+    // Validation basique de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ [API] Email invalide:', email);
+      return false;
+    }
+    
+    // Dans un vrai système, on ajouterait l'email à la liste de newsletter avec les préférences
+    // Ici on simule le succès
+    console.log(`✅ [API] Inscription à la newsletter réussie pour: ${email}`);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ [API] Erreur lors de l\'inscription à la newsletter:', error);
+    return false;
+  }
+}

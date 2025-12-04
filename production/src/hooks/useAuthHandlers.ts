@@ -25,7 +25,7 @@ export function useAuthHandlers(
     bio?: string;
     birthYear?: number;
   }) => Promise<User | null>,
-  subscribeToNewsletter: (email: string) => Promise<boolean>,
+  subscribeToNewsletter: (email: string, frequency?: string, location?: string) => Promise<boolean>,
   loginWithSSO?: () => void,
   registerWithSSO?: () => void
 ) {
@@ -159,7 +159,7 @@ export function useAuthHandlers(
   }): Promise<boolean> => {
     try {
       // ✅ Appel à l'action du store
-      const success = await subscribeToNewsletter(data.email);
+      const success = await subscribeToNewsletter(data.email, data.frequency, data.location);
       
       if (success) {
         const frequencyText = data.frequency === 'daily' ? 'quotidienne' : 
