@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useGroupActions } from '../hooks/useGroupActions';
 import { useNavigationActions } from '../hooks/useNavigationActions';
-import { Group, User } from '../types';
+import { Group, User, Location } from '../types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -25,6 +25,7 @@ import { GroupTypeBadge } from './group/GroupTypeBadge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Users, Lightbulb, ArrowRight, ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react';
 import { getGroupTypes } from '../config/clientConfig';
+import { LocationSearch } from './LocationSearch';
 
 interface CreateGroupFlowProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<Group['type']>('community');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState<Location | string>('');
   const [tags, setTags] = useState('');
   
   // Step 2 : Co-fondateurs
@@ -266,10 +267,9 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
 
             <div>
               <Label htmlFor="location">Localisation (optionnel)</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+              <LocationSearch
+                initialLocation={location}
+                onLocationSelect={(loc) => setLocation(loc || '')}
                 placeholder={clientConfig.examples.group.locationPlaceholder}
               />
             </div>
@@ -372,7 +372,9 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                     <div className="flex-1 min-w-0">
                       <div>{user.name}</div>
                       {user.location && (
-                        <div className="text-sm text-gray-500">{user.location}</div>
+                        <div className="text-sm text-gray-500">
+                          {typeof user.location === 'string' ? user.location : user.location.label}
+                        </div>
                       )}
                     </div>
                   </div>

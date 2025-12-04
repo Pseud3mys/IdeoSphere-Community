@@ -9,7 +9,7 @@
 
 import { useEntityStoreSimple } from './useEntityStoreSimple';
 import * as groupService from '../api/groupService';
-import { Group } from '../types';
+import { Group, Location } from '../types';
 
 export function useGroupActions() {
   const { actions, currentUser, getIdeaById, getPostById } = useEntityStoreSimple();
@@ -181,7 +181,7 @@ export function useGroupActions() {
       shortDescription: string;
       type: Group['type'];
       avatar?: string;
-      location?: string;
+      location?: Location | string;
       tags: string[];
     },
     founderIds: string[],
@@ -299,7 +299,7 @@ export function useGroupActions() {
    */
   const updateGroupInfo = async (
     groupId: string,
-    updates: Partial<{ name: string; description: string; shortDescription: string; type: Group['type']; avatar?: string; banner?: string; location?: string; tags: string[] }>
+    updates: Partial<{ name: string; description: string; shortDescription: string; type: Group['type']; avatar?: string; banner?: string; location?: Location | string; tags: string[] }>
   ) => {
     if (!currentUser || !currentUser.isRegistered) {
       console.error('❌ [useGroupActions.updateGroupInfo] Utilisateur non enregistré');

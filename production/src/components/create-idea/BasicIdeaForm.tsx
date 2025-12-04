@@ -7,9 +7,10 @@ import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { RichTextEditor } from '../RichTextEditor';
 import { Lightbulb, FileText, MapPin, Users, X } from 'lucide-react';
-import { Post } from '../../types';
+import { Post, Location } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 import { clientConfig } from '../../config/clientConfig';
+import { LocationSearch } from '../LocationSearch';
 
 interface BasicIdeaFormProps {
   title: string;
@@ -18,8 +19,8 @@ interface BasicIdeaFormProps {
   setSummary: (summary: string) => void;
   description: string;
   setDescription: (description: string) => void;
-  location?: string;
-  setLocation?: (location: string) => void;
+  location?: Location | string;
+  setLocation?: (location: Location | string) => void;
   groupIds?: string[];
   setGroupIds?: (groupIds: string[]) => void;
   sourcePost?: Post;
@@ -155,12 +156,10 @@ export function BasicIdeaForm({
                 <MapPin className="w-4 h-4" />
                 <span>Localisation (optionnelle)</span>
               </Label>
-              <Input
-                id="location"
-                value={location || ''}
-                onChange={(e) => setLocation(e.target.value)}
+              <LocationSearch
+                initialLocation={location}
+                onLocationSelect={(loc) => setLocation(loc || '')}
                 placeholder={clientConfig.examples.idea.locationPlaceholder}
-                className="w-full"
               />
               <p className="text-xs text-muted-foreground">
                 Précisez où cette idée s'applique si elle concerne un lieu spécifique

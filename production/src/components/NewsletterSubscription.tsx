@@ -13,6 +13,8 @@ import {
   Calendar
 } from 'lucide-react';
 
+import { LocationSearch } from './LocationSearch';
+
 interface NewsletterSubscriptionProps {
   onSubscribe: (data: {
     email: string;
@@ -150,50 +152,14 @@ export function NewsletterSubscription({ onSubscribe }: NewsletterSubscriptionPr
 
           <div className="space-y-2">
             <Label htmlFor="newsletter-location">Votre zone d'intérêt *</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                id="newsletter-location"
-                type="text"
-                placeholder="ex. Lyon 2ème, Villeurbanne, Place Bellecour..."
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                className="pl-10"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Entrez votre quartier, ville ou une adresse précise
-              </p>
-              <Button 
-                type="button"
-                variant="link" 
-                className="text-primary p-0 h-auto text-sm"
-                onClick={() => {
-                  // Simuler la géolocalisation
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        // Simuler une adresse basée sur la position
-                        handleInputChange('location', 'Lyon 2ème (position détectée)');
-                      },
-                      (error) => {
-                        // Fallback en cas d'erreur
-                        handleInputChange('location', 'Lyon (position approximative)');
-                      }
-                    );
-                  } else {
-                    handleInputChange('location', 'Lyon (position approximative)');
-                  }
-                }}
-                disabled={isLoading}
-              >
-                <MapPin className="w-4 h-4 mr-1" />
-                Utiliser ma position
-              </Button>
-            </div>
+            <LocationSearch
+              onLocationSelect={(loc) => handleInputChange('location', loc ? loc.label : '')}
+              initialLocation={formData.location}
+              placeholder="ex. Lyon 2ème, Villeurbanne, Place Bellecour..."
+            />
+            <p className="text-sm text-muted-foreground">
+              Entrez votre quartier, ville ou une adresse précise
+            </p>
           </div>
 
           <div className="space-y-2">

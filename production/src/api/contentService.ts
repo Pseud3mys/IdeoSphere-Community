@@ -1,6 +1,6 @@
 // src/services/contentService.ts
 
-import { Idea, Post, User } from '../types';
+import { Idea, Post, User, Location } from '../types';
 import apiClient from './apiClient';
 import { transformIdea, transformPost, transformUser, RawIdea, RawPost, RawUser } from './transformService';
 
@@ -10,20 +10,23 @@ interface CreateIdeaPayload {
   description: string;
   summary?: string;
   tags?: string[];
-  location?: string;
+  location?: Location | string;
   // Les champs spécifiques que le frontend envoie
   sourceIdeas?: string[];
   sourcePosts?: string[];
   sourceDiscussions?: string[];
+  groupIds?: string[];
 }
 
 interface CreatePostPayload {
   authorId: string;
   content: string;
-  type: 'general' | 'question' | 'suggestion' | 'technical'; 
+  type?: 'general' | 'question' | 'suggestion' | 'technical'; 
   title?: string;
   tags?: string[];
-  location?: string;
+  location?: Location | string;
+  author?: User; // Added to match usage in apiActions
+  groupIds?: string[]; // Added to match usage in apiActions
   // Les champs spécifiques que le frontend envoie
   sourceIdeas?: string[];
   sourcePosts?: string[];

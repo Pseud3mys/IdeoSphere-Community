@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Idea, Post } from '../types';
+import { User, Idea, Post, Location } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
@@ -162,7 +162,7 @@ ${postIntro}
     return '';
   });
 
-  const [location, setLocation] = useState(() => {
+  const [location, setLocation] = useState<Location | string>(() => {
     // Pré-remplir avec la localisation du store, de l'idée source ou du post source
     return store.prefilledLocation || sourceIdea?.location || derivedSourcePost?.location || '';
   });
@@ -262,7 +262,7 @@ ${postIntro}
       title: title.trim(),
       summary: summary.trim(),
       description: description.trim(),
-      location: location.trim() || undefined,
+      location: location || undefined,
       groupIds: groupIds.length > 0 ? groupIds : undefined,
       creators: selectedCoCreators,
       sourceIdeas: sourceIdeas,

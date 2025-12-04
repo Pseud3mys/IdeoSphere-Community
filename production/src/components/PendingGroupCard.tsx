@@ -52,7 +52,9 @@ export function PendingGroupCard({ pendingGroup, onConfirm, onViewDetails }: Pen
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <GroupTypeBadge type={pendingGroup.type} />
               {pendingGroup.location && (
-                <span className="text-gray-500">{pendingGroup.location}</span>
+                <span className="text-gray-500">
+                  {typeof pendingGroup.location === 'string' ? pendingGroup.location : pendingGroup.location.label}
+                </span>
               )}
             </div>
             <CardDescription className="line-clamp-2">

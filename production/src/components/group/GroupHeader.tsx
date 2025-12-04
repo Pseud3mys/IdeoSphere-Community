@@ -85,8 +85,12 @@ export function GroupHeader({
               {group.location && (
                 <div className="flex items-center gap-1 md:gap-2">
                   <span>📍</span>
-                  <span className="hidden md:inline">{group.location}</span>
-                  <span className="md:hidden truncate max-w-[80px]">{group.location}</span>
+                  <span className="hidden md:inline">
+                    {typeof group.location === 'string' ? group.location : group.location.label}
+                  </span>
+                  <span className="md:hidden truncate max-w-[80px]">
+                    {typeof group.location === 'string' ? group.location : group.location.city || group.location.label}
+                  </span>
                 </div>
               )}
             </div>

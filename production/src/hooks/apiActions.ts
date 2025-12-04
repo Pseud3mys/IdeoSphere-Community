@@ -1,5 +1,5 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
-import { User, Idea, Post, DiscussionTopic } from '../types';
+import { User, Idea, Post, DiscussionTopic, Location } from '../types';
 import { toast } from 'sonner@2.0.3';
 
 /**
@@ -861,7 +861,7 @@ export function createApiActions(
       title: string;
       summary: string;
       description: string;
-      location?: string;
+      location?: Location | string;
       groupIds?: string[];
       creators?: User[];
       sourceIdeas?: string[];
@@ -934,7 +934,7 @@ export function createApiActions(
     publishPost: async (payload: {
       title?: string;
       content: string;
-      location?: string;
+      location?: Location | string;
       tags?: string[];
       authorId?: string;
       groupIds?: string[];

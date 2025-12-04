@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-import { User, Idea, Post, DiscussionTopic, PrefilledContent, Group, GroupMembership, PendingGroupCreation, GroupLink } from '../types';
+import { User, Idea, Post, DiscussionTopic, PrefilledContent, Group, GroupMembership, PendingGroupCreation, GroupLink, Location } from '../types';
 import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
@@ -28,7 +28,7 @@ interface SimpleEntityStore {
   prefilledSourceIdea: string | null;
   prefilledLinkedContent: PrefilledContent[];
   prefilledSelectedDiscussions: string[];
-  prefilledLocation: string | null; // Localisation pré-remplie
+  prefilledLocation: Location | string | null; // Localisation pré-remplie
   prefilledSourcePostId: string | null; // Post source spécifiquement pour la création
   prefilledGroupIds: string[]; // Groupes pré-remplis pour la création
   prefilledSignupData: {

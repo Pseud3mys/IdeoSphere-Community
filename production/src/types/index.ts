@@ -1,12 +1,27 @@
+/**
+ * Location - Géolocalisation structurée avec l'API gouvernementale française
+ * 
+ * Provient de l'API de géocodage data.geopf.fr
+ */
+export interface Location {
+  label: string;        // Libellé complet (ex: "73 Avenue de Paris, 94160 Saint-Mandé")
+  lon: number;          // Longitude
+  lat: number;          // Latitude
+  context?: string;     // Contexte (ex: "94, Val-de-Marne, Île-de-France")
+  city?: string;        // Ville
+  postcode?: string;    // Code postal
+  citycode?: string;    // Code INSEE de la commune
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar: string;
   bio?: string;
-  location?: string; // Localisation de l'utilisateur (ville, région)
-  address?: string; // Adresse complète de l'utilisateur (optionnelle)
-  birthYear?: number; // Année de naissance (obligatoire pour les utilisateurs enregistrés)
+  location?: Location;  // Localisation de l'utilisateur (géocodée)
+  address?: string;     // DEPRECATED - utiliser location.label à la place
+  birthYear?: number;   // Année de naissance (obligatoire pour les utilisateurs enregistrés)
   createdAt: Date;
   lastLoginDate?: Date; // Date de dernière connexion (pour calculer les notifications)
   isRegistered: boolean; // true = utilisateur connecté, false = invité/anonyme
@@ -95,7 +110,7 @@ export interface Post {
   updatedAt?: Date; // Date de dernière modification (optionnel)
   supportCount?: number; // ✅ Optionnel - calculé dynamiquement depuis supporters.length
   tags?: string[];
-  location?: string;
+  location?: Location; // Localisation géocodée du post
   groupIds?: string[]; // Groupes auxquels appartient ce post
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // IDs des utilisateurs qui soutiennent ce post
@@ -131,7 +146,7 @@ export interface Idea {
   createdAt: Date;
   updatedAt?: Date; // Date de dernière modification (optionnel)
   tags?: string[];
-  location?: string;
+  location?: Location; // Localisation géocodée de l'idée
   groupIds?: string[]; // Groupes auxquels appartient cette idée
   // Champs chargés progressivement (peuvent être vides au début)
   supporters: string[]; // ✅ IDs des utilisateurs (aligné avec Post.supporters)
@@ -166,7 +181,7 @@ export interface PrefilledContent {
   title: string;
   content: string;
   author: string;
-  location?: string; // Localisation du contenu source
+  location?: Location; // Localisation du contenu source
 }
 
 // Groupes (anciennement Communautés)
@@ -180,7 +195,7 @@ export interface Group {
   type: GroupType;
   avatar?: string;
   banner?: string;
-  location?: string;
+  location?: Location;
   tags: string[];
   memberCount: number;
   ideaCount: number;
@@ -239,7 +254,7 @@ export interface PendingGroupCreation {
   shortDescription: string;
   type: GroupType;
   avatar?: string;
-  location?: string;
+  location?: Location;
   tags: string[];
   founders: string[]; // User IDs (min 3)
   confirmations: string[]; // User IDs qui ont confirmé

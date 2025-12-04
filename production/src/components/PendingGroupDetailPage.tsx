@@ -1,7 +1,14 @@
 /**
  * PendingGroupDetailPage - Page de détails d'un groupe en attente
  * 
- * Affiche les informations complètes du groupe pending et permet de confirmer
+ * Affiche les informations complètes du groupe pending et permet de               {pendingGroup.location && (
+                <div className="flex items-center gap-1 text-gray-500">
+                  <MapPin className="w-4 h-4" />
+                  <span>
+                    {typeof pendingGroup.location === 'string' ? pendingGroup.location : pendingGroup.location.label}
+                  </span>
+                </div>
+              )}mer
  * sa participation en tant que co-fondateur
  */
 
@@ -145,7 +152,9 @@ export function PendingGroupDetailPage() {
               {pendingGroup.location && (
                 <div className="flex items-center gap-1 text-gray-600">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{pendingGroup.location}</span>
+                  <span className="text-sm">
+                    {typeof pendingGroup.location === 'string' ? pendingGroup.location : pendingGroup.location.label}
+                  </span>
                 </div>
               )}
             </div>
@@ -292,7 +301,9 @@ export function PendingGroupDetailPage() {
                         )}
                       </div>
                       {founder.location && (
-                        <div className="text-sm text-gray-500">{founder.location}</div>
+                        <div className="text-sm text-gray-500">
+                          {typeof founder.location === 'string' ? founder.location : founder.location.label}
+                        </div>
                       )}
                     </div>
                     <div>

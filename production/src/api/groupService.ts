@@ -6,7 +6,8 @@ import {
   Idea, 
   Post, 
   PendingGroupCreation, 
-  User 
+  User,
+  Location
 } from '../types';
 import apiClient from './apiClient';
 import { 
@@ -212,7 +213,7 @@ export async function createPendingGroup(
     shortDescription: string;
     type: Group['type'];
     avatar?: string;
-    location?: string;
+    location?: Location | string;
     tags: string[];
   },
   founderIds: string[],
@@ -310,7 +311,7 @@ export async function recommendContentToGroups(
  */
 export async function updateGroup(
   groupId: string,
-  updates: Partial<Pick<Group, 'name' | 'description' | 'shortDescription' | 'type' | 'avatar' | 'banner' | 'location' | 'tags'>>,
+  updates: Partial<Omit<Group, 'location'>> & { location?: Location | string },
   updatedBy: string
 ): Promise<Group | null> {
   try {

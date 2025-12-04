@@ -37,8 +37,9 @@ import { GroupTypeBadge } from './group/GroupTypeBadge';
 import { GroupLinksModule } from './group/GroupLinksModule';
 import { UserLink } from './UserLink';
 import { toast } from 'sonner@2.0.3';
-import { Group } from '../types';
+import { Group, Location } from '../types';
 import { getGroupTypes } from '../config/clientConfig';
+import { LocationSearch } from './LocationSearch';
 
 interface GroupManagePageProps {
   groupId: string;
@@ -68,7 +69,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
     type: Group['type'];
     avatar?: string;
     banner?: string;
-    location?: string;
+    location?: Location | string;
     tags: string;
   }>({
     name: '',
@@ -283,9 +284,9 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
               {/* Localisation */}
               <div>
                 <label className="text-sm mb-2 block">Localisation (optionnel)</label>
-                <Input
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                <LocationSearch
+                  initialLocation={formData.location}
+                  onLocationSelect={(loc) => setFormData({ ...formData, location: loc || '' })}
                   placeholder={clientConfig.examples.group.locationPlaceholder}
                 />
               </div>

@@ -14,9 +14,19 @@ import {
   PendingGroupCreation,
   GroupMembership,
   VerticalGroupLink,
-  HorizontalGroupLink
+  HorizontalGroupLink,
+  Location
 } from '../types';
 import { defaultRatingCriteria } from '../data/ratings';
+
+// Helper to parse location
+function parseLocation(loc: string | Location | undefined): Location | undefined {
+  if (!loc) return undefined;
+  if (typeof loc === 'string') {
+    return { label: loc, lon: 0, lat: 0 };
+  }
+  return loc;
+}
 
 // =============================================================================
 // RAW INTERFACES - Mirror the JSON structure from the Python API
@@ -29,7 +39,7 @@ export interface RawUser {
   email: string;
   createdAt: string; // ISO String
   bio?: string;
-  location?: string;
+  location?: string | Location;
   avatar?: string;
   birthYear?: number;
   isRegistered?: boolean;
@@ -51,7 +61,7 @@ export interface RawContent {
   createdAt: string; // ISO String
   creators: string[]; // List of user _ids
   tags?: string[];
-  location?: string;
+  location?: string | Location;
   title?: string;
   groupIds?: string[]; // List of group _ids
   // Idea-specific
@@ -86,6 +96,9 @@ export interface RawFeedback {
   ratings?: { [criterionName: string]: number };
 }
 
+export type RawPost = RawContent;
+export type RawIdea = RawContent;
+
 // --- NOUVEAUX RAW TYPES (pour les Groupes) ---
 
 export interface RawGroup {
@@ -97,7 +110,7 @@ export interface RawGroup {
   type: GroupType;
   avatar?: string;
   banner?: string;
-  location?: string;
+  location?: string | Location;
   tags: string[];
   createdAt: string; // ISO String
   createdBy: string;
@@ -205,7 +218,7 @@ const unknownUser: User = {
   email: '',
   avatar: '/assets/images/avatars/default.png',
   bio: '',
-  location: '',
+  location: undefined,
   createdAt: new Date(),
   isRegistered: false,
 };
@@ -220,7 +233,7 @@ export const transformUser = (raw: RawUser): User => ({
   createdAt: new Date(raw.createdAt),
   avatar: raw.avatar || '',
   bio: raw.bio || '',
-  location: raw.location || '',
+  location: parseLocation(raw.location),
   birthYear: raw.birthYear,
   isRegistered: raw.isRegistered ?? false,
 });
@@ -245,16 +258,15 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
 
   return {
     id: raw._id, // c'est le trucentier posts/123345
-    type: 'post',
     title: raw.title || '',
     content: raw.content || raw.title || '',
     authorId: raw.creators?.[0],
     createdAt: new Date(raw.createdAt),
     supporters: raw.supporters || [],
     groupIds: raw.groupIds || [],
-    replies: (raw.comments || []).map(comment => transformComment(comment, usersMap)),
+    replies: (raw.comments || []).map(comment => transformComment(comment, usersMap) as unknown as PostReply), // Temporary cast to fix type mismatch
     tags: raw.tags || [],
-    location: raw.location || '',
+    location: parseLocation(raw.location),
     // Initialize progressive load fields as empty
     derivedIdeas: [],
     derivedPosts: [],
@@ -269,7 +281,6 @@ export const transformIdea = (raw: RawIdea): Idea => {
 
   return {
     id: raw._id,
-    type: 'idea',
     title: raw.title || 'Sans titre',
     summary: raw.summary || (raw.description || '').slice(0, 150),
     description: raw.description || '',
@@ -279,7 +290,7 @@ export const transformIdea = (raw: RawIdea): Idea => {
     status: 'published' as IdeaStatus, // Default status
     tags: raw.tags || [],
     groupIds: raw.groupIds || [],
-    location: raw.location || '',
+    location: parseLocation(raw.location),
     // Initialize progressive load fields as empty
     discussionIds: [],
     ratingCriteria: defaultRatingCriteria, // CORRIGÉ
@@ -352,7 +363,7 @@ export const transformGroup = (raw: RawGroup): Group => ({
   type: raw.type,
   avatar: raw.avatar,
   banner: raw.banner,
-  location: raw.location,
+  location: parseLocation(raw.location),
   tags: raw.tags || [],
   createdAt: new Date(raw.createdAt),
   createdBy: [raw.createdBy], // L'API stocke un seul initiateur
@@ -374,7 +385,7 @@ export const transformPendingGroup = (raw: RawPendingGroup): PendingGroupCreatio
   shortDescription: raw.shortDescription,
   type: raw.type,
   avatar: raw.avatar,
-  location: raw.location,
+  location: parseLocation(raw.location),
   tags: raw.tags || [],
   createdAt: new Date(raw.createdAt),
   initiatorId: raw.createdBy,
@@ -387,7 +398,6 @@ export const transformPendingGroup = (raw: RawPendingGroup): PendingGroupCreatio
  * Transforme un RawMembership en GroupMembership (frontend type).
  */
 export const transformMembership = (raw: RawMembership): GroupMembership => ({
-  id: raw._id,
   userId: raw._from,
   groupId: raw._to,
   role: raw.role,

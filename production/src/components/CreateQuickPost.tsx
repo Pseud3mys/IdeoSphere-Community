@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Post } from '../types';
+import { Post, Location } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
@@ -13,6 +13,7 @@ import { Badge } from './ui/badge';
 import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin, Users, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { clientConfig } from '../config/clientConfig';
+import { LocationSearch } from './LocationSearch';
 
 interface CreateQuickPostProps {
   sourcePost?: Post;
@@ -35,7 +36,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
   
   const [title, setTitle] = useState(sourcePost && sourcePostAuthor ? `En réponse à ${sourcePostAuthor.name}` : '');
-  const [location, setLocation] = useState(() => {
+  const [location, setLocation] = useState<Location | string>(() => {
     // Pré-remplir avec la localisation du store ou du post source
     return store.prefilledLocation || sourcePost?.location || '';
   });
@@ -58,7 +59,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
       const newPost = await actions.publishPost({
         title: title.trim() || undefined,
         content: content.trim(),
-        location: location.trim() || undefined,
+        location: location || undefined,
         groupIds: groupIds.length > 0 ? groupIds : undefined,
         sourcePostIds: sourcePost ? [sourcePost.id] : []
       });
@@ -182,12 +183,10 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
                 <MapPin className="w-4 h-4" />
                 <span>Localisation (optionnelle)</span>
               </Label>
-              <Input
-                id="post-location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+              <LocationSearch
+                initialLocation={location}
+                onLocationSelect={(loc) => setLocation(loc || '')}
                 placeholder={clientConfig.examples.post.locationPlaceholder}
-                className="w-full"
               />
               <p className="text-xs text-muted-foreground">
                 Précisez où votre post s'applique si il concerne un lieu spécifique
