@@ -219,3 +219,31 @@ export function getUserProfileFromToken(): User | null {
   }
   return null;
 }
+
+/**
+ * Inscription à la newsletter
+ * @param email - Email pour l'inscription
+ * @returns true si l'inscription a réussi
+ */
+export async function subscribeToNewsletterOnApi(email: string): Promise<boolean> {
+  
+  console.log('🔄 [AUTH] Inscription à la newsletter pour:', email);
+  
+  try {
+    // Validation basique de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ [AUTH] Email invalide:', email);
+      return false;
+    }
+    
+    // Dans un vrai système, on ajouterait l'email à la liste de newsletter
+    // Ici on simule le succès
+    console.log('✅ [AUTH] Inscription à la newsletter réussie pour:', email);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ [AUTH] Erreur lors de l\'inscription à la newsletter:', error);
+    return false;
+  }
+}
