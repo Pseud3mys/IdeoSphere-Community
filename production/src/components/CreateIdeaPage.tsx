@@ -34,6 +34,7 @@ interface Draft {
   type: 'post' | 'idea';
   createdAt: Date | string;
   sourcePostIds?: string[];
+  selectedParentIds?: string[]; // Ajouter les liens
 }
 
 export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinkedContent, prefilledSelectedDiscussions, prefilledGroupIds, prefilledCreationMode, onClearPrefilled }: CreateIdeaPageProps) {
@@ -116,7 +117,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
     setCreationMode('idea');
   };
 
-  const handleSaveDraft = (title: string, summary: string, description?: string) => {
+  const handleSaveDraft = (title: string, summary: string, description?: string, selectedParentIds?: string[]) => {
     const newDraft: Draft = {
       id: Date.now().toString(),
       title: title || 'Brouillon sans titre',
@@ -124,7 +125,8 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
       description: description,
       type: creationMode,
       createdAt: new Date(),
-      sourcePostIds: sourcePost ? [sourcePost.id] : []
+      sourcePostIds: sourcePost ? [sourcePost.id] : [],
+      selectedParentIds: selectedParentIds || [] // Sauvegarder les liens
     };
 
     const updatedDrafts = [newDraft, ...drafts].slice(0, 10); // Garder max 10 brouillons

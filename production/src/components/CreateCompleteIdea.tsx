@@ -17,7 +17,7 @@ interface CreateCompleteIdeaProps {
   prefilledSelectedDiscussions?: string[];
   prefilledGroupIds?: string[];
   onClearPrefilled?: () => void;
-  onSaveDraft?: (title: string, summary: string, description?: string) => void;
+  onSaveDraft?: (title: string, summary: string, description?: string, selectedParentIds?: string[]) => void;
   loadedDraft?: {
     id: string;
     title: string;
@@ -26,6 +26,7 @@ interface CreateCompleteIdeaProps {
     type: 'post' | 'idea';
     createdAt: Date | string;
     sourcePostIds?: string[];
+    selectedParentIds?: string[]; // Ajouter les liens
   } | null;
   onDraftLoaded?: () => void;
 }
@@ -51,7 +52,8 @@ export function CreateCompleteIdea({
     getAllPosts,
     getAllGroups,
     getDiscussionTopicById,
-    actions
+    actions,
+    rawActions
   } = useEntityStoreSimple();
   
   const navigation = useNavigationActions();
@@ -169,6 +171,10 @@ ${postIntro}
   const [groupIds, setGroupIds] = useState<string[]>(prefilledGroupIds || []);
   const [selectedCoCreators, setSelectedCoCreators] = useState<User[]>([]);
   const [selectedParentIds, setSelectedParentIds] = useState<string[]>(() => {
+    // Si on a un brouillon, charger ses liens
+    if (loadedDraft?.selectedParentIds) {
+      return loadedDraft.selectedParentIds;
+    }
     const initialIds = prefilledLinkedContent || [];
     // Ajouter automatiquement l'idée source si elle existe et n'est pas déjà présente
     if (prefilledSourceIdea && !initialIds.includes(prefilledSourceIdea)) {
@@ -191,6 +197,9 @@ ${postIntro}
       setTitle(loadedDraft.title);
       setSummary(loadedDraft.summary);
       setDescription(loadedDraft.description || '');
+      if (loadedDraft.selectedParentIds) {
+        setSelectedParentIds(loadedDraft.selectedParentIds);
+      }
       // Marquer le brouillon comme chargé
       onDraftLoaded?.();
     }
@@ -305,6 +314,10 @@ ${postIntro}
     setSelectedParentIds([]);
     setSelectedCoCreators([]);
     
+    // Nettoyer le store pour supprimer le post source
+    rawActions.setPrefilledSourcePostId(null);
+    rawActions.setPrefilledLocation(null);
+    
     // Appeler onClearPrefilled si disponible pour nettoyer l'état parent
     if (onClearPrefilled) {
       onClearPrefilled();
@@ -317,12 +330,13 @@ ${postIntro}
     <div className="space-y-6">
       {/* Bandeau d'indication de source */}
       <SourceIndicatorBanner
-        sourcePost={derivedSourcePost}
+        sourcePost={derivedSourcePost || undefined}
         prefilledSourceIdea={prefilledSourceIdea}
         prefilledLinkedContent={prefilledLinkedContent}
         prefilledSelectedDiscussions={prefilledSelectedDiscussions}
         onClearPrefilled={onClearPrefilled}
         onStartFromScratch={handleStartFromScratch}
+        isIdeaMode={true}
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -338,7 +352,7 @@ ${postIntro}
           setLocation={setLocation}
           groupIds={groupIds}
           setGroupIds={setGroupIds}
-          sourcePost={derivedSourcePost}
+          sourcePost={derivedSourcePost || undefined}
         />
 
         {/* Section collaboration */}
@@ -359,7 +373,7 @@ ${postIntro}
             <Button 
               type="button" 
               variant="outline"
-              onClick={() => onSaveDraft(title, summary, description)}
+              onClick={() => onSaveDraft(title, summary, description, selectedParentIds)}
               className="flex items-center space-x-2"
             >
               <Quote className="w-4 h-4" />

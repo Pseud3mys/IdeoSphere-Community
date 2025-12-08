@@ -31,6 +31,7 @@ interface SimpleEntityStore {
   prefilledLocation: Location | string | null; // Localisation pré-remplie
   prefilledSourcePostId: string | null; // Post source spécifiquement pour la création
   prefilledGroupIds: string[]; // Groupes pré-remplis pour la création
+  prefilledSelectedParentIds: string[]; // Liens (selectedParentIds) pré-remplis pour la création
   prefilledSignupData: {
     name?: string;
     email?: string;
@@ -98,6 +99,7 @@ interface SimpleEntityActions {
   setPrefilledLocation: (location: string | null) => void;
   setPrefilledSourcePostId: (id: string | null) => void;
   setPrefilledGroupIds: (groupIds: string[]) => void;
+  setPrefilledSelectedParentIds: (selectedParentIds: string[]) => void;
   setPrefilledSignupData: (data: { name?: string; email?: string } | null) => void;
   
   // Actions pour les IDs du feed
@@ -160,6 +162,7 @@ const createInitialStore = (): SimpleEntityStore => {
     prefilledLocation: null,
     prefilledSourcePostId: null,
     prefilledGroupIds: [],
+    prefilledSelectedParentIds: [], // Initialiser les liens pré-remplis
     prefilledSignupData: null,
     feedIdeaIds: [],
     feedPostIds: [],
@@ -520,6 +523,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setPrefilledLocation: (location) => setStore(prev => ({ ...prev, prefilledLocation: location })),
     setPrefilledSourcePostId: (id) => setStore(prev => ({ ...prev, prefilledSourcePostId: id })),
     setPrefilledGroupIds: (groupIds) => setStore(prev => ({ ...prev, prefilledGroupIds: groupIds })),
+    setPrefilledSelectedParentIds: (selectedParentIds) => setStore(prev => ({ ...prev, prefilledSelectedParentIds: selectedParentIds })),
     
     // Feed IDs Actions
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),

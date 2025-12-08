@@ -372,18 +372,6 @@ export function UserProfilePage({
               <div className="text-sm text-muted-foreground">Collaborations</div>
             </div>
           </div>
-
-          {/* Message élogieux basé sur les stats */}
-          <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <Star className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                {/* Remarques sur le profil supprimées */}
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 

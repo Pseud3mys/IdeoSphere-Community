@@ -9,6 +9,7 @@ export interface Draft {
   type: 'post' | 'idea';
   createdAt: Date | string;
   sourcePostIds?: string[];
+  selectedParentIds?: string[]; // Ajouter les liens
 }
 
 interface DraftsSectionProps {
