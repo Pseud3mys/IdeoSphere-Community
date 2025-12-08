@@ -45,9 +45,17 @@ export function QuickPostWidget({
   const [createdPost, setCreatedPost] = useState<Post | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     // Initialiser avec l'utilisateur connecté ou le guest stocké
-    if (currentUser) return currentUser.id;
+    if (currentUser) {
+      console.log('[QuickPostWidget] Utilisateur connecté trouvé:', currentUser.id);
+      return currentUser.id;
+    }
     const storedGuestId = localStorage.getItem('quickpost_guest_user_id');
-    return storedGuestId || 'unknown';
+    if (storedGuestId) {
+      console.log('[QuickPostWidget] Compte invité stocké trouvé:', storedGuestId);
+      return storedGuestId;
+    }
+    console.log('[QuickPostWidget] Aucun utilisateur trouvé, sera créé lors de la soumission');
+    return ''; // Chaîne vide au lieu de 'unknown'
   });
 
   const handlePostCreated = (post: Post) => {

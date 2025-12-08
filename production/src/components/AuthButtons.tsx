@@ -46,14 +46,19 @@ export function AuthButtons({
 
   // Si l'utilisateur est connecté, afficher le lien vers le profil
   if (!isGuest) {
+    // Extraire le nom de la location si c'est un objet
+    const locationText = typeof currentUser?.location === 'string' 
+      ? currentUser.location 
+      : currentUser?.location?.label || 'Membre actif';
+
     if (compact) {
-      // Version compacte pour le header
+      // Version compacte pour le header - wrap dans un div pour éviter les fragments
       return (
-        <>
+        <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <div className="text-sm text-gray-900">{currentUser?.name || 'Utilisateur'}</div>
             <div className="text-xs text-muted-foreground">
-              {currentUser?.location || 'Membre actif'}
+              {locationText}
             </div>
           </div>
           <div 
@@ -63,7 +68,7 @@ export function AuthButtons({
           >
             {currentUser?.name?.slice(0, 2).toUpperCase() || 'U'}
           </div>
-        </>
+        </div>
       );
     } else {
       // Version complète pour la page d'accueil

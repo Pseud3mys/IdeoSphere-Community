@@ -82,12 +82,20 @@ export async function createPostOnApi(payload: CreatePostPayload): Promise<Post 
       sourceIds: sourceIds,
     };
     
+    console.log('[API] createPostOnApi - Payload envoyé:', JSON.stringify(apiPayload, null, 2));
+    
     // 3. Envoyer le payload agrégé à l'API
     const response = await apiClient.post<RawPost>('/posts', apiPayload);
 
+    console.log('[API] createPostOnApi - Réponse reçue:', response.data);
     return transformPost(response.data, new Map());
-  } catch (error) {
-    console.error('❌ Error creating post:', error);
+  } catch (error: any) {
+    console.error('❌ [API] Error creating post:', error);
+    console.error('❌ [API] Error details:', {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status
+    });
     return null;
   }
 }
