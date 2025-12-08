@@ -39,9 +39,11 @@ export function AppHeader({
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl text-gray-900 truncate">{clientConfig.identity.appName}</h1>
-                <p className="text-sm text-muted-foreground hidden sm:block">
-                  {clientConfig.identity.appTagline}
-                </p>
+                {isWelcomePage && (
+                  <p className="text-sm text-muted-foreground hidden sm:block">
+                    {clientConfig.identity.appTagline}
+                  </p>
+                )}
               </div>
             </div>
           </div>

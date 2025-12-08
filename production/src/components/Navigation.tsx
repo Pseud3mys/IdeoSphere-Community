@@ -53,7 +53,7 @@ export function Navigation() {
   return (
     <>
       {/* Navigation Desktop - en haut */}
-      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[73px] z-40">
+      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[57px] z-40">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex space-x-1">
             {tabs.map((tab) => {

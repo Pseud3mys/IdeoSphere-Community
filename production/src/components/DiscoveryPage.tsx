@@ -279,21 +279,21 @@ export function DiscoveryPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      {/* Header simplifié */}
-      <div className="mb-6">
-        <div className="flex items-center justify-center space-x-2">
-          <Sparkles className="w-5 h-5 text-blue-500" />
-          <h1 className="text-xl text-gray-900">Explorer</h1>
-        </div>
-
-        {/* Bandeau info intégré */}
-        {currentUser && currentUser.id !== 'unknown' && (
-          <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-4 py-2.5 mt-3 max-w-2xl mx-auto">
-            <p className="text-sm text-gray-600 text-center">
-              Retrouvez vos propres contributions dans <Link to="/my-contributions" className="font-medium text-blue-700 hover:text-blue-800">Mes contributions</Link>
+      {/* En-tête */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl text-gray-900 mb-2">Explorer</h1>
+            <p className="text-gray-600">
+              Découvrez les idées et conversations de la communauté
             </p>
           </div>
-        )}
+          {currentUser && currentUser.id !== 'unknown' && (
+            <div className="text-sm text-gray-600">
+              Vos contributions dans <Link to="/my-contributions" className="font-medium text-gray-900 hover:text-blue-700">Mes contributions</Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Navigation améliorée */}
