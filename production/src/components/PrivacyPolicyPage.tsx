@@ -38,7 +38,7 @@ export function PrivacyPolicyPage({ onNavigateBack }: PrivacyPolicyPageProps) {
             Comment nous protégeons et utilisons vos données personnelles
           </p>
           <p className="text-sm text-gray-500">
-            <strong>Dernière mise à jour :</strong> Janvier 2025
+            <strong>Dernière mise à jour :</strong> Octobre 2025
           </p>
         </div>
 

@@ -190,14 +190,10 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   // Transformer les données de l'API en format d'affichage (idées et posts)
   const recentPropositions = homeData ? homeData.recentSharedPropositions.slice(0, 5).map(item => {
     if (item.type === 'idea') {
-      // Résoudre le premier créateur depuis l'ID
-      const firstCreator = item.creatorIds?.[0] ? getUserById(item.creatorIds[0]) : null;
-      
       return {
         id: item.id,
         title: item.title,
         content: item.summary, // Pour les idées, utiliser le summary comme contenu
-        location: item.location || (firstCreator?.name + " (créateur)") || "Localisation non précisée",
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         type: 'idea' as const,
@@ -205,12 +201,10 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       };
     } else {
       // C'est un post
-      const author = getUserById(item.authorId);
       return {
         id: item.id,
         title: item.content.length > 60 ? item.content.substring(0, 60) + '...' : item.content,
         content: item.content,
-        location: item.location || (author ? author.name + " (auteur)" : "Localisation non précisée"),
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
         type: 'post' as const,
@@ -400,18 +394,16 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               </div>
             ) : recentPropositions.length > 0 ? (
               recentPropositions.map((item, index) => (
-                <Card key={item.id || index} className="border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer">
+                <Card key={item.id || index} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="mb-2">
-                      <h3 className="text-lg text-primary hover:underline">{item.title}</h3>
+                      <h3 className="text-lg text-gray-900">{item.title}</h3>
                     </div>
                     
                     {/* Afficher le contenu pour les posts */}
                     {item.type === 'post' && item.content && item.content !== item.title && (
                       <p className="text-sm text-gray-700 mb-2 line-clamp-2">{item.content}</p>
                     )}
-                    
-                    <p className="text-sm text-muted-foreground mb-2">{item.location}</p>
                     
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <div className="flex items-center">

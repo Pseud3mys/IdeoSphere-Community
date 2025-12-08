@@ -122,7 +122,7 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
                 <AccordionContent>
                   <div className="space-y-3 text-sm">
                     <p>
-                      Oui, IdeoSphere est entièrement open source. Cela signifie que :
+                      Oui, IdeoSphere est open source. Cela signifie que :
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Le code source est accessible et consultable par tous</li>

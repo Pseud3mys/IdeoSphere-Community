@@ -1,11 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { ArrowLeft, Star, Zap, TrendingUp, Users, MessageSquare, Vote } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
+import { ArrowLeft, Lightbulb, MessageSquare, Users, Sparkles } from 'lucide-react';
 
 interface HowItWorksPageProps {
-  onNavigateBack?: () => void; // Optionnel pour compatibilité
+  onNavigateBack?: () => void;
 }
 
 export function HowItWorksPage({ onNavigateBack }: HowItWorksPageProps) {
@@ -18,286 +17,229 @@ export function HowItWorksPage({ onNavigateBack }: HowItWorksPageProps) {
       navigate('/');
     }
   };
+
   return (
-    <div className="min-h-screen bg-white py-12">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-white py-12">
+      <div className="max-w-3xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-12">
           <Button 
             variant="ghost" 
             onClick={handleBack}
-            className="mb-4 text-gray-600 hover:text-primary"
+            className="mb-6 text-gray-600 hover:text-primary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Comment utiliser <span className="text-primary">IdeoSphere</span> ?
-          </h1>
-          <p className="text-lg text-gray-600">
-            Découvrez étape par étape comment partager vos idées, les enrichir collectivement et les transformer 
-            en projets concrets grâce à l'intelligence collective.
-          </p>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Comment ça marche ?
+            </h1>
+            <p className="text-xl text-gray-600">
+              Partagez vos idées, enrichissez celles des autres
+            </p>
+          </div>
         </div>
 
-        {/* Parcours des idées */}
+        {/* Introduction simple */}
+        <Card className="mb-12 bg-blue-50/50 border-blue-100">
+          <CardContent className="p-8">
+            <p className="text-lg text-gray-700 leading-relaxed text-center">
+              <strong>IdeoSphere</strong> est une plateforme où chacun peut partager ses idées 
+              et collaborer pour les améliorer ensemble. 
+              <span className="block mt-2 text-gray-600">Simple, transparent et collaboratif.</span>
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 3 étapes principales */}
         <div className="mb-12">
-          <h2 className="text-xl font-medium text-gray-900 mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 bg-primary rounded-full"></span>
-            Le parcours des idées sur IdeoSphere
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
+            En 3 étapes simples
           </h2>
-          <p className="text-primary/70 mb-8">
-            Comment une simple idée devient un projet concret grâce à l'intelligence collective
-          </p>
           
-          <div className="bg-gray-50 rounded-lg p-8">
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
+          <div className="space-y-8">
+            {/* Étape 1 */}
+            <div className="flex gap-6 items-start">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-blue-500 text-white rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg">
                   1
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-gray-600" />
-                    Post initial
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    Tout commence par un <strong>post simple</strong> où quelqu'un partage une idée, une observation ou une question.
-                  </p>
-                </div>
               </div>
+              <div className="flex-1 pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="w-6 h-6 text-blue-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Partagez une idée</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  Vous avez une idée pour améliorer votre ville, votre quartier ? 
+                  Partagez-la en quelques mots. Pas besoin d'un plan détaillé au début !
+                </p>
+              </div>
+            </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
+            {/* Étape 2 */}
+            <div className="flex gap-6 items-start">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-purple-500 text-white rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg">
                   2
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-600" />
-                    Enrichissement collectif
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    La communauté réagit, <strong>enrichit l'idée</strong> par des commentaires, propose des améliorations et identifie le potentiel.
-                  </p>
-                </div>
               </div>
+              <div className="flex-1 pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="w-6 h-6 text-purple-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Échangez avec la communauté</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  D'autres membres lisent votre idée, la commentent et proposent des améliorations. 
+                  Ensemble, vous affinez le projet.
+                </p>
+              </div>
+            </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
+            {/* Étape 3 */}
+            <div className="flex gap-6 items-start">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-green-500 text-white rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg">
                   3
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-gray-600" />
-                    Transformation en idée structurée
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    Quand l'intérêt grandit, l'idée est <strong>formalisée en projet structuré</strong> avec description détaillée et objectifs clairs.
-                  </p>
-                </div>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
-                  4
+              <div className="flex-1 pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="w-6 h-6 text-green-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Collaborez sur les projets</h3>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Vote className="h-4 w-4 text-gray-600" />
-                    Discussions et évaluations
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    L'idée fait l'objet de <strong>discussions approfondies</strong> et d'évaluations selon les critères Potentiel, Faisabilité, Aboutissement.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
-                  5
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Star className="h-4 w-4 text-gray-600" />
-                    Versions et évolutions
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    L'idée évolue en <strong>différentes versions</strong> qui affinent la proposition et la rendent plus réalisable.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 font-medium">
-                  6
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-gray-600" />
-                    Inspiration pour de nouveaux posts
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    Les meilleures idées <strong>inspirent de nouveaux posts</strong> qui proposent des applications concrètes, des variantes ou des projets dérivés.
-                  </p>
-                </div>
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  Les meilleures idées deviennent des projets concrets. 
+                  Rejoignez les projets qui vous intéressent pour les faire avancer.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Posts vs Projets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                Posts
-                <Badge variant="secondary">Simple</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <p><strong>Caractéristiques :</strong></p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Messages courts et simples</li>
-                  <li>Partage rapide d'idées</li>
-                  <li>Interaction par commentaires</li>
-                  <li>Pas d'évaluation complexe</li>
-                </ul>
-                <p><strong>Idéal pour :</strong> Brainstorming, questions, suggestions rapides, discussions informelles.</p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Ce que vous pouvez faire */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+            Ce que vous pouvez faire
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-2 hover:border-blue-200 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Explorer les idées</h3>
+                    <p className="text-gray-600 text-sm">
+                      Découvrez ce que proposent les autres membres de votre communauté
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
-                Projets
-                <Badge variant="default">Avancé</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <p><strong>Caractéristiques :</strong></p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Contenu structuré et détaillé</li>
-                  <li>Évaluations selon les 3 critères</li>
-                  <li>Collaboration organisée</li>
-                  <li>Versions et évolutions</li>
-                </ul>
-                <p><strong>Idéal pour :</strong> Projets concrets, initiatives structurées, propositions de politique publique.</p>
-              </div>
-            </CardContent>
-          </Card>
+            <Card className="border-2 hover:border-blue-200 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Commenter et discuter</h3>
+                    <p className="text-gray-600 text-sm">
+                      Donnez votre avis, posez des questions, proposez des améliorations
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-blue-200 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Lightbulb className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Publier vos idées</h3>
+                    <p className="text-gray-600 text-sm">
+                      Partagez vos propositions pour améliorer votre territoire
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-blue-200 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Rejoindre des groupes</h3>
+                    <p className="text-gray-600 text-sm">
+                      Collaborez avec d'autres personnes sur des thématiques communes
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Processus d'émergence */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Processus d'émergence des meilleures idées</CardTitle>
-            <CardDescription>
-              Comment l'intelligence collective fait remonter les meilleures solutions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-600 font-medium">1</span>
+        {/* Principes clés */}
+        <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+          <CardContent className="p-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+              Les principes clés
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white text-xs">✓</span>
                 </div>
-                <div>
-                  <h4 className="font-medium mb-2">Publication et découverte</h4>
-                  <p className="text-sm text-gray-600">
-                    Une idée est publiée et devient visible dans le feed de découverte de la communauté.
-                  </p>
-                </div>
+                <p className="text-gray-700 text-lg">
+                  <strong>Ouvert à tous :</strong> Pas besoin d'être expert, toutes les idées comptent
+                </p>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 font-medium">2</span>
+              
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white text-xs">✓</span>
                 </div>
-                <div>
-                  <h4 className="font-medium mb-2">Évaluation collaborative</h4>
-                  <p className="text-sm text-gray-600">
-                    Les membres de la communauté évaluent l'idée selon les trois critères : Potentiel, Faisabilité, Aboutissement.
-                  </p>
-                </div>
+                <p className="text-gray-700 text-lg">
+                  <strong>Collaboratif :</strong> Les meilleures idées naissent de l'échange
+                </p>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-purple-600 font-medium">3</span>
+              
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white text-xs">✓</span>
                 </div>
-                <div>
-                  <h4 className="font-medium mb-2">Discussion et enrichissement</h4>
-                  <p className="text-sm text-gray-600">
-                    Les commentaires et discussions permettent d'enrichir l'idée et de la faire évoluer.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-orange-600 font-medium">4</span>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Émergence naturelle</h4>
-                  <p className="text-sm text-gray-600">
-                    Les idées les mieux notées et les plus discutées remontent naturellement dans les classements et feeds personnalisés.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-red-600 font-medium">5</span>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Action concrète</h4>
-                  <p className="text-sm text-gray-600">
-                    Les meilleures idées sont transformées en projets concrets avec des équipes de collaboration.
-                  </p>
-                </div>
+                <p className="text-gray-700 text-lg">
+                  <strong>Transparent :</strong> Tout le monde voit l'évolution des projets
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Rôle des groupes de travail */}
-        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-          <CardHeader>
-            <CardTitle className="text-green-900">Rôle des groupes de travail</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-green-800 mb-4">
-              Les groupes de travail permettent de structurer les communautés par thématiques ou projets spécifiques. 
-              Ils facilitent la collaboration entre personnes partageant les mêmes centres d'intérêt et expertise.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-medium text-green-800 mb-2">Avantages :</h4>
-                <ul className="list-disc pl-5 space-y-1 text-green-700">
-                  <li>Focus sur des sujets spécifiques</li>
-                  <li>Collaboration entre experts</li>
-                  <li>Suivi dédié des projets</li>
-                  <li>Communication ciblée</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium text-green-800 mb-2">Exemples de groupes :</h4>
-                <ul className="list-disc pl-5 space-y-1 text-green-700">
-                  <li>Écologie et environnement</li>
-                  <li>Économie sociale et solidaire</li>
-                  <li>Mobilité durable</li>
-                  <li>Numérique et innovation</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Call to action */}
+        <div className="mt-12 text-center">
+          <Button 
+            onClick={handleBack}
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
+          >
+            Commencer à explorer
+          </Button>
+        </div>
       </div>
     </div>
   );

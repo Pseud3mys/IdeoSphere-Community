@@ -38,7 +38,7 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
             Les règles d'utilisation d'IdeoSphere pour une communauté respectueuse et productive
           </p>
           <p className="text-sm text-gray-500">
-            <strong>Dernière mise à jour :</strong> Janvier 2025
+            <strong>Dernière mise à jour :</strong> Octobre 2025
           </p>
         </div>
 
@@ -50,7 +50,6 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
           <CardContent>
             <p className="mb-4 text-gray-700">
               En utilisant IdeoSphere, vous acceptez ces conditions d'utilisation dans leur intégralité. 
-              Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser la plateforme.
             </p>
             <p className="text-sm text-gray-600">
               IdeoSphere est une plateforme de collaboration citoyenne destinée à faciliter l'émergence 
@@ -117,7 +116,7 @@ export function TermsPage({ onNavigateBack }: TermsPageProps) {
               <h4 className="font-medium text-gray-900 mb-2">Note importante :</h4>
               <p className="text-sm">
                 Vos idées publiées peuvent être reprises et développées par d'autres membres 
-                de la communauté dans l'esprit de collaboration open source.
+                de la communauté dans l'esprit de collaboration ouverte.
               </p>
             </div>
           </div>
