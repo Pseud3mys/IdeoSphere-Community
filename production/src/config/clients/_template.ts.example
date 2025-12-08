@@ -89,8 +89,6 @@ export const templateConfig: ClientConfig = {
     },
     recentPropositions: {
       title: 'Propositions récentes',
-      fallbackCategoryIdea: 'Idée',
-      fallbackCategoryPost: 'Post',
       loadingText: 'Chargement...',
       emptyText: 'Aucune proposition',
     },

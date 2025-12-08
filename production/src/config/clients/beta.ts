@@ -138,8 +138,6 @@ export const betaConfig: ClientConfig = {
     // Section propositions récentes
     recentPropositions: {
       title: 'Propositions récentes de nos membres',
-      fallbackCategoryIdea: 'Proposition programmatique',
-      fallbackCategoryPost: 'Discussion collective',
       loadingText: 'Chargement des propositions...',
       emptyText: 'Aucune proposition récente. Soyez le premier à contribuer !',
     },

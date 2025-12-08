@@ -200,7 +200,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         location: item.location || (firstCreator?.name + " (créateur)") || "Localisation non précisée",
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
-        category: item.tags?.[0] || clientConfig.welcome.recentPropositions.fallbackCategoryIdea,
         type: 'idea' as const,
         supporters: item.supporters // ✅ Passer le tableau de supporters pour le calcul dynamique
       };
@@ -214,7 +213,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         location: item.location || (author ? author.name + " (auteur)" : "Localisation non précisée"),
         time: formatTimeAgo(item.createdAt),
         lastUpdate: formatTimeAgo(item.createdAt),
-        category: item.tags?.[0] || clientConfig.welcome.recentPropositions.fallbackCategoryPost,
         type: 'post' as const,
         supporters: item.supporters // ✅ Passer le tableau de supporters pour le calcul dynamique
       };
@@ -404,11 +402,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               recentPropositions.map((item, index) => (
                 <Card key={item.id || index} className="border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2">
                       <h3 className="text-lg text-primary hover:underline">{item.title}</h3>
-                      <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20 ml-4">
-                        {item.category}
-                      </Badge>
                     </div>
                     
                     {/* Afficher le contenu pour les posts */}

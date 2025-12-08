@@ -139,8 +139,6 @@ export const leblancConfig: ClientConfig = {
     // Section propositions récentes
     recentPropositions: {
       title: 'Propositions récemment partagées',
-      fallbackCategoryIdea: 'Idée collaborative',
-      fallbackCategoryPost: 'Discussion collaborative',
       loadingText: 'Chargement des propositions récentes...',
       emptyText: 'Aucune proposition récente trouvée.',
     },

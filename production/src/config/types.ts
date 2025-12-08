@@ -106,8 +106,6 @@ export interface ClientConfig {
     };
     recentPropositions: {
       title: string;
-      fallbackCategoryIdea: string;
-      fallbackCategoryPost: string;
       loadingText: string;
       emptyText: string;
     };
