@@ -26,6 +26,7 @@ import { HowItWorksPage } from '../components/HowItWorksPage';
 import { FAQPage } from '../components/FAQPage';
 import { PrivacyPolicyPage } from '../components/PrivacyPolicyPage';
 import { TermsPage } from '../components/TermsPage';
+import { QuickPostWidgetStandalone } from '../components/QuickPostWidget';
 
 // Pages protégées sans paramètres (aucune pour le moment)
 
@@ -77,6 +78,14 @@ export const routes: RouteObject[] = [
   {
     path: 'signup',
     element: <SignupPageWrapper />,
+  },
+
+  // ========================================
+  // WIDGET EMBEDDABLE (iframe)
+  // ========================================
+  {
+    path: 'widget/quick-post',
+    element: <QuickPostWidgetStandalone />,
   },
 
   // ========================================
