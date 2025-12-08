@@ -93,7 +93,7 @@ export function GroupHubPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center">
           <p className="text-muted-foreground">Chargement du groupe...</p>
         </div>
@@ -103,7 +103,7 @@ export function GroupHubPage() {
 
   if (!group) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center">
           <h2>Groupe introuvable</h2>
           <p className="text-muted-foreground mt-2">
@@ -127,7 +127,7 @@ export function GroupHubPage() {
       />
 
       {/* Contenu principal */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Bouton retour */}
         <Button
           variant="ghost"

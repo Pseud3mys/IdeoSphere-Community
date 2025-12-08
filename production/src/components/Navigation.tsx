@@ -26,9 +26,9 @@ export function Navigation() {
   const tabs = [
     {
       path: '/discovery',
-      label: 'Fil d\'idées',
+      label: 'Explorer',
       icon: Home,
-      description: 'Découvrir les idées de la communauté',
+      description: 'Explorer les idées de la communauté',
     },
     {
       path: '/my-contributions',

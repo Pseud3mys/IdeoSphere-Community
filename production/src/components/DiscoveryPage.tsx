@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Idea, User, Post, FeedItem } from '../types';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -277,63 +278,19 @@ export function DiscoveryPage({
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Header compact */}
+    <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Header simplifié */}
       <div className="mb-6">
-        {/* Version desktop */}
-        <div className="hidden sm:flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <Sparkles className="w-5 h-5 text-blue-500" />
-            <div>
-              <h1 className="text-xl text-gray-900">Fil de la communauté</h1>
-              <p className="text-sm text-gray-600">Découvrez les idées et conversations</p>
-            </div>
-          </div>
-          
-          {/* Stats compactes à droite */}
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <div className="flex items-center space-x-1">
-              <MessageSquare className="w-4 h-4" />
-              <span>{totalPosts}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Lightbulb className="w-4 h-4" />
-              <span>{totalIdeas}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Users className="w-4 h-4" />
-              <span>{totalParticipants}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Version mobile */}
-        <div className="sm:hidden text-center mb-3">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <Sparkles className="w-5 h-5 text-blue-500" />
-            <h1 className="text-xl text-gray-900">Fil de la communauté</h1>
-          </div>
-          <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
-            <span className="flex items-center space-x-1">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>{totalPosts}</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <Lightbulb className="w-3.5 h-3.5" />
-              <span>{totalIdeas}</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <Users className="w-3.5 h-3.5" />
-              <span>{totalParticipants}</span>
-            </span>
-          </div>
+        <div className="flex items-center justify-center space-x-2">
+          <Sparkles className="w-5 h-5 text-blue-500" />
+          <h1 className="text-xl text-gray-900">Explorer</h1>
         </div>
 
         {/* Bandeau info intégré */}
         {currentUser && currentUser.id !== 'unknown' && (
-          <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-3 py-2 mt-3">
-            <p className="text-xs text-gray-600 text-center">
-              💡 Retrouvez vos propres contributions dans <span className="font-medium text-blue-700">Mes contributions</span>
+          <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-4 py-2.5 mt-3 max-w-2xl mx-auto">
+            <p className="text-sm text-gray-600 text-center">
+              Retrouvez vos propres contributions dans <Link to="/my-contributions" className="font-medium text-blue-700 hover:text-blue-800">Mes contributions</Link>
             </p>
           </div>
         )}

@@ -22,7 +22,7 @@ export function GroupHeader({
 }: GroupHeaderProps) {
   return (
     <div className="border-b bg-card">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-start gap-4 md:gap-6">
           {/* Avatar */}
           {group.avatar && (

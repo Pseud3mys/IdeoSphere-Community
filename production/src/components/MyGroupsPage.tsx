@@ -113,7 +113,7 @@ export function MyGroupsPage() {
 
   if (!currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* 🔧 DEBUG : Boutons de connexion rapide */}
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-2xl mx-auto">
           <p className="text-sm mb-3 text-center">🔧 <strong>Mode Debug</strong> - Connectez-vous pour tester :</p>
@@ -140,7 +140,7 @@ export function MyGroupsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
@@ -149,7 +149,7 @@ export function MyGroupsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-5xl">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 md:mb-8">
         <div className="flex-1">

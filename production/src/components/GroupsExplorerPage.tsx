@@ -134,7 +134,7 @@ export function GroupsExplorerPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center">
           <p className="text-muted-foreground">Chargement des groupes...</p>
         </div>
@@ -143,7 +143,7 @@ export function GroupsExplorerPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
       {/* En-tête */}
       <div className="mb-6 md:mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
