@@ -131,7 +131,7 @@ export function IdeaCard({
             {latestIdea.location && (
               <>
                 <MapPin className="w-4 h-4" />
-                <span>{latestIdea.location}</span>
+                <span>{latestIdea.location.label}</span>
                 <span>•</span>
               </>
             )}
