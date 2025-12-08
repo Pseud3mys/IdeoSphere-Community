@@ -113,13 +113,6 @@ export interface ClientConfig {
     };
     cta: {
       buttonText: string;
-      values: string[];
-    };
-    discover: {
-      title: string;
-      description: string;
-      buttonText: string;
-      features: string[];
     };
   };
 

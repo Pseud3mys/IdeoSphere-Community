@@ -465,15 +465,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               {clientConfig.welcome.cta.buttonText}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            
-            <div className="flex items-center justify-center space-x-6 mt-6 text-sm text-muted-foreground">
-              {clientConfig.welcome.cta.values.map((value, index) => (
-                <div key={index} className="flex items-center">
-                  <CheckCircle2 className="w-4 h-4 mr-2 text-primary/60" />
-                  {value}
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -483,29 +474,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             <NewsletterSubscription onSubscribe={onNewsletterSubscribe} />
           </section>
         )}
-
-        {/* Accès démo en bas de page */}
-        <section className="py-12 border-t border-gray-100">
-          <div className="text-center">
-            <h2 className="text-2xl mb-4 text-gray-900">{clientConfig.welcome.discover.title}</h2>
-            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              {clientConfig.welcome.discover.description}
-            </p>
-            
-            <Button 
-              onClick={onEnterPlatformWithTempUser}
-              size="lg"
-              className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 px-12 py-4 text-lg"
-            >
-              <CheckCircle2 className="w-5 h-5 mr-3" />
-              {clientConfig.welcome.discover.buttonText}
-            </Button>
-            
-            <p className="text-sm text-muted-foreground mt-4">
-              {clientConfig.welcome.discover.features.join(' • ')}
-            </p>
-          </div>
-        </section>
       </div>
     </div>
   );

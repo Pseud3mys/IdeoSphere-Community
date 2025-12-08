@@ -708,16 +708,7 @@ export function MyContributionsPage({
 
         {/* Tab: Notifications */}
         <TabsContent value="notifications" className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl text-gray-900">Activité sur vos contenus</h2>
-              <p className="text-sm text-gray-600">
-                Soutiens, commentaires et évaluations par ordre chronologique
-              </p>
-            </div>
-            <Badge variant="secondary">{notifications.length} notification{notifications.length > 1 ? 's' : ''}</Badge>
-          </div>
-
+          
           {notifications.length === 0 ? (
             <Alert>
               <AlertDescription>

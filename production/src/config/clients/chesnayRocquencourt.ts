@@ -148,25 +148,6 @@ export const chesnayRocquencourtConfig: ClientConfig = {
     // Call-to-Action principal
     cta: {
       buttonText: 'Explorer toutes les propositions',
-      
-      // Badges de valeurs
-      values: [
-        'Collaboration ouverte',
-        'Projets concrets',
-        'Intelligence collective',
-      ],
-    },
-    
-    // Section "Envie de découvrir"
-    discover: {
-      title: 'Envie de découvrir la plateforme ?',
-      description: 'Explorez les propositions déjà partagées par la communauté et découvrez comment participer à l\'émergence de projets innovants.',
-      buttonText: 'Accès démo instantané',
-      features: [
-        'Aucune inscription requise',
-        'Accès immédiat',
-        'Toutes les fonctionnalités',
-      ],
     },
   },
 
