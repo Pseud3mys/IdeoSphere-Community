@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, HelpCircle, MessageCircle, Mail } from 'lucide-react';
+import { QuickPostWidget } from './QuickPostWidget';
 
 interface FAQPageProps {
   onNavigateBack?: () => void; // Optionnel pour compatibilité
@@ -233,16 +234,23 @@ export function FAQPage({ onNavigateBack }: FAQPageProps) {
           <p className="text-primary/70 mb-6">Notre équipe est là pour vous aider</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center gap-4 p-6 border rounded-lg">
-              <MessageCircle className="h-8 w-8 text-gray-600" />
-              <div>
-                <h4 className="font-medium text-gray-900">Discord</h4>
-                <p className="text-sm text-gray-600 mb-3">Discussions en temps réel avec la communauté</p>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://discord.gg/WuUY5dtB" target="_blank" rel="noopener noreferrer">
-                    Rejoindre Discord
-                  </a>
-                </Button>
+            <div className="flex flex-col gap-4 p-6 border rounded-lg">
+              <div className="flex items-center gap-4">
+                <MessageCircle className="h-8 w-8 text-gray-600" />
+                <div>
+                  <h4 className="font-medium text-gray-900">Posez votre question</h4>
+                  <p className="text-sm text-gray-600">Partagez vos questions et remarques</p>
+                </div>
+              </div>
+              
+              {/* Widget de création rapide de post */}
+              <div className="mt-2">
+                <QuickPostWidget 
+                  defaultTags={['#FAQ']}
+                  showFeedAfterPost={false}
+                  showContactFields={false}
+                  placeholder="Posez votre question ici..."
+                />
               </div>
             </div>
 

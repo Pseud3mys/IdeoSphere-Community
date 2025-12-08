@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
@@ -9,9 +9,11 @@ import { toast } from 'sonner';
 import { createPostOnApi } from '../../api/contentService';
 import apiClient from '../../api/apiClient';
 import { Post } from '../../types';
+import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface QuickPostComposerProps {
   groupIds?: string[];
+  tags?: string[]; // Tags par défaut (ex: ['#FAQ'])
   showContactFields?: boolean;
   onPostCreated?: (post: Post) => void;
   placeholder?: string;
@@ -21,15 +23,37 @@ type PostType = 'question' | 'suggestion' | 'other';
 
 export function QuickPostComposer({ 
   groupIds = [], 
+  tags = [],
   showContactFields = false,
   onPostCreated,
   placeholder = "Partagez votre question, suggestion ou remarque..."
 }: QuickPostComposerProps) {
+  // Récupération de l'utilisateur connecté depuis l'Entity Store
+  const { getCurrentUser } = useEntityStoreSimple();
+  const currentUser = getCurrentUser();
+  
   const [content, setContent] = useState('');
   const [postType, setPostType] = useState<PostType>('question');
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [guestUserId, setGuestUserId] = useState<string | null>(null);
+
+  // Vérifier si on a déjà un utilisateur (connecté ou invité créé précédemment)
+  useEffect(() => {
+    // Si l'utilisateur est connecté, pas besoin de créer un compte invité
+    if (currentUser) {
+      console.log('✅ Utilisateur déjà connecté:', currentUser.id);
+    }
+    // Sinon, vérifier si on a déjà un guestUserId stocké en localStorage
+    else {
+      const storedGuestId = localStorage.getItem('quickpost_guest_user_id');
+      if (storedGuestId) {
+        setGuestUserId(storedGuestId);
+        console.log('✅ Compte invité existant trouvé:', storedGuestId);
+      }
+    }
+  }, [currentUser]);
 
   const postTypes: { value: PostType; label: string; icon: any; color: string }[] = [
     { value: 'question', label: 'Question', icon: MessageSquare, color: 'text-blue-600' },
@@ -79,13 +103,32 @@ export function QuickPostComposer({
     setIsSubmitting(true);
 
     try {
-      // 1. Créer un utilisateur invité
-      const userId = await createGuestUser();
-      
-      if (!userId) {
-        toast.error('Erreur lors de la création du profil');
-        setIsSubmitting(false);
-        return;
+      let userId: string;
+
+      // 1. Déterminer quel utilisateur utiliser
+      if (currentUser) {
+        // Utilisateur connecté
+        userId = currentUser.id;
+        console.log('✅ Utilisation de l\'utilisateur connecté:', userId);
+      } else if (guestUserId) {
+        // Utilisateur invité existant (stocké en localStorage)
+        userId = guestUserId;
+        console.log('✅ Utilisation du compte invité existant:', userId);
+      } else {
+        // Créer un nouvel utilisateur invité
+        const newGuestId = await createGuestUser();
+        
+        if (!newGuestId) {
+          toast.error('Erreur lors de la création du profil');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Stocker l'ID en localStorage pour réutilisation
+        localStorage.setItem('quickpost_guest_user_id', newGuestId);
+        setGuestUserId(newGuestId);
+        userId = newGuestId;
+        console.log('✅ Nouveau compte invité créé et stocké:', userId);
       }
 
       // 2. Créer le post
@@ -93,7 +136,8 @@ export function QuickPostComposer({
         authorId: userId,
         content: content.trim(),
         type: mapPostTypeToApiType(postType),
-        groupIds: groupIds.length > 0 ? groupIds : undefined
+        groupIds: groupIds.length > 0 ? groupIds : undefined,
+        tags: tags.length > 0 ? tags : undefined
       });
 
       if (newPost) {

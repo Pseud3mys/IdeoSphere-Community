@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 interface QuickPostFeedProps {
   groupIds: string[];
+  tags?: string[]; // Tags pour filtrer le feed si pas de groupIds
   feedSize?: number;
   currentUserId?: string;
   onCreateAnother?: () => void;
@@ -19,6 +20,7 @@ interface QuickPostFeedProps {
 
 export function QuickPostFeed({ 
   groupIds, 
+  tags = [],
   feedSize = 6,
   currentUserId = 'unknown',
   onCreateAnother,
@@ -31,28 +33,56 @@ export function QuickPostFeed({
 
   useEffect(() => {
     loadFeed();
-  }, [groupIds]);
+  }, [groupIds, tags]);
 
   const loadFeed = async () => {
     setIsLoading(true);
     
     try {
-      // On utilise le premier groupId pour récupérer le feed
-      // TODO: Si plusieurs groupIds, on pourrait merger les feeds
-      const primaryGroupId = groupIds[0] || '';
-      
-      if (!primaryGroupId) {
-        console.warn('⚠️ Aucun groupId fourni pour le feed');
-        setPosts([]);
-        setIsLoading(false);
-        return;
-      }
+      let allPosts: Post[] = [];
 
-      // Récupérer le feed du groupe (idées et posts)
-      const { posts: groupPosts } = await fetchGroupFeed(primaryGroupId, currentUserId);
+      // Si on a des groupIds, on récupère le feed du groupe
+      if (groupIds.length > 0) {
+        const primaryGroupId = groupIds[0];
+        const { posts: groupPosts } = await fetchGroupFeed(primaryGroupId, currentUserId);
+        allPosts = groupPosts;
+      } 
+      // Sinon, si on a des tags, on récupère le feed général et on filtre par tags
+      else if (tags.length > 0) {
+        // On récupère le feed général (weighted-random ou autre)
+        // Pour l'instant, on utilise fetchHomePageStats qui donne du contenu récent
+        const { fetchHomePageStats } = await import('../../api/feedService');
+        const homeData = await fetchHomePageStats();
+        
+        // Convertir les FeedPostCard en Post (approximatif pour le filtrage)
+        allPosts = homeData.recentSharedPropositions
+          .filter(item => item.type === 'post')
+          .map(card => ({
+            id: card.id,
+            content: (card as any).content,
+            authorId: (card as any).authorId,
+            createdAt: card.createdAt,
+            supporters: card.supporters,
+            supportCount: card.supportCount,
+            tags: card.tags,
+            replies: [],
+            location: card.location,
+            derivedIdeas: [],
+            derivedPosts: [],
+            sourcePosts: []
+          } as Post));
+        
+        // Filtrer par tags
+        const normalizedTags = tags.map(t => t.toLowerCase().replace(/^#/, ''));
+        allPosts = allPosts.filter(post => 
+          post.tags?.some(tag => 
+            normalizedTags.includes(tag.toLowerCase().replace(/^#/, ''))
+          )
+        );
+      }
       
       // Limiter aux N premiers posts
-      const limitedPosts = groupPosts.slice(0, feedSize);
+      const limitedPosts = allPosts.slice(0, feedSize);
       setPosts(limitedPosts);
       
       // Initialiser les posts déjà supportés par l'utilisateur
@@ -104,8 +134,8 @@ export function QuickPostFeed({
             return {
               ...post,
               supportCount: isCurrentlySupporting 
-                ? post.supportCount - 1 
-                : post.supportCount + 1,
+                ? (post.supportCount || 0) - 1 
+                : (post.supportCount || 0) + 1,
               supporters: isCurrentlySupporting
                 ? post.supporters.filter(id => id !== currentUserId)
                 : [...post.supporters, currentUserId]
@@ -134,7 +164,7 @@ export function QuickPostFeed({
   const convertToFeedCard = (post: Post): FeedPostCard => ({
     id: post.id,
     content: post.content,
-    location: post.location,
+    location: typeof post.location === 'string' ? post.location : post.location?.label,
     authorId: post.authorId,
     createdAt: post.createdAt,
     supporters: post.supporters || [],
