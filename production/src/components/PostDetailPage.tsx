@@ -242,7 +242,7 @@ export function PostDetailPage({
                       <span className="text-gray-500">•</span>
                       <span className="text-sm text-gray-500">{formatTimeAgo(latestPost.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-500">{postAuthor.location || 'Membre de la communauté'}</p>
+                    <p className="text-sm text-gray-500">{postAuthor.location?.label || 'Localisation non renseigné'}</p>
                   </div>
                 </>
               ) : (

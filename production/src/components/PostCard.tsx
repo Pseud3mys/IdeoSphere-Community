@@ -131,7 +131,7 @@ export function PostCard({
             {postAuthor?.location && (
               <>
                 <MapPin className="w-4 h-4" />
-                <span>{postAuthor.location}</span>
+                <span>{postAuthor.location.label}</span>
                 <span>•</span>
               </>
             )}

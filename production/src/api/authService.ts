@@ -64,9 +64,12 @@ export async function createUnfinalizedAccountOnApi(guestData?: { name?: string;
     const response = await apiClient.post<RawUser>('/users', {
       name,
       email,
-      address: guestData?.address || '',
+      //address: guestData?.address || '',
+      // a remplacer par: 
+      //location: {
+      //    label: guestData?.address || ''
+      //},
       isRegistered: false, // Marqueur important pour le backend
-      bio: 'Compte invité',
       createdAt: new Date().toISOString()
     });
 
