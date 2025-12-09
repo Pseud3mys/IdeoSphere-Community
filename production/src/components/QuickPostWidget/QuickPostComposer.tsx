@@ -38,6 +38,37 @@ export function QuickPostComposer({
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [guestUserId, setGuestUserId] = useState<string | null>(null);
+  const [guestUserData, setGuestUserData] = useState<{ name: string; email: string } | null>(null);
+
+  // Charger les données du compte invité depuis l'API
+  const loadGuestUserData = async (userId: string) => {
+    try {
+      const cleanKey = userId.replace('users/', '');
+      const response = await apiClient.get(`/users/${cleanKey}`);
+      
+      if (response.data) {
+        const userData = {
+          name: response.data.name || '',
+          email: response.data.email || ''
+        };
+        setGuestUserData(userData);
+        
+        // Préremplir les champs
+        // L'email : Seulement si ce n'est pas un email auto-généré
+        if (userData.email && !userData.email.includes('@temp.ideosphere.org')) {
+          setEmail(userData.email);
+        }
+        // Le nom : Seulement si ce n'est pas "Invité"
+        if (userData.name && userData.name !== 'Invité') {
+          setFirstName(userData.name);
+        }
+        
+        console.log('✅ [QuickPostComposer] Données du compte invité chargées et préremplies:', userData);
+      }
+    } catch (error) {
+      console.error('❌ [QuickPostComposer] Erreur lors du chargement des données invité:', error);
+    }
+  };
 
   // Vérifier si on a déjà un utilisateur (connecté ou invité créé précédemment)
   useEffect(() => {
@@ -51,6 +82,8 @@ export function QuickPostComposer({
       if (storedGuestId) {
         setGuestUserId(storedGuestId);
         console.log('✅ [QuickPostComposer] Compte invité existant trouvé:', storedGuestId);
+        // Charger les données de ce compte pour préremplir les champs
+        loadGuestUserData(storedGuestId);
       } else {
         console.log('ℹ️ [QuickPostComposer] Aucun compte invité trouvé (utilisateur mock ou non connecté)');
       }
@@ -65,16 +98,17 @@ export function QuickPostComposer({
 
   /**
    * Crée un utilisateur invité sur le backend
+   * Si l'email existe déjà, récupère l'utilisateur existant
    */
   const createGuestUser = async (): Promise<string | null> => {
-    try {
-      const guestData = {
-        name: firstName.trim() || 'Invité',
-        email: email.trim() || `guest_${Date.now()}@temp.ideosphere.org`,
-        isRegistered: false,
-        birthYear: new Date().getFullYear() // Par défaut année courante pour les invités
-      };
+    const guestData = {
+      name: firstName.trim() || 'Invité',
+      email: email.trim() || `guest_${Date.now()}@temp.ideosphere.org`,
+      isRegistered: false,
+      createdAt: new Date()
+    };
 
+    try {
       console.log('🔄 Création d\'un utilisateur invité...', guestData);
       const response = await apiClient.post('/users', guestData);
       
@@ -86,8 +120,36 @@ export function QuickPostComposer({
       
       console.error('❌ Réponse invalide de l\'API:', response.data);
       return null;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Erreur lors de la création de l\'utilisateur invité:', error);
+      
+      // Vérifier si c'est une erreur de doublon d'email
+      const errorMessage = error?.response?.data?.message || '';
+      if (errorMessage.includes('existe déjà') && guestData.email) {
+        console.log('ℹ️ [QuickPost] Email existe déjà, recherche de l\'utilisateur...');
+        
+        // Essayer de trouver l'utilisateur avec cet email
+        try {
+          const searchResponse = await apiClient.get(`/users?email=${encodeURIComponent(guestData.email)}`);
+          
+          if (searchResponse.data && searchResponse.data.length > 0) {
+            const existingUser = searchResponse.data[0];
+            const userId = existingUser._id;
+            console.log('✅ [QuickPost] Utilisateur existant trouvé avec cet email:', userId);
+            
+            // Stocker les données de cet utilisateur
+            setGuestUserData({
+              name: existingUser.name || '',
+              email: existingUser.email || ''
+            });
+            
+            return userId;
+          }
+        } catch (searchError) {
+          console.error('❌ [QuickPost] Erreur lors de la recherche de l\'utilisateur:', searchError);
+        }
+      }
+      
       return null;
     }
   };
@@ -115,10 +177,43 @@ export function QuickPostComposer({
         // Utilisateur VRAIMENT connecté (pas le mock "Visiteur")
         userId = currentUser.id;
         console.log('✅ [QuickPost] Utilisation de l\'utilisateur enregistré connecté:', userId);
+      } else if (guestUserId && guestUserData) {
+        // Vérifier si les données ont changé
+        const currentEmail = email.trim() || `guest_${Date.now()}@temp.ideosphere.org`;
+        const currentName = firstName.trim() || 'Invité';
+        
+        const emailChanged = currentEmail !== guestUserData.email && !currentEmail.includes('@temp.ideosphere.org');
+        const nameChanged = currentName !== guestUserData.name && currentName !== 'Invité';
+        
+        if (emailChanged || nameChanged) {
+          // Les données ont changé, créer un nouveau compte invité
+          console.log('🔄 [QuickPost] Données modifiées, création d\'un nouveau compte invité...');
+          console.log('   Ancien:', guestUserData);
+          console.log('   Nouveau:', { name: currentName, email: currentEmail });
+          
+          const newGuestId = await createGuestUser();
+          
+          if (!newGuestId) {
+            toast.error('Erreur lors de la création du nouveau profil');
+            setIsSubmitting(false);
+            return;
+          }
+          
+          // Remplacer l'ancien compte par le nouveau
+          localStorage.setItem('quickpost_guest_user_id', newGuestId);
+          setGuestUserId(newGuestId);
+          setGuestUserData({ name: currentName, email: currentEmail });
+          userId = newGuestId;
+          console.log('✅ [QuickPost] Nouveau compte invité créé:', userId);
+        } else {
+          // Utiliser le compte existant
+          userId = guestUserId;
+          console.log('✅ [QuickPost] Utilisation du compte invité existant:', userId);
+        }
       } else if (guestUserId) {
-        // Utilisateur invité existant (stocké en localStorage)
+        // On a un guestUserId mais pas les données chargées, on utilise quand même
         userId = guestUserId;
-        console.log('✅ [QuickPost] Utilisation du compte invité existant:', userId);
+        console.log('✅ [QuickPost] Utilisation du compte invité existant (données non chargées):', userId);
       } else {
         // Créer un nouvel utilisateur invité
         console.log('🔄 [QuickPost] Création d\'un nouveau compte invité...');

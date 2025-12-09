@@ -86,7 +86,7 @@ export const amdfConfig: ClientConfig = {
     // Section Hero (titre principal)
     hero: {
       title: 'Partagez, explorez et co-construisez des idées ensemble',
-      description: 'Innovation, projets collaboratifs, amélioration continue, initiatives communautaires... Que vous ayez une grande vision ou une petite amélioration à proposer, cette plateforme recueille toutes vos contributions pour faire avancer votre communauté.',
+      description: 'Initiatives citoyennes ou de quartiers, projets collaboratifs, améliorations continues… Que vous ayez une grande vision ou une petite amélioration à proposer, cette plateforme recueille toutes vos contributions pour faire avancer votre commune.',
       
       // Thématiques suggérées (utilisées dans la description)
       themes: [
