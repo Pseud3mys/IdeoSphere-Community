@@ -80,12 +80,25 @@ export function PendingGroupDetailPage() {
 
     setIsConfirming(true);
     try {
+      // Vérifier si ce sera la dernière confirmation AVANT de confirmer
+      const willBeComplete = pendingGroup && 
+        (pendingGroup.confirmations.length + 1) >= pendingGroup.founders.length;
+      
       await confirmGroupFounder(pendingId);
-      toast.success('Confirmation enregistrée !', {
-        description: isComplete 
-          ? 'Le groupe sera activé automatiquement.' 
-          : 'En attente des autres co-fondateurs.'
-      });
+      
+      if (willBeComplete) {
+        toast.success('Groupe activé !', {
+          description: 'Le groupe a été créé avec succès. Redirection...'
+        });
+        // Rediriger vers la page des groupes après un court délai
+        setTimeout(() => {
+          navigate('/groups/my');
+        }, 1500);
+      } else {
+        toast.success('Confirmation enregistrée !', {
+          description: 'En attente des autres co-fondateurs.'
+        });
+      }
     } catch (error) {
       console.error('❌ [PendingGroupDetailPage] Erreur confirmation:', error);
       toast.error('Erreur lors de la confirmation');

@@ -220,10 +220,28 @@ export function useGroupActions() {
     try {
       const pendingGroup = await groupService.confirmGroupFounder(pendingId, currentUser.id);
       
-      // Mettre à jour le groupe pending dans le store
-      actions.updatePendingGroupCreation(pendingId, pendingGroup);
+      // Vérifier si le groupe est maintenant complet (toutes les confirmations reçues)
+      const isComplete = pendingGroup.confirmations.length >= pendingGroup.founders.length;
       
-      console.log(`✅ [useGroupActions.confirmGroupFounder] Confirmation ajoutée pour ${pendingId}`);
+      if (isComplete) {
+        // Le groupe devrait être activé côté backend
+        // Recharger toutes les données pour obtenir le nouveau groupe actif et supprimer le pending
+        console.log(`✅ [useGroupActions.confirmGroupFounder] Groupe ${pendingId} complet - rechargement des données`);
+        
+        // Attendre un peu pour laisser le backend activer le groupe
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Recharger les groupes de l'utilisateur
+        await loadMyGroups();
+        
+        // Supprimer le groupe pending du store local s'il existe encore
+        actions.removePendingGroupCreation(pendingId);
+      } else {
+        // Mettre à jour le groupe pending dans le store
+        actions.updatePendingGroupCreation(pendingId, pendingGroup);
+      }
+      
+      console.log(`✅ [useGroupActions.confirmGroupFounder] Confirmation ajoutée pour ${pendingId} (${pendingGroup.confirmations.length}/${pendingGroup.founders.length})`);
       return pendingGroup;
     } catch (error) {
       console.error('❌ [useGroupActions.confirmGroupFounder] Erreur:', error);

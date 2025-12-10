@@ -22,6 +22,7 @@ export function GroupsExplorerPage() {
     isUserMemberOfGroup,
     getCurrentUser,
     getUserPendingGroupCreations,
+    getPendingGroupCreationById,
     store
   } = useEntityStoreSimple();
 
@@ -133,8 +134,19 @@ export function GroupsExplorerPage() {
     }
 
     try {
+      const pendingGroup = getPendingGroupCreationById(pendingId);
+      const willBeComplete = pendingGroup && 
+        (pendingGroup.confirmations.length + 1) >= pendingGroup.founders.length;
+      
       await groupActions.confirmGroupFounder(pendingId);
-      toast.success("Confirmation enregistrée !");
+      
+      if (willBeComplete) {
+        toast.success("Groupe activé !", {
+          description: 'Le groupe a été créé avec succès.'
+        });
+      } else {
+        toast.success("Confirmation enregistrée !");
+      }
     } catch (error) {
       console.error("Erreur lors de la confirmation:", error);
       toast.error("Erreur lors de la confirmation");

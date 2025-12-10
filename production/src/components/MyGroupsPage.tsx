@@ -19,7 +19,7 @@ import { CreateGroupFlow } from './CreateGroupFlow';
 import { toast } from 'sonner@2.0.3';
 
 export function MyGroupsPage() {
-  const { getUserGroups, getUserPendingGroupCreations, currentUser, isUserMemberOfGroup, store, actions, getUserById } = useEntityStoreSimple();
+  const { getUserGroups, getUserPendingGroupCreations, getPendingGroupCreationById, currentUser, isUserMemberOfGroup, store, actions, getUserById } = useEntityStoreSimple();
   const { loadMyGroups, joinGroup, leaveGroup, confirmGroupFounder } = useGroupActions();
   const { goToGroup, goToPendingGroup } = useNavigationActions();
 
@@ -97,8 +97,19 @@ export function MyGroupsPage() {
 
   const handleConfirmPending = async (pendingId: string) => {
     try {
+      const pendingGroup = getPendingGroupCreationById(pendingId);
+      const willBeComplete = pendingGroup && 
+        (pendingGroup.confirmations.length + 1) >= pendingGroup.founders.length;
+      
       await confirmGroupFounder(pendingId);
-      toast.success('Confirmation enregistrée !');
+      
+      if (willBeComplete) {
+        toast.success('Groupe activé !', {
+          description: 'Le groupe a été créé avec succès.'
+        });
+      } else {
+        toast.success('Confirmation enregistrée !');
+      }
     } catch (error) {
       console.error('❌ [MyGroupsPage] Erreur confirmGroupFounder:', error);
       toast.error('Erreur lors de la confirmation');
