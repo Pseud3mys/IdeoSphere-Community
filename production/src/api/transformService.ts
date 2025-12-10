@@ -115,8 +115,10 @@ export interface RawGroup {
   createdAt: string; // ISO String
   createdBy: string;
   status: "pending" | "active" | "archived";
-  // Les champs 'memberCount' etc. peuvent être absents
-  // et seront calculés ou gérés par le frontend au besoin.
+  // Champs optionnels pour les statistiques (fournis par le backend dans certains endpoints)
+  memberCount?: number;
+  ideaCount?: number;
+  projectCount?: number;
 }
 
 export interface RawPendingGroup extends RawGroup {
@@ -369,10 +371,10 @@ export const transformGroup = (raw: RawGroup): Group => ({
   createdBy: [raw.createdBy], // L'API stocke un seul initiateur
   animators: [], // Sera peuplé par la réponse normalisée
   isActive: raw.status === 'active',
-  // Ces champs devront être calculés ou fournis par des endpoints dédiés
-  memberCount: 0, 
-  ideaCount: 0,
-  projectCount: 0,
+  // Utiliser les valeurs du backend si disponibles, sinon 0
+  memberCount: raw.memberCount ?? 0, 
+  ideaCount: raw.ideaCount ?? 0,
+  projectCount: raw.projectCount ?? 0,
 });
 
 /**

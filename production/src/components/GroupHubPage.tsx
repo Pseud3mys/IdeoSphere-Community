@@ -65,6 +65,14 @@ export function GroupHubPage() {
   const groupPosts = groupId ? getPostsByGroup(groupId) : [];
   const groupIdeas = groupId ? getIdeasByGroup(groupId) : [];
 
+  // Créer un groupe enrichi avec les counts calculés à partir des données réelles
+  const enrichedGroup = group ? {
+    ...group,
+    memberCount: members.length,
+    ideaCount: groupIdeas.length,
+    projectCount: groupPosts.length, // Les posts dans un groupe peuvent être considérés comme des projets
+  } : null;
+
   const isMember = currentUser && groupId ? isUserMemberOfGroup(currentUser.id, groupId) : false;
   const isAnimator = currentUser && groupId ? isUserAnimatorOfGroup(currentUser.id, groupId) : false;
 
@@ -101,7 +109,7 @@ export function GroupHubPage() {
     );
   }
 
-  if (!group) {
+  if (!enrichedGroup) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center">
@@ -118,12 +126,12 @@ export function GroupHubPage() {
     <div>
       {/* En-tête du groupe */}
       <GroupHeader
-        group={group}
+        group={enrichedGroup}
         isMember={isMember}
         isAnimator={isAnimator}
         onJoin={handleJoinGroup}
         onLeave={handleLeaveGroup}
-        onManage={() => goToGroupManage(group.id)}
+        onManage={() => goToGroupManage(enrichedGroup.id)}
       />
 
       {/* Contenu principal */}
@@ -258,14 +266,14 @@ export function GroupHubPage() {
             <div className="space-y-8">
               {/* Section Liens */}
               <div>
-                <GroupLinksModule groupId={group.id} isAnimator={isAnimator} />
+                <GroupLinksModule groupId={enrichedGroup.id} isAnimator={isAnimator} />
               </div>
 
               {/* Section Membres */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Membres du groupe</h3>
                 <GroupMembersList
-                  groupId={group.id}
+                  groupId={enrichedGroup.id}
                   animators={animators}
                   members={members}
                   showAll={true}

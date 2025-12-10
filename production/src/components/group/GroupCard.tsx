@@ -2,7 +2,7 @@ import { Group } from "../../types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { GroupTypeBadge } from "./GroupTypeBadge";
-import { Users, Lightbulb, FolderKanban, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface GroupCardProps {
   group: Group;
@@ -64,28 +64,9 @@ export function GroupCard({ group, isMember, onJoin, onClick }: GroupCardProps) 
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <CardDescription className="line-clamp-2 mb-3">
+        <CardDescription className="line-clamp-2">
           {group.shortDescription}
         </CardDescription>
-        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span className="hidden md:inline">{group.memberCount} membres</span>
-            <span className="md:hidden">{group.memberCount}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Lightbulb className="w-4 h-4" />
-            <span className="hidden md:inline">{group.ideaCount} idées</span>
-            <span className="md:hidden">{group.ideaCount}</span>
-          </div>
-          {group.projectCount > 0 && (
-            <div className="flex items-center gap-1">
-              <FolderKanban className="w-4 h-4" />
-              <span className="hidden md:inline">{group.projectCount} projets</span>
-              <span className="md:hidden">{group.projectCount}</span>
-            </div>
-          )}
-        </div>
       </CardContent>
     </Card>
   );

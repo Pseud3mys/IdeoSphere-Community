@@ -127,6 +127,11 @@ export async function fetchGroupById(groupId: string): Promise<{
     // On utilise les vraies données du backend (rôle, joinedAt exacts)
     const memberships = response.data.memberships.map(transformMembership);
     
+    // Si le backend ne fournit pas memberCount, on le calcule localement
+    if (group.memberCount === 0 && members.length > 0) {
+      group.memberCount = members.length;
+    }
+    
     console.log(`📦 [API groupService] Groupe ${groupId} chargé: ${members.length} membres, ${memberships.length} adhésions`);
     
     return { group, members, memberships };
