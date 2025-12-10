@@ -113,13 +113,19 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
 
     setIsLoading(true);
     try {
+      // Préparer la location : si c'est un string vide, on envoie un objet avec label vide
+      const locationData: Location = 
+        typeof location === 'string' || !location 
+          ? { label: '', lon: 0, lat: 0 } 
+          : location;
+
       const pendingGroup = await createPendingGroup(
         {
           name,
           description,
           shortDescription: description, // Utiliser la même valeur
           type,
-          location,
+          location: locationData,
           tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         },
         selectedFounders,
@@ -171,7 +177,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
     }
 
     // Vérifier si correspond à un utilisateur sélectionné
-    const userWithEmail = allUsers.find(u => u.email.toLowerCase() === email);
+    const userWithEmail = allUsers.find(u => u.email?.toLowerCase() === email);
     if (userWithEmail && selectedFounders.includes(userWithEmail.id)) {
       toast.error('Cet utilisateur est déjà sélectionné dans la liste');
       return;
@@ -218,9 +224,9 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
 
         {/* Step 1 : Informations de base */}
         {step === 1 && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <Label htmlFor="name">Nom du groupe *</Label>
+              <Label htmlFor="name" className="mb-2 block">Nom du groupe *</Label>
               <Input
                 id="name"
                 value={name}
@@ -231,7 +237,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
             </div>
 
             <div>
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description" className="mb-2 block">Description *</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -244,7 +250,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
             </div>
 
             <div>
-              <Label htmlFor="type">Type de groupe *</Label>
+              <Label htmlFor="type" className="mb-2 block">Type de groupe *</Label>
               <Select value={type} onValueChange={(v) => setType(v as Group['type'])}>
                 <SelectTrigger id="type">
                   <SelectValue />
@@ -266,7 +272,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
             </div>
 
             <div>
-              <Label htmlFor="location">Localisation (optionnel)</Label>
+              <Label htmlFor="location" className="mb-2 block">Localisation (optionnel)</Label>
               <LocationSearch
                 initialLocation={location}
                 onLocationSelect={(loc) => setLocation(loc || '')}
@@ -275,7 +281,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
             </div>
 
             <div>
-              <Label htmlFor="tags">Tags (optionnel, séparés par des virgules)</Label>
+              <Label htmlFor="tags" className="mb-2 block">Tags (optionnel, séparés par des virgules)</Label>
               <Input
                 id="tags"
                 value={tags}

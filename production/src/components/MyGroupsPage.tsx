@@ -26,6 +26,15 @@ export function MyGroupsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
+  // Fonction pour vérifier et ouvrir le dialogue de création
+  const handleOpenCreateDialog = () => {
+    if (!currentUser || !currentUser.isRegistered) {
+      toast.error('Vous devez être enregistré pour créer un groupe');
+      return;
+    }
+    setIsCreateDialogOpen(true);
+  };
+
   // Charger les groupes de l'utilisateur au montage
   useEffect(() => {
     const loadData = async () => {
@@ -181,7 +190,7 @@ export function MyGroupsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             <span className="hidden md:inline">Rafraîchir</span>
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="flex-1 md:flex-none shrink-0">
+          <Button onClick={handleOpenCreateDialog} className="flex-1 md:flex-none shrink-0">
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden md:inline">Créer un groupe</span>
             <span className="md:hidden">Créer</span>
@@ -215,7 +224,7 @@ export function MyGroupsPage() {
               <p className="text-gray-600 mb-4">
                 Rejoignez des groupes ou créez-en un nouveau !
               </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Button onClick={handleOpenCreateDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Créer un groupe
               </Button>
@@ -244,7 +253,7 @@ export function MyGroupsPage() {
               <p className="text-gray-600 mb-4">
                 Les groupes que vous créez apparaîtront ici en attendant la confirmation des co-fondateurs.
               </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Button onClick={handleOpenCreateDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Créer un groupe
               </Button>

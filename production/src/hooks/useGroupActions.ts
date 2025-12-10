@@ -181,7 +181,7 @@ export function useGroupActions() {
       shortDescription: string;
       type: Group['type'];
       avatar?: string;
-      location?: Location | string;
+      location: Location;
       tags: string[];
     },
     founderIds: string[],

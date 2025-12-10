@@ -35,6 +35,15 @@ export function GroupsExplorerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
+  // Fonction pour vérifier et ouvrir le dialogue de création
+  const handleOpenCreateDialog = () => {
+    if (!currentUser || !currentUser.isRegistered) {
+      toast.error('Vous devez être enregistré pour créer un groupe');
+      return;
+    }
+    setIsCreateDialogOpen(true);
+  };
+
   // Charger les groupes au montage
   useEffect(() => {
     const loadGroups = async () => {
@@ -153,7 +162,7 @@ export function GroupsExplorerPage() {
               Découvrez et rejoignez les groupes de la plateforme
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full md:w-auto">
+          <Button onClick={handleOpenCreateDialog} className="w-full md:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden md:inline">Créer un groupe</span>
             <span className="md:hidden">Créer</span>

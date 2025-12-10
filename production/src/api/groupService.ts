@@ -218,7 +218,7 @@ export async function createPendingGroup(
     shortDescription: string;
     type: Group['type'];
     avatar?: string;
-    location?: Location | string;
+    location: Location;
     tags: string[];
   },
   founderIds: string[],
@@ -226,7 +226,7 @@ export async function createPendingGroup(
   founderEmails: string[] = []
 ): Promise<PendingGroupCreation> {
   try {
-    const payload = { ...groupData, founderIds, initiatorId };
+    const payload = { ...groupData, founderIds, initiatorId, founderEmails };
     const response = await apiClient.post<RawPendingGroup>('/groups/pending', payload);
     
     const pendingGroup = transformPendingGroup(response.data);
