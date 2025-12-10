@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Post } from '../../types';
 import { QuickPostComposer } from './QuickPostComposer';
 import { QuickPostFeed } from './QuickPostFeed';
+import { QuickPostSuccess } from './QuickPostSuccess';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 export interface QuickPostWidgetProps {
@@ -25,7 +26,7 @@ export interface QuickPostWidgetProps {
   placeholder?: string;
 }
 
-type ViewMode = 'composer' | 'feed';
+type ViewMode = 'composer' | 'feed' | 'success';
 
 export function QuickPostWidget({
   defaultGroupIds = [],
@@ -67,14 +68,11 @@ export function QuickPostWidget({
       onPostCreated(post);
     }
 
-    // Basculer vers le feed si activé
+    // Basculer vers le feed ou la page de succès
     if (showFeedAfterPost) {
       setCurrentView('feed');
     } else {
-      // Si pas de feed, fermer ou notifier
-      if (onClose) {
-        onClose();
-      }
+      setCurrentView('success');
     }
 
     // Notification iframe si mode standalone
@@ -115,6 +113,10 @@ export function QuickPostWidget({
             showContactFields={showContactFields}
             onPostCreated={handlePostCreated}
             placeholder={placeholder}
+          />
+        ) : currentView === 'success' ? (
+          <QuickPostSuccess
+            onCreateAnother={handleCreateAnother}
           />
         ) : (
           <QuickPostFeed

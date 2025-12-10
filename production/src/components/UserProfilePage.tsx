@@ -263,7 +263,7 @@ export function UserProfilePage({
               <div>
                 <h1 className="mb-2">{user.name}</h1>
                 <p className="text-muted-foreground mb-1">
-                  {user.location || 'Membre de la communauté'}
+                  {user.location?.label || 'Membre de la communauté'}
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />

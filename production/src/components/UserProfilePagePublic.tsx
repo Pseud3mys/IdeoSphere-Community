@@ -83,7 +83,7 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
               {user.location && (
                 <div className="flex items-center text-gray-600 mb-2">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span>{user.location}</span>
+                  <span>{user.location.label}</span>
                 </div>
               )}
 

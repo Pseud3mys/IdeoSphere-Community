@@ -234,6 +234,7 @@ export function QuickPostComposer({
 
       // 2. Créer le post
       console.log('🔄 [QuickPost] Création du post avec authorId:', userId);
+      console.log('🔄 [QuickPost] Tags à envoyer:', tags);
       const newPost = await createPostOnApi({
         authorId: userId,
         content: content.trim(),
@@ -244,15 +245,13 @@ export function QuickPostComposer({
 
       if (newPost) {
         console.log('✅ [QuickPost] Post créé avec succès:', newPost.id);
-        toast.success('Votre contribution a été publiée !');
         
-        // Réinitialiser le formulaire
+        // Réinitialiser le formulaire pour permettre une nouvelle contribution
         setContent('');
-        setFirstName('');
-        setEmail('');
+        // Ne pas réinitialiser firstName et email pour faciliter les contributions multiples
         setPostType('question');
         
-        // Callback
+        // Callback - va déclencher l'affichage de la page de succès
         if (onPostCreated) {
           onPostCreated(newPost);
         }

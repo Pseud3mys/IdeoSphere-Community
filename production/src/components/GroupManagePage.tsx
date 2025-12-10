@@ -368,7 +368,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                       <div>
                         <UserLink userId={user.id} />
                         {user.location && (
-                          <p className="text-xs text-muted-foreground">{user.location}</p>
+                          <p className="text-xs text-muted-foreground">{user.location.label}</p>
                         )}
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                         <div>
                           <UserLink userId={user.id} />
                           {user.location && (
-                            <p className="text-xs text-muted-foreground">{user.location}</p>
+                            <p className="text-xs text-muted-foreground">{user.location.label}</p>
                           )}
                         </div>
                       </div>
