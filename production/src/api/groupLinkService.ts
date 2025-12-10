@@ -15,9 +15,7 @@ import {
 
 
 /*
-  NOTE: 'fetchAllGroupLinks' a été omis car il n'y a pas de route
-  correspondante dans 'group_routes.py'.
-
+  NOTE:
   groupLinkService.deleteGroupLink(linkId, userId) à changer de signature
   pour inclure 'userId' pour la vérification d'auth, même si le backend
 */

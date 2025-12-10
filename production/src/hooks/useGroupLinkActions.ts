@@ -50,25 +50,6 @@ export function useGroupLinkActions() {
     },
 
     /**
-     * Charge tous les liens du système
-     */
-    loadAllGroupLinks: async () => {
-      try {
-        const links = await groupLinkService.fetchAllGroupLinks();
-        
-        links.forEach((link) => {
-          actions.addGroupLink(link);
-        });
-        
-        console.log(`✅ [useGroupLinkActions.loadAllGroupLinks] ${links.length} liens chargés`);
-        return links;
-      } catch (error) {
-        console.error('❌ [useGroupLinkActions.loadAllGroupLinks]', error);
-        return [];
-      }
-    },
-
-    /**
      * Crée un lien vertical (parent → enfant)
      */
     createVerticalLink: async (parentGroupId: string, childGroupId: string) => {
