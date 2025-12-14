@@ -120,12 +120,8 @@ export const chesnayRocquencourtConfig: ClientConfig = {
     
     // Section "Comment ça marche"
     howItWorks: {
-      title: 'Comment ça marche ?',
+      title: '',
       steps: [
-        'Décrivez votre idée ci-dessus',
-        'Ajoutez une localisation si nécessaire',
-        'Laissez vos coordonnées pour suivre son évolution',
-        'Nous la partageons avec votre communauté',
       ],
     },
     
