@@ -252,20 +252,17 @@ export async function ignoreContentOnApi(contentType: 'idea' | 'post', contentId
 }
 
 /**
- * Enregistre un signalement (Correction : s'assurer que 'reason' est bien envoyé)
+ * Enregistre un signalement via la nouvelle API admin
  */
-export async function reportContentOnApi(contentId: string, userId: string, reason: string): Promise<any> {
-  console.log(`🔄 [API] Signalement pour ${contentId} : ${reason}`);
+export async function reportContentOnApi(contentType: 'idea' | 'post', contentId: string, userId: string, reason: string): Promise<boolean> {
+  console.log(`🔄 [API] Signalement pour ${contentType}/${contentId} : ${reason}`);
   try {
-    // On ajoute le champ 'reason' dans le payload
-    return await apiClient.post('/feedback', { 
-        userId, 
-        contentId, 
-        type: 'reports',
-        reason: reason 
-    });
+    const { reportContent } = await import('./adminService');
+    const contentTypeForApi = contentType === 'idea' ? 'ideas' : 'posts';
+    return await reportContent(contentTypeForApi, contentId);
   } catch (error) {
     console.error(`❌ Error reporting content ${contentId}:`, error);
+    return false;
   }
 }
 

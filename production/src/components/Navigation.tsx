@@ -18,7 +18,9 @@ export function Navigation() {
     if (path.startsWith('/create-idea')) return '/create-idea';
     if (path.startsWith('/groups')) return '/groups';
     if (path.startsWith('/communities')) return '/communities';
-    return '/discovery'; // Par défaut
+    if (path.startsWith('/discovery')) return '/discovery';
+    // Si on est sur une autre page (admin, profile, content, etc.), ne rien sélectionner
+    return null;
   };
 
   const activePath = getActivePath();
@@ -53,7 +55,7 @@ export function Navigation() {
   return (
     <>
       {/* Navigation Desktop - en haut */}
-      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[57px] z-40">
+      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[57px] z-40 shadow-sm">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex space-x-1">
             {tabs.map((tab) => {

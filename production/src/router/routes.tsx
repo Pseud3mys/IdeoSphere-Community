@@ -19,6 +19,7 @@ import { MyGroupsPageWrapper } from './MyGroupsPageWrapper';
 import { PendingGroupDetailPageWrapper } from './PendingGroupDetailPageWrapper';
 import { GroupManagePageWrapper } from './GroupManagePageWrapper';
 import { StatisticsPageWrapper } from './StatisticsPageWrapper';
+import { AdminPageWrapper } from './AdminPageWrapper';
 
 // Pages publiques
 import { AboutPage } from '../components/AboutPage';
@@ -148,6 +149,10 @@ export const routes: RouteObject[] = [
       {
         path: 'statistics',
         element: <StatisticsPageWrapper />,
+      },
+      {
+        path: 'admin',
+        element: <AdminPageWrapper />,
       },
     ],
   },

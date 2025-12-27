@@ -16,6 +16,8 @@ apiClient.interceptors.request.use(
     const token = getToken(); // Utilise la nouvelle fonction
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.warn(`⚠️ [apiClient] Pas de token pour ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
