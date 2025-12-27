@@ -46,8 +46,8 @@ export function AdminPage({
   const handleViewContent = (contentType: 'ideas' | 'posts', contentId: string) => {
     // Nettoyer l'ID si nécessaire (enlever le préfixe "ideas/" ou "posts/")
     const cleanId = contentId.includes('/') ? contentId.split('/')[1] : contentId;
-    const type = contentType === 'ideas' ? 'idea' : 'post';
-    navigate(`/content/${type}/${cleanId}`);
+    // Utiliser le contentType directement (ideas ou posts, pas idea/post)
+    navigate(`/content/${contentType}/${cleanId}`);
   };
 
   return (
@@ -112,7 +112,14 @@ export function AdminPage({
                           className="text-left hover:text-[#4f75ff] transition-colors group w-full"
                         >
                           <CardTitle className="text-lg flex items-center gap-2">
-                            {item.content?.title || item.content?.text || 'Contenu sans titre'}
+                            {/* Pour les projets : afficher le titre */}
+                            {item.contentType === 'ideas' && (item.content?.title || 'Projet sans titre')}
+                            {/* Pour les posts : afficher un extrait du texte comme titre */}
+                            {item.contentType === 'posts' && (() => {
+                              const text = item.content?.text || item.content?.content || '';
+                              if (!text) return 'Post sans contenu';
+                              return text.length > 80 ? text.substring(0, 80) + '...' : text;
+                            })()}
                             <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                           </CardTitle>
                         </button>
@@ -129,14 +136,22 @@ export function AdminPage({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {item.content?.text && (
-                      <p className="text-gray-700 mb-4 line-clamp-3">
-                        {item.content.text}
-                      </p>
-                    )}
+                    {/* Pour les posts : afficher le texte complet */}
+                    {item.contentType === 'posts' && (() => {
+                      const text = item.content?.text || item.content?.content || '';
+                      if (text) {
+                        return (
+                          <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+                            {text}
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                     
-                    {item.content?.description && (
-                      <p className="text-gray-700 mb-4 line-clamp-3">
+                    {/* Pour les projets : afficher la description */}
+                    {item.contentType === 'ideas' && item.content?.description && (
+                      <p className="text-gray-700 mb-4 line-clamp-4">
                         {item.content.description}
                       </p>
                     )}
