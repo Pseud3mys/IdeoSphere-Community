@@ -7,9 +7,11 @@ import { Textarea } from './ui/textarea';
 import { AppHeader } from './AppHeader';
 import { AuthButtons } from './AuthButtons';
 import { NewsletterSubscription } from './NewsletterSubscription';
+import { LocationSearch } from './LocationSearch';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { fetchHomePageStats, HomePageData } from '../api/feedService';
+import { Location } from '../types';
 import { 
   ArrowRight, 
   MapPin, 
@@ -53,7 +55,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   const [showLocationStep, setShowLocationStep] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
-  const [guestLocation, setGuestLocation] = useState('');
+  const [guestLocation, setGuestLocation] = useState<Location | null>(null);
   
   // État pour les données autonomes
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
@@ -109,7 +111,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
       // Publier le post directement avec l'utilisateur actuel
       const newPost = await actions.publishPost({
         content: quickIdea,
-        location: guestLocation.trim() || undefined
+        location: guestLocation || undefined
       });
       
       // Navigate to the created post
@@ -123,7 +125,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     const guestData = {
       name: guestName.trim() || undefined,
       email: guestEmail.trim() || undefined,
-      address: guestLocation.trim() || undefined
+      address: guestLocation?.label || undefined
     };
     
     console.log('🔄 [CitizenWelcome] Création d\'un compte invité via l\'API pour partager l\'idée...');
@@ -146,7 +148,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
     // ✅ IMPORTANT: Passer explicitement l'ID de l'utilisateur temporaire
     const newPost = await actions.publishPost({
       content: quickIdea,
-      location: guestLocation.trim() || undefined,
+      location: guestLocation || undefined,
       authorId: tempUser.id // ✅ Utiliser l'utilisateur temporaire qu'on vient de créer
     });
     
@@ -303,11 +305,10 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                         <MapPin className="w-5 h-5 mr-2 text-primary" />
                         {clientConfig.welcome.quickIdea.locationSectionTitle}
                       </h3>
-                      <Input
+                      <LocationSearch
+                        onLocationSelect={setGuestLocation}
+                        initialLocation={guestLocation || undefined}
                         placeholder={clientConfig.welcome.quickIdea.locationPlaceholder}
-                        className="text-base"
-                        value={guestLocation}
-                        onChange={(e) => setGuestLocation(e.target.value)}
                       />
                     </div>
                     

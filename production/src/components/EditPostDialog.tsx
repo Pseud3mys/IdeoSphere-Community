@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Post } from '../types';
+import { Post, Location } from '../types';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { LocationSearch } from './LocationSearch';
 import { updatePost } from '../api/contentEditService';
 import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
@@ -33,7 +34,7 @@ export function EditPostDialog({
   children,
 }: EditPostDialogProps) {
   const [content, setContent] = useState(post.content);
-  const [location, setLocation] = useState(post.location || '');
+  const [location, setLocation] = useState<Location | string | undefined>(post.location);
   const [tags, setTags] = useState(post.tags?.join(', ') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,7 +63,7 @@ export function EditPostDialog({
 
       const updatedPost = await updatePost(post.id, {
         content: content.trim(),
-        location: location.trim() || undefined,
+        location: location || undefined,
         tags: allTags.length > 0 ? allTags : undefined,
       });
 
@@ -110,12 +111,10 @@ export function EditPostDialog({
 
           <div>
             <Label htmlFor="location">Localisation</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+            <LocationSearch
+              onLocationSelect={(loc) => setLocation(loc || undefined)}
+              initialLocation={location}
               placeholder="Ville, quartier..."
-              disabled={isSubmitting}
             />
           </div>
 

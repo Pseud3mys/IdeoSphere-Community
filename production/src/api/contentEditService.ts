@@ -1,6 +1,6 @@
 // src/api/contentEditService.ts
 import apiClient from './apiClient';
-import { Post, Idea } from '../types';
+import { Post, Idea, Location } from '../types';
 import { transformPost, transformIdea } from './transformService';
 
 /**
@@ -47,7 +47,7 @@ const handleEditError = (error: any, context: string) => {
  */
 export async function updatePost(
   postId: string,
-  updates: Partial<Pick<Post, 'content' | 'tags' | 'location'>>
+  updates: Partial<Pick<Post, 'content' | 'tags'>> & { location?: Location | string }
 ): Promise<Post | null> {
   const postKey = postId.includes('/') ? postId.split('/')[1] : postId;
 
@@ -69,7 +69,7 @@ export async function updatePost(
  */
 export async function updateIdea(
   ideaId: string,
-  updates: Partial<Pick<Idea, 'title' | 'summary' | 'description' | 'tags' | 'location'>>
+  updates: Partial<Pick<Idea, 'title' | 'summary' | 'description' | 'tags'>> & { location?: Location | string }
 ): Promise<Idea | null> {
   const ideaKey = ideaId.includes('/') ? ideaId.split('/')[1] : ideaId;
 

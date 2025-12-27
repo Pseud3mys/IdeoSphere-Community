@@ -55,7 +55,7 @@ export function Navigation() {
   return (
     <>
       {/* Navigation Desktop - en haut */}
-      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[57px] z-40 shadow-sm">
+      <nav className="hidden sm:block border-b border-gray-200 bg-white sticky top-[57px] z-40 shadow-sm" style={{ backgroundColor: 'rgb(255, 255, 255)' }}>
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex space-x-1">
             {tabs.map((tab) => {

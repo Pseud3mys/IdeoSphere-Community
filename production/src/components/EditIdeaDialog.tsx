@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Idea } from '../types';
+import { Idea, Location } from '../types';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { LocationSearch } from './LocationSearch';
 import { updateIdea } from '../api/contentEditService';
 import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
@@ -35,7 +36,7 @@ export function EditIdeaDialog({
   const [title, setTitle] = useState(idea.title);
   const [summary, setSummary] = useState(idea.summary);
   const [description, setDescription] = useState(idea.description || '');
-  const [location, setLocation] = useState(idea.location || '');
+  const [location, setLocation] = useState<Location | string | undefined>(idea.location);
   const [tags, setTags] = useState(idea.tags?.join(', ') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,7 +73,7 @@ export function EditIdeaDialog({
         title: title.trim(),
         summary: summary.trim(),
         description: description.trim() || undefined,
-        location: location.trim() || undefined,
+        location: location || undefined,
         tags: allTags.length > 0 ? allTags : undefined,
       });
 
@@ -143,12 +144,10 @@ export function EditIdeaDialog({
 
           <div>
             <Label htmlFor="location">Localisation</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+            <LocationSearch
+              onLocationSelect={(loc) => setLocation(loc || undefined)}
+              initialLocation={location}
               placeholder="Ville, quartier..."
-              disabled={isSubmitting}
             />
           </div>
 

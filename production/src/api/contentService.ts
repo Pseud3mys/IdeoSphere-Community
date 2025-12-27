@@ -76,7 +76,7 @@ export async function createPostOnApi(payload: CreatePostPayload): Promise<Post 
     ];
 
     // 2. Préparer le payload final pour l'API
-    const { sourceIdeas, sourcePosts, sourcePostIds, ...basePayload } = payload;
+    const { sourceIdeas, sourcePosts, sourcePostIds, author, ...basePayload } = payload;
     const apiPayload = {
       ...basePayload,
       sourceIds: sourceIds,

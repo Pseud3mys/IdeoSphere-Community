@@ -26,7 +26,7 @@ export function AppHeader({
   isWelcomePage = false
 }: AppHeaderProps) {
   return (
-    <header className={`border-b ${isWelcomePage ? 'border-gray-100' : 'border-gray-200'} bg-white backdrop-blur-sm sticky top-0 z-50`}>
+    <header className={`border-b ${isWelcomePage ? 'border-gray-100' : 'border-gray-200'} bg-white sticky top-0 z-50 shadow-sm`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div 
