@@ -1,5 +1,6 @@
 // src/api/adminService.ts
 import apiClient from './apiClient';
+import { createUnfinalizedAccountOnApi } from './authService';
 
 /**
  * Type pour le contenu signalé
@@ -10,6 +11,15 @@ export interface ReportedContent {
   content: any;
   reportCount: number;
   firstReportedAt: string;
+}
+
+/**
+ * Type pour un contact terrain (simplifié)
+ */
+export interface FieldContact {
+  name: string;
+  email: string;
+  neighborhood?: string;
 }
 
 /**
@@ -71,5 +81,64 @@ export async function fetchReportedContent(
   } catch (error) {
     console.error(`❌ [Admin API] Erreur lors de la récupération des contenus signalés:`, error);
     return null;
+  }
+}
+
+/**
+ * Ajoute un nouveau contact terrain en créant un compte invité
+ * Utilise createUnfinalizedAccountOnApi de authService
+ */
+export async function addFieldContact(contact: FieldContact): Promise<{ success: boolean; data?: any }> {
+  console.log(`🔄 [Admin API] Ajout d'un nouveau contact terrain (compte invité)`);
+  try {
+    // Créer un compte invité via l'API d'auth
+    const user = await createUnfinalizedAccountOnApi({
+      name: contact.name,
+      email: contact.email,
+      address: contact.neighborhood // Le quartier devient l'adresse
+    });
+    
+    console.log(`✅ [Admin API] Contact terrain (compte invité) créé avec succès:`, user);
+    return { success: true, data: user };
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de l'ajout du contact terrain:`, error);
+    return { success: false };
+  }
+}
+
+/**
+ * Récupère la liste des contacts terrain
+ * GET /api/admin/field-contacts?limit=50&offset=0
+ */
+export async function fetchFieldContacts(
+  limit: number = 50,
+  offset: number = 0
+): Promise<{ data: FieldContact[]; total: number; limit: number; offset: number } | null> {
+  console.log(`🔄 [Admin API] Récupération des contacts terrain (limit: ${limit}, offset: ${offset})`);
+  try {
+    const response = await apiClient.get('/admin/field-contacts', {
+      params: { limit, offset }
+    });
+    console.log(`✅ [Admin API] ${response.data.total} contacts terrain récupérés`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la récupération des contacts terrain:`, error);
+    return null;
+  }
+}
+
+/**
+ * Supprime un contact terrain
+ * DELETE /api/admin/field-contacts/{contactId}
+ */
+export async function deleteFieldContact(contactId: string): Promise<{ success: boolean }> {
+  console.log(`🔄 [Admin API] Suppression du contact terrain ${contactId}`);
+  try {
+    await apiClient.delete(`/admin/field-contacts/${contactId}`);
+    console.log(`✅ [Admin API] Contact terrain supprimé avec succès`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la suppression du contact terrain:`, error);
+    return { success: false };
   }
 }

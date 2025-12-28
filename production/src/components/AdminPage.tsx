@@ -6,21 +6,25 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink } from 'lucide-react';
-import { ReportedContent } from '../api/adminService';
+import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink, Users } from 'lucide-react';
+import { ReportedContent, FieldContact } from '../api/adminService';
+import { FieldContactForm } from './FieldContactForm';
 
 interface AdminPageProps {
   onDeleteReport: (contentType: 'ideas' | 'posts', contentId: string) => Promise<void>;
   onIgnoreReport: (contentType: 'ideas' | 'posts', contentId: string) => Promise<void>;
   reportedContent: ReportedContent[];
   isLoading: boolean;
+  // Props pour les contacts terrain
+  onAddContact: (contact: FieldContact) => Promise<boolean>;
 }
 
 export function AdminPage({
   onDeleteReport,
   onIgnoreReport,
   reportedContent,
-  isLoading
+  isLoading,
+  onAddContact
 }: AdminPageProps) {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -74,6 +78,10 @@ export function AdminPage({
                 {reportedContent.length}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Contacts Terrain
           </TabsTrigger>
         </TabsList>
 
@@ -190,6 +198,13 @@ export function AdminPage({
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="contacts" className="mt-6">
+          <div className="space-y-6">
+            {/* Formulaire d'ajout */}
+            <FieldContactForm onSubmit={onAddContact} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

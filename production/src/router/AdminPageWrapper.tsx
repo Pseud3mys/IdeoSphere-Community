@@ -1,7 +1,13 @@
 // src/router/AdminPageWrapper.tsx
 import { useState, useEffect } from 'react';
 import { AdminPage } from '../components/AdminPage';
-import { fetchReportedContent, handleReport, ReportedContent } from '../api/adminService';
+import { 
+  fetchReportedContent, 
+  handleReport, 
+  ReportedContent,
+  FieldContact,
+  addFieldContact
+} from '../api/adminService';
 import { toast } from 'sonner';
 import { useAuth } from '../context/authContext';
 import { Loader2 } from 'lucide-react';
@@ -77,6 +83,23 @@ export function AdminPageWrapper() {
     }
   };
 
+  const handleAddContact = async (contact: FieldContact): Promise<boolean> => {
+    try {
+      const result = await addFieldContact(contact);
+      if (result.success) {
+        toast.success('Contact ajouté avec succès');
+        return true;
+      } else {
+        toast.error('Erreur lors de l\'ajout du contact');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'ajout du contact:', error);
+      toast.error('Erreur lors de l\'ajout du contact');
+      return false;
+    }
+  };
+
   // Afficher un loader pendant l'initialisation de l'auth
   if (authLoading) {
     return (
@@ -95,6 +118,7 @@ export function AdminPageWrapper() {
       onIgnoreReport={handleIgnoreReport}
       reportedContent={reportedContent}
       isLoading={isLoading}
+      onAddContact={handleAddContact}
     />
   );
 }
