@@ -230,10 +230,10 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Section principale */}
-        <div className="py-8 sm:py-12">
+        <div className="py-8 sm:py-12 space-y-8">
           {/* ✅ Bandeau d'avertissement démonstration */}
           {clientConfig.features.showBetaBanner && (
-            <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
+            <div className="bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
                   <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -254,115 +254,18 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
           )}
 
           {/* Titre principal */}
-          <div className="mb-8">
+          <div>
             <h1 className="text-4xl mb-4 text-gray-900 leading-tight">
               {clientConfig.welcome.hero.title}
             </h1>
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-lg text-muted-foreground">
               {clientConfig.welcome.hero.description}
             </p>
           </div>
 
-          {/* Zone de partage rapide d'idée EN PREMIER */}
-          <div className="mb-8">
-            {!showLocationStep ? (
-              <div className="space-y-4">
-                <h2 className="text-xl mb-4 text-gray-900 flex items-center">
-                  <Lightbulb className="w-5 h-5 mr-2 text-primary" />
-                  {clientConfig.welcome.quickIdea.sectionTitle}
-                </h2>
-                <div className="space-y-3">
-                  <Textarea
-                    placeholder={clientConfig.welcome.quickIdea.placeholder}
-                    value={quickIdea}
-                    onChange={(e) => setQuickIdea(e.target.value)}
-                    rows={3}
-                    className="text-base"
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleShareIdea}
-                      disabled={!quickIdea.trim()}
-                      className="bg-primary hover:bg-primary/90 text-white"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      {clientConfig.welcome.quickIdea.buttonText}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <h2 className="text-xl mb-4 text-gray-900">{clientConfig.welcome.quickIdea.finalizationTitle}</h2>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-700 italic">"{quickIdea}"</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 flex items-center mb-3">
-                        <MapPin className="w-5 h-5 mr-2 text-primary" />
-                        {clientConfig.welcome.quickIdea.locationSectionTitle}
-                      </h3>
-                      <LocationSearch
-                        onLocationSelect={setGuestLocation}
-                        initialLocation={guestLocation || undefined}
-                        placeholder={clientConfig.welcome.quickIdea.locationPlaceholder}
-                      />
-                    </div>
-                    
-                    {/* ✅ Afficher cette section seulement si l'utilisateur n'est PAS connecté ou est un invité */}
-                    {(!currentUser || !currentUser.isRegistered) && (
-                      <div className="space-y-3 pt-4 border-t border-gray-200">
-                        <h3 className="text-base font-medium text-gray-900">
-                          {clientConfig.welcome.quickIdea.followUpSectionTitle}
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <Input
-                            placeholder={clientConfig.welcome.quickIdea.namePlaceholder}
-                            className="text-base"
-                            value={guestName}
-                            onChange={(e) => setGuestName(e.target.value)}
-                          />
-                          <Input
-                            type="email"
-                            placeholder={clientConfig.welcome.quickIdea.emailPlaceholder}
-                            className="text-base"
-                            value={guestEmail}
-                            onChange={(e) => setGuestEmail(e.target.value)}
-                          />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {clientConfig.welcome.quickIdea.followUpDescription}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                      <Button
-                        onClick={handleAddLocation}
-                        className="bg-primary hover:bg-primary/90 text-white"
-                      >
-                        <Send className="w-4 h-4 mr-2" />
-                        {clientConfig.welcome.quickIdea.submitButtonText}
-                      </Button>
-                      <Button
-                        onClick={handleSkipLocation}
-                        variant="outline"
-                      >
-                        {clientConfig.welcome.quickIdea.skipButtonText}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Comment partager une idée - APRÈS le formulaire */}
+          {/* Comment partager une idée */}
           {!showLocationStep && (
-            <div className="mb-8">
+            <div>
               <h2 className="text-xl mb-4 text-gray-900">{clientConfig.welcome.howItWorks.title}</h2>
               <ol className="space-y-2 text-muted-foreground">
                 {clientConfig.welcome.howItWorks.steps.map((step, index) => (
@@ -373,7 +276,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
           )}
 
           {/* Statistiques */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {recentStats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-3xl text-primary mb-2">{stat.value}</div>
@@ -384,8 +287,8 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
         </div>
 
         {/* Idées récemment partagées */}
-        <section className="py-12 border-t border-gray-100">
-          <h2 className="text-2xl mb-8 text-gray-900">{clientConfig.welcome.recentPropositions.title}</h2>
+        <section className="py-8 sm:py-12 border-t border-gray-100">
+          <h2 className="text-2xl mb-6 text-gray-900">{clientConfig.welcome.recentPropositions.title}</h2>
           
           <div className="space-y-4">
             {isLoading ? (
@@ -442,9 +345,108 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
               </div>
             )}
           </div>
+        </section>
 
-          {/* CTA pour explorer */}
-          <div className="text-center mt-12">
+        {/* Zone de partage rapide d'idée */}
+        <section className="py-8 sm:py-12 border-t border-gray-100">
+          {!showLocationStep ? (
+            <div className="space-y-4">
+              <h2 className="text-2xl mb-6 text-gray-900 flex items-center">
+                <Lightbulb className="w-5 h-5 mr-2 text-primary" />
+                {clientConfig.welcome.quickIdea.sectionTitle}
+              </h2>
+              <div className="space-y-3">
+                <Textarea
+                  placeholder={clientConfig.welcome.quickIdea.placeholder}
+                  value={quickIdea}
+                  onChange={(e) => setQuickIdea(e.target.value)}
+                  rows={3}
+                  className="text-base"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleShareIdea}
+                    disabled={!quickIdea.trim()}
+                    className="bg-primary hover:bg-primary/90 text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {clientConfig.welcome.quickIdea.buttonText}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <h2 className="text-2xl mb-6 text-gray-900">{clientConfig.welcome.quickIdea.finalizationTitle}</h2>
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-700 italic">"{quickIdea}"</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
+                      <MapPin className="w-5 h-5 mr-2 text-primary" />
+                      {clientConfig.welcome.quickIdea.locationSectionTitle}
+                    </h3>
+                    <LocationSearch
+                      onLocationSelect={setGuestLocation}
+                      initialLocation={guestLocation || undefined}
+                      placeholder={clientConfig.welcome.quickIdea.locationPlaceholder}
+                    />
+                  </div>
+                  
+                  {/* ✅ Afficher cette section seulement si l'utilisateur n'est PAS connecté ou est un invité */}
+                  {(!currentUser || !currentUser.isRegistered) && (
+                    <div className="space-y-4 pt-6 border-t border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        {clientConfig.welcome.quickIdea.followUpSectionTitle}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input
+                          placeholder={clientConfig.welcome.quickIdea.namePlaceholder}
+                          className="text-base"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                        />
+                        <Input
+                          type="email"
+                          placeholder={clientConfig.welcome.quickIdea.emailPlaceholder}
+                          className="text-base"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
+                        />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {clientConfig.welcome.quickIdea.followUpDescription}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6">
+                    <Button
+                      onClick={handleAddLocation}
+                      className="bg-primary hover:bg-primary/90 text-white"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      {clientConfig.welcome.quickIdea.submitButtonText}
+                    </Button>
+                    <Button
+                      onClick={handleSkipLocation}
+                      variant="outline"
+                    >
+                      {clientConfig.welcome.quickIdea.skipButtonText}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+        
+        {/* CTA pour explorer */}
+        <section className="py-8 sm:py-12 border-t border-gray-100">
+          <div className="text-center">
             <Button 
               onClick={onEnterPlatformWithTempUser}
               size="lg"
@@ -458,7 +460,7 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
 
         {/* Newsletter personnalisée */}
         {clientConfig.features.enableNewsletters && (
-          <section className="py-12 border-t border-gray-100">
+          <section className="py-8 sm:py-12 border-t border-gray-100">
             <NewsletterSubscription onSubscribe={onNewsletterSubscribe} />
           </section>
         )}
