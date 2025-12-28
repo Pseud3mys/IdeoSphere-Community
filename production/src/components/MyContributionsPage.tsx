@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Idea, Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
+import { useAuth } from '../context/authContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent } from './ui/card';
@@ -17,6 +18,9 @@ import {
   Heart,
   TrendingUp,
   Lightbulb,
+  LogIn,
+  UserPlus,
+  Lock,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Alert, AlertDescription } from './ui/alert';
@@ -78,6 +82,8 @@ export function MyContributionsPage({
     getAllGroups,
     getUserById,
   } = useEntityStoreSimple();
+
+  const { login, register } = useAuth();
 
   const currentUser = getCurrentUser();
   const allPosts = getAllPosts();
@@ -517,14 +523,52 @@ export function MyContributionsPage({
   // RENDER
   // ============================================================================
 
-  if (!currentUser) {
+  // Si l'utilisateur n'est pas connecté ou n'a pas de compte finalisé
+  if (!currentUser || !currentUser.isRegistered) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Alert>
-          <AlertDescription>
-            Veuillez vous connecter pour voir vos contributions
-          </AlertDescription>
-        </Alert>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <Card className="border-2">
+          <CardContent className="p-12 text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="w-16 h-16 bg-[#e8f0ff] rounded-full flex items-center justify-center">
+                <Lock className="w-8 h-8 text-[#4f75ff]" />
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Connectez-vous pour voir vos contributions
+            </h2>
+            
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Suivez vos idées, vos participations et vos soutiens en créant un compte ou en vous connectant.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                onClick={login}
+                size="lg"
+                className="bg-[#4f75ff] hover:bg-[#3d5fd9] text-white"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Se connecter
+              </Button>
+              
+              <Button
+                onClick={register}
+                size="lg"
+                variant="outline"
+                className="border-[#4f75ff] text-[#4f75ff] hover:bg-[#e8f0ff]"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Créer un compte
+              </Button>
+            </div>
+            
+            <p className="text-sm text-gray-500 mt-6">
+              En créant un compte, vous pourrez gérer et suivre toute votre activité sur la plateforme.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

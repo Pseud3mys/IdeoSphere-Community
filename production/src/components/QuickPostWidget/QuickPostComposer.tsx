@@ -307,7 +307,7 @@ export function QuickPostComposer({
           {/* Sélection du type de post */}
           <div>
             <Label className="text-sm font-medium mb-2 block">Type de contribution</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {postTypes.map((type) => {
                 const Icon = type.icon;
                 return (
@@ -318,10 +318,10 @@ export function QuickPostComposer({
                     size="sm"
                     onClick={() => setPostType(type.value)}
                     disabled={isSubmitting}
-                    className="flex-1"
+                    className="flex-1 min-w-[90px]"
                   >
                     <Icon className={`h-4 w-4 mr-1 ${postType === type.value ? '' : type.color}`} />
-                    {type.label}
+                    <span className="text-xs sm:text-sm">{type.label}</span>
                   </Button>
                 );
               })}
