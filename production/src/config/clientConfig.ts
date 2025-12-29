@@ -11,6 +11,8 @@ import { betaConfig } from './clients/beta';
 import { leblancConfig } from './clients/leblanc';
 import { amdfConfig } from './clients/amdf';
 import { chesnayRocquencourtConfig } from './clients/chesnayRocquencourt';
+import { solidarcyConfig } from './clients/solidarcy';
+import { saintcyrencommunConfig } from './clients/saintcyrencommun';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -42,6 +44,10 @@ const configs: Record<string, ClientConfig> = {
 
   // chesnayRocquencourtConfig
   'chesnay-rocquencourt': chesnayRocquencourtConfig,
+
+  //autres listes
+  'solidarcy': solidarcyConfig,
+  'saintcyrencommun': saintcyrencommunConfig,
 
 };
 
