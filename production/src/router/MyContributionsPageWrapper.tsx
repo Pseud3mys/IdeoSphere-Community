@@ -44,23 +44,19 @@ export function MyContributionsPageWrapper() {
   };
 
   const handleIgnoreIdea = async (ideaId: string) => {
-    console.log('Ignorer idée:', ideaId);
-    // TODO: Implémenter la logique d'ignorance
+    await actions.ignoreIdea(ideaId);
   };
 
   const handleReportIdea = async (ideaId: string) => {
-    console.log('Signaler idée:', ideaId);
-    // TODO: Implémenter la logique de signalement
+    await actions.reportIdea(ideaId);
   };
 
   const handleIgnorePost = async (postId: string) => {
-    console.log('Ignorer post:', postId);
-    // TODO: Implémenter la logique d'ignorance
+    await actions.ignorePost(postId);
   };
 
   const handleReportPost = async (postId: string) => {
-    console.log('Signaler post:', postId);
-    // TODO: Implémenter la logique de signalement
+    await actions.reportPost(postId);
   };
 
   const handleCreateContent = () => {
