@@ -28,22 +28,26 @@ import {
   Zap,
   Share,
   Users,
-  Edit
+  Edit,
+  Flag
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { canEditIdea } from '../utils/contentEditUtils';
 import { EditIdeaDialog } from './EditIdeaDialog';
+import { ContentActionDialogs } from './ContentActionDialogs';
 
 interface IdeaDetailPageProps {
   idea: Idea;
   onBack: () => void;
   onPostClick?: (postId: string) => void;
+  onReport?: (ideaId: string) => void;
 }
 
 export function IdeaDetailPage({ 
   idea, 
   onBack,
-  onPostClick
+  onPostClick,
+  onReport
 }: IdeaDetailPageProps) {
   // Récupération des données depuis l'Entity Store
   const {
@@ -82,6 +86,23 @@ export function IdeaDetailPage({
   const [activeTab, setActiveTab] = useState('description');
   const [isEditDialogOpenMobile, setIsEditDialogOpenMobile] = useState(false);
   const [isEditDialogOpenDesktop, setIsEditDialogOpenDesktop] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  
+  // Handlers pour les dialogues
+  const handleReportClick = () => {
+    setIsReportDialogOpen(true);
+  };
+
+  const handleReportConfirm = () => {
+    setIsReportDialogOpen(false);
+    if (onReport) {
+      onReport(latestIdea.id);
+    }
+  };
+
+  const handleReportCancel = () => {
+    setIsReportDialogOpen(false);
+  };
   
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
@@ -244,6 +265,19 @@ export function IdeaDetailPage({
               </Button>
             </EditIdeaDialog>
           )}
+          
+          {/* Bouton Signaler mobile - discret */}
+          {onReport && (
+            <Button 
+              variant="ghost" 
+              className="w-full flex items-center justify-center space-x-2 h-11 mt-4 text-gray-400 hover:text-red-600 hover:bg-red-50"
+              onClick={handleReportClick}
+              title="Signaler un contenu inapproprié"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span className="text-xs">Signaler</span>
+            </Button>
+          )}
         </div>
 
         {/* Version desktop */}
@@ -329,6 +363,19 @@ export function IdeaDetailPage({
                     <span>Modifier</span>
                   </Button>
                 </EditIdeaDialog>
+              )}
+              
+              {/* Bouton Signaler desktop - discret */}
+              {onReport && (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={handleReportClick}
+                  title="Signaler un contenu inapproprié"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                </Button>
               )}
             </div>
           </div>
@@ -487,6 +534,18 @@ export function IdeaDetailPage({
           />
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogues de confirmation */}
+      <ContentActionDialogs
+        isIgnoreDialogOpen={false}
+        isReportDialogOpen={isReportDialogOpen}
+        contentType="projet"
+        contentId={latestIdea.id}
+        onIgnoreCancel={() => {}}
+        onIgnoreConfirm={() => {}}
+        onReportCancel={handleReportCancel}
+        onReportConfirm={handleReportConfirm}
+      />
     </div>
   );
 }

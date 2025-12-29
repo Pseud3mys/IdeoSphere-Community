@@ -119,6 +119,7 @@ export function PostDetailPageWrapper() {
       onCreateResponsePost={actions.createResponsePost}
       onIdeaClick={navigation.goToIdea}
       onPostClick={navigation.goToPost}
+      onReport={actions.reportPost}
     />
   );
 }

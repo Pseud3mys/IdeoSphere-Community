@@ -160,5 +160,5 @@ export function IdeaDetailPageWrapper() {
     return null;
   }
 
-  return <IdeaDetailPage idea={idea} onBack={handleBack} onPostClick={navigation.goToPost} />;
+  return <IdeaDetailPage idea={idea} onBack={handleBack} onPostClick={navigation.goToPost} onReport={actions.reportIdea} />;
 }

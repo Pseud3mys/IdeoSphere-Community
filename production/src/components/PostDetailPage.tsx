@@ -20,7 +20,8 @@ import {
   ArrowUp,
   Reply,
   Share,
-  Edit
+  Edit,
+  Flag
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { ShareDialog } from './ShareDialog';
@@ -30,6 +31,7 @@ import { RecommendToGroupDialog } from './group/RecommendToGroupDialog';
 import { Users } from 'lucide-react';
 import { canEditPost } from '../utils/contentEditUtils';
 import { EditPostDialog } from './EditPostDialog';
+import { ContentActionDialogs } from './ContentActionDialogs';
 
 interface PostDetailPageProps {
   post: Post;
@@ -38,6 +40,7 @@ interface PostDetailPageProps {
   onCreateResponsePost: (postId: string) => void;
   onIdeaClick: (ideaId: string) => void;
   onPostClick: (postId: string) => void;
+  onReport?: (postId: string) => void;
 }
 
 function formatTimeAgo(date: Date | undefined): string {
@@ -66,7 +69,8 @@ export function PostDetailPage({
   onPromoteToIdea,
   onCreateResponsePost,
   onIdeaClick,
-  onPostClick
+  onPostClick,
+  onReport
 }: PostDetailPageProps) {
   // Récupération des données depuis l'Entity Store
   const {
@@ -94,8 +98,25 @@ export function PostDetailPage({
   const [newReply, setNewReply] = useState('');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const isSupporting = latestPost.supporters?.includes(effectiveUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
+
+  // Handlers pour les dialogues
+  const handleReportClick = () => {
+    setIsReportDialogOpen(true);
+  };
+
+  const handleReportConfirm = () => {
+    setIsReportDialogOpen(false);
+    if (onReport) {
+      onReport(latestPost.id);
+    }
+  };
+
+  const handleReportCancel = () => {
+    setIsReportDialogOpen(false);
+  };
 
   // Tracker les chargements déjà effectués pour éviter les boucles infinies
   const loadedLineageRef = useRef(new Set<string>());
@@ -421,6 +442,19 @@ export function PostDetailPage({
                   <span className="text-sm">Recommander</span>
                 </Button>
               </RecommendToGroupDialog>
+              
+              {/* Bouton Signaler - discret */}
+              {onReport && (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={handleReportClick}
+                  title="Signaler un contenu inapproprié"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
             
             <button
@@ -678,6 +712,18 @@ export function PostDetailPage({
           </div>
         </div>
       </div>
+      
+      {/* Dialogues de confirmation */}
+      <ContentActionDialogs
+        isIgnoreDialogOpen={false}
+        isReportDialogOpen={isReportDialogOpen}
+        contentType="post"
+        contentId={latestPost.id}
+        onIgnoreCancel={() => {}}
+        onIgnoreConfirm={() => {}}
+        onReportCancel={handleReportCancel}
+        onReportConfirm={handleReportConfirm}
+      />
     </div>
   );
 }
