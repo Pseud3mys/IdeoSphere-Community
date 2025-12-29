@@ -175,6 +175,7 @@ export function useNavigationActions() {
     goToHome: () => navigate('/'),
     goToSignup: () => navigate('/signup'),
     goToStatistics: () => navigate('/statistics'),
+    goToCartography: () => navigate('/cartography'),
     
     /**
      * Navigation vers la création avec des groupes pré-remplis

@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Home, User, Plus, Users2 } from 'lucide-react';
+import { Home, User, Plus, Users2, Network } from 'lucide-react';
 
 /**
  * Navigation
@@ -19,6 +19,7 @@ export function Navigation() {
     if (path.startsWith('/groups')) return '/groups';
     if (path.startsWith('/communities')) return '/communities';
     if (path.startsWith('/discovery')) return '/discovery';
+    if (path.startsWith('/cartography')) return '/cartography';
     // Si on est sur une autre page (admin, profile, content, etc.), ne rien sélectionner
     return null;
   };
@@ -49,6 +50,12 @@ export function Navigation() {
       label: 'Groupes',
       icon: Users2,
       description: 'Rejoindre et participer aux groupes',
+    },
+    {
+      path: '/cartography',
+      label: 'Cartographie',
+      icon: Network,
+      description: 'Visualiser le réseau de la communauté',
     }
   ];
 
@@ -95,6 +102,7 @@ export function Navigation() {
               if (label === 'Mes contributions') return 'Mes idées';
               if (label === 'Partager une idée') return 'Créer';
               if (label === 'Groupes de travail') return 'Groupes';
+              if (label === 'Cartographie') return 'Carto';
               return label;
             };
             
