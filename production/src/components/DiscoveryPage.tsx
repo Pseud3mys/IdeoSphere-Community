@@ -65,7 +65,6 @@ export function DiscoveryPage({
   const [sortOrder, setSortOrder] = useState<SortOrder>('default');
   // ✅ Stocker l'ordre des items pour éviter le re-tri à chaque interaction
   const [sortedItemsCache, setSortedItemsCache] = useState<(FeedItem & { type: 'post' | 'idea' })[]>([]);
-  const [lastSortKey, setLastSortKey] = useState<string>('default-all');
   const [contentChains, setContentChains] = useState<ContentChain[]>([]);
   const [seenItems, setSeenItems] = useState<Set<string>>(new Set()); // Items déjà vus par l'utilisateur
   // Removed unused state: showTips
@@ -90,9 +89,9 @@ export function DiscoveryPage({
   const ideas = feedData.ideas;
   const posts = feedData.posts;
 
-  // ✅ Utiliser unknownUser comme fallback pour les invités
-  // (pas de blocage, on affiche le contenu même sans utilisateur connecté)
-  const effectiveUser = currentUser || { id: 'unknown', name: 'Invité' } as any;
+  // ✅ Utiliser un fallback pour l'affichage si pas d'utilisateur valide
+  // Note: En pratique, fetchFeed crée automatiquement un compte si nécessaire
+  const effectiveUser = currentUser || { id: 'guest-fallback', name: 'Invité' } as any;
 
   // Utiliser la fonction flat pour récupérer les items avec discriminants de type
   const createFeedItems = (): (FeedItem & { type: 'post' | 'idea' })[] => {
@@ -171,30 +170,27 @@ export function DiscoveryPage({
     }
   };
 
-  // Charger les données du feed au montage du composant
+  // ✅ Charger les données du feed au montage du composant
+  // Force le rechargement pour s'assurer qu'on a les données à jour
   useEffect(() => {
-    actions.fetchFeed();
+    console.log('🔄 [DiscoveryPage] Montage - Chargement du feed...');
+    // Réinitialiser le cache local pour forcer un recalcul
+    setSortedItemsCache([]);
+    // Invalider le cache pour forcer un rechargement à chaque fois qu'on arrive sur la page
+    actions.invalidateFeedCache();
+    actions.fetchFeed(true); // forceRefresh = true
   }, []);
 
-  // ✅ Initialiser le cache lors du premier chargement des données
+  // ✅ Recalculer le cache quand les données du feed changent (après fetchFeed)
+  // Combinaison ideas.length + posts.length comme clé de dépendance
   useEffect(() => {
-    if ((ideas.length > 0 || posts.length > 0) && sortedItemsCache.length === 0) {
-      const initialSortedItems = getFilteredAndSortedItems();
-      setSortedItemsCache(initialSortedItems);
-      console.log('🎯 [DiscoveryPage] Initialisation du cache avec', initialSortedItems.length, 'items');
-    }
-  }, [ideas.length, posts.length]);
-
-  // ✅ Recalculer le tri uniquement quand le filtre ou l'ordre change
-  const currentSortKey = `${sortOrder}-${contentFilter}`;
-  useEffect(() => {
-    if (currentSortKey !== lastSortKey) {
+    const totalItems = ideas.length + posts.length;
+    if (totalItems > 0) {
       const newSortedItems = getFilteredAndSortedItems();
       setSortedItemsCache(newSortedItems);
-      setLastSortKey(currentSortKey);
-      console.log('🔄 [DiscoveryPage] Tri recalculé:', currentSortKey);
+      console.log('🎯 [DiscoveryPage] Cache mis à jour avec', newSortedItems.length, 'items');
     }
-  }, [sortOrder, contentFilter, currentSortKey, lastSortKey]);
+  }, [ideas.length, posts.length, sortOrder, contentFilter]);
 
   // ✅ Analyser les chaînes de contenu quand les données changent
   useEffect(() => {
@@ -288,7 +284,7 @@ export function DiscoveryPage({
               Découvrez les idées et conversations de la communauté
             </p>
           </div>
-          {currentUser && currentUser.id !== 'unknown' && (
+          {currentUser && currentUser.id && currentUser.id.startsWith('users/') && (
             <div className="text-sm text-gray-600">
               Vos contributions dans <Link to="/my-contributions" className="font-medium text-gray-900 hover:text-blue-700">Mes contributions</Link>
             </div>

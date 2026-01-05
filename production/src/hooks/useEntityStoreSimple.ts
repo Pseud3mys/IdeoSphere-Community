@@ -246,9 +246,9 @@ export function useEntityStoreSimple() {
     // Actions d'authentification et utilisateur
     setCurrentUserId: actions.setCurrentUserId,
     
-    // Actions UI/UX
-    showOnboarding: () => actions.setShowOnboarding(true),
-    hideOnboarding: () => actions.setShowOnboarding(false),
+    // Actions de cache
+    invalidateFeedCache: actions.invalidateFeedCache,
+    invalidateContributionsCache: actions.invalidateContributionsCache,
     
     // Actions Group (Phase 1)
     addGroup: actions.addGroup,
@@ -284,15 +284,7 @@ export function useEntityStoreSimple() {
     
     // Actions spéciales qui nécessitent une coordination entre modules
     
-    /**
-     * Navigation vers une idée - Charge uniquement l'idée de base
-     * Les données des onglets sont chargées à la demande via loadIdeaTabData
-     */
-    goToIdea: async (ideaId: string, initialTab: 'description' | 'discussions' | 'evaluation' | 'versions' = 'description') => {
-      console.log(`🔄 [goToIdea] Navigation vers idée ${ideaId}, onglet: ${initialTab}`);
-      await navigationActions.goToIdea(ideaId, initialTab);
-      console.log(`✅ [goToIdea] Idée ${ideaId} chargée`);
-    },
+    // NOTE: goToIdea() supprimée - utiliser useNavigationActions().goToIdea() directement
     
     /**
      * Charge les données d'un onglet spécifique d'une idée

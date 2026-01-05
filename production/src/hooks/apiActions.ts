@@ -12,11 +12,51 @@ export function createApiActions(
   boundSelectors: any,
   storeUpdater: StoreUpdater
 ) {
+  /**
+   * ✅ FONCTION CENTRALISÉE pour créer un compte invité sur le backend
+   * Cette fonction doit être utilisée partout où on a besoin d'un utilisateur
+   * Elle crée un VRAI compte sur le backend avec un ID commençant par "users/"
+   */
+  const ensureGuestUserExists = async (): Promise<User | null> => {
+    const currentUser = boundSelectors.getCurrentUser();
+    
+    // Vérifier si on a déjà un utilisateur valide (ID commence par "users/")
+    if (currentUser?.id && currentUser.id.startsWith('users/')) {
+      console.log('✅ [ensureGuestUserExists] Utilisateur valide existant:', currentUser.id);
+      return currentUser;
+    }
+    
+    // Sinon, créer un compte invité sur le backend
+    console.log('👤 [ensureGuestUserExists] Création d\'un compte invité sur le backend...');
+    
+    try {
+      const { createUnfinalizedAccountOnApi } = await import('../api/authService');
+      const guestUser = await createUnfinalizedAccountOnApi();
+      
+      if (guestUser && guestUser.id.startsWith('users/')) {
+        console.log(`✅ [ensureGuestUserExists] Compte invité créé: ${guestUser.id}`);
+        
+        // Ajouter au store et définir comme utilisateur actuel
+        actions.addUser(guestUser);
+        actions.setCurrentUserId(guestUser.id);
+        actions.setHasEnteredPlatform(true);
+        
+        return guestUser;
+      } else {
+        console.error('❌ [ensureGuestUserExists] ID invalide ou création échouée');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ [ensureGuestUserExists] Erreur:', error);
+      return null;
+    }
+  };
+
   return {
     /**
      * ⚠️ FONCTION UNIQUE DE CHARGEMENT INITIAL
      * Charge TOUTES les données mockées UNE SEULE FOIS au démarrage
-     * C'est le SEUL endroit où on accède à dataService !
+     * ✅ NE CRÉE PLUS de faux utilisateurs anonymes
      */
     loadInitialData: async () => {
       try {
@@ -35,32 +75,20 @@ export function createApiActions(
           pendingGroups: mockData.pendingGroups?.length || 0
         });
         
-        // Créer un utilisateur anonyme temporaire pour la navigation
-        const anonymousUser = {
-          id: 'anonymous',
-          name: 'Visiteur',
-          email: '',
-          avatar: '',
-          bio: '',
-          createdAt: new Date(),
-          isRegistered: false
-        };
-        
-        // Initialiser le store avec toutes les données avec utilisateur anonyme
-        // Les boutons de connexion changeront le currentUserId
+        // ✅ Initialiser le store SANS utilisateur par défaut
+        // L'utilisateur sera créé automatiquement par ensureGuestUserExists() quand nécessaire
         actions.initializeStore({
-          users: [anonymousUser, mockData.currentUser, mockData.guestUser, ...mockData.users],
+          users: [mockData.currentUser, mockData.guestUser, ...mockData.users],
           ideas: mockData.ideas,
           posts: mockData.posts,
           discussionTopics: mockData.discussions,
-          // ⚠️ Les groupes seront chargés via l'API après l'authentification
           groups: [],
           groupMemberships: [],
           pendingGroups: [],
-          currentUserId: 'anonymous' // ✅ Utilisateur anonyme par défaut pour la navigation
+          currentUserId: null // ✅ Pas d'utilisateur par défaut
         });
         
-        console.log('✅ [apiActions] Store initialisé avec toutes les données (currentUserId: anonymous)');
+        console.log('✅ [apiActions] Store initialisé (pas d\'utilisateur par défaut)');
         
         return true;
       } catch (error) {
@@ -70,28 +98,14 @@ export function createApiActions(
     },
     
     /**
-     * Charge les statistiques de la page d'accueil et initialise un utilisateur visiteur
+     * Charge les statistiques de la page d'accueil
+     * ✅ Ne crée PLUS d'utilisateur - utiliser ensureGuestUserExists() si nécessaire
      */
     fetchHomePageStats: async () => {
       try {
         const { fetchHomePageStats } = await import('../api/feedService');
         const homePageData = await fetchHomePageStats();
-        
-        if (homePageData) {
-          // Vérifier si on a déjà un utilisateur réel connecté
-          const currentUser = boundSelectors.getCurrentUser();
-          if (!currentUser || currentUser.id === 'not-connected') {
-            // Créer automatiquement un visiteur
-            const visitorId = `visitor-${Date.now()}`;
-            const { createVisitorUser } = await import('../api/transformService');
-            const visitorUser = createVisitorUser(visitorId);
-            
-            actions.addUser(visitorUser);
-            actions.setCurrentUserId(visitorId);
-          }
-          
-          return homePageData;
-        }
+        return homePageData;
       } catch (error) {
         console.error('❌ [hook/apiActions] fetchHomePageStats:', error);
         return null;
@@ -100,12 +114,27 @@ export function createApiActions(
     
     /**
      * Charge le feed de découverte avec système de cache
+     * ✅ Utilise ensureGuestUserExists() pour créer un compte invité si nécessaire
      */
     fetchFeed: async (forceRefresh: boolean = false) => {
       try {
-        // Récupérer l'utilisateur actuel pour personnaliser le feed
-        const currentUser = boundSelectors.getCurrentUser();
-        const userId = currentUser?.id;
+        // ✅ S'assurer qu'on a un utilisateur valide (crée un compte invité si nécessaire)
+        const currentUser = await ensureGuestUserExists();
+        
+        if (!currentUser) {
+          console.error('❌ [apiActions] fetchFeed - Impossible de créer un compte invité');
+          // Fallback : retourner des données vides
+          return {
+            posts: [],
+            ideas: [],
+            totalPosts: 0,
+            totalIdeas: 0,
+            totalItems: 0
+          };
+        }
+        
+        const userId = currentUser.id;
+        const isValidBackendUser = userId.startsWith('users/');
         
         // Vérifier si on a déjà les données en cache (valide pendant 5 minutes)
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -117,8 +146,8 @@ export function createApiActions(
           console.log(`♻️ [apiActions] fetchFeed - Utilisation du cache (${store.feedIdeaIds.length} idées, ${store.feedPostIds.length} posts)`);
           
           // Récupérer directement depuis le store
-          const ideasFromStore = store.feedIdeaIds.map(id => boundSelectors.getIdeaById(id)).filter(Boolean);
-          const postsFromStore = store.feedPostIds.map(id => boundSelectors.getPostById(id)).filter(Boolean);
+          const ideasFromStore = store.feedIdeaIds.map((id: string) => boundSelectors.getIdeaById(id)).filter(Boolean);
+          const postsFromStore = store.feedPostIds.map((id: string) => boundSelectors.getPostById(id)).filter(Boolean);
           
           return {
             posts: postsFromStore,
@@ -129,10 +158,30 @@ export function createApiActions(
           };
         }
         
-        console.log(`🔄 [apiActions] fetchFeed - Chargement depuis l'API (User: ${userId || 'anonymous'})`);
+        console.log(`🔄 [apiActions] fetchFeed - Chargement depuis l'API (User: ${userId}, Valid: ${isValidBackendUser})`);
         
-        const { fetchFeed } = await import('../api/feedService');
-        const feedData = await fetchFeed(userId);
+        // ✅ Si on a un userId valide du backend (commence par "users/"), on utilise l'API normale
+        // Sinon, plan B avec weighted-random
+        let feedData;
+        if (isValidBackendUser) {
+          console.log('📡 [apiActions] fetchFeed - Utilisation de neighbors-activity avec userId backend:', userId);
+          const { fetchFeed } = await import('../api/feedService');
+          feedData = await fetchFeed(userId);
+        } else {
+          console.warn('⚠️ [apiActions] fetchFeed - Pas d\'userId valide du backend, utilisation de weighted-random comme fallback');
+          const { fetchHomePageStats } = await import('../api/feedService');
+          const homeData = await fetchHomePageStats();
+          
+          // homeData.recentSharedPropositions contient déjà des FeedIdeaCard et FeedPostCard avec la propriété 'type'
+          feedData = {
+            ideas: homeData.recentSharedPropositions.filter((item: any) => item.type === 'idea') as any[],
+            posts: homeData.recentSharedPropositions.filter((item: any) => item.type === 'post') as any[],
+            communities: [],
+            users: []
+          };
+          
+          console.log(`📊 [apiActions] feedData fallback - ${feedData.ideas.length} idées, ${feedData.posts.length} posts`);
+        }
         
         // Ajouter les éléments du feed au store avec transformation API
         const { transformIdeaCardToIdea, transformPostCardToPost } = await import('../api/transformService');
