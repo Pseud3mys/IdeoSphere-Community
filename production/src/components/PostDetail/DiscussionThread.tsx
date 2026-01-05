@@ -337,14 +337,6 @@ export function DiscussionThread({
             
             return null;
           })}
-
-        {discussionItems.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
-            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Aucune réaction pour le moment</p>
-            <p className="text-xs text-gray-400 mt-1">Soyez le premier à partager votre avis</p>
-          </div>
-        )}
       </div>
   );
 }

@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { ArrowLeft, Send, RefreshCw, Quote, ExternalLink } from 'lucide-react';
 import { PostDetailContent } from './PostDetail/PostDetailContent';
 import { DiscussionThread } from './PostDetail/DiscussionThread';
+import { DerivedProjectsSection } from './PostDetail/DerivedProjectsSection';
 import { ContentActionDialogs } from './ContentActionDialogs';
 import { getDiscussionTreeOnApi } from '../api/replyPromotionService';
 import { toast } from 'sonner';
@@ -212,16 +213,11 @@ export function PostDetailPage({
           post={latestPost}
           currentUser={currentUser}
           postAuthor={postAuthor}
-          sourcePosts={[]} // Ne plus passer les sourcePosts ici car affichés au-dessus
-          derivedIdeas={[]} // Ne pas afficher les projets ici
           derivedIdeasCount={derivedIdeas.length} // Juste le nombre pour le bandeau
           isSupporting={isSupporting}
           supportCount={supportCount}
-          getUserById={getUserById}
           onToggleLike={() => actions.togglePostLike(latestPost.id)}
           onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
-          onIdeaClick={onIdeaClick}
-          onPostClick={onPostClick}
           onReportClick={handleReportClick}
           onPostUpdated={handlePostUpdated}
         />
@@ -289,27 +285,14 @@ export function PostDetailPage({
         )}
       </div>
 
-      {/* Projets dérivés - affichés après le rectangle principal */}
-      {derivedIdeas.length > 0 && (
-        <div data-section="derived-projects">
-          <PostDetailContent
-            post={latestPost}
-            currentUser={currentUser}
-            postAuthor={postAuthor}
-            sourcePosts={[]}
-            derivedIdeas={derivedIdeas}
-            isSupporting={isSupporting}
-            supportCount={supportCount}
-            getUserById={getUserById}
-            onToggleLike={() => actions.togglePostLike(latestPost.id)}
-            onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
-            onIdeaClick={onIdeaClick}
-            onPostClick={onPostClick}
-            onReportClick={handleReportClick}
-            onPostUpdated={handlePostUpdated}
-          />
-        </div>
-      )}
+      {/* Projets dérivés - Section séparée affichée à la fin */}
+      <DerivedProjectsSection
+        derivedIdeas={derivedIdeas}
+        hasComments={latestPost.replies.length > 0}
+        getUserById={getUserById}
+        onIdeaClick={onIdeaClick}
+        onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
+      />
       
       {/* Dialogues de confirmation */}
       <ContentActionDialogs

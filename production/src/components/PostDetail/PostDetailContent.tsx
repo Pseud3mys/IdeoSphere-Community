@@ -1,16 +1,13 @@
 import { useState } from 'react';
-import { Post, User, Idea } from '../../types';
+import { Post, User } from '../../types';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
-import { Card, CardContent } from '../ui/card';
 import { UserLink } from '../UserLink';
 import { 
   Heart, 
   MessageSquare, 
   Lightbulb,
-  ExternalLink,
-  Quote,
   Share,
   Edit,
   Flag,
@@ -28,16 +25,11 @@ interface PostDetailContentProps {
   post: Post;
   currentUser: User | null;
   postAuthor: User | undefined;
-  sourcePosts: (Post | undefined)[];
-  derivedIdeas: (Idea | undefined)[];
   derivedIdeasCount?: number; // Nombre de projets dérivés pour le bandeau
   isSupporting: boolean;
   supportCount: number;
-  getUserById: (userId: string) => User | undefined;
   onToggleLike: () => void;
   onPromoteToIdea: () => void;
-  onIdeaClick: (ideaId: string) => void;
-  onPostClick: (postId: string) => void;
   onReportClick: () => void;
   onPostUpdated: (post: Post) => void;
 }
@@ -46,20 +38,14 @@ export function PostDetailContent({
   post,
   currentUser,
   postAuthor,
-  sourcePosts,
-  derivedIdeas,
   derivedIdeasCount = 0,
   isSupporting,
   supportCount,
-  getUserById,
   onToggleLike,
   onPromoteToIdea,
-  onIdeaClick,
-  onPostClick,
   onReportClick,
   onPostUpdated
 }: PostDetailContentProps) {
-  const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Calculer le nombre de participants uniques dans la discussion
@@ -73,87 +59,8 @@ export function PostDetailContent({
   const hasActiveDiscussion = participantCount >= 3;
   const shouldShowBanner = hasProjects || hasActiveDiscussion;
 
-  // Si on n'affiche que les projets dérivés (sourcePosts est vide), retourner seulement cette section
-  if (sourcePosts.length === 0 && derivedIdeas.length > 0) {
-    return (
-      <>
-        {/* Contenu dérivé - Projets mis en avant */}
-        <div className="mt-6">
-          {/* Projets dérivés - Section importante */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-gray-500" />
-              <h3 className="text-base font-medium text-gray-900">
-                Projets issus de cette discussion ({derivedIdeas.length})
-              </h3>
-            </div>
-            
-            <div className="space-y-3">
-              {derivedIdeas.map(idea => {
-                const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
-                
-                return (
-                  <Card 
-                    key={idea?.id}
-                    className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
-                    onClick={() => idea && onIdeaClick(idea.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Lightbulb className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
-                              Projet
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              par <UserLink user={firstCreator || undefined} className="text-gray-700 hover:text-purple-600 font-medium" />
-                            </span>
-                            <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
-                          </div>
-                          <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
-                          <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                            <span>{idea?.supporters?.length || 0} soutiens</span>
-                          </div>
-                        </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Bouton "Structurer en projet" */}
-        <div className="mt-6">
-          <button
-            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50/30 transition-colors text-left group"
-            onClick={onPromoteToIdea}
-          >
-            <div className="flex items-center gap-3">
-              <Lightbulb className="w-5 h-5 text-gray-400 group-hover:text-purple-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-medium text-gray-900 mb-0.5">Structurer en projet complet</p>
-                <p className="text-sm text-gray-600">
-                  Transformer cette discussion en idée aboutie avec description détaillée et évaluations
-                </p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
-      {/* Posts sources - Section déplacée vers PostDetailPage.tsx */}
-      
       {/* Header utilisateur */}
       <div className="p-4 border-b border-gray-100">
           <div className="flex items-start justify-between">
@@ -251,8 +158,6 @@ export function PostDetailContent({
             </div>
           )}
         </div>
-
-        {/* Statistiques - SUPPRIMÉ */}
 
         {/* Actions principales - Simplifiées */}
         <div className="px-4 py-3 bg-white">
