@@ -1,6 +1,7 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
 import { toast } from 'sonner@2.0.3';
+import { User } from '../types';
 
 /**
  * Actions de contenu pour l'Entity Store
@@ -608,7 +609,10 @@ export function createContentActions(
           return null;
         }
         
-        const { newPostId, newPost } = result;
+        const { newPostId, newPost, users } = result;
+        
+        console.log('✅ [promoteReplyToPost] Nouveau post reçu:', newPost);
+        console.log('✅ [promoteReplyToPost] Utilisateurs reçus:', users);
         
         // Mettre à jour le store
         storeUpdater(prevStore => {
@@ -626,12 +630,21 @@ export function createContentActions(
           
           console.log('✅ Reply promue en post:', newPostId);
           
+          // Ajouter les utilisateurs au store
+          const updatedUsers = { ...prevStore.users };
+          if (users && users.length > 0) {
+            users.forEach((user: User) => {
+              updatedUsers[user.id] = user;
+            });
+          }
+          
           return {
             posts: {
               ...prevStore.posts,
               [postId]: updatedPost,
               [newPostId]: newPost
-            }
+            },
+            users: updatedUsers
           };
         });
         

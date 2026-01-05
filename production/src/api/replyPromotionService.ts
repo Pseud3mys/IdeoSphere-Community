@@ -12,7 +12,7 @@ export async function promoteReplyToPostOnApi(
   replyId: string, 
   newReplyContent: string,
   newReplyAuthorId: string
-): Promise<{ newPostId: string; newReplyId: string; newPost: Post } | null> {
+): Promise<{ newPostId: string; newReplyId: string; newPost: Post; users: User[] } | null> {
   try {
     const postKey = postId.split('/')[1];
     const payload = { 
@@ -41,6 +41,7 @@ export async function promoteReplyToPostOnApi(
     
     // Créer un Map des utilisateurs depuis la réponse API
     const usersMap = new Map<string, User>();
+    const usersList: User[] = [];
     if (response.data.data.users) {
       Object.values(response.data.data.users).forEach((rawUser: any) => {
         const user: User = {
@@ -53,6 +54,7 @@ export async function promoteReplyToPostOnApi(
           isRegistered: rawUser.isRegistered ?? false,
         };
         usersMap.set(rawUser._id, user);
+        usersList.push(user);
       });
     }
     
@@ -62,7 +64,8 @@ export async function promoteReplyToPostOnApi(
     return {
       newPostId: newPostId,
       newReplyId: response.data.data.new_reply_id,
-      newPost: transformedPost
+      newPost: transformedPost,
+      users: usersList
     };
   } catch (error) {
     console.error(`❌ Error promoting reply ${replyId} to post:`, error);
