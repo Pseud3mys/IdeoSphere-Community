@@ -252,7 +252,7 @@ export function PostDetailPage({
                 <Textarea
                   value={newReply}
                   onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Partagez votre réaction..."
+                  placeholder="Partagez votre commentaire..."
                   rows={2}
                   className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
                 />
