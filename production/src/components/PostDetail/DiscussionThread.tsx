@@ -21,7 +21,6 @@ interface DiscussionThreadProps {
   derivedPosts: Post[];
   currentUser: User | null;
   getUserById: (userId: string) => User | undefined;
-  onAddReply: (postId: string, content: string) => Promise<string | null>;
   onLikeReply: (postId: string, replyId: string) => void;
   onPromoteReplyToPost: (postId: string, replyId: string, newReplyContent: string) => Promise<string | null>;
   onPostClick: (postId: string) => void;
@@ -32,13 +31,10 @@ export function DiscussionThread({
   derivedPosts,
   currentUser,
   getUserById,
-  onAddReply,
   onLikeReply,
   onPromoteReplyToPost,
   onPostClick
 }: DiscussionThreadProps) {
-  const [newReply, setNewReply] = useState('');
-  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
 
@@ -60,30 +56,6 @@ export function DiscussionThread({
     
     return dateA.getTime() - dateB.getTime();
   });
-
-  // Ajouter une reply principale au post
-  const handleAddReply = async () => {
-    if (!newReply.trim()) {
-      toast.error('Veuillez écrire une réponse');
-      return;
-    }
-
-    setIsSubmittingReply(true);
-    try {
-      const replyId = await onAddReply(post.id, newReply);
-      if (replyId) {
-        toast.success('Réponse ajoutée ! 💬');
-        setNewReply('');
-      } else {
-        toast.error('Erreur lors de l\'ajout de la réponse');
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la réponse:', error);
-      toast.error('Impossible d\'envoyer la réponse. Vérifiez votre connexion.');
-    } finally {
-      setIsSubmittingReply(false);
-    }
-  };
 
   // Répondre à une reply (ce qui la promeut en post)
   const handleReplyToReply = async (replyId: string) => {
@@ -115,75 +87,8 @@ export function DiscussionThread({
   };
 
   return (
-    <div className="mt-8">
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-100 bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
-                Discussion ({post.replies.length})
-              </h3>
-              <p className="text-xs text-gray-500">
-                💬 Partagez vos réactions • Cliquez sur "Répondre" pour approfondir une idée
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Zone de texte principale pour ajouter une reply */}
-        {currentUser ? (
-          <div className="p-4 border-b border-gray-100 bg-gray-50/30">
-            <div className="flex space-x-3">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                  {currentUser.name.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-2">
-                <Textarea
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Partagez votre réaction..."
-                  rows={2}
-                  className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
-                />
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={handleAddReply}
-                    disabled={!newReply.trim() || isSubmittingReply}
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                  >
-                    {isSubmittingReply ? (
-                      <>
-                        <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
-                        Envoi...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3 h-3 mr-2" />
-                        Publier
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 border-b border-gray-100 bg-gray-50/30">
-            <p className="text-sm text-muted-foreground text-center">
-              Vous devez être connecté pour participer à la discussion
-            </p>
-          </div>
-        )}
-
-        {/* Liste unifiée: replies ET posts dérivés */}
-        <div className="divide-y divide-gray-100">
-          {discussionItems.map(item => {
+    <div className="divide-y divide-gray-100">
+      {discussionItems.map(item => {
             // Rendu d'une reply
             if (item.type === 'reply') {
               const reply = item.data;
@@ -387,15 +292,13 @@ export function DiscussionThread({
             return null;
           })}
 
-          {discussionItems.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
-              <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Aucune réaction pour le moment</p>
-              <p className="text-xs text-gray-400 mt-1">Soyez le premier à partager votre avis</p>
-            </div>
-          )}
-        </div>
+        {discussionItems.length === 0 && (
+          <div className="p-8 text-center text-gray-500">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>Aucune réaction pour le moment</p>
+            <p className="text-xs text-gray-400 mt-1">Soyez le premier à partager votre avis</p>
+          </div>
+        )}
       </div>
-    </div>
   );
 }

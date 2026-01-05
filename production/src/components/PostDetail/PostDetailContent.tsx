@@ -30,6 +30,7 @@ interface PostDetailContentProps {
   postAuthor: User | undefined;
   sourcePosts: (Post | undefined)[];
   derivedIdeas: (Idea | undefined)[];
+  derivedIdeasCount?: number; // Nombre de projets dérivés pour le bandeau
   isSupporting: boolean;
   supportCount: number;
   getUserById: (userId: string) => User | undefined;
@@ -47,6 +48,7 @@ export function PostDetailContent({
   postAuthor,
   sourcePosts,
   derivedIdeas,
+  derivedIdeasCount = 0,
   isSupporting,
   supportCount,
   getUserById,
@@ -60,18 +62,106 @@ export function PostDetailContent({
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Calculer le nombre de participants uniques dans la discussion
+  const uniqueParticipants = new Set<string>();
+  uniqueParticipants.add(post.authorId); // L'auteur du post
+  post.replies.forEach(reply => uniqueParticipants.add(reply.authorId)); // Les auteurs des replies
+  const participantCount = uniqueParticipants.size;
+
+  // Déterminer si on doit afficher le bandeau d'incitation
+  const hasProjects = derivedIdeasCount > 0;
+  const hasActiveDiscussion = participantCount >= 3;
+  const shouldShowBanner = hasProjects || hasActiveDiscussion;
+
+  // Si on n'affiche que les projets dérivés (sourcePosts est vide), retourner seulement cette section
+  if (sourcePosts.length === 0 && derivedIdeas.length > 0) {
+    return (
+      <>
+        {/* Contenu dérivé - Projets mis en avant */}
+        <div className="mt-6">
+          {/* Projets dérivés - Section importante */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-gray-500" />
+              <h3 className="text-base font-medium text-gray-900">
+                Projets issus de cette discussion ({derivedIdeas.length})
+              </h3>
+            </div>
+            
+            <div className="space-y-3">
+              {derivedIdeas.map(idea => {
+                const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+                
+                return (
+                  <Card 
+                    key={idea?.id}
+                    className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
+                    onClick={() => idea && onIdeaClick(idea.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Lightbulb className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
+                              Projet
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              par <UserLink user={firstCreator || undefined} className="text-gray-700 hover:text-purple-600 font-medium" />
+                            </span>
+                            <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
+                          </div>
+                          <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
+                          <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                            <span>{idea?.supporters?.length || 0} soutiens</span>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Bouton "Structurer en projet" */}
+        <div className="mt-6">
+          <button
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50/30 transition-colors text-left group"
+            onClick={onPromoteToIdea}
+          >
+            <div className="flex items-center gap-3">
+              <Lightbulb className="w-5 h-5 text-gray-400 group-hover:text-purple-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 mb-0.5">Structurer en projet complet</p>
+                <p className="text-sm text-gray-600">
+                  Transformer cette discussion en idée aboutie avec description détaillée et évaluations
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Posts sources - L'inspiration */}
       {sourcePosts.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
             <Quote className="w-4 h-4 text-gray-500" />
             <h3 className="text-sm font-medium text-gray-700">
               {sourcePosts.length > 1 ? 'En réponse à plusieurs messages' : 'En réponse à'}
             </h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {sourcePosts.map((sourcePost, index) => {
               const sourceAuthor = sourcePost?.authorId ? getUserById(sourcePost.authorId) : undefined;
               // Afficher quand même si l'auteur n'est pas trouvé, mais avec un nom par défaut
@@ -80,27 +170,27 @@ export function PostDetailContent({
               return (
                 <div 
                   key={sourcePost?.id}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
                   onClick={() => sourcePost && onPostClick(sourcePost.id)}
                 >
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-8 h-8 flex-shrink-0">
+                    <Avatar className="w-10 h-10 flex-shrink-0">
                       <AvatarImage src={getValidAvatar(displayAuthor.name, displayAuthor.avatar || undefined)} alt={displayAuthor.name} />
-                      <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                      <AvatarFallback className="bg-gray-200 text-gray-600 text-sm">
                         {displayAuthor.name.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-gray-900">{displayAuthor.name}</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium text-gray-600">{displayAuthor.name}</span>
                         <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
                       </div>
                       {sourcePost?.title && (
-                        <p className="text-sm font-medium text-gray-900 mb-1">{sourcePost.title}</p>
+                        <p className="text-base font-medium text-gray-900 mb-2">{sourcePost.title}</p>
                       )}
-                      <p className="text-sm text-gray-700 line-clamp-2">{sourcePost?.content}</p>
+                      <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{sourcePost?.content}</p>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
                   </div>
                 </div>
               );
@@ -109,10 +199,8 @@ export function PostDetailContent({
         </div>
       )}
 
-      {/* Post principal - Style Reddit/Twitter */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        {/* Header utilisateur */}
-        <div className="p-4 border-b border-gray-100">
+      {/* Header utilisateur */}
+      <div className="p-4 border-b border-gray-100">
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-3 flex-1">
               {postAuthor ? (
@@ -209,45 +297,12 @@ export function PostDetailContent({
           )}
         </div>
 
-        {/* Statistiques */}
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex items-center space-x-6 text-sm text-gray-500">
-            <span>{supportCount} soutiens</span>
-            <span>{post.replies.length} discussions</span>
-            {derivedIdeas.length > 0 && (
-              <span>{derivedIdeas.length} {derivedIdeas.length > 1 ? 'projets' : 'projet'}</span>
-            )}
-          </div>
-        </div>
+        {/* Statistiques - SUPPRIMÉ */}
 
-        {/* Actions principales - CONTRIBUER AU FIL */}
-        <div className="px-4 py-3 border-t border-gray-100 bg-white">
-          <div className="mb-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-1">Structurer en projet</h4>
-            <p className="text-xs text-gray-600">Transformez cette discussion en idée aboutie</p>
-          </div>
-          
-          {/* Action principale: Structurer en projet */}
-          <div className="mb-3">
-            {/* Projet complet */}
-            <button
-              className="w-full p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50/30 transition-colors text-left group"
-              onClick={onPromoteToIdea}
-            >
-              <div className="flex items-center gap-3">
-                <Lightbulb className="w-4 h-4 text-gray-500 group-hover:text-purple-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 mb-0.5">Structurer en projet complet</p>
-                  <p className="text-xs text-gray-600">
-                    Transformer en idée aboutie avec description détaillée et évaluations
-                  </p>
-                </div>
-              </div>
-            </button>
-          </div>
-
+        {/* Actions principales - Simplifiées */}
+        <div className="px-4 py-3 bg-white">
           {/* Actions secondaires */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button 
                 variant="ghost"
@@ -260,7 +315,7 @@ export function PostDetailContent({
                 <Heart className={`w-4 h-4 ${isSupporting ? 'fill-current' : ''}`} />
                 <span className="text-sm">{isSupporting ? 'Soutenu' : 'Soutenir'}</span>
                 {supportCount > 0 && (
-                  <span className="text-xs text-gray-500">({supportCount})</span>
+                  <span className="text-xs font-medium">({supportCount})</span>
                 )}
               </Button>
               
@@ -302,82 +357,75 @@ export function PostDetailContent({
                 <Flag className="w-3.5 h-3.5" />
               </Button>
             </div>
-            
-            <button
-              onClick={() => setShowCreateOptions(!showCreateOptions)}
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
-            >
-              {showCreateOptions ? 'Masquer' : 'En savoir plus'}
-            </button>
-          </div>
-
-          {/* Explications détaillées (optionnel) */}
-          {showCreateOptions && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600 space-y-1">
-              <p>
-                <strong>Projet :</strong> Transforme cette discussion en idée structurée avec évaluation détaillée sur plusieurs critères.
-              </p>
-              <p className="pt-1 border-t border-gray-200 text-gray-500">
-                💬 Pour participer à la discussion, utilisez la section "Discussion" ci-dessous. Cliquez sur "Répondre" pour approfondir une idée.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Contenu dérivé - Projets mis en avant */}
-      {derivedIdeas.length > 0 && (
-        <div className="mt-6">
-          {/* Projets dérivés - Section importante */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-gray-500" />
-              <h3 className="text-base font-medium text-gray-900">
-                Projets issus de cette discussion ({derivedIdeas.length})
-              </h3>
-            </div>
-            
-            <div className="space-y-3">
-              {derivedIdeas.map(idea => {
-                const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
-                
-                return (
-                  <Card 
-                    key={idea?.id}
-                    className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
-                    onClick={() => idea && onIdeaClick(idea.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Lightbulb className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
-                              Projet
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              par <UserLink user={firstCreator || undefined} className="text-gray-700 hover:text-purple-600 font-medium" />
-                            </span>
-                            <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
-                          </div>
-                          <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
-                          <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                            <span>{idea?.supporters?.length || 0} soutiens</span>
-                          </div>
-                        </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
           </div>
         </div>
-      )}
+
+        {/* Bandeau d'incitation projet */}
+        {shouldShowBanner && (
+          <div className={`px-4 py-3 ${hasProjects ? 'bg-purple-50/50 border-t border-purple-100' : 'bg-blue-50/50 border-t border-blue-100'}`}>
+            {hasProjects ? (
+              // Si des projets existent, inciter à les consulter
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Lightbulb className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-purple-900">
+                      {derivedIdeasCount === 1 ? 'Un projet structuré existe' : `${derivedIdeasCount} projets structurés existent`}
+                    </p>
+                    <p className="text-xs text-purple-700">
+                      Cette discussion a donné naissance à des projets concrets
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-purple-50 border-purple-200 text-purple-700 font-medium"
+                  onClick={() => {
+                    // Scroll vers la section des projets
+                    const projectsSection = document.querySelector('[data-section="derived-projects"]');
+                    projectsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                >
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Voir {derivedIdeasCount === 1 ? 'le projet' : 'les projets'}
+                </Button>
+              </div>
+            ) : (
+              // Si pas de projet mais discussion active, inciter à créer
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Discussion active ({participantCount} participants)
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      Structurez ces échanges en projet pour mieux organiser les idées
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-blue-50 border-blue-200 text-blue-700 font-medium"
+                  onClick={onPromoteToIdea}
+                >
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Créer un projet
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Ligne de séparation sous les boutons */}
+        <div className="border-t border-gray-100"></div>
+      {/* Fin du rectangle blanc principal - les commentaires seront ajoutés après dans PostDetailPage */}
     </>
   );
 }

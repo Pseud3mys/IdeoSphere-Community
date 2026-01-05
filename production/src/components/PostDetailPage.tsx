@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Textarea } from './ui/textarea';
+import { ArrowLeft, Send, RefreshCw } from 'lucide-react';
 import { PostDetailContent } from './PostDetail/PostDetailContent';
 import { DiscussionThread } from './PostDetail/DiscussionThread';
 import { ContentActionDialogs } from './ContentActionDialogs';
 import { getDiscussionTreeOnApi } from '../api/replyPromotionService';
+import { toast } from 'sonner';
+import { getValidAvatar } from '../api/avatarService';
 
 interface PostDetailPageProps {
   post: Post;
@@ -47,6 +51,8 @@ export function PostDetailPage({
   const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [newReply, setNewReply] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const isSupporting = latestPost.supporters?.includes(effectiveUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
@@ -116,6 +122,30 @@ export function PostDetailPage({
     actions.addPost(updatedPost);
   };
 
+  // Ajouter une reply principale au post
+  const handleAddReply = async () => {
+    if (!newReply.trim()) {
+      toast.error('Veuillez écrire une réponse');
+      return;
+    }
+
+    setIsSubmittingReply(true);
+    try {
+      const replyId = await actions.addPostReply(latestPost.id, newReply);
+      if (replyId) {
+        toast.success('Réponse ajoutée ! 💬');
+        setNewReply('');
+      } else {
+        toast.error('Erreur lors de l\'ajout de la réponse');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la réponse:', error);
+      toast.error('Impossible d\'envoyer la réponse. Vérifiez votre connexion.');
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       {/* Header avec retour */}
@@ -129,35 +159,109 @@ export function PostDetailPage({
         </div>
       </div>
 
-      {/* Contenu principal du post */}
-      <PostDetailContent
-        post={latestPost}
-        currentUser={currentUser}
-        postAuthor={postAuthor}
-        sourcePosts={sourcePosts}
-        derivedIdeas={derivedIdeas}
-        isSupporting={isSupporting}
-        supportCount={supportCount}
-        getUserById={getUserById}
-        onToggleLike={() => actions.togglePostLike(latestPost.id)}
-        onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
-        onIdeaClick={onIdeaClick}
-        onPostClick={onPostClick}
-        onReportClick={handleReportClick}
-        onPostUpdated={handlePostUpdated}
-      />
+      {/* Contenu principal du post avec discussion intégrée */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <PostDetailContent
+          post={latestPost}
+          currentUser={currentUser}
+          postAuthor={postAuthor}
+          sourcePosts={sourcePosts}
+          derivedIdeas={[]} // Ne pas afficher les projets ici
+          derivedIdeasCount={derivedIdeas.length} // Juste le nombre pour le bandeau
+          isSupporting={isSupporting}
+          supportCount={supportCount}
+          getUserById={getUserById}
+          onToggleLike={() => actions.togglePostLike(latestPost.id)}
+          onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
+          onIdeaClick={onIdeaClick}
+          onPostClick={onPostClick}
+          onReportClick={handleReportClick}
+          onPostUpdated={handlePostUpdated}
+        />
 
-      {/* Section discussion unifiée */}
-      <DiscussionThread
-        post={latestPost}
-        derivedPosts={derivedPosts}
-        currentUser={currentUser}
-        getUserById={getUserById}
-        onAddReply={actions.addPostReply}
-        onLikeReply={actions.likePostReply}
-        onPromoteReplyToPost={actions.promoteReplyToPost}
-        onPostClick={onPostClick}
-      />
+        {/* Section discussion unifiée - dans le même rectangle */}
+        <DiscussionThread
+          post={latestPost}
+          derivedPosts={derivedPosts}
+          currentUser={currentUser}
+          getUserById={getUserById}
+          onLikeReply={actions.likePostReply}
+          onPromoteReplyToPost={actions.promoteReplyToPost}
+          onPostClick={onPostClick}
+        />
+
+        {/* Zone de texte pour ajouter une reply - en dessous des commentaires */}
+        {currentUser ? (
+          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+            <div className="flex space-x-3">
+              <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={getValidAvatar(currentUser.name, currentUser.avatar)} alt={currentUser.name} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                  {currentUser.name.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-2">
+                <Textarea
+                  value={newReply}
+                  onChange={(e) => setNewReply(e.target.value)}
+                  placeholder="Partagez votre réaction..."
+                  rows={2}
+                  className="resize-none border-gray-200 focus:border-gray-300 focus:ring-gray-200 text-sm"
+                />
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleAddReply}
+                    disabled={!newReply.trim() || isSubmittingReply}
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                  >
+                    {isSubmittingReply ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
+                        Envoi...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3 h-3 mr-2" />
+                        Publier
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+            <p className="text-sm text-muted-foreground text-center">
+              Vous devez être connecté pour participer à la discussion
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Projets dérivés - affichés après le rectangle principal */}
+      {derivedIdeas.length > 0 && (
+        <div data-section="derived-projects">
+          <PostDetailContent
+            post={latestPost}
+            currentUser={currentUser}
+            postAuthor={postAuthor}
+            sourcePosts={[]}
+            derivedIdeas={derivedIdeas}
+            isSupporting={isSupporting}
+            supportCount={supportCount}
+            getUserById={getUserById}
+            onToggleLike={() => actions.togglePostLike(latestPost.id)}
+            onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
+            onIdeaClick={onIdeaClick}
+            onPostClick={onPostClick}
+            onReportClick={handleReportClick}
+            onPostUpdated={handlePostUpdated}
+          />
+        </div>
+      )}
       
       {/* Dialogues de confirmation */}
       <ContentActionDialogs
