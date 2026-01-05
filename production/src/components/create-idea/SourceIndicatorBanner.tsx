@@ -8,9 +8,7 @@ import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface SourceIndicatorBannerProps {
   sourcePost?: Post;
-  prefilledSourceIdea?: string | null;
-  prefilledLinkedContent?: string[];
-  prefilledSelectedDiscussions?: string[];
+  selectedParentIds?: string[]; // Les liens actuellement sélectionnés (contient tous les types : idées, posts, discussions)
   onClearPrefilled?: () => void;
   onStartFromScratch: () => void;
   isIdeaMode?: boolean; // Pour savoir si on est en mode projet (true) ou post (false)
@@ -18,9 +16,7 @@ interface SourceIndicatorBannerProps {
 
 export function SourceIndicatorBanner({
   sourcePost,
-  prefilledSourceIdea,
-  prefilledLinkedContent,
-  prefilledSelectedDiscussions,
+  selectedParentIds,
   onClearPrefilled,
   onStartFromScratch,
   isIdeaMode = true
@@ -31,21 +27,18 @@ export function SourceIndicatorBanner({
   const { getUserById, getIdeaById, getPostById } = useEntityStoreSimple();
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
   
-  // Le bandeau ne s'affiche que s'il y a vraiment du contenu source
-  const hasSourceContent = prefilledSourceIdea || 
-                          (prefilledLinkedContent && prefilledLinkedContent.length > 0) || 
-                          (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0) || 
-                          sourcePost;
+  // ✨ Le bandeau s'affiche s'il y a du contenu source OU des liens sélectionnés
+  const hasSourceContent = (selectedParentIds && selectedParentIds.length > 0) || sourcePost;
 
   if (!hasSourceContent) {
     return null;
   }
 
+  // ✨ Compter les liens uniques
+  const uniqueLinkedCount = selectedParentIds?.length || 0;
+
   // Compter le nombre total de contenus liés
-  const linkedContentCount = (prefilledLinkedContent?.length || 0) + 
-                             (prefilledSelectedDiscussions?.length || 0) +
-                             (sourcePost ? 1 : 0) +
-                             (prefilledSourceIdea ? 1 : 0);
+  const linkedContentCount = uniqueLinkedCount + (sourcePost ? 1 : 0);
 
   const handleResetClick = () => {
     // Pour les projets : afficher le dialog de confirmation
@@ -86,12 +79,8 @@ export function SourceIndicatorBanner({
           {isIdeaMode && (
             <div className="mt-2 text-xs text-purple-700">
               {sourcePost && sourcePostAuthor && <div>• Inspirée du post de {sourcePostAuthor.name}</div>}
-              {prefilledSourceIdea && <div>• Basée sur l'idée source</div>}
-              {prefilledLinkedContent && prefilledLinkedContent.length > 0 && (
-                <div>• {prefilledLinkedContent.length} contenu{prefilledLinkedContent.length > 1 ? 's' : ''} lié{prefilledLinkedContent.length > 1 ? 's' : ''}</div>
-              )}
-              {prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0 && (
-                <div>• {prefilledSelectedDiscussions.length} discussion{prefilledSelectedDiscussions.length > 1 ? 's' : ''} sélectionnée{prefilledSelectedDiscussions.length > 1 ? 's' : ''}</div>
+              {uniqueLinkedCount > 0 && (
+                <div>• {uniqueLinkedCount} contenu{uniqueLinkedCount > 1 ? 's' : ''} lié{uniqueLinkedCount > 1 ? 's' : ''}</div>
               )}
             </div>
           )}
@@ -115,35 +104,27 @@ export function SourceIndicatorBanner({
                     <span>Post de <strong>{sourcePostAuthor.name}</strong></span>
                   </div>
                 )}
-                {prefilledSourceIdea && (() => {
-                  const idea = getIdeaById(prefilledSourceIdea);
-                  return idea ? (
-                    <div className="flex items-start gap-2">
-                      <span className="text-gray-400">•</span>
-                      <span>Projet : <strong>{idea.title}</strong></span>
-                    </div>
-                  ) : null;
-                })()}
-                {prefilledLinkedContent && prefilledLinkedContent.length > 0 && 
-                  prefilledLinkedContent.map(contentId => {
-                    const idea = getIdeaById(contentId);
-                    const post = idea ? null : getPostById(contentId);
-                    const item = idea || post;
-                    if (!item) return null;
+                {/* ✨ Afficher tous les contenus liés depuis selectedParentIds */}
+                {selectedParentIds?.map(contentId => {
+                  const idea = getIdeaById(contentId);
+                  const post = idea ? null : getPostById(contentId);
+                  const item = idea || post;
+                  if (!item) {
+                    // Si ce n'est ni une idée ni un post, c'est probablement une discussion
                     return (
                       <div key={contentId} className="flex items-start gap-2">
                         <span className="text-gray-400">•</span>
-                        <span>{idea ? 'Projet' : 'Post'} : <strong>{item.title || (item as any).content?.substring(0, 50) + '...'}</strong></span>
+                        <span>Discussion (ID: {contentId.substring(0, 8)}...)</span>
                       </div>
                     );
-                  })
-                }
-                {prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0 && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-gray-400">•</span>
-                    <span>{prefilledSelectedDiscussions.length} discussion{prefilledSelectedDiscussions.length > 1 ? 's' : ''}</span>
-                  </div>
-                )}
+                  }
+                  return (
+                    <div key={contentId} className="flex items-start gap-2">
+                      <span className="text-gray-400">•</span>
+                      <span>{idea ? 'Projet' : 'Post'} : <strong>{item.title || (item as any).content?.substring(0, 50) + '...'}</strong></span>
+                    </div>
+                  );
+                })}
               </div>
               <p className="text-gray-600 text-sm">Cette action est irréversible.</p>
             </DialogDescription>

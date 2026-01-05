@@ -17,9 +17,7 @@ import { toast } from 'sonner@2.0.3';
 
 interface CreateIdeaPageProps {
   sourcePost?: Post; // Post source si on vient d'un post
-  prefilledSourceIdea?: string | null;
-  prefilledLinkedContent?: string[];
-  prefilledSelectedDiscussions?: string[];
+  prefilledParentIds?: string[]; // ✨ TOUS les contenus pré-remplis fusionnés (idées, posts, discussions)
   prefilledGroupIds?: string[];
   prefilledCreationMode?: 'post' | 'idea'; // Mode de création pré-rempli depuis la navigation
   onClearPrefilled?: () => void;
@@ -34,10 +32,12 @@ interface Draft {
   type: 'post' | 'idea';
   createdAt: Date | string;
   sourcePostIds?: string[];
-  selectedParentIds?: string[]; // Ajouter les liens
+  selectedParentIds?: string[]; // Liens vers contenus (idées/posts)
+  location?: string; // Localisation du projet
+  groupIds?: string[]; // Groupes associés
 }
 
-export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinkedContent, prefilledSelectedDiscussions, prefilledGroupIds, prefilledCreationMode, onClearPrefilled }: CreateIdeaPageProps) {
+export function CreateIdeaPage({ sourcePost, prefilledParentIds, prefilledGroupIds, prefilledCreationMode, onClearPrefilled }: CreateIdeaPageProps) {
   // Récup��ration des données depuis l'Entity Store
   const {
     store,
@@ -62,9 +62,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
     
     console.log('🎯 [CreateIdeaPage] Détermination du mode de création:', {
       prefilledCreationMode,
-      prefilledSourceIdea,
-      prefilledLinkedContentLength: prefilledLinkedContent?.length,
-      prefilledSelectedDiscussionsLength: prefilledSelectedDiscussions?.length,
+      prefilledParentIdsLength: prefilledParentIds?.length,
       hasSourcePost: !!sourcePost
     });
     
@@ -74,32 +72,20 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
       return prefilledCreationMode;
     }
     
-    // 1. Vérifier d'abord si on a une idée source préremplie
-    if (prefilledSourceIdea) {
-      console.log('✅ Mode IDEA : idée source détectée');
+    // 1. Si on a des contenus pré-remplis (idées, posts, discussions), c'est qu'on veut créer une idée
+    if (prefilledParentIds && prefilledParentIds.length > 0) {
+      console.log('✅ Mode IDEA : contenus pré-remplis détectés');
       return 'idea';
     }
     
-    // 2. Si on a du contenu lié prérempli, c'est qu'on veut créer une idée
-    if (prefilledLinkedContent && prefilledLinkedContent.length > 0) {
-      console.log('✅ Mode IDEA : contenu lié détecté');
-      return 'idea';
-    }
-    
-    // 3. Si on a des discussions sélectionnées, c'est qu'on veut créer une idée
-    if (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0) {
-      console.log('✅ Mode IDEA : discussions sélectionnées');
-      return 'idea';
-    }
-    
-    // 4. SEULEMENT si on a un post source ET qu'on n'a AUCUN autre indicateur,
+    // 2. SEULEMENT si on a un post source ET qu'on n'a AUCUN autre indicateur,
     // alors c'est qu'on veut créer un post de réponse
     if (sourcePost) {
       console.log('✅ Mode POST : post source pour réponse');
       return 'post';
     }
     
-    // 5. Par défaut, commencer en mode post (plus simple)
+    // 3. Par défaut, commencer en mode post (plus simple)
     console.log('✅ Mode POST : par défaut');
     return 'post';
   });
@@ -117,7 +103,14 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
     setCreationMode('idea');
   };
 
-  const handleSaveDraft = (title: string, summary: string, description?: string, selectedParentIds?: string[]) => {
+  const handleSaveDraft = (
+    title: string, 
+    summary: string, 
+    description?: string, 
+    selectedParentIds?: string[],
+    location?: string,
+    groupIds?: string[]
+  ) => {
     const newDraft: Draft = {
       id: Date.now().toString(),
       title: title || 'Brouillon sans titre',
@@ -126,7 +119,9 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
       type: creationMode,
       createdAt: new Date(),
       sourcePostIds: sourcePost ? [sourcePost.id] : [],
-      selectedParentIds: selectedParentIds || [] // Sauvegarder les liens
+      selectedParentIds: selectedParentIds || [], // Sauvegarder les liens
+      location: location, // Sauvegarder la localisation
+      groupIds: groupIds || [] // Sauvegarder les groupes
     };
 
     const updatedDrafts = [newDraft, ...drafts].slice(0, 10); // Garder max 10 brouillons
@@ -136,7 +131,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
   };
 
   const loadDraft = (draft: Draft) => {
-    // Simuler le chargement d'un brouillon (dans une vraie app, on sauvegarderait plus de données)
+    // Charger toutes les données du brouillon
     setCreationMode(draft.type);
     setLoadedDraft(draft);
     toast.success('Brouillon chargé ! 📋');
@@ -158,9 +153,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
         onToggleDrafts={() => setShowDrafts(!showDrafts)}
         sourcePost={
           // Seulement afficher le sourcePost s'il y a des données préremplies
-          (store.prefilledLinkedContent && store.prefilledLinkedContent.length > 0) ||
-          prefilledSourceIdea ||
-          (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0)
+          (prefilledParentIds && prefilledParentIds.length > 0)
             ? sourcePost
             : undefined
         }
@@ -212,9 +205,7 @@ export function CreateIdeaPage({ sourcePost, prefilledSourceIdea, prefilledLinke
           ) : (
             <CreateCompleteIdea
               sourcePost={sourcePost}
-              prefilledSourceIdea={prefilledSourceIdea}
-              prefilledLinkedContent={prefilledLinkedContent}
-              prefilledSelectedDiscussions={prefilledSelectedDiscussions}
+              prefilledParentIds={prefilledParentIds}
               prefilledGroupIds={prefilledGroupIds}
               onClearPrefilled={onClearPrefilled}
               onSaveDraft={handleSaveDraft}

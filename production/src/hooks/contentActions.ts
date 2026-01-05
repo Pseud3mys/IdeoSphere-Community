@@ -23,47 +23,25 @@ export function createContentActions(
   }) => {
     console.log(`🔗 Liaison de ${params.sourceIds.length} ${params.sourceType}(s) vers ${params.targetType}`);
     
-    // D'abord, nettoyer TOUTES les données pré-remplies précédentes
-    actions.setPrefilledSourceIdea(null);
+    // Nettoyer les données pré-remplies précédentes
     actions.setPrefilledSourcePostId(null);
-    actions.setPrefilledLinkedContent([]);
-    actions.setPrefilledSelectedDiscussions([]);
     actions.setPrefilledLocation(null);
-    actions.setPrefilledGroupIds([]); // Nettoyer les groupes (Phase 5)
+    actions.setPrefilledGroupIds([]);
+    actions.clearDraftIdea(); // Nettoyer le brouillon
     
     console.log(`🧹 Toutes les données pré-remplies précédentes ont été supprimées`);
     
-    // Ensuite, préparer les nouvelles données pré-remplies selon le type source ET la cible
-    if (params.sourceType === 'discussion') {
-      actions.setPrefilledSelectedDiscussions(params.sourceIds);
-    } else if (params.sourceType === 'idea') {
-      if (params.sourceIds.length > 0) {
-        actions.setPrefilledSourceIdea(params.sourceIds[0]);
-      }
-    } else if (params.sourceType === 'post') {
-      if (params.sourceIds.length > 0) {
-        // Si la cible est un post, utiliser prefilledSourcePostId (pour réponse post)
-        if (params.targetType === 'post') {
-          actions.setPrefilledSourcePostId(params.sourceIds[0]);
-        } else if (params.targetType === 'idea') {
-          // Pour promotion post->idée, marquer le post comme source inspirante
-          // en l'ajoutant dans prefilledLinkedContent
-          // Cela déclenchera automatiquement le mode 'idea' dans CreateIdeaPage
-          const post = boundSelectors.getPostById(params.sourceIds[0]);
-          if (post) {
-            actions.setPrefilledLinkedContent([{
-              type: 'post',
-              id: post.id,
-              title: post.content.substring(0, 50),
-              content: post.content,
-              author: post.authorId
-            }]);
-          }
-        }
+    // Définir les nouveaux parents pré-remplis
+    if (params.targetType === 'idea') {
+      // Pour les idées, tous les types de contenu vont dans selectedParentIds
+      actions.setPrefilledSelectedParentIds(params.sourceIds);
+    } else if (params.targetType === 'post') {
+      // Pour les posts, utiliser le système existant
+      if (params.sourceType === 'post' && params.sourceIds.length > 0) {
+        actions.setPrefilledSourcePostId(params.sourceIds[0]);
       }
     }
     
-    // Note: Navigation is now handled by the caller using useNavigate()
     console.log(`✅ Pré-remplissage pour création de ${params.targetType}`);
   };
   
@@ -356,12 +334,11 @@ export function createContentActions(
     setPrefillFromIdea: (ideaId: string) => actions.setPrefilledSourceIdea(ideaId),
     setPrefilledGroupIds: (groupIds: string[]) => actions.setPrefilledGroupIds(groupIds), // Phase 5
     clearPrefill: () => {
-      actions.setPrefilledSourceIdea(null);
-      actions.setPrefilledLinkedContent([]);
-      actions.setPrefilledSelectedDiscussions([]);
       actions.setPrefilledLocation(null); // Nettoyer la localisation pré-remplie
       actions.setPrefilledSourcePostId(null); // Nettoyer le post source pour la création
       actions.setPrefilledGroupIds([]); // Nettoyer les groupes pré-remplis (Phase 5)
+      actions.setPrefilledSelectedParentIds([]); // Nettoyer les liens pré-remplis
+      actions.clearDraftIdea(); // Nettoyer le brouillon en cours
     },
     
     // Action pour créer une version depuis une idée
@@ -371,15 +348,9 @@ export function createContentActions(
       // Récupérer l'idée source pour hériter ses groupes
       const sourceIdea = boundSelectors.getIdeaById(ideaId);
       
-      // Utiliser la fonction générique de liaison
-      linkContentToContent({
-        sourceType: 'discussion',
-        sourceIds: selectedDiscussionIds,
-        targetType: 'idea'
-      });
-      
-      // Ajouter aussi l'idée source
-      actions.setPrefilledSourceIdea(ideaId);
+      // Fusionner l'idée source et les discussions dans selectedParentIds
+      const allParentIds = [ideaId, ...selectedDiscussionIds];
+      actions.setPrefilledSelectedParentIds(allParentIds);
       
       // Hériter les groupes de l'idée source (Phase 5)
       if (sourceIdea?.groupIds && sourceIdea.groupIds.length > 0) {

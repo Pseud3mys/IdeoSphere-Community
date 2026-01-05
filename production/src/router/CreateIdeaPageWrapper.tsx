@@ -31,12 +31,36 @@ export function CreateIdeaPageWrapper() {
   // Mode de création pré-rempli (ex: 'idea' depuis le bouton "Projet" du groupe)
   const prefilledCreationMode = location.state?.creationMode as 'post' | 'idea' | undefined;
 
+  // ✨ FUSION: Combiner tous les contenus pré-remplis dans un seul array
+  const allPrefilledParentIds = new Set<string>();
+  
+  // Ajouter l'idée source
+  if (store.prefilledSourceIdea) {
+    allPrefilledParentIds.add(store.prefilledSourceIdea);
+  }
+  
+  // Ajouter les contenus liés
+  if (store.prefilledLinkedContent) {
+    store.prefilledLinkedContent.forEach(content => allPrefilledParentIds.add(content.id));
+  }
+  
+  // Ajouter les discussions sélectionnées
+  if (store.prefilledSelectedDiscussions) {
+    store.prefilledSelectedDiscussions.forEach(id => allPrefilledParentIds.add(id));
+  }
+  
+  // Ajouter les IDs déjà dans prefilledSelectedParentIds
+  if (store.prefilledSelectedParentIds) {
+    store.prefilledSelectedParentIds.forEach(id => allPrefilledParentIds.add(id));
+  }
+  
+  const prefilledParentIds = Array.from(allPrefilledParentIds);
+  console.log('🔄 [CreateIdeaPageWrapper] Fusion des contenus pré-remplis:', prefilledParentIds);
+
   return (
     <CreateIdeaPage
       sourcePost={sourcePost}
-      prefilledSourceIdea={store.prefilledSourceIdea}
-      prefilledLinkedContent={store.prefilledLinkedContent?.map(content => content.id) || []}
-      prefilledSelectedDiscussions={store.prefilledSelectedDiscussions}
+      prefilledParentIds={prefilledParentIds}
       prefilledGroupIds={prefilledGroupIds}
       prefilledCreationMode={prefilledCreationMode}
       onClearPrefilled={actions.clearPrefill}

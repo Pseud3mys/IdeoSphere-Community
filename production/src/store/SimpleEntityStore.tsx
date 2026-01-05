@@ -37,6 +37,11 @@ interface SimpleEntityStore {
     email?: string;
   } | null;
   
+  // 💾 États du formulaire de création (pour persistance lors de la navigation)
+  draftIdeaTitle: string;
+  draftIdeaSummary: string;
+  draftIdeaDescription: string;
+  
   // IDs des items du feed (pour filtrer ce qui doit être affiché dans Discovery)
   feedIdeaIds: string[];
   feedPostIds: string[];
@@ -102,6 +107,12 @@ interface SimpleEntityActions {
   setPrefilledSelectedParentIds: (selectedParentIds: string[]) => void;
   setPrefilledSignupData: (data: { name?: string; email?: string } | null) => void;
   
+  // Actions pour le brouillon en cours de création
+  setDraftIdeaTitle: (title: string) => void;
+  setDraftIdeaSummary: (summary: string) => void;
+  setDraftIdeaDescription: (description: string) => void;
+  clearDraftIdea: () => void; // Nettoyer le brouillon
+  
   // Actions pour les IDs du feed
   setFeedIdeaIds: (ids: string[]) => void;
   setFeedPostIds: (ids: string[]) => void;
@@ -164,6 +175,9 @@ const createInitialStore = (): SimpleEntityStore => {
     prefilledGroupIds: [],
     prefilledSelectedParentIds: [], // Initialiser les liens pré-remplis
     prefilledSignupData: null,
+    draftIdeaTitle: '',
+    draftIdeaSummary: '',
+    draftIdeaDescription: '',
     feedIdeaIds: [],
     feedPostIds: [],
     feedLastFetched: null,
@@ -528,6 +542,17 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     setPrefilledSourcePostId: (id) => setStore(prev => ({ ...prev, prefilledSourcePostId: id })),
     setPrefilledGroupIds: (groupIds) => setStore(prev => ({ ...prev, prefilledGroupIds: groupIds })),
     setPrefilledSelectedParentIds: (selectedParentIds) => setStore(prev => ({ ...prev, prefilledSelectedParentIds: selectedParentIds })),
+    
+    // Draft Idea Actions
+    setDraftIdeaTitle: (title) => setStore(prev => ({ ...prev, draftIdeaTitle: title })),
+    setDraftIdeaSummary: (summary) => setStore(prev => ({ ...prev, draftIdeaSummary: summary })),
+    setDraftIdeaDescription: (description) => setStore(prev => ({ ...prev, draftIdeaDescription: description })),
+    clearDraftIdea: () => setStore(prev => ({ 
+      ...prev, 
+      draftIdeaTitle: '', 
+      draftIdeaSummary: '', 
+      draftIdeaDescription: '' 
+    })),
     
     // Feed IDs Actions
     setFeedIdeaIds: (ids) => setStore(prev => ({ ...prev, feedIdeaIds: ids })),

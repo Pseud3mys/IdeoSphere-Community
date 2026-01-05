@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, Idea, Post, Location } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
@@ -12,12 +12,17 @@ import { toast } from 'sonner@2.0.3';
 
 interface CreateCompleteIdeaProps {
   sourcePost?: Post;
-  prefilledSourceIdea?: string | null;
-  prefilledLinkedContent?: string[];
-  prefilledSelectedDiscussions?: string[];
+  prefilledParentIds?: string[]; // ✨ TOUS les contenus pré-remplis fusionnés
   prefilledGroupIds?: string[];
   onClearPrefilled?: () => void;
-  onSaveDraft?: (title: string, summary: string, description?: string, selectedParentIds?: string[]) => void;
+  onSaveDraft?: (
+    title: string, 
+    summary: string, 
+    description?: string, 
+    selectedParentIds?: string[],
+    location?: string,
+    groupIds?: string[]
+  ) => void;
   loadedDraft?: {
     id: string;
     title: string;
@@ -26,16 +31,16 @@ interface CreateCompleteIdeaProps {
     type: 'post' | 'idea';
     createdAt: Date | string;
     sourcePostIds?: string[];
-    selectedParentIds?: string[]; // Ajouter les liens
+    selectedParentIds?: string[]; // Liens vers contenus
+    location?: string; // Localisation
+    groupIds?: string[]; // Groupes associés
   } | null;
   onDraftLoaded?: () => void;
 }
 
 export function CreateCompleteIdea({ 
   sourcePost, 
-  prefilledSourceIdea,
-  prefilledLinkedContent,
-  prefilledSelectedDiscussions,
+  prefilledParentIds,
   prefilledGroupIds,
   onClearPrefilled,
   onSaveDraft,
@@ -68,8 +73,7 @@ export function CreateCompleteIdea({
   // ✅ Utiliser unknownUser comme fallback pour les invités
   const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
 
-  // Obtenir l'idée source si elle existe
-  const sourceIdea = prefilledSourceIdea ? ideas.find(i => i.id === prefilledSourceIdea) : null;
+  // ✨ Plus besoin de sourceIdea séparément, tout est dans prefilledParentIds
   
   // Obtenir le post source depuis les props ou depuis le store
   const derivedSourcePost = sourcePost || 
@@ -80,23 +84,46 @@ export function CreateCompleteIdea({
   
   // États pour le formulaire
   const [title, setTitle] = useState(() => {
+    // PRIORITÉ 1: Charger depuis le brouillon
     if (loadedDraft) {
       return loadedDraft.title;
     }
-    if (sourceIdea) {
-      return `[À modifier] ${sourceIdea.title}`;
+    // PRIORITÉ 2: Charger depuis le store (persistance navigation)
+    if (store.draftIdeaTitle) {
+      console.log('🔄 Restauration du titre depuis le store:', store.draftIdeaTitle);
+      return store.draftIdeaTitle;
     }
-    return derivedSourcePost ? '' : ''; // Laisser vide pour que l'utilisateur complète
+    // PRIORITÉ 3: Vérifier si un des contenus pré-remplis est une idée source
+    const sourceIdeaId = prefilledParentIds?.find(id => ideas.find(i => i.id === id));
+    if (sourceIdeaId) {
+      const sourceIdea = ideas.find(i => i.id === sourceIdeaId);
+      if (sourceIdea) {
+        return `[À modifier] ${sourceIdea.title}`;
+      }
+    }
+    // Par défaut: vide
+    return derivedSourcePost ? '' : '';
   });
   
   const [summary, setSummary] = useState(() => {
+    // PRIORITÉ 1: Charger depuis le brouillon
     if (loadedDraft) {
       return loadedDraft.summary;
     }
-    if (sourceIdea) {
-      return `[À modifier] ${sourceIdea.summary}`;
+    // PRIORITÉ 2: Charger depuis le store (persistance navigation)
+    if (store.draftIdeaSummary) {
+      console.log('🔄 Restauration du résumé depuis le store');
+      return store.draftIdeaSummary;
     }
-    // Utiliser le titre ou le contenu du post comme base pour le résumé
+    // PRIORITÉ 3: Vérifier si un des contenus pré-remplis est une idée source
+    const sourceIdeaId = prefilledParentIds?.find(id => ideas.find(i => i.id === id));
+    if (sourceIdeaId) {
+      const sourceIdea = ideas.find(i => i.id === sourceIdeaId);
+      if (sourceIdea) {
+        return `[À modifier] ${sourceIdea.summary}`;
+      }
+    }
+    // PRIORITÉ 4: Utiliser le titre ou contenu du post source
     if (derivedSourcePost) {
       // Si le post a un titre, l'utiliser comme résumé de base
       if (derivedSourcePost.title) {
@@ -111,15 +138,25 @@ export function CreateCompleteIdea({
   });
   
   const [description, setDescription] = useState(() => {
+    // PRIORIT�� 1: Charger depuis le brouillon
     if (loadedDraft) {
       return loadedDraft.description || '';
     }
-    if (sourceIdea) {
-      const sourceCreatorName = sourceIdea.creatorIds?.[0] 
-        ? (getUserById(sourceIdea.creatorIds[0])?.name || 'l\'équipe')
-        : 'l\'équipe';
-      
-      return `[À modifier] ${sourceIdea.description}
+    // PRIORITÉ 2: Charger depuis le store (persistance navigation)
+    if (store.draftIdeaDescription) {
+      console.log('🔄 Restauration de la description depuis le store');
+      return store.draftIdeaDescription;
+    }
+    // PRIORITÉ 3: Vérifier si un des contenus pré-remplis est une idée source
+    const sourceIdeaId = prefilledParentIds?.find(id => ideas.find(i => i.id === id));
+    if (sourceIdeaId) {
+      const sourceIdea = ideas.find(i => i.id === sourceIdeaId);
+      if (sourceIdea) {
+        const sourceCreatorName = sourceIdea.creatorIds?.[0] 
+          ? (getUserById(sourceIdea.creatorIds[0])?.name || 'l\'équipe')
+          : 'l\'équipe';
+        
+        return `[À modifier] ${sourceIdea.description}
 
 ---
 
@@ -131,7 +168,9 @@ export function CreateCompleteIdea({
 - Enrichir avec de nouvelles fonctionnalités suggérées
 
 *Modifiez le contenu ci-dessus pour refléter vos améliorations et l'évolution par rapport à l'idée originale de ${sourceCreatorName}.*`;
+      }
     }
+    // PRIORITÉ 4: Préremplir depuis le post source
     if (derivedSourcePost) {
       const authorName = derivedSourcePostAuthor?.name || 'un membre';
       const postIntro = derivedSourcePost.title ? `**${derivedSourcePost.title}**\n\n${derivedSourcePost.content}` : derivedSourcePost.content;
@@ -165,24 +204,63 @@ ${postIntro}
   });
 
   const [location, setLocation] = useState<Location | string>(() => {
-    // Pré-remplir avec la localisation du store, de l'idée source ou du post source
-    return store.prefilledLocation || sourceIdea?.location || derivedSourcePost?.location || '';
+    // Charger depuis le brouillon en priorité
+    if (loadedDraft?.location) {
+      return loadedDraft.location;
+    }
+    // Vérifier si un des contenus pré-remplis a une location
+    const sourceIdeaId = prefilledParentIds?.find(id => ideas.find(i => i.id === id));
+    if (sourceIdeaId) {
+      const sourceIdea = ideas.find(i => i.id === sourceIdeaId);
+      if (sourceIdea?.location) {
+        return sourceIdea.location;
+      }
+    }
+    // Sinon, pré-remplir avec la localisation du store ou du post source
+    return store.prefilledLocation || derivedSourcePost?.location || '';
   });
-  const [groupIds, setGroupIds] = useState<string[]>(prefilledGroupIds || []);
+  const [groupIds, setGroupIds] = useState<string[]>(() => {
+    // Charger depuis le brouillon en priorité
+    if (loadedDraft?.groupIds) {
+      return loadedDraft.groupIds;
+    }
+    // Sinon, utiliser les groupes pré-remplis
+    return prefilledGroupIds || [];
+  });
   const [selectedCoCreators, setSelectedCoCreators] = useState<User[]>([]);
   const [selectedParentIds, setSelectedParentIds] = useState<string[]>(() => {
-    // Si on a un brouillon, charger ses liens
-    if (loadedDraft?.selectedParentIds) {
+    // PRIORITÉ 1: Si on a un brouillon, charger ses liens
+    if (loadedDraft?.selectedParentIds && loadedDraft.selectedParentIds.length > 0) {
+      console.log('🔄 Chargement des liens depuis le brouillon:', loadedDraft.selectedParentIds);
       return loadedDraft.selectedParentIds;
     }
-    const initialIds = prefilledLinkedContent || [];
-    // Ajouter automatiquement l'idée source si elle existe et n'est pas déjà présente
-    if (prefilledSourceIdea && !initialIds.includes(prefilledSourceIdea)) {
-      initialIds.push(prefilledSourceIdea);
+    // PRIORITÉ 2: Charger depuis le store (persistance navigation)
+    // prefilledParentIds contient déjà tous les contenus fusionnés (sourceIdea + linkedContent + discussions)
+    if (prefilledParentIds && prefilledParentIds.length > 0) {
+      console.log('🔄 Restauration des liens depuis prefilledParentIds:', prefilledParentIds);
+      return prefilledParentIds;
     }
-    return initialIds;
+    
+    return [];
   });
   const [showNoLinksDialog, setShowNoLinksDialog] = useState(false);
+
+  // Ref pour le timer de l'auto-sauvegarde
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAutoSaveRef = useRef<string>(''); // Pour éviter les sauvegardes redondantes
+
+  // 💾 PERSISTANCE : Sauvegarder dans le store à chaque changement pour persister lors de la navigation
+  useEffect(() => {
+    // Ne sauvegarder que si on n'est pas en train de charger un brouillon
+    if (!loadedDraft) {
+      rawActions.setDraftIdeaTitle(title);
+      rawActions.setDraftIdeaSummary(summary);
+      rawActions.setDraftIdeaDescription(description);
+      rawActions.setPrefilledSelectedParentIds(selectedParentIds);
+      rawActions.setPrefilledLocation(typeof location === 'string' ? location : JSON.stringify(location));
+      rawActions.setPrefilledGroupIds(groupIds);
+    }
+  }, [title, summary, description, selectedParentIds, location, groupIds, loadedDraft, rawActions]);
 
   // Effet pour ajouter automatiquement le post source aux contenus liés
   useEffect(() => {
@@ -194,16 +272,66 @@ ${postIntro}
   // Effet pour charger les données du brouillon
   useEffect(() => {
     if (loadedDraft) {
+      console.log('📋 Chargement du brouillon:', loadedDraft);
       setTitle(loadedDraft.title);
       setSummary(loadedDraft.summary);
       setDescription(loadedDraft.description || '');
-      if (loadedDraft.selectedParentIds) {
+      if (loadedDraft.selectedParentIds && loadedDraft.selectedParentIds.length > 0) {
+        console.log('✅ Chargement des liens du brouillon:', loadedDraft.selectedParentIds);
         setSelectedParentIds(loadedDraft.selectedParentIds);
+      }
+      if (loadedDraft.location) {
+        setLocation(loadedDraft.location);
+      }
+      if (loadedDraft.groupIds && loadedDraft.groupIds.length > 0) {
+        setGroupIds(loadedDraft.groupIds);
       }
       // Marquer le brouillon comme chargé
       onDraftLoaded?.();
     }
   }, [loadedDraft, onDraftLoaded]);
+
+  // ✨ AUTO-SAUVEGARDE AUTOMATIQUE DES BROUILLONS
+  // Sauvegarde automatiquement toutes les 30 secondes si du contenu a été écrit
+  useEffect(() => {
+    // Nettoyer le timer précédent
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Ne sauvegarder que s'il y a du contenu significatif
+    const hasContent = title.trim().length > 0 || summary.trim().length > 0 || description.trim().length > 0;
+    
+    if (hasContent && onSaveDraft) {
+      // Créer une signature du contenu actuel
+      const currentSignature = JSON.stringify({ title, summary, description, selectedParentIds, location, groupIds });
+      
+      // Ne sauvegarder que si le contenu a changé
+      if (currentSignature !== lastAutoSaveRef.current) {
+        // Démarrer un timer de 30 secondes
+        autoSaveTimerRef.current = setTimeout(() => {
+          console.log('💾 Auto-sauvegarde du brouillon...');
+          onSaveDraft(
+            title, 
+            summary, 
+            description, 
+            selectedParentIds, 
+            typeof location === 'string' ? location : JSON.stringify(location), 
+            groupIds
+          );
+          lastAutoSaveRef.current = currentSignature;
+          toast.info('Brouillon sauvegardé automatiquement', { duration: 2000 });
+        }, 30000); // 30 secondes
+      }
+    }
+
+    // Cleanup lors du démontage
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [title, summary, description, selectedParentIds, location, groupIds, onSaveDraft]);
 
   // Gestion des actions
   const handleSubmit = (e: React.FormEvent) => {
@@ -233,8 +361,8 @@ ${postIntro}
     }
     
     // Vérifier s'il y a des contenus liés
-    const hasLinkedContent = selectedParentIds.length > 0 || 
-                            (prefilledSelectedDiscussions && prefilledSelectedDiscussions.length > 0);
+    // selectedParentIds contient déjà tous les types de contenus (idées, posts, discussions)
+    const hasLinkedContent = selectedParentIds.length > 0;
     
     if (!hasLinkedContent) {
       // Afficher le dialogue de confirmation
@@ -247,9 +375,10 @@ ${postIntro}
   };
 
   const publishIdea = async () => {
-    // Séparer les sourceIdeas et sourcePosts depuis selectedParentIds
+    // Séparer les sourceIdeas, sourcePosts et sourceDiscussions depuis selectedParentIds
     const sourceIdeas: string[] = [];
     const sourcePosts: string[] = [];
+    const sourceDiscussions: string[] = [];
     
     selectedParentIds.forEach(id => {
       const idea = ideas.find(i => i.id === id);
@@ -259,13 +388,11 @@ ${postIntro}
         sourceIdeas.push(id);
       } else if (post) {
         sourcePosts.push(id);
+      } else {
+        // Si ce n'est ni une idée ni un post, c'est probablement une discussion (topic)
+        sourceDiscussions.push(id);
       }
     });
-    
-    // CORRECTION : Ajouter automatiquement l'idée source aux sourceIdeas si c'est une version
-    if (prefilledSourceIdea && !sourceIdeas.includes(prefilledSourceIdea)) {
-      sourceIdeas.push(prefilledSourceIdea);
-    }
 
     const newIdea = await actions.publishIdea({
       title: title.trim(),
@@ -276,7 +403,7 @@ ${postIntro}
       creators: selectedCoCreators,
       sourceIdeas: sourceIdeas,
       sourcePosts: sourcePosts,
-      sourceDiscussions: prefilledSelectedDiscussions || [], // Ajouter les discussions sources
+      sourceDiscussions: sourceDiscussions, // Discussions extraites de selectedParentIds
       discussionIds: [] // Ne pas copier les discussions
     });
     
@@ -293,6 +420,10 @@ ${postIntro}
     setGroupIds([]);
     setSelectedCoCreators([]);
     setSelectedParentIds([]);
+    
+    // Nettoyer le store après publication réussie
+    rawActions.clearDraftIdea();
+    rawActions.setPrefilledSelectedParentIds([]);
   };
 
   const handleConfirmPublishWithoutLinks = () => {
@@ -314,9 +445,12 @@ ${postIntro}
     setSelectedParentIds([]);
     setSelectedCoCreators([]);
     
-    // Nettoyer le store pour supprimer le post source
+    // Nettoyer le store pour supprimer TOUTES les données pré-remplies
     rawActions.setPrefilledSourcePostId(null);
     rawActions.setPrefilledLocation(null);
+    rawActions.setPrefilledGroupIds([]);
+    rawActions.setPrefilledSelectedParentIds([]);
+    rawActions.clearDraftIdea(); // Nettoyer le brouillon dans le store
     
     // Appeler onClearPrefilled si disponible pour nettoyer l'état parent
     if (onClearPrefilled) {
@@ -331,9 +465,7 @@ ${postIntro}
       {/* Bandeau d'indication de source */}
       <SourceIndicatorBanner
         sourcePost={derivedSourcePost || undefined}
-        prefilledSourceIdea={prefilledSourceIdea}
-        prefilledLinkedContent={prefilledLinkedContent}
-        prefilledSelectedDiscussions={prefilledSelectedDiscussions}
+        selectedParentIds={selectedParentIds}
         onClearPrefilled={onClearPrefilled}
         onStartFromScratch={handleStartFromScratch}
         isIdeaMode={true}
@@ -361,7 +493,6 @@ ${postIntro}
           setSelectedCoCreators={setSelectedCoCreators}
           selectedParentIds={selectedParentIds}
           setSelectedParentIds={setSelectedParentIds}
-          prefilledSelectedDiscussions={prefilledSelectedDiscussions}
           users={users}
           ideas={ideas}
           posts={posts}
@@ -373,7 +504,7 @@ ${postIntro}
             <Button 
               type="button" 
               variant="outline"
-              onClick={() => onSaveDraft(title, summary, description, selectedParentIds)}
+              onClick={() => onSaveDraft(title, summary, description, selectedParentIds, typeof location === 'string' ? location : JSON.stringify(location), groupIds)}
               className="flex items-center space-x-2"
             >
               <Quote className="w-4 h-4" />
