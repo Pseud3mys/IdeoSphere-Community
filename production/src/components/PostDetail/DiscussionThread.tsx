@@ -222,7 +222,7 @@ export function DiscussionThread({
                     {/* Contenu principal */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <UserLink user={replyAuthor} className="font-medium text-gray-900 text-sm" />
+                        <UserLink user={replyAuthor} className="text-gray-600 text-sm hover:text-gray-800" />
                         <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
                         
                         {/* Badge pour les posts */}
@@ -238,7 +238,7 @@ export function DiscussionThread({
                         )}
                       </div>
                       
-                      <p className="text-gray-800 leading-relaxed text-sm mb-2">{reply.content}</p>
+                      <p className="text-gray-900 leading-relaxed text-sm mb-2">{reply.content}</p>
                       
                       {/* Actions */}
                       {currentUser && !isPromoted && (
@@ -290,97 +290,96 @@ export function DiscussionThread({
               );
             }
             
-            // Rendu d'un post dérivé (affiché comme une reply avec ses sous-replies)
+            // Rendu d'un post dérivé (affiché exactement comme une reply)
             if (item.type === 'post') {
               const derivedPost = item.data;
               const postAuthor = getUserById(derivedPost.authorId);
               if (!postAuthor) return null;
               
               return (
-                <div key={`post-${derivedPost.id}`}>
-                  {/* Post principal (affiché comme une reply) */}
-                  <div className="p-4 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex space-x-3">
-                      {/* Colonne gauche: Avatar + votes */}
+                <div key={`post-${derivedPost.id}`} className="p-4 hover:bg-gray-50/50 transition-colors">
+                  <div className="flex space-x-3">
+                    {/* Colonne gauche: Avatar + votes (identique aux replies) */}
+                    <div className="flex flex-col items-center space-y-1">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
+                        <AvatarFallback className="bg-blue-300 text-blue-700 text-xs">
+                          {postAuthor.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex flex-col items-center space-y-1">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={getValidAvatar(postAuthor.name, postAuthor.avatar)} alt={postAuthor.name} />
-                          <AvatarFallback className="bg-blue-300 text-blue-700 text-xs">
-                            {postAuthor.name.slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-center space-y-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
+                          onClick={() => {/* Could toggle like on post */}}
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </Button>
+                        <span className="text-xs font-medium text-gray-600">
+                          {derivedPost.supporters?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Contenu principal */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <UserLink user={postAuthor} className="text-gray-600 text-sm hover:text-gray-800" />
+                        <span className="text-xs text-gray-500">{formatTimeAgo(derivedPost.createdAt)}</span>
+                      </div>
+                      
+                      <p className="text-gray-900 leading-relaxed text-sm mb-2">{derivedPost.content}</p>
+                      
+                      {/* Sub-replies affichées ici (entre contenu et boutons) */}
+                      {derivedPost.replies && derivedPost.replies.length > 0 && (
+                        <div className="ml-4 pl-4 border-l-2 border-gray-200 mt-3 mb-3 space-y-3">
+                          {derivedPost.replies.map(subReply => {
+                            const subReplyAuthor = getUserById(subReply.authorId);
+                            if (!subReplyAuthor) return null;
+                            
+                            return (
+                              <div key={`subreply-${subReply.id}`} className="text-sm">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <UserLink user={subReplyAuthor} className="text-gray-500 text-xs hover:text-gray-700" />
+                                  <span className="text-xs text-gray-400">{formatTimeAgo(subReply.createdAt)}</span>
+                                  <button
+                                    className="ml-auto flex items-center space-x-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                    onClick={() => {/* Like sub-reply */}}
+                                  >
+                                    <ArrowUp className="w-3 h-3" />
+                                    <span className="text-xs">{subReply.likes?.length || 0}</span>
+                                  </button>
+                                </div>
+                                <p className="text-gray-900 text-sm leading-relaxed font-normal">{subReply.content}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Actions (identiques aux replies) */}
+                      {currentUser && (
+                        <div className="flex items-center space-x-3">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
-                            onClick={() => {/* Could toggle like on post */}}
+                            className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                            onClick={() => {/* TODO: Navigate to post detail to reply */}}
                           >
-                            <ArrowUp className="w-3 h-3" />
+                            <MessageSquare className="w-3 h-3 mr-1" />
+                            Répondre
                           </Button>
-                          <span className="text-xs font-medium text-gray-600">
-                            {derivedPost.supporters?.length || 0}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Contenu */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <UserLink user={postAuthor} className="font-medium text-gray-900 text-sm" />
-                          <span className="text-xs text-gray-500">{formatTimeAgo(derivedPost.createdAt)}</span>
-                        </div>
-                        
-                        <p className="text-gray-800 leading-relaxed text-sm mb-2">{derivedPost.content}</p>
-                        
-                        {/* Actions avec "Répondre" et "Voir plus" */}
-                        <div className="flex items-center space-x-4 text-xs">
-                          <span className="text-gray-500">
-                            {derivedPost.replies?.length || 0} réponse{(derivedPost.replies?.length || 0) !== 1 ? 's' : ''}
-                          </span>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-blue-600 hover:text-blue-800"
+                          <button
+                            className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
                             onClick={() => onPostClick(derivedPost.id)}
                           >
-                            <ExternalLink className="w-3 h-3 mr-1" />
                             Voir plus
-                          </Button>
+                          </button>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
-                  
-                  {/* Replies du post dérivé (format compact sans avatar) */}
-                  {derivedPost.replies && derivedPost.replies.length > 0 && (
-                    <div className="ml-14 border-l-2 border-gray-200 pl-4">
-                      {derivedPost.replies.map(subReply => {
-                        const subReplyAuthor = getUserById(subReply.authorId);
-                        if (!subReplyAuthor) return null;
-                        
-                        return (
-                          <div key={`subreply-${subReply.id}`} className="py-2 hover:bg-gray-50/30 transition-colors">
-                            {/* En-tête compact */}
-                            <div className="flex items-center space-x-2 mb-1">
-                              <UserLink user={subReplyAuthor} className="font-medium text-gray-800 text-xs" />
-                              <span className="text-xs text-gray-400">{formatTimeAgo(subReply.createdAt)}</span>
-                              <button
-                                className="ml-auto flex items-center space-x-1 text-gray-400 hover:text-orange-600 transition-colors"
-                                onClick={() => {/* Like sub-reply via derived post */}}
-                              >
-                                <ArrowUp className="w-3 h-3" />
-                                <span className="text-xs">{subReply.likes?.length || 0}</span>
-                              </button>
-                            </div>
-                            
-                            {/* Contenu compact */}
-                            <p className="text-gray-700 text-sm leading-snug">{subReply.content}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
               );
             }
