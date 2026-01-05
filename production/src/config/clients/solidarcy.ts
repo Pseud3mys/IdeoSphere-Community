@@ -386,10 +386,10 @@ Quels bénéfices concrets pour la communauté ?`,
     // Kumu.io - Visualisation de réseaux
     kumu: {
       // URL de l'iframe d'embed Kumu (si disponible)
-      embedUrl: 'https://embed.kumu.io/5a0774c48c07c70e276730247c873345',
+      embedUrl: 'https://embed.kumu.io/fea792a4683485e61bf3f692dce16a9f',
       
       // URL directe vers le projet Kumu
-      projectUrl: 'https://embed.kumu.io/5a0774c48c07c70e276730247c873345',
+      projectUrl: 'https://embed.kumu.io/fea792a4683485e61bf3f692dce16a9f',
       
       // Activer l'affichage de l'iframe
       enabled: true,
