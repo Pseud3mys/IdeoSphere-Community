@@ -152,53 +152,8 @@ export function PostDetailContent({
 
   return (
     <>
-      {/* Posts sources - L'inspiration */}
-      {sourcePosts.length > 0 && (
-        <div className="mb-6 pb-6 border-b border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <Quote className="w-4 h-4 text-gray-500" />
-            <h3 className="text-sm font-medium text-gray-700">
-              {sourcePosts.length > 1 ? 'En réponse à plusieurs messages' : 'En réponse à'}
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {sourcePosts.map((sourcePost, index) => {
-              const sourceAuthor = sourcePost?.authorId ? getUserById(sourcePost.authorId) : undefined;
-              // Afficher quand même si l'auteur n'est pas trouvé, mais avec un nom par défaut
-              const displayAuthor = sourceAuthor || { id: 'unknown', name: 'Utilisateur inconnu', email: '', avatar: undefined };
-              
-              return (
-                <div 
-                  key={sourcePost?.id}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
-                  onClick={() => sourcePost && onPostClick(sourcePost.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-10 h-10 flex-shrink-0">
-                      <AvatarImage src={getValidAvatar(displayAuthor.name, displayAuthor.avatar || undefined)} alt={displayAuthor.name} />
-                      <AvatarFallback className="bg-gray-200 text-gray-600 text-sm">
-                        {displayAuthor.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-gray-600">{displayAuthor.name}</span>
-                        <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
-                      </div>
-                      {sourcePost?.title && (
-                        <p className="text-base font-medium text-gray-900 mb-2">{sourcePost.title}</p>
-                      )}
-                      <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{sourcePost?.content}</p>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
+      {/* Posts sources - Section déplacée vers PostDetailPage.tsx */}
+      
       {/* Header utilisateur */}
       <div className="p-4 border-b border-gray-100">
           <div className="flex items-start justify-between">

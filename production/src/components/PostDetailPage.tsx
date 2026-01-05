@@ -4,13 +4,14 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Textarea } from './ui/textarea';
-import { ArrowLeft, Send, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Send, RefreshCw, Quote, ExternalLink } from 'lucide-react';
 import { PostDetailContent } from './PostDetail/PostDetailContent';
 import { DiscussionThread } from './PostDetail/DiscussionThread';
 import { ContentActionDialogs } from './ContentActionDialogs';
 import { getDiscussionTreeOnApi } from '../api/replyPromotionService';
 import { toast } from 'sonner';
 import { getValidAvatar } from '../api/avatarService';
+import { formatTimeAgo } from './PostDetail/formatTimeAgo';
 
 interface PostDetailPageProps {
   post: Post;
@@ -159,13 +160,59 @@ export function PostDetailPage({
         </div>
       </div>
 
+      {/* Section "en réponse à" - en dehors du rectangle blanc */}
+      {sourcePosts.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Quote className="w-4 h-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-700">
+              {sourcePosts.length > 1 ? 'En réponse à plusieurs messages' : 'En réponse à'}
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {sourcePosts.map((sourcePost) => {
+              const sourceAuthor = sourcePost?.authorId ? getUserById(sourcePost.authorId) : undefined;
+              const displayAuthor = sourceAuthor || { id: 'unknown', name: 'Utilisateur inconnu', email: '', avatar: undefined };
+              
+              return (
+                <div 
+                  key={sourcePost?.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+                  onClick={() => sourcePost && onPostClick(sourcePost.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-10 h-10 flex-shrink-0">
+                      <AvatarImage src={getValidAvatar(displayAuthor.name, displayAuthor.avatar || undefined)} alt={displayAuthor.name} />
+                      <AvatarFallback className="bg-gray-200 text-gray-600 text-sm">
+                        {displayAuthor.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium text-gray-600">{displayAuthor.name}</span>
+                        <span className="text-xs text-gray-500">• {sourcePost && formatTimeAgo(sourcePost.createdAt)}</span>
+                      </div>
+                      {sourcePost?.title && (
+                        <p className="text-base font-medium text-gray-900 mb-2">{sourcePost.title}</p>
+                      )}
+                      <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{sourcePost?.content}</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Contenu principal du post avec discussion intégrée */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <PostDetailContent
           post={latestPost}
           currentUser={currentUser}
           postAuthor={postAuthor}
-          sourcePosts={sourcePosts}
+          sourcePosts={[]} // Ne plus passer les sourcePosts ici car affichés au-dessus
           derivedIdeas={[]} // Ne pas afficher les projets ici
           derivedIdeasCount={derivedIdeas.length} // Juste le nombre pour le bandeau
           isSupporting={isSupporting}
@@ -187,6 +234,7 @@ export function PostDetailPage({
           getUserById={getUserById}
           onLikeReply={actions.likePostReply}
           onPromoteReplyToPost={actions.promoteReplyToPost}
+          onAddReplyToPost={actions.addPostReply}
           onPostClick={onPostClick}
         />
 

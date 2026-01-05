@@ -372,7 +372,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       const existing = prev.posts[post.id];
       if (existing) {
         // Fusionner intelligemment : préserver les données complètes déjà chargées
-        console.log(`📝 [Store] Fusion du post ${post.id}: existant ${existing.replies.length} replies, nouveau ${post.replies?.length || 0} replies`);
+        console.log(`📝 [Store] Fusion du post ${post.id}: existant ${existing.replies?.length || 0} replies, nouveau ${post.replies?.length || 0} replies`);
         const merged: Post = {
           ...existing,
           ...post,
@@ -390,7 +390,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             ? post.content 
             : (existing.content || '')
         };
-        console.log(`📝 [Store] Après fusion: ${merged.replies.length} replies`);
+        console.log(`📝 [Store] Après fusion: ${merged.replies?.length || 0} replies`);
         return { ...prev, users: newUsers, posts: { ...prev.posts, [post.id]: merged } };
       }
       return { ...prev, users: newUsers, posts: { ...prev.posts, [post.id]: post } };

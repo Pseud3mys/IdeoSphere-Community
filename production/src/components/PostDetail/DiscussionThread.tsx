@@ -23,6 +23,7 @@ interface DiscussionThreadProps {
   getUserById: (userId: string) => User | undefined;
   onLikeReply: (postId: string, replyId: string) => void;
   onPromoteReplyToPost: (postId: string, replyId: string, newReplyContent: string) => Promise<string | null>;
+  onAddReplyToPost: (postId: string, content: string) => Promise<string | null>;
   onPostClick: (postId: string) => void;
 }
 
@@ -33,10 +34,13 @@ export function DiscussionThread({
   getUserById,
   onLikeReply,
   onPromoteReplyToPost,
+  onAddReplyToPost,
   onPostClick
 }: DiscussionThreadProps) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
+  const [replyingToPost, setReplyingToPost] = useState<string | null>(null);
+  const [postReplyContent, setPostReplyContent] = useState<Record<string, string>>({});
 
   // Créer une liste unifiée de tous les éléments de discussion (replies + posts dérivés)
   type DiscussionItem = 
@@ -83,6 +87,33 @@ export function DiscussionThread({
     } catch (error) {
       console.error('Erreur lors de la réponse:', error);
       toast.error('Impossible de créer la discussion. Vérifiez votre connexion.');
+    }
+  };
+
+  // Répondre directement à un post dérivé
+  const handleReplyToPost = async (postId: string) => {
+    const content = postReplyContent[postId]?.trim();
+    if (!content) {
+      toast.error('Veuillez écrire une réponse');
+      return;
+    }
+
+    try {
+      const replyId = await onAddReplyToPost(postId, content);
+      if (replyId) {
+        toast.success('Réponse ajoutée ! 💬');
+        setReplyingToPost(null);
+        setPostReplyContent(prev => {
+          const newState = { ...prev };
+          delete newState[postId];
+          return newState;
+        });
+      } else {
+        toast.error('Erreur lors de l\'ajout de la réponse');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la réponse au post:', error);
+      toast.error('Impossible d\'envoyer la réponse. Vérifiez votre connexion.');
     }
   };
 
@@ -270,10 +301,10 @@ export function DiscussionThread({
                             variant="ghost"
                             size="sm"
                             className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
-                            onClick={() => {/* TODO: Navigate to post detail to reply */}}
+                            onClick={() => setReplyingToPost(replyingToPost === derivedPost.id ? null : derivedPost.id)}
                           >
                             <MessageSquare className="w-3 h-3 mr-1" />
-                            Répondre
+                            {replyingToPost === derivedPost.id ? 'Annuler' : 'Répondre'}
                           </Button>
                           <button
                             className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
@@ -281,6 +312,36 @@ export function DiscussionThread({
                           >
                             Voir plus
                           </button>
+                        </div>
+                      )}
+                      
+                      {/* Zone de réponse inline pour post dérivé */}
+                      {replyingToPost === derivedPost.id && (
+                        <div className="mt-3 ml-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <Textarea
+                            value={postReplyContent[derivedPost.id] || ''}
+                            onChange={(e) => setPostReplyContent(prev => ({ ...prev, [derivedPost.id]: e.target.value }))}
+                            placeholder="Votre réponse..."
+                            rows={2}
+                            className="resize-none text-sm mb-2"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setReplyingToPost(null)}
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReplyToPost(derivedPost.id)}
+                              disabled={!postReplyContent[derivedPost.id]?.trim()}
+                            >
+                              <Send className="w-3 h-3 mr-2" />
+                              Répondre
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>

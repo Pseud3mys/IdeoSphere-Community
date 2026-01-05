@@ -1,6 +1,6 @@
 import { Post, PostReply, User } from '../types';
 import apiClient from './apiClient';
-import { RawComment, RawUser } from './transformService';
+import { RawComment, RawUser, transformPost } from './transformService';
 import { transformDiscussionTree, RawDiscussionTree } from './discussionTreeTransform';
 
 /**
@@ -21,17 +21,48 @@ export async function promoteReplyToPostOnApi(
     };
     
     const response = await apiClient.post<{
-      newPost: any;
-      newReply: RawComment;
-      user: RawUser;
+      data: {
+        post: any;
+        new_reply_id: string;
+        parent_post_key: string;
+        users: {
+          new_reply_author: RawUser;
+          original_author: RawUser;
+        };
+      };
+      message: string;
+      status: string;
     }>(`/posts/${postKey}/comments/${replyId}/promote`, payload);
     
     console.log('✅ Reply promue en post:', response.data);
     
+    const postData = response.data.data.post;
+    const newPostId = postData._id || `posts/${postData._key}`;
+    
+    // Créer un Map des utilisateurs depuis la réponse API
+    const usersMap = new Map<string, User>();
+    if (response.data.data.users) {
+      Object.values(response.data.data.users).forEach((rawUser: any) => {
+        const user: User = {
+          id: rawUser._id,
+          name: rawUser.name,
+          email: rawUser.email,
+          createdAt: new Date(rawUser.createdAt),
+          avatar: rawUser.avatar || '',
+          bio: rawUser.bio || '',
+          isRegistered: rawUser.isRegistered ?? false,
+        };
+        usersMap.set(rawUser._id, user);
+      });
+    }
+    
+    // Transformer le post brut en Post typé avec replies initialisées
+    const transformedPost = transformPost(postData, usersMap);
+    
     return {
-      newPostId: response.data.newPost.id || `posts/${response.data.newPost._id}`,
-      newReplyId: response.data.newReply.id,
-      newPost: response.data.newPost
+      newPostId: newPostId,
+      newReplyId: response.data.data.new_reply_id,
+      newPost: transformedPost
     };
   } catch (error) {
     console.error(`❌ Error promoting reply ${replyId} to post:`, error);
