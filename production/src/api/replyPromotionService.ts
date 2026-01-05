@@ -34,20 +34,24 @@ export async function promoteReplyToPostOnApi(
       status: string;
     }>(`/posts/${postKey}/comments/${replyId}/promote`, payload);
     
-    console.log('✅ Reply promue en post:', response.data);
-    
     const postData = response.data.data.post;
     const newPostId = postData._id || `posts/${postData._key}`;
     
     // Créer un Map des utilisateurs depuis la réponse API
     const usersMap = new Map<string, User>();
     const usersList: User[] = [];
+    
     if (response.data.data.users) {
-      Object.values(response.data.data.users).forEach((rawUser: any) => {
+      // Gérer le cas où users est un tableau ou un objet
+      const usersArray = Array.isArray(response.data.data.users) 
+        ? response.data.data.users 
+        : Object.values(response.data.data.users);
+      
+      usersArray.forEach((rawUser: any) => {
         const user: User = {
           id: rawUser._id,
           name: rawUser.name,
-          email: rawUser.email,
+          email: rawUser.email || '',
           createdAt: new Date(rawUser.createdAt),
           avatar: rawUser.avatar || '',
           bio: rawUser.bio || '',
