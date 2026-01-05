@@ -1,0 +1,49 @@
+{
+  "name": "IdeoSphere Code Structure",
+  "description": "Visualisation de la structure du code avec les imports et la hiérarchie des dossiers",
+  "settings": {
+    "template": "stakeholder",
+    "defaultView": "map"
+  },
+  "views": [
+    {
+      "name": "Architecture Overview",
+      "description": "Vue d'ensemble de l'architecture avec tous les nœuds",
+      "filters": {}
+    },
+    {
+      "name": "Imports Only",
+      "description": "Affiche uniquement les connexions d'imports entre fichiers",
+      "filters": {
+        "connections": "[connection type='import']"
+      }
+    },
+    {
+      "name": "Files by Size",
+      "description": "Fichiers colorés selon leur taille (nombre de lignes)",
+      "filters": {
+        "elements": "[type='file']"
+      }
+    },
+    {
+      "name": "Folder Structure",
+      "description": "Affiche uniquement la structure des dossiers",
+      "filters": {
+        "connections": "[connection type='folder-hierarchy']"
+      }
+    },
+    {
+      "name": "Files in Folders",
+      "description": "Affiche les fichiers et leur appartenance aux dossiers",
+      "filters": {
+        "connections": "[connection type='file-in-folder']"
+      }
+    }
+  ],
+  "perspectives": [
+    {
+      "name": "Default",
+      "style": "@settings {\n  font-scale: 1.2;\n  layout-gravity: 0.0001;\n  layout-particle-charge: 300;\n}\n\n/* Style des dossiers */\n[type=\"folder\"] {\n  color: #f4a261;\n  size: 30;\n  shape: square;\n  font-size: 14;\n}\n\n/* Style des fichiers TypeScript */\n[extension=\".tsx\"] {\n  color: #3178c6;\n  size: scale(\"lines\", 10, 100);\n  shape: circle;\n}\n\n[extension=\".ts\"] {\n  color: #007acc;\n  size: scale(\"lines\", 10, 100);\n  shape: circle;\n}\n\n/* Style des fichiers JavaScript */\n[extension=\".jsx\"] {\n  color: #f7df1e;\n  size: scale(\"lines\", 10, 100);\n  shape: circle;\n}\n\n[extension=\".js\"] {\n  color: #f0db4f;\n  size: scale(\"lines\", 10, 100);\n  shape: circle;\n}\n\n/* Connexions d'imports (entre fichiers) */\n[connection type=\"import\"] {\n  color: #2a9d8f;\n  width: 2;\n  arrow-size: 0.5;\n}\n\n/* Hiérarchie entre dossiers */\n[connection type=\"folder-hierarchy\"] {\n  color: #e76f51;\n  width: 1.5;\n  style: dashed;\n  arrow-visibility: hidden;\n}\n\n/* Appartenance fichier -> dossier */\n[connection type=\"file-in-folder\"] {\n  color: #8338ec;\n  width: 1;\n  style: dotted;\n  arrow-visibility: hidden;\n}\n\n/* Fichiers avec beaucoup de lignes */\n[lines > 300] {\n  border-width: 3;\n  border-color: #e63946;\n}\n\n/* Fichiers moyens */\n[lines > 100][lines < 300] {\n  border-width: 2;\n  border-color: #f77f00;\n}\n\n/* Petits fichiers */\n[lines < 100] {\n  border-width: 1;\n  border-color: #06d6a0;\n}"
+    }
+  ]
+}

@@ -48,6 +48,9 @@ config/secrets.json
 # Large files
 *.mp4
 *.mov
+
+# Scripts output (meta-analysis)
+scripts/kumu-graph.json
 *.avi
 *.zip
 *.tar.gz
