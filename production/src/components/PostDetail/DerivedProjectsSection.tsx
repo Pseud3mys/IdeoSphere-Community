@@ -26,10 +26,16 @@ export function DerivedProjectsSection({
   onIdeaClick,
   onPromoteToIdea
 }: DerivedProjectsSectionProps) {
+  // Debug: afficher les valeurs
+  console.log('🔍 DerivedProjectsSection - derivedIdeas.length:', derivedIdeas.length, 'hasComments:', hasComments);
+  
   // Ne rien afficher si pas de projets ET pas de commentaires
   if (derivedIdeas.length === 0 && !hasComments) {
+    console.log('❌ DerivedProjectsSection - Pas d\'affichage (pas de projets ET pas de commentaires)');
     return null;
   }
+
+  console.log('✅ DerivedProjectsSection - Affichage de la section');
 
   return (
     <div className="mt-6" data-section="derived-projects">

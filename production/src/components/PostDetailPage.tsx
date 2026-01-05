@@ -124,6 +124,14 @@ export function PostDetailPage({
     actions.addPost(updatedPost);
   };
 
+  // Calculer si le post a des commentaires (replies + posts dérivés)
+  const hasComments = (latestPost.replies?.length || 0) > 0 || derivedPosts.length > 0;
+
+  // Debug: Afficher les infos du post
+  console.log('📝 PostDetailPage - latestPost.replies:', latestPost.replies, 'length:', latestPost.replies?.length || 0);
+  console.log('📝 PostDetailPage - derivedPosts.length:', derivedPosts.length);
+  console.log('📝 PostDetailPage - hasComments:', hasComments);
+
   // Ajouter une reply principale au post
   const handleAddReply = async () => {
     if (!newReply.trim()) {
@@ -288,7 +296,7 @@ export function PostDetailPage({
       {/* Projets dérivés - Section séparée affichée à la fin */}
       <DerivedProjectsSection
         derivedIdeas={derivedIdeas}
-        hasComments={latestPost.replies.length > 0}
+        hasComments={hasComments}
         getUserById={getUserById}
         onIdeaClick={onIdeaClick}
         onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
