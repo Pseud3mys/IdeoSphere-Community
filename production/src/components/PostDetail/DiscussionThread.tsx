@@ -53,6 +53,11 @@ export function DiscussionThread({
   ].sort((a, b) => {
     const dateA = a.data.createdAt;
     const dateB = b.data.createdAt;
+    
+    // Vérification de sécurité : si une date est invalide, mettre l'item à la fin
+    if (!dateA || !(dateA instanceof Date)) return 1;
+    if (!dateB || !(dateB instanceof Date)) return -1;
+    
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -324,14 +329,6 @@ export function DiscussionThread({
                         <div className="flex items-center space-x-2 mb-1">
                           <UserLink user={postAuthor} className="font-medium text-gray-900 text-sm" />
                           <span className="text-xs text-gray-500">{formatTimeAgo(derivedPost.createdAt)}</span>
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs border-blue-200 bg-blue-50 text-blue-700 cursor-pointer hover:bg-blue-100"
-                            onClick={() => onPostClick(derivedPost.id)}
-                          >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Voir détail
-                          </Badge>
                         </div>
                         
                         <p className="text-gray-800 leading-relaxed text-sm mb-2">{derivedPost.content}</p>
@@ -386,6 +383,19 @@ export function DiscussionThread({
                       })}
                     </div>
                   )}
+                  
+                  {/* Badge "Voir détail" après les replies */}
+                  <div className="ml-14 px-4 pb-3">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-blue-600 hover:text-blue-800"
+                      onClick={() => onPostClick(derivedPost.id)}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Voir la discussion complète ({derivedPost.replies?.length || 0} réponse{(derivedPost.replies?.length || 0) !== 1 ? 's' : ''})
+                    </Button>
+                  </div>
                 </div>
               );
             }

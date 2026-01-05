@@ -404,7 +404,9 @@ export function createApiActions(
               childIdeaIds.push(child.id);
             } else if ('content' in child && 'authorId' in child && 'supporters' in child) {
               // C'est un Post (a content, authorId ET supporters)
-              actions.addPost(child as Post);
+              const childPost = child as Post;
+              console.log(`✅ [apiActions] Ajout d'un post dérivé ${childPost.id} avec ${childPost.replies?.length || 0} replies`);
+              actions.addPost(childPost);
               childPostIds.push(child.id);
             } else if ('content' in child && 'type' in child) {
               // C'est une DiscussionTopic (a content ET type)

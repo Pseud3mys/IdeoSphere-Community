@@ -254,6 +254,18 @@ export const transformComment = (raw: RawComment, usersMap: Map<string, User>): 
 });
 
 /**
+ * Transforms a RawComment into a PostReply (pour les replies de Post)
+ */
+export const transformCommentToReply = (raw: RawComment): PostReply => ({
+  id: raw.id,
+  authorId: raw.authorId,
+  content: raw.content,
+  createdAt: new Date(raw.createdAt),
+  likes: raw.upvotes || [],
+  likeCount: (raw.upvotes || []).length
+});
+
+/**
  * Transforms a RawPost into the frontend Post type.
  */
 export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post => {
@@ -266,7 +278,7 @@ export const transformPost = (raw: RawPost, usersMap: Map<string, User>): Post =
     createdAt: new Date(raw.createdAt),
     supporters: raw.supporters || [],
     groupIds: raw.groupIds || [],
-    replies: (raw.comments || []).map(comment => transformComment(comment, usersMap) as unknown as PostReply), // Temporary cast to fix type mismatch
+    replies: (raw.comments || []).map(comment => transformCommentToReply(comment)),
     tags: raw.tags || [],
     location: parseLocation(raw.location),
     // Initialize progressive load fields as empty
