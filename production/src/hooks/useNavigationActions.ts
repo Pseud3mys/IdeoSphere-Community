@@ -92,6 +92,7 @@ export function useNavigationActions() {
         }
         
         // 2. Ajouter au store (post + utilisateurs)
+        console.log(`✅ [goToPost] Post ${postId} chargé avec ${apiResponse.post.replies.length} commentaires`);
         actions.addPost(apiResponse.post);
         apiResponse.users.forEach(user => actions.addUser(user));
         

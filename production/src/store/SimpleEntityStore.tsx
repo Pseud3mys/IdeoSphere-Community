@@ -372,6 +372,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       const existing = prev.posts[post.id];
       if (existing) {
         // Fusionner intelligemment : préserver les données complètes déjà chargées
+        console.log(`📝 [Store] Fusion du post ${post.id}: existant ${existing.replies.length} replies, nouveau ${post.replies?.length || 0} replies`);
         const merged: Post = {
           ...existing,
           ...post,
@@ -379,14 +380,17 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
           derivedIdeas: (post.derivedIdeas && post.derivedIdeas.length > 0) ? post.derivedIdeas : existing.derivedIdeas || [],
           derivedPosts: (post.derivedPosts && post.derivedPosts.length > 0) ? post.derivedPosts : existing.derivedPosts || [],
           sourcePosts: (post.sourcePosts && post.sourcePosts.length > 0) ? post.sourcePosts : existing.sourcePosts || [],
-          // Préserver les supporters/replies si non vides
+          // Préserver les supporters si non vides
           supporters: (post.supporters && post.supporters.length > 0) ? post.supporters : existing.supporters || [],
-          replies: (post.replies && post.replies.length > 0) ? post.replies : existing.replies || [],
+          // ✅ FIX : Toujours utiliser les nouvelles replies si définies (même si vides)
+          // undefined = pas encore chargé, [] = chargé mais vide
+          replies: post.replies !== undefined ? post.replies : existing.replies || [],
           // ✅ AMÉLIORATION : Préserver le contenu existant si le nouveau est vide/undefined
           content: (post.content !== undefined && post.content !== '') 
             ? post.content 
             : (existing.content || '')
         };
+        console.log(`📝 [Store] Après fusion: ${merged.replies.length} replies`);
         return { ...prev, users: newUsers, posts: { ...prev.posts, [post.id]: merged } };
       }
       return { ...prev, users: newUsers, posts: { ...prev.posts, [post.id]: post } };

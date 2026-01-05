@@ -44,24 +44,25 @@ export function PostDetailPageWrapper() {
       try {
         const { fetchPostDetails } = await import('../api/contentService');
         
-        // 1. Vérifier si le post est déjà dans le store
-        let postData = getPostById(postId);
+        // ✅ TOUJOURS charger les détails complets depuis l'API
+        // Cela garantit que nous avons toujours les commentaires, même si le post
+        // vient du feed (où les commentaires ne sont pas inclus)
+        console.log(`🔄 [PostDetailPageWrapper] Chargement des détails complets pour ${postId}`);
+        const apiResponse = await fetchPostDetails(postId);
 
-        // 2. Si pas dans le store, charger depuis l'API
-        if (!postData) {
-          const apiResponse = await fetchPostDetails(postId);
-
-          if (!apiResponse) {
-            console.error(`❌ Post ${postId} non trouvé`);
-            navigate('/discovery');
-            return;
-          }
-
-          // ✅ Ajouter le post ET les utilisateurs au store
-          actions.addPost(apiResponse.post);
-          apiResponse.users.forEach(user => actions.addUser(user));
-          postData = getPostById(postId);
+        if (!apiResponse) {
+          console.error(`❌ Post ${postId} non trouvé`);
+          navigate('/discovery');
+          return;
         }
+
+        // ✅ Ajouter le post complet (avec commentaires) ET les utilisateurs au store
+        console.log(`✅ [PostDetailPageWrapper] Ajout du post avec ${apiResponse.post.replies.length} commentaires`);
+        actions.addPost(apiResponse.post);
+        apiResponse.users.forEach(user => actions.addUser(user));
+        
+        // Récupérer le post mis à jour depuis le store
+        let postData = getPostById(postId);
 
         // 3. Charger les posts référencés (sourcePosts) - toujours
         if (postData && postData.sourcePosts && postData.sourcePosts.length > 0) {
