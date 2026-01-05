@@ -588,6 +588,63 @@ export function createContentActions(
         console.error('❌ Erreur lors du like de la réponse:', error);
       }
     },
+
+    // Promouvoir une reply en post
+    promoteReplyToPost: async (postId: string, replyId: string, newReplyContent: string): Promise<string | null> => {
+      try {
+        const { promoteReplyToPostOnApi } = await import('../api/replyPromotionService');
+        
+        const currentUser = boundSelectors.getCurrentUser();
+        if (!currentUser) {
+          console.error('❌ Utilisateur non connecté');
+          return null;
+        }
+        
+        // Appeler l'API pour promouvoir la reply
+        const result = await promoteReplyToPostOnApi(postId, replyId, newReplyContent, currentUser.id);
+        
+        if (!result) {
+          console.error('❌ Échec de la promotion de la reply');
+          return null;
+        }
+        
+        const { newPostId, newPost } = result;
+        
+        // Mettre à jour le store
+        storeUpdater(prevStore => {
+          const post = selectors.getPostById(prevStore)(postId);
+          if (!post) return {};
+          
+          // Marquer la reply comme promue
+          const updatedReplies = post.replies.map(r => 
+            r.id === replyId 
+              ? { ...r, promotedToPostId: newPostId }
+              : r
+          );
+          
+          const updatedPost = {
+            ...post,
+            replies: updatedReplies,
+            derivedPosts: [...(post.derivedPosts || []), newPostId]
+          };
+          
+          console.log('✅ Reply promue en post:', newPostId);
+          
+          return {
+            posts: {
+              ...prevStore.posts,
+              [postId]: updatedPost,
+              [newPostId]: newPost
+            }
+          };
+        });
+        
+        return newPostId;
+      } catch (error) {
+        console.error('❌ Erreur lors de la promotion de la reply:', error);
+        return null;
+      }
+    },
     
     // Actions de discussion
     upvoteDiscussionTopic: async (topicId: string) => {

@@ -4,8 +4,9 @@ import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { PostDetailContent } from './PostDetail/PostDetailContent';
-import { PostDetailReplies } from './PostDetail/PostDetailReplies';
+import { DiscussionThread } from './PostDetail/DiscussionThread';
 import { ContentActionDialogs } from './ContentActionDialogs';
+import { getDiscussionTreeOnApi } from '../api/replyPromotionService';
 
 interface PostDetailPageProps {
   post: Post;
@@ -104,11 +105,11 @@ export function PostDetailPage({
   const derivedIdeas = latestPost.derivedIdeas
     ?.map(ideaId => ideas.find(i => i.id === ideaId))
     .filter(Boolean) || [];
-  
-  // Trouver les posts dérivés de ce post (utiliser derivedPosts du post)
-  const derivedPosts = latestPost.derivedPosts
+
+  // Trouver les posts dérivés de ce post (posts de réponse)
+  const derivedPosts = (latestPost.derivedPosts
     ?.map(postId => posts.find(p => p.id === postId))
-    .filter(Boolean) || [];
+    .filter((p): p is Post => p !== undefined)) || [];
 
   const handlePostUpdated = (updatedPost: Post) => {
     // Utiliser addPost pour une fusion intelligente des données
@@ -135,12 +136,10 @@ export function PostDetailPage({
         postAuthor={postAuthor}
         sourcePosts={sourcePosts}
         derivedIdeas={derivedIdeas}
-        derivedPosts={derivedPosts}
         isSupporting={isSupporting}
         supportCount={supportCount}
         getUserById={getUserById}
         onToggleLike={() => actions.togglePostLike(latestPost.id)}
-        onCreateResponsePost={() => actions.createResponsePost(latestPost.id)}
         onPromoteToIdea={() => actions.promotePostToIdea(latestPost.id)}
         onIdeaClick={onIdeaClick}
         onPostClick={onPostClick}
@@ -148,13 +147,16 @@ export function PostDetailPage({
         onPostUpdated={handlePostUpdated}
       />
 
-      {/* Section commentaires */}
-      <PostDetailReplies
+      {/* Section discussion unifiée */}
+      <DiscussionThread
         post={latestPost}
+        derivedPosts={derivedPosts}
         currentUser={currentUser}
         getUserById={getUserById}
         onAddReply={actions.addPostReply}
         onLikeReply={actions.likePostReply}
+        onPromoteReplyToPost={actions.promoteReplyToPost}
+        onPostClick={onPostClick}
       />
       
       {/* Dialogues de confirmation */}

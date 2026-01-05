@@ -83,6 +83,7 @@ export interface PostReply {
   createdAt: Date;
   likes: string[];
   likeCount?: number; // ✅ Optionnel - calculé dynamiquement depuis likes.length
+  promotedToPostId?: string; // ✅ ID du post créé si cette reply a été promue
 }
 
 export type IdeaStatus = 'draft' | 'published' | 'featured' | 'archived';

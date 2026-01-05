@@ -30,12 +30,10 @@ interface PostDetailContentProps {
   postAuthor: User | undefined;
   sourcePosts: (Post | undefined)[];
   derivedIdeas: (Idea | undefined)[];
-  derivedPosts: (Post | undefined)[];
   isSupporting: boolean;
   supportCount: number;
   getUserById: (userId: string) => User | undefined;
   onToggleLike: () => void;
-  onCreateResponsePost: () => void;
   onPromoteToIdea: () => void;
   onIdeaClick: (ideaId: string) => void;
   onPostClick: (postId: string) => void;
@@ -49,12 +47,10 @@ export function PostDetailContent({
   postAuthor,
   sourcePosts,
   derivedIdeas,
-  derivedPosts,
   isSupporting,
   supportCount,
   getUserById,
   onToggleLike,
-  onCreateResponsePost,
   onPromoteToIdea,
   onIdeaClick,
   onPostClick,
@@ -217,9 +213,9 @@ export function PostDetailContent({
         <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
           <div className="flex items-center space-x-6 text-sm text-gray-500">
             <span>{supportCount} soutiens</span>
-            <span>{post.replies.length} réponses</span>
-            {(derivedIdeas.length > 0 || derivedPosts.length > 0) && (
-              <span>{derivedIdeas.length + derivedPosts.length} réactions</span>
+            <span>{post.replies.length} discussions</span>
+            {derivedIdeas.length > 0 && (
+              <span>{derivedIdeas.length} {derivedIdeas.length > 1 ? 'projets' : 'projet'}</span>
             )}
           </div>
         </div>
@@ -227,28 +223,12 @@ export function PostDetailContent({
         {/* Actions principales - CONTRIBUER AU FIL */}
         <div className="px-4 py-3 border-t border-gray-100 bg-white">
           <div className="mb-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-1">Apporter votre pierre à l'édifice</h4>
-            <p className="text-xs text-gray-600">Développez la discussion ou structurez un projet</p>
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">Structurer en projet</h4>
+            <p className="text-xs text-gray-600">Transformez cette discussion en idée aboutie</p>
           </div>
           
-          {/* Actions principales de contribution */}
-          <div className="space-y-2 mb-3">
-            {/* Post de réponse */}
-            <button
-              className="w-full p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 transition-colors text-left group"
-              onClick={onCreateResponsePost}
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-4 h-4 text-gray-500 group-hover:text-blue-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 mb-0.5">Ajouter un élément à la discussion</p>
-                  <p className="text-xs text-gray-600">
-                    Développer un argument, partager une suggestion, apporter une nuance...
-                  </p>
-                </div>
-              </div>
-            </button>
-
+          {/* Action principale: Structurer en projet */}
+          <div className="mb-3">
             {/* Projet complet */}
             <button
               className="w-full p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50/30 transition-colors text-left group"
@@ -335,13 +315,10 @@ export function PostDetailContent({
           {showCreateOptions && (
             <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600 space-y-1">
               <p>
-                <strong>Discussion :</strong> Les posts de réponse alimentent le fil de manière fluide et permettent un échange d'arguments.
-              </p>
-              <p>
-                <strong>Projet :</strong> Pour les idées mûres qui nécessitent une évaluation structurée sur plusieurs critères.
+                <strong>Projet :</strong> Transforme cette discussion en idée structurée avec évaluation détaillée sur plusieurs critères.
               </p>
               <p className="pt-1 border-t border-gray-200 text-gray-500">
-                💬 Les commentaires ci-dessous sont pour les réactions courtes et spontanées.
+                💬 Pour participer à la discussion, utilisez la section "Discussion" ci-dessous. Cliquez sur "Répondre" pour approfondir une idée.
               </p>
             </div>
           )}
@@ -349,106 +326,56 @@ export function PostDetailContent({
       </div>
 
       {/* Contenu dérivé - Projets mis en avant */}
-      {(derivedIdeas.length > 0 || derivedPosts.length > 0) && (
-        <div className="mt-6 space-y-4">
+      {derivedIdeas.length > 0 && (
+        <div className="mt-6">
           {/* Projets dérivés - Section importante */}
-          {derivedIdeas.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="w-4 h-4 text-gray-500" />
-                <h3 className="text-base font-medium text-gray-900">
-                  Projets issus de cette discussion ({derivedIdeas.length})
-                </h3>
-              </div>
-              
-              <div className="space-y-3">
-                {derivedIdeas.map(idea => {
-                  const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
-                  
-                  return (
-                    <Card 
-                      key={idea?.id}
-                      className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
-                      onClick={() => idea && onIdeaClick(idea.id)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Lightbulb className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
-                                Projet
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                par <UserLink user={firstCreator || undefined} className="text-gray-700 hover:text-purple-600 font-medium" />
-                              </span>
-                              <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
-                            </div>
-                            <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
-                            <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                              <span>{idea?.supporters?.length || 0} soutiens</span>
-                            </div>
-                          </div>
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-gray-500" />
+              <h3 className="text-base font-medium text-gray-900">
+                Projets issus de cette discussion ({derivedIdeas.length})
+              </h3>
             </div>
-          )}
-
-          {/* Posts dérivés - Style discussion */}
-          {derivedPosts.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-gray-500" />
-                <h3 className="text-base font-medium text-gray-900">
-                  Suite de la discussion ({derivedPosts.length})
-                </h3>
-              </div>
-              
-              <div className="space-y-2">
-                {derivedPosts.map(derivedPost => {
-                  const derivedAuthor = derivedPost?.authorId ? getUserById(derivedPost.authorId) : undefined;
-                  if (!derivedAuthor || derivedAuthor.id === 'unknown') return null;
-                  
-                  return (
-                    <div
-                      key={derivedPost?.id}
-                      className="border-l-2 border-gray-300 bg-gray-50 rounded-r-lg p-3 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors"
-                      onClick={() => derivedPost && onPostClick(derivedPost.id)}
-                    >
+            
+            <div className="space-y-3">
+              {derivedIdeas.map(idea => {
+                const firstCreator = idea?.creatorIds?.[0] ? getUserById(idea.creatorIds[0]) : null;
+                
+                return (
+                  <Card 
+                    key={idea?.id}
+                    className="border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer transition-all"
+                    onClick={() => idea && onIdeaClick(idea.id)}
+                  >
+                    <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <Avatar className="w-8 h-8 flex-shrink-0">
-                          <AvatarImage src={getValidAvatar(derivedAuthor.name, derivedAuthor.avatar)} alt={derivedAuthor.name} />
-                          <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                            {derivedAuthor.name.slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Lightbulb className="w-4 h-4 text-purple-600" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <UserLink user={derivedAuthor} className="font-medium text-gray-900 text-sm" />
-                            <span className="text-xs text-gray-500">• {derivedPost && formatTimeAgo(derivedPost.createdAt)}</span>
+                            <Badge variant="outline" className="text-xs border-purple-200 text-purple-700">
+                              Projet
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              par <UserLink user={firstCreator || undefined} className="text-gray-700 hover:text-purple-600 font-medium" />
+                            </span>
+                            <span className="text-xs text-gray-400">• {idea && formatTimeAgo(idea.createdAt)}</span>
                           </div>
-                          <p className="text-sm text-gray-700 line-clamp-2">{derivedPost?.content}</p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1.5">
-                            <span>{derivedPost?.supporters?.length || 0} soutiens</span>
-                            <span>{derivedPost?.replies.length} réponses</span>
+                          <h4 className="font-medium text-gray-900 mb-1">{idea?.title}</h4>
+                          <p className="text-sm text-gray-600 line-clamp-2">{idea?.summary}</p>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                            <span>{idea?.supporters?.length || 0} soutiens</span>
                           </div>
                         </div>
                         <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
       )}
     </>
