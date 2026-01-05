@@ -615,12 +615,8 @@ export function createContentActions(
           const post = selectors.getPostById(prevStore)(postId);
           if (!post) return {};
           
-          // Marquer la reply comme promue
-          const updatedReplies = post.replies.map(r => 
-            r.id === replyId 
-              ? { ...r, promotedToPostId: newPostId }
-              : r
-          );
+          // Supprimer la reply promue (le backend l'a supprimée)
+          const updatedReplies = post.replies.filter(r => r.id !== replyId);
           
           const updatedPost = {
             ...post,

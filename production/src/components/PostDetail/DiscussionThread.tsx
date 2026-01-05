@@ -3,13 +3,11 @@ import { Post, PostReply, User } from '../../types';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Textarea } from '../ui/textarea';
-import { Badge } from '../ui/badge';
 import { UserLink } from '../UserLink';
 import { 
   MessageSquare, 
   Send,
   ArrowUp,
-  ExternalLink,
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,6 +46,7 @@ export function DiscussionThread({
     | { type: 'post'; data: Post };
   
   const discussionItems: DiscussionItem[] = [
+    // Les replies promues sont supprimées par le backend, pas besoin de filtrer
     ...post.replies.map(reply => ({ type: 'reply' as const, data: reply })),
     ...derivedPosts.map(post => ({ type: 'post' as const, data: post }))
   ].sort((a, b) => {
@@ -79,8 +78,7 @@ export function DiscussionThread({
           delete newState[replyId];
           return newState;
         });
-        // Naviguer vers le nouveau post
-        onPostClick(newPostId);
+        // Ne pas naviguer - rester sur le post actuel
       } else {
         toast.error('Erreur lors de la création de la discussion');
       }
@@ -126,7 +124,6 @@ export function DiscussionThread({
               const replyAuthor = getUserById(reply.authorId);
               if (!replyAuthor) return null;
               
-              const isPromoted = !!reply.promotedToPostId;
               const isReplying = replyingTo === reply.id;
               
               return (
@@ -160,24 +157,12 @@ export function DiscussionThread({
                       <div className="flex items-center space-x-2 mb-1">
                         <UserLink user={replyAuthor} className="text-gray-600 text-sm hover:text-gray-800" />
                         <span className="text-xs text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
-                        
-                        {/* Badge pour les posts */}
-                        {isPromoted && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs border-blue-200 bg-blue-50 text-blue-700 cursor-pointer hover:bg-blue-100"
-                            onClick={() => onPostClick(reply.promotedToPostId!)}
-                          >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Voir détail
-                          </Badge>
-                        )}
                       </div>
                       
                       <p className="text-gray-900 leading-relaxed text-sm mb-2">{reply.content}</p>
                       
                       {/* Actions */}
-                      {currentUser && !isPromoted && (
+                      {currentUser && (
                         <div className="flex items-center space-x-3">
                           <Button
                             variant="ghost"
