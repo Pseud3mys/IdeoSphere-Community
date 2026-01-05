@@ -49,13 +49,14 @@ export function PostDetailPage({
   const isSupporting = latestPost.supporters?.includes(effectiveUser.id) || false;
   const supportCount = latestPost.supporters?.length || 0;
 
-  // Handlers pour les dialogues
+  // Handlers pour le signalement
   const handleReportClick = () => {
     setIsReportDialogOpen(true);
   };
 
   const handleReportConfirm = () => {
     setIsReportDialogOpen(false);
+    // Appeler le callback parent si fourni
     if (onReport) {
       onReport(latestPost.id);
     }

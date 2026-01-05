@@ -116,8 +116,6 @@ export function PostDetailPageWrapper() {
     <PostDetailPage
       post={post}
       onBack={handleBack}
-      onPromoteToIdea={actions.promotePostToIdea}
-      onCreateResponsePost={actions.createResponsePost}
       onIdeaClick={navigation.goToIdea}
       onPostClick={navigation.goToPost}
       onReport={actions.reportPost}
