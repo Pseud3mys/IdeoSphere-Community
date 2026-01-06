@@ -104,7 +104,7 @@ export function QuickPostWidget({
   };
 
   return (
-    <div className={standalone ? 'min-h-screen bg-gray-50 p-4' : ''}>
+    <div className={standalone ? 'min-h-screen p-4' : ''}>
       <div className={standalone ? 'max-w-2xl mx-auto' : ''}>
         {currentView === 'composer' ? (
           <QuickPostComposer

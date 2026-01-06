@@ -58,7 +58,7 @@ export function QuickPostWidgetStandalone() {
   // Attendre que la config soit prête
   if (!config) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-600">Chargement...</div>
       </div>
     );
