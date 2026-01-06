@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test iframe QuickPostWidget</title>
+    <title>Test QuickPost Widget</title>
     <style>
         * {
             margin: 0;
@@ -12,317 +12,353 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
             min-height: 100vh;
             padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            width: 100%;
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1600px;
             margin: 0 auto;
+            height: calc(100vh - 40px);
         }
 
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
+        .widget-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        .widget-showcase {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 30px;
+            border-radius: 12px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
         }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .widget-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 320px;
+            border: none;
+            display: block;
+            background: transparent;
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+            color: #1a1a1a;
         }
 
         .controls {
-            background: white;
-            border-radius: 12px;
+            background: #f8f9fa;
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
         }
 
         .controls h2 {
-            margin-bottom: 15px;
+            font-size: 1rem;
+            margin-bottom: 16px;
             color: #333;
         }
 
         .control-group {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .control-item {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .control-item label {
-            font-size: 0.9rem;
+            display: block;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             color: #555;
         }
 
-        .control-item input[type="text"],
-        .control-item select {
-            padding: 8px 12px;
-            border: 2px solid #ddd;
+        .control-item input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 0.9rem;
-            transition: border-color 0.3s;
+            font-size: 0.85rem;
         }
 
-        .control-item input[type="text"]:focus,
-        .control-item select:focus {
+        .control-item input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0066cc;
         }
 
-        .control-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+        .checkbox-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
             cursor: pointer;
         }
 
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .checkbox-item label {
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #555;
         }
 
         .btn-reload {
-            background: #667eea;
+            background: #0066cc;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
             width: 100%;
         }
 
         .btn-reload:hover {
-            background: #5568d3;
+            background: #0052a3;
         }
 
-        .url-display {
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            word-break: break-all;
-            margin-top: 10px;
+        .code-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .code-section h3 {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
             color: #333;
         }
 
-        .iframe-container {
-            background: transparent;
-            border-radius: 12px;
-            overflow: visible;
-            margin-bottom: 20px;
+        .code-block {
+            position: relative;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            overflow-x: auto;
         }
 
-        .iframe-container iframe {
-            width: 100%;
+        .btn-copy {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #0066cc;
+            color: white;
             border: none;
-            display: block;
-            background: transparent;
-        }
-
-        .background-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .bg-option {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 3px solid white;
-            transition: transform 0.2s;
-        }
-
-        .bg-option:hover {
-            transform: scale(1.1);
-        }
-
-        .bg-option.active {
-            border-color: #ffd700;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-            padding: 40px;
-        }
-
-        .iframe-wrapper {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #f7fafc;
-        }
-
-        iframe {
-            width: 100%;
-            height: 800px;
-            border: none;
-            display: block;
-        }
-
-        .info-box {
-            margin-top: 30px;
-            padding: 20px;
-            background: #edf2f7;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .info-box h3 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .info-box p {
-            color: #4a5568;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-
-        .info-box code {
-            background: #fff;
-            padding: 2px 6px;
+            padding: 6px 12px;
             border-radius: 4px;
-            color: #667eea;
-            font-size: 0.9em;
+            font-size: 0.85rem;
+            cursor: pointer;
         }
 
-        .log-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: #2d3748;
-            border-radius: 12px;
-            max-height: 200px;
+        .btn-copy:hover {
+            background: #0052a3;
+        }
+
+        .url-display {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin-bottom: 12px;
+            color: #333;
+            max-height: 100px;
             overflow-y: auto;
         }
 
-        .log-container h3 {
-            color: #a0aec0;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .log-entry {
-            color: #e2e8f0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            padding: 5px;
-            border-left: 3px solid #667eea;
-            padding-left: 10px;
-        }
-
-        .log-entry.success {
-            border-left-color: #48bb78;
-            color: #9ae6b4;
-        }
-
-        .log-entry.error {
-            border-left-color: #f56565;
-            color: #fc8181;
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .controls-section {
+                max-height: none;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 Test iframe QuickPostWidget</h1>
-            <p>Widget embeddable pour création de posts</p>
+    <div class="main-container">
+        <div class="widget-section">
+            <h1>Widget QuickPost</h1>
+            <div class="widget-showcase">
+                <div class="widget-container">
+                    <iframe 
+                        id="widget" 
+                        src="http://test-tenant.localhost:3000/widget/quick-post?showContact=true&background=white"
+                        allowtransparency="true">
+                    </iframe>
+                </div>
+            </div>
         </div>
 
-        <div class="iframe-container">
-            <div class="iframe-wrapper">
-                <iframe 
-                    id="quickpost-iframe"
-                    src="http://test-tenant.localhost:3000/widget/quick-post?groups=groups/654537&tags=%23testIframe&showFeed=true&showContact=true"
-                    title="QuickPost Widget"
-                    allowtransparency="true"
-                ></iframe>
+        <div class="controls-section">
+            <h1>Configuration</h1>
+
+            <div class="controls">
+                <h2>Paramètres</h2>
+                
+                <div class="control-group">
+                    <div class="control-item">
+                        <label>URL de base</label>
+                        <input type="text" id="baseUrl" value="http://test-tenant.localhost:3000" placeholder="http://test-tenant.localhost:3000">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-item">
+                        <label>Groups (séparés par virgule)</label>
+                        <input type="text" id="groups" placeholder="groups/123,groups/456">
+                    </div>
+                    <div class="control-item">
+                        <label>Tags (séparés par virgule)</label>
+                        <input type="text" id="tags" placeholder="#FAQ,#Support">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-item">
+                        <label>Placeholder</label>
+                        <input type="text" id="placeholder" placeholder="Posez votre question...">
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showContact" checked>
+                        <label for="showContact">Afficher contact</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showFeed">
+                        <label for="showFeed">Afficher feed</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="backgroundWhite" checked>
+                        <label for="backgroundWhite">Fond blanc</label>
+                    </div>
+                </div>
+
+                <div class="url-display" id="urlDisplay"></div>
+
+                <button class="btn-reload" onclick="reloadWidget()">Recharger le widget</button>
             </div>
 
-            <div class="info-box">
-                <h3>📋 Configuration de l'iframe</h3>
-                <p><strong>URL:</strong> <code>http://test-tenant.localhost:3000/widget/quick-post</code></p>
-                <p><strong>Paramètres:</strong></p>
-                <ul style="margin-left: 20px; color: #4a5568; line-height: 1.8;">
-                    <li><code>groups=groups/654537</code> - ID du groupe</li>
-                    <li><code>tags=%23testIframe</code> - Tag #testIframe (encodé en URL)</li>
-                    <li><code>showFeed=true</code> - Afficher le feed après publication</li>
-                    <li><code>showContact=true</code> - Afficher les champs contact</li>
-                </ul>
-            </div>
-
-            <div class="log-container">
-                <h3>📡 Messages reçus de l'iframe</h3>
-                <div id="log-output">
-                    <div class="log-entry">En attente de messages...</div>
+            <div class="code-section">
+                <h3>Code d'intégration</h3>
+                <div class="code-block">
+                    <button class="btn-copy" onclick="copyCode()">Copier</button>
+                    <pre id="codeDisplay"></pre>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Écouter les messages de l'iframe
-        window.addEventListener('message', function(event) {
-            // Sécurité : vérifier l'origine (adapter selon votre domaine)
-            // if (event.origin !== "http://localhost:5173") return;
-
-            const logOutput = document.getElementById('log-output');
-            const timestamp = new Date().toLocaleTimeString();
+        function buildWidgetUrl() {
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const widgetPath = '/widget/quick-post';
+            const params = new URLSearchParams();
             
-            let logClass = 'log-entry';
-            let message = '';
-
-            if (event.data.type === 'quickpost_created') {
-                logClass += ' success';
-                message = `✅ [${timestamp}] Post créé ! ID: ${event.data.postId}, Groupe: ${event.data.groupIds}`;
-                console.log('Post créé:', event.data);
-            } else if (event.data.type === 'quickpost_closed') {
-                logClass += ' success';
-                message = `🔒 [${timestamp}] Widget fermé`;
-                console.log('Widget fermé');
-            } else {
-                message = `📨 [${timestamp}] Message reçu: ${JSON.stringify(event.data)}`;
+            const groups = document.getElementById('groups').value.trim();
+            if (groups) params.set('groups', groups);
+            
+            const tags = document.getElementById('tags').value.trim();
+            if (tags) params.set('tags', tags);
+            
+            const placeholder = document.getElementById('placeholder').value.trim();
+            if (placeholder) params.set('placeholder', placeholder);
+            
+            if (document.getElementById('showContact').checked) {
+                params.set('showContact', 'true');
+            }
+            
+            if (document.getElementById('showFeed').checked) {
+                params.set('showFeed', 'true');
             }
 
-            const logEntry = document.createElement('div');
-            logEntry.className = logClass;
-            logEntry.textContent = message;
-            
-            // Ajouter en premier
-            logOutput.insertBefore(logEntry, logOutput.firstChild);
-            
-            // Limiter à 10 entrées
-            while (logOutput.children.length > 10) {
-                logOutput.removeChild(logOutput.lastChild);
+            if (document.getElementById('backgroundWhite').checked) {
+                params.set('background', 'white');
             }
+            
+            const fullUrl = baseUrl + widgetPath;
+            const url = params.toString() ? `${fullUrl}?${params.toString()}` : fullUrl;
+            document.getElementById('urlDisplay').textContent = url;
+            
+            // Générer le code d'intégration
+            const code = `<iframe 
+    src="${url}"
+    style="width: 100%; height: 320px; border: none;"
+    allowtransparency="true">
+</iframe>`;
+            document.getElementById('codeDisplay').textContent = code;
+            
+            return url;
+        }
+
+        function reloadWidget() {
+            const iframe = document.getElementById('widget');
+            iframe.src = buildWidgetUrl();
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copié !';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Charger l'URL au démarrage
+        window.addEventListener('load', () => {
+            buildWidgetUrl();
         });
-
-        console.log('🎯 Page de test chargée. En attente de messages de l\'iframe...');
     </script>
 </body>
 </html>
+          
