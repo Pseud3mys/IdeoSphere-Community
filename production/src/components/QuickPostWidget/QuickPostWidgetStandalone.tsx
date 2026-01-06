@@ -6,22 +6,28 @@ import { QuickPostWidget, QuickPostWidgetProps } from './QuickPostWidget';
  * Parse les paramètres URL et les passe au QuickPostWidget.
  * 
  * Exemple d'URL:
- * /widget/quick-post?groups=groups/123,groups/456&tags=%23FAQ,%23Support&showFeed=true&feedSize=6&showContact=false
+ * /widget/quick-post?groups=groups/123,groups/456&tags=%23FAQ,%23Support&showFeed=true&feedSize=6&showContact=false&background=white
  */
 export function QuickPostWidgetStandalone() {
   const [config, setConfig] = useState<QuickPostWidgetProps | null>(null);
 
   useEffect(() => {
-    // Rendre le body transparent pour l'iframe et supprimer tous les espaces
+    // Rendre le body transparent pour l'iframe
     document.body.style.backgroundColor = 'transparent';
     document.documentElement.style.backgroundColor = 'transparent';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.height = 'fit-content';
     document.documentElement.style.height = 'fit-content';
+  }, []);
+
+  useEffect(() => {
     
     // Parser les paramètres URL
     const params = new URLSearchParams(window.location.search);
+    
+    // Gérer le fond du widget (transparent par défaut, ou blanc)
+    const background = params.get('background') || 'transparent';
     
     const parsedConfig: QuickPostWidgetProps = {
       // Groupes (séparés par virgule)
@@ -37,6 +43,9 @@ export function QuickPostWidgetStandalone() {
       
       // Placeholder personnalisé
       placeholder: params.get('placeholder') || undefined,
+      
+      // Fond du widget
+      background: background as 'white' | 'transparent',
       
       // Mode standalone activé
       standalone: true,

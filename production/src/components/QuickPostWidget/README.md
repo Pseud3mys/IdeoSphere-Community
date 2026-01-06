@@ -65,9 +65,11 @@ import { QuickPostWidget } from './components/QuickPostWidget';
 
 ### En iframe (standalone)
 
-URL: `/widget/quick-post?groups=FAQ&tags=Support,Question&showFeed=true&feedSize=6&showContact=false`
+URL: `/widget/quick-post?groups=FAQ&tags=Support,Question&showFeed=true&feedSize=6&showContact=false&background=white`
 
 Le composant `QuickPostWidgetStandalone` parse automatiquement les paramètres.
+
+**Hauteur recommandée : 320px**
 
 ## 🔧 Props
 
@@ -82,6 +84,7 @@ Le composant `QuickPostWidgetStandalone` parse automatiquement les paramètres.
 | `onClose` | `() => void` | - | Callback à la fermeture du widget |
 | `standalone` | `boolean` | `false` | Active le mode iframe |
 | `placeholder` | `string` | - | Texte du placeholder personnalisé |
+| `background` | `'white' \| 'transparent'` | `'transparent'` | Fond du widget (blanc ou transparent) |
 
 ## 🎨 Composants internes
 

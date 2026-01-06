@@ -24,6 +24,9 @@ export interface QuickPostWidgetProps {
   
   // Placeholder personnalisé
   placeholder?: string;
+  
+  // Fond du widget (transparent par défaut)
+  background?: 'white' | 'transparent';
 }
 
 type ViewMode = 'composer' | 'feed' | 'success';
@@ -37,7 +40,8 @@ export function QuickPostWidget({
   onPostCreated,
   onClose,
   standalone = false,
-  placeholder
+  placeholder,
+  background = 'transparent'
 }: QuickPostWidgetProps) {
   const { getCurrentUser } = useEntityStoreSimple();
   const currentUser = getCurrentUser();
@@ -105,7 +109,10 @@ export function QuickPostWidget({
 
   return (
     <div className={standalone ? 'w-full max-w-2xl h-fit' : ''}>
-      <div className={standalone ? 'rounded-lg border border-black/20 shadow-sm overflow-hidden p-6' : ''}>
+      <div className={`
+        ${standalone ? 'rounded-lg border border-black/20 shadow-sm overflow-hidden p-6' : ''}
+        ${background === 'white' ? 'bg-white' : ''}
+      `}>
         {currentView === 'composer' ? (
           <QuickPostComposer
             groupIds={defaultGroupIds}
