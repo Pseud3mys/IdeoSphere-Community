@@ -104,7 +104,7 @@ export function QuickPostWidget({
   };
 
   return (
-    <div className={standalone ? 'w-full max-w-2xl' : ''}>
+    <div className={standalone ? 'w-full max-w-2xl h-fit' : ''}>
       <div className={standalone ? 'rounded-lg border border-black/20 shadow-sm overflow-hidden p-6' : ''}>
         {currentView === 'composer' ? (
           <QuickPostComposer

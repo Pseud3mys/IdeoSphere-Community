@@ -17,29 +17,8 @@ export function QuickPostWidgetStandalone() {
     document.documentElement.style.backgroundColor = 'transparent';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    
-    // Fonction pour envoyer la hauteur au parent
-    const sendHeight = () => {
-      const height = document.body.scrollHeight;
-      if (window.parent !== window) {
-        window.parent.postMessage({
-          type: 'quickpost_resize',
-          height: height
-        }, '*');
-      }
-    };
-
-    // Observer les changements de taille
-    const resizeObserver = new ResizeObserver(() => {
-      sendHeight();
-    });
-    
-    resizeObserver.observe(document.body);
-
-    // Envoyer la hauteur initiale
-    setTimeout(sendHeight, 100);
+    document.body.style.height = 'fit-content';
+    document.documentElement.style.height = 'fit-content';
     
     // Parser les paramètres URL
     const params = new URLSearchParams(window.location.search);
@@ -82,11 +61,6 @@ export function QuickPostWidgetStandalone() {
 
     // Log pour debugging
     console.log('🔧 QuickPostWidget Standalone configuré:', parsedConfig);
-    
-    // Cleanup
-    return () => {
-      resizeObserver.disconnect();
-    };
   }, []);
 
   // Attendre que la config soit prête
