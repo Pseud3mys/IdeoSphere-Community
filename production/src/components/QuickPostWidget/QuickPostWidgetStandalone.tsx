@@ -12,6 +12,10 @@ export function QuickPostWidgetStandalone() {
   const [config, setConfig] = useState<QuickPostWidgetProps | null>(null);
 
   useEffect(() => {
+    // Rendre le body transparent pour l'iframe
+    document.body.style.backgroundColor = 'transparent';
+    document.documentElement.style.backgroundColor = 'transparent';
+    
     // Parser les paramètres URL
     const params = new URLSearchParams(window.location.search);
     

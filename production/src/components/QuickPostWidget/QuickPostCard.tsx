@@ -1,4 +1,5 @@
 import { FeedPostCard } from '../../api/feedService';
+import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Heart } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,8 +19,8 @@ export function QuickPostCard({ post, onSupport, isSupporting = false, isSupport
   };
 
   return (
-    <div className="rounded-lg border border-gray-300 hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm">
-      <div className="p-4">
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
         <div className="space-y-3">
           {/* Contenu du post */}
           <p className="text-sm text-gray-700">
@@ -46,7 +47,7 @@ export function QuickPostCard({ post, onSupport, isSupporting = false, isSupport
             {isSupported ? 'Soutenu' : 'Soutenir'}
           </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
