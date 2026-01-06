@@ -18,7 +18,7 @@ export function QuickPostCard({ post, onSupport, isSupporting = false, isSupport
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="rounded-lg border border-gray-300 hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm">
       <div className="p-4">
         <div className="space-y-3">
           {/* Contenu du post */}

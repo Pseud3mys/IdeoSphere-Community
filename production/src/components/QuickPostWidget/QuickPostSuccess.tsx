@@ -7,8 +7,8 @@ interface QuickPostSuccessProps {
 
 export function QuickPostSuccess({ onCreateAnother }: QuickPostSuccessProps) {
   return (
-    <div className="rounded-xl border border-gray-200">
-      <div className="px-6 pt-6 pb-6">
+    <div>
+      <div className="pt-6 pb-6">
         <div className="text-center space-y-6">
           {/* Icône de succès */}
           <div className="flex justify-center">

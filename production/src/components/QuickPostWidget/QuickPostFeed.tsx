@@ -175,8 +175,8 @@ export function QuickPostFeed({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-gray-200">
-        <div className="px-6 p-12 text-center">
+      <div>
+        <div className="p-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="mt-4 text-sm text-gray-600">Chargement des contributions...</p>
         </div>
@@ -185,8 +185,8 @@ export function QuickPostFeed({
   }
 
   return (
-    <div className="rounded-xl border border-gray-200">
-      <div className="px-6 pt-6">
+    <div>
+      <div className="pt-6">
         <h4 className="text-lg leading-none">
           Merci pour votre contribution ! 🎉
         </h4>
@@ -194,7 +194,7 @@ export function QuickPostFeed({
           Soutenez d'autres contributions similaires
         </p>
       </div>
-      <div className="px-6 pb-6 space-y-4">
+      <div className="pb-6 space-y-4">
         {posts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>Aucune contribution à afficher pour le moment.</p>

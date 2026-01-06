@@ -286,11 +286,11 @@ export function QuickPostComposer({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200">
-      <div className="px-6 pt-6 pb-3">
+    <div>
+      <div className="pb-3">
         <h4 className="text-lg leading-none">Partagez votre contribution</h4>
       </div>
-      <div className="px-6 pb-6">
+      <div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Textarea principale */}
           <div>
