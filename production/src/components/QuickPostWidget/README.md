@@ -2,7 +2,28 @@
 
 Composant réutilisable pour créer rapidement des posts avec support optionnel d'un feed de suggestions.
 
-## 🎯 Fonctionnalités
+## � Principes de design pour widgets embarqués (iframe)
+
+### ✅ Transparence
+- **Body/HTML transparents** : Configuré dans `QuickPostWidgetStandalone.tsx`
+- **Pas de conteneurs avec fond** : Éviter `bg-white`, `bg-gray-*` sur les conteneurs externes
+- **Seuls les éléments interactifs** (Cards, Inputs) ont un fond
+
+### ✅ Dimensionnement correct
+- **Pas de `min-h-screen`** : Le widget doit prendre uniquement la hauteur de son contenu
+- **Largeur contrôlée** : `w-full max-w-2xl mx-auto` sur le conteneur principal
+- **Pas de padding excessif** : Éviter les marges qui créent de l'espace vide autour
+
+### ✅ Structure type
+```tsx
+<div className="w-full max-w-2xl mx-auto">
+  <div className="rounded-lg border border-black/20 shadow-sm p-6">
+    {/* Contenu */}
+  </div>
+</div>
+```
+
+## �🎯 Fonctionnalités
 
 - **Création rapide de posts** : textarea + sélection de type (question/suggestion/autre)
 - **Gestion intelligente des utilisateurs** :
