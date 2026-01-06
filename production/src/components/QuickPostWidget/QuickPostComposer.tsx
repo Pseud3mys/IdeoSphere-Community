@@ -3,7 +3,6 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { MessageSquare, Lightbulb, MessageCircle, Loader2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { createPostOnApi } from '../../api/contentService';
@@ -287,11 +286,11 @@ export function QuickPostComposer({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Partagez votre contribution</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-xl border border-gray-200">
+      <div className="px-6 pt-6 pb-3">
+        <h4 className="text-lg leading-none">Partagez votre contribution</h4>
+      </div>
+      <div className="px-6 pb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Textarea principale */}
           <div>
@@ -394,7 +393,7 @@ export function QuickPostComposer({
             )}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import { fetchGroupFeed } from '../../api/groupService';
 import { toggleSupportOnApi } from '../../api/interactionService';
 import { QuickPostCard } from './QuickPostCard';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -176,26 +175,26 @@ export function QuickPostFeed({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-12 text-center">
+      <div className="rounded-xl border border-gray-200">
+        <div className="px-6 p-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="mt-4 text-sm text-gray-600">Chargement des contributions...</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">
+    <div className="rounded-xl border border-gray-200">
+      <div className="px-6 pt-6">
+        <h4 className="text-lg leading-none">
           Merci pour votre contribution ! 🎉
-        </CardTitle>
+        </h4>
         <p className="text-sm text-gray-600">
           Soutenez d'autres contributions similaires
         </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+      <div className="px-6 pb-6 space-y-4">
         {posts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>Aucune contribution à afficher pour le moment.</p>
@@ -237,7 +236,7 @@ export function QuickPostFeed({
             </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

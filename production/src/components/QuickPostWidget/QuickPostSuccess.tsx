@@ -1,4 +1,3 @@
-import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { CheckCircle2, PlusCircle } from 'lucide-react';
 
@@ -8,8 +7,8 @@ interface QuickPostSuccessProps {
 
 export function QuickPostSuccess({ onCreateAnother }: QuickPostSuccessProps) {
   return (
-    <Card>
-      <CardContent className="pt-6">
+    <div className="rounded-xl border border-gray-200">
+      <div className="px-6 pt-6 pb-6">
         <div className="text-center space-y-6">
           {/* Icône de succès */}
           <div className="flex justify-center">
@@ -38,7 +37,7 @@ export function QuickPostSuccess({ onCreateAnother }: QuickPostSuccessProps) {
             Publier une autre contribution
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
