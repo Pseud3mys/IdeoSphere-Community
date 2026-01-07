@@ -12,7 +12,8 @@ import {
   getIdeaTrendingScore,
   getUniqueEngagementForPost,
   getUniqueEngagementForIdea,
-  getLineageScore
+  getLineageScore,
+  sortByAlternatingTrendingRandom
 } from '../utils/trendingUtils';
 import { 
   Plus,
@@ -137,35 +138,10 @@ export function DiscoveryPage({
       }
       
       default: { // 'default'
-        // Algorithme "par défaut" - mix équilibré récent + engagement (utilisateurs uniques)
+        // Algorithme "par défaut" - Alternance entre tendance et aléatoire
+        // Pattern : random, tendance #1, random, tendance #2, random, tendance #3, etc.
         const allDiscussions = getAllDiscussionTopics();
-        
-        return items.sort((a, b) => {
-          const now = Date.now();
-          const ageA = (now - a.createdAt.getTime()) / (1000 * 60 * 60); // en heures
-          const ageB = (now - b.createdAt.getTime()) / (1000 * 60 * 60);
-          
-          // Engagement basé sur les utilisateurs uniques
-          const uniqueEngagementA = a.type === 'post' 
-            ? getUniqueEngagementForPost(a)
-            : getUniqueEngagementForIdea(a, allDiscussions);
-          const uniqueEngagementB = b.type === 'post'
-            ? getUniqueEngagementForPost(b)
-            : getUniqueEngagementForIdea(b, allDiscussions);
-          
-          // Bonus pour le lineage (idées seulement)
-          const lineageA = a.type === 'idea' ? getLineageScore(a) * 0.3 : 0;
-          const lineageB = b.type === 'idea' ? getLineageScore(b) * 0.3 : 0;
-          
-          const engagementA = uniqueEngagementA + lineageA;
-          const engagementB = uniqueEngagementB + lineageB;
-          
-          // Score combiné : engagement / âge (plus récent = meilleur)
-          const scoreA = engagementA / Math.max(ageA / 24, 0.1); // normaliser par jour
-          const scoreB = engagementB / Math.max(ageB / 24, 0.1);
-          
-          return scoreB - scoreA;
-        });
+        return sortByAlternatingTrendingRandom(items, allDiscussions);
       }
     }
   };

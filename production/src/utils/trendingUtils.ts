@@ -149,3 +149,73 @@ export function sortByTrending<T extends { type: 'post' | 'idea' } & (Post | Ide
     return bScore - aScore; // Ordre décroissant
   });
 }
+
+/**
+ * Algorithme de tri alterné : mélange de tendance et aléatoire
+ * Pattern : random, tendance #1, random, tendance #2, random, tendance #3, etc.
+ * 
+ * @param items - Tableau d'items à trier
+ * @param allDiscussions - Toutes les discussions (pour calculer le score des idées)
+ * @returns Tableau trié avec alternance tendance/aléatoire
+ */
+export function sortByAlternatingTrendingRandom<T extends { type: 'post' | 'idea' } & (Post | Idea)>(
+  items: T[],
+  allDiscussions?: DiscussionTopic[]
+): T[] {
+  if (items.length === 0) return items;
+  
+  // 1. Trier tous les items par tendance pour avoir le classement
+  const sortedByTrending = [...items].sort((a, b) => {
+    const aScore = a.type === 'post' 
+      ? getPostTrendingScore(a as Post)
+      : getIdeaTrendingScore(a as Idea, allDiscussions);
+    
+    const bScore = b.type === 'post'
+      ? getPostTrendingScore(b as Post)
+      : getIdeaTrendingScore(b as Idea, allDiscussions);
+    
+    return bScore - aScore;
+  });
+  
+  // 2. Créer un pool aléatoire (mélanger tous les items)
+  const randomPool = [...items].sort(() => Math.random() - 0.5);
+  
+  // 3. Alterner : random, tendance, random, tendance, etc.
+  const result: T[] = [];
+  let trendingIndex = 0;
+  let randomIndex = 0;
+  const usedIds = new Set<string>();
+  
+  for (let i = 0; i < items.length; i++) {
+    // Alterner : positions impaires = random, positions paires = tendance
+    if (i % 2 === 0) {
+      // Position paire (0, 2, 4...) : prendre un item aléatoire
+      while (randomIndex < randomPool.length) {
+        const item = randomPool[randomIndex];
+        const itemId = 'id' in item ? item.id : '';
+        randomIndex++;
+        
+        if (!usedIds.has(itemId)) {
+          usedIds.add(itemId);
+          result.push(item);
+          break;
+        }
+      }
+    } else {
+      // Position impaire (1, 3, 5...) : prendre le prochain item de tendance
+      while (trendingIndex < sortedByTrending.length) {
+        const item = sortedByTrending[trendingIndex];
+        const itemId = 'id' in item ? item.id : '';
+        trendingIndex++;
+        
+        if (!usedIds.has(itemId)) {
+          usedIds.add(itemId);
+          result.push(item);
+          break;
+        }
+      }
+    }
+  }
+  
+  return result;
+}
