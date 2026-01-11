@@ -53,6 +53,7 @@ export function createApiActions(
   };
 
   return {
+    ensureGuestUserExists,
     /**
      * ⚠️ FONCTION UNIQUE DE CHARGEMENT INITIAL
      * Charge TOUTES les données mockées UNE SEULE FOIS au démarrage
@@ -400,6 +401,8 @@ export function createApiActions(
      */
     loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
+        await ensureGuestUserExists();
+
         const { fetchLineage } = await import('../api/lineageService');
         const result = await fetchLineage(itemId, itemType);
         
@@ -507,6 +510,8 @@ export function createApiActions(
      */
     loadDiscussions: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
+        await ensureGuestUserExists();
+
         const { fetchDiscussions } = await import('../api/detailsService');
         const { discussions, users } = await fetchDiscussions(itemId, itemType);
         
@@ -545,6 +550,8 @@ export function createApiActions(
      */
     loadIdeaRatings: async (ideaId: string) => {
       try {
+        await ensureGuestUserExists();
+
         const { fetchIdeaRatings } = await import('../api/detailsService');
         const ratings = await fetchIdeaRatings(ideaId);
         

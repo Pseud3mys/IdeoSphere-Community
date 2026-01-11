@@ -42,6 +42,8 @@ export function IdeaDetailPageWrapper() {
       setIsLoading(true);
 
       try {
+        await actions.ensureGuestUserExists();
+        
         const { fetchIdeaDetails } = await import('../api/contentService');
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
