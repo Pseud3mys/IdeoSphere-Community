@@ -1,7 +1,8 @@
 import { Group } from "../../types";
 import { Button } from "../ui/button";
 import { GroupTypeBadge } from "./GroupTypeBadge";
-import { Users, Lightbulb, FolderKanban, Check, Settings } from "lucide-react";
+import { ShareGroupDialog } from "../ShareGroupDialog";
+import { Users, Lightbulb, FolderKanban, Check, Settings, Share } from "lucide-react";
 
 interface GroupHeaderProps {
   group: Group;
@@ -41,6 +42,15 @@ export function GroupHeader({
 
               {/* Boutons d'action */}
               <div className="flex gap-2 shrink-0">
+                <ShareGroupDialog groupId={group.id} groupName={group.name}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                </ShareGroupDialog>
                 {isAnimator && onManage && (
                   <Button variant="outline" onClick={onManage} size="sm" className="md:h-10">
                     <Settings className="w-4 h-4 md:mr-2" />

@@ -15,7 +15,7 @@ export const solidarcyConfig: ClientConfig = {
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere Solid\'Arcy',
+    appName: 'IdeoSphere SolidArcy',
     
     // Tagline / Sous-titre
     appTagline: 'Plateforme collaborative d\'intelligence collective',
@@ -409,7 +409,7 @@ Quels bénéfices concrets pour la communauté ?`,
     showBetaBanner: false,
     
     // Activer les newsletters
-    enableNewsletters: true,
+    enableNewsletters: false,
   },
 
   // ============================================================================

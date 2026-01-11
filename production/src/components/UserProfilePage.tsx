@@ -10,6 +10,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { ContactUserDialog } from './ContactUserDialog';
+import { SharePlatformDialog } from './SharePlatformDialog';
 import { 
   User as UserIcon, 
   Edit, 
@@ -31,9 +32,10 @@ import {
   Upload,
   Loader2,
   BarChart3,
-  LogOut
+  LogOut,
+  Share
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { resizeImageTo200x200, validateImageFile, uploadUserAvatar } from '../api/avatarService';
 import { logout } from '../api/authService';
 import { useNavigationActions } from '../hooks/useNavigationActions';
@@ -85,7 +87,7 @@ export function UserProfilePage({
     avgRating: userIdeas.length > 0 
       ? userIdeas.reduce((sum, idea) => {
           const ratings = idea.ratings;
-          if (ratings.length === 0) return sum;
+          if (!ratings || ratings.length === 0) return sum;
           const avgForIdea = ratings.reduce((rSum, r) => rSum + r.value, 0) / ratings.length;
           return sum + avgForIdea;
         }, 0) / userIdeas.length 
@@ -372,6 +374,32 @@ export function UserProfilePage({
               <div className="text-sm text-muted-foreground">Collaborations</div>
             </div>
           </div>
+
+          {/* Section Partager la plateforme */}
+          <div className="mt-6 border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Share className="w-4 h-4 text-primary" />
+                  <h3 className="font-medium">Partager la plateforme</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Invitez vos proches à rejoindre la communauté ! Plus nous sommes nombreux, plus nos voix comptent.
+                </p>
+              </div>
+            </div>
+            
+            <SharePlatformDialog>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                <Share className="w-4 h-4 mr-2" />
+                Partager la plateforme
+              </Button>
+            </SharePlatformDialog>
+          </div>
         </CardContent>
       </Card>
 
@@ -419,30 +447,6 @@ export function UserProfilePage({
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {/* Section Statistiques de la plateforme */}
-            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <BarChart3 className="w-4 h-4 text-blue-600" />
-                    <Label className="font-medium text-blue-800">Statistiques de la plateforme</Label>
-                  </div>
-                  <p className="text-sm text-blue-700">
-                    Consultez les statistiques de santé et d'engagement de la plateforme, explorez les visualisations réseau et exportez les données.
-                  </p>
-                </div>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={goToStatistics}
-                className="bg-white hover:bg-blue-100 border-blue-300"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Voir les statistiques
-              </Button>
-            </div>
 
             {/* Section Déconnexion */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -518,6 +522,31 @@ export function UserProfilePage({
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+            </div>
+
+            {/* Section Statistiques de la plateforme */}
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <BarChart3 className="w-4 h-4 text-blue-600" />
+                    <Label className="font-medium text-blue-800">Statistiques de la plateforme</Label>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Consultez les statistiques de santé et d'engagement de la plateforme, explorez les visualisations réseau et exportez les données.
+                  </p>
+                </div>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={goToStatistics}
+                className="bg-white hover:bg-blue-100 border-blue-300"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Voir les statistiques
+              </Button>
             </div>
 
             {/* Info légale */}

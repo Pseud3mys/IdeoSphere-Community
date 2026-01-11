@@ -6,7 +6,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
-import { UserPlus, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { UserPlus, Loader2, CheckCircle, AlertCircle, Share } from 'lucide-react';
+import { SharePlatformDialog } from './SharePlatformDialog';
 
 interface FieldContactFormProps {
   onSubmit: (contact: {
@@ -155,6 +156,33 @@ export function FieldContactForm({ onSubmit }: FieldContactFormProps) {
             )}
           </Button>
         </form>
+
+        {/* Section Partager la plateforme */}
+        <div className="mt-6 pt-6 border-t">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Share className="w-4 h-4 text-primary" />
+                <h3 className="font-medium text-sm">Partager la plateforme avec QR code</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Générez un QR code pour partager facilement la plateforme. 
+                Idéal pour les actions de terrains ou à imprimer sur un tract.
+              </p>
+            </div>
+          </div>
+          
+          <SharePlatformDialog>
+            <Button 
+              variant="outline" 
+              size="sm"
+              type="button"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Partager le QR code
+            </Button>
+          </SharePlatformDialog>
+        </div>
       </CardContent>
     </Card>
   );
