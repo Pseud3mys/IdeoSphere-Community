@@ -1005,19 +1005,20 @@ export function createApiActions(
             toast.error('Erreur: utilisateur introuvable');
             return null;
           }
-        } else if (!currentUser) {
-          console.error('❌ [hook/apiActions] publishPost: Aucun utilisateur connecté');
-          toast.error('Vous devez être connecté pour publier un post');
-          return null;
         }
+        // ✅ POSTS: Pas besoin de bloquer les invités, ils peuvent publier des posts
 
-        // ✅ Déterminer l'auteur réel : si authorId est fourni, le récupérer du store
+        // ✅ Déterminer l'auteur réel : si authorId est fourni, le récupérer du store, sinon utiliser currentUser (ou null)
         const finalAuthorId = payload.authorId || currentUser?.id;
         const finalAuthor = payload.authorId 
-          ? boundSelectors.getUserById(payload.authorId)!
-          : currentUser!;
+          ? boundSelectors.getUserById(payload.authorId)
+          : currentUser;
         
-        console.log(`✅ [hook/apiActions] publishPost - Auteur: ${finalAuthor.id} ${finalAuthor.name}`);
+        if (finalAuthor) {
+          console.log(`✅ [hook/apiActions] publishPost - Auteur: ${finalAuthor.id} ${finalAuthor.name}`);
+        } else {
+          console.log(`✅ [hook/apiActions] publishPost - Post invité sans auteur`);
+        }
 
         // Extraction automatique des hashtags
         const { extractHashtagsFromMultipleTexts } = await import('../utils/hashtagUtils');

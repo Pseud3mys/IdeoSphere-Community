@@ -23,6 +23,7 @@ interface DiscussionThreadProps {
   onPromoteReplyToPost: (postId: string, replyId: string, newReplyContent: string) => Promise<string | null>;
   onAddReplyToPost: (postId: string, content: string) => Promise<string | null>;
   onPostClick: (postId: string) => void;
+  onTogglePostLike: (postId: string) => void;
 }
 
 export function DiscussionThread({ 
@@ -33,12 +34,60 @@ export function DiscussionThread({
   onLikeReply,
   onPromoteReplyToPost,
   onAddReplyToPost,
-  onPostClick
+  onPostClick,
+  onTogglePostLike
 }: DiscussionThreadProps) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const [replyingToPost, setReplyingToPost] = useState<string | null>(null);
   const [postReplyContent, setPostReplyContent] = useState<Record<string, string>>({});
+  
+  // États pour empêcher les clics multiples
+  const [likingReply, setLikingReply] = useState<Set<string>>(new Set());
+  const [likingPost, setLikingPost] = useState<Set<string>>(new Set());
+
+  // Gérer le like d'une reply avec protection contre les clics multiples
+  const handleLikeReply = async (postId: string, replyId: string) => {
+    if (!currentUser) return;
+    
+    const key = `${postId}-${replyId}`;
+    if (likingReply.has(key)) return; // Déjà en cours
+    
+    setLikingReply(prev => new Set(prev).add(key));
+    try {
+      await onLikeReply(postId, replyId);
+    } finally {
+      // Retirer après un court délai pour éviter les clics trop rapides
+      setTimeout(() => {
+        setLikingReply(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(key);
+          return newSet;
+        });
+      }, 300);
+    }
+  };
+
+  // Gérer le like d'un post avec protection contre les clics multiples
+  const handleLikePost = async (postId: string) => {
+    if (!currentUser) return;
+    
+    if (likingPost.has(postId)) return; // Déjà en cours
+    
+    setLikingPost(prev => new Set(prev).add(postId));
+    try {
+      await onTogglePostLike(postId);
+    } finally {
+      // Retirer après un court délai pour éviter les clics trop rapides
+      setTimeout(() => {
+        setLikingPost(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+      }, 300);
+    }
+  };
 
   // Créer une liste unifiée de tous les éléments de discussion (replies + posts dérivés)
   type DiscussionItem = 
@@ -141,13 +190,18 @@ export function DiscussionThread({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
-                          onClick={() => onLikeReply(post.id, reply.id)}
+                          className={`h-6 w-6 p-0 hover:bg-orange-100 transition-colors ${
+                            reply.upvotes?.includes(currentUser?.id || '') 
+                              ? 'text-orange-600' 
+                              : 'text-gray-400 hover:text-orange-600'
+                          }`}
+                          onClick={() => handleLikeReply(post.id, reply.id)}
+                          disabled={!currentUser || likingReply.has(`${post.id}-${reply.id}`)}
                         >
                           <ArrowUp className="w-3 h-3" />
                         </Button>
                         <span className="text-xs font-medium text-gray-600">
-                          {reply.likes?.length || 0}
+                          {reply.upvotes?.length || 0}
                         </span>
                       </div>
                     </div>
@@ -232,8 +286,13 @@ export function DiscussionThread({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 hover:bg-orange-100 text-gray-400 hover:text-orange-600"
-                          onClick={() => {/* Could toggle like on post */}}
+                          className={`h-6 w-6 p-0 hover:bg-orange-100 transition-colors ${
+                            derivedPost.supporters?.includes(currentUser?.id || '') 
+                              ? 'text-orange-600' 
+                              : 'text-gray-400 hover:text-orange-600'
+                          }`}
+                          onClick={() => handleLikePost(derivedPost.id)}
+                          disabled={!currentUser || likingPost.has(derivedPost.id)}
                         >
                           <ArrowUp className="w-3 h-3" />
                         </Button>
@@ -265,11 +324,16 @@ export function DiscussionThread({
                                   <UserLink user={subReplyAuthor} className="text-gray-500 text-xs hover:text-gray-700" />
                                   <span className="text-xs text-gray-400">{formatTimeAgo(subReply.createdAt)}</span>
                                   <button
-                                    className="ml-auto flex items-center space-x-1 text-gray-400 hover:text-orange-600 transition-colors"
-                                    onClick={() => {/* Like sub-reply */}}
+                                    className={`ml-auto flex items-center space-x-1 transition-colors ${
+                                      subReply.upvotes?.includes(currentUser?.id || '')
+                                        ? 'text-orange-600'
+                                        : 'text-gray-400 hover:text-orange-600'
+                                    }`}
+                                    onClick={() => handleLikeReply(derivedPost.id, subReply.id)}
+                                    disabled={!currentUser || likingReply.has(`${derivedPost.id}-${subReply.id}`)}
                                   >
                                     <ArrowUp className="w-3 h-3" />
-                                    <span className="text-xs">{subReply.likes?.length || 0}</span>
+                                    <span className="text-xs">{subReply.upvotes?.length || 0}</span>
                                   </button>
                                 </div>
                                 <p className="text-gray-900 text-sm leading-relaxed font-normal">{subReply.content}</p>

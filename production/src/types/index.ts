@@ -81,8 +81,8 @@ export interface PostReply {
   authorId: string; // ✅ ID de l'utilisateur au lieu de l'objet complet
   content: string;
   createdAt: Date;
-  likes: string[];
-  likeCount?: number; // ✅ Optionnel - calculé dynamiquement depuis likes.length
+  upvotes: string[]; // ✅ L'API retourne "upvotes"
+  likeCount?: number; // ✅ Optionnel - calculé dynamiquement depuis upvotes.length
   promotedToPostId?: string; // ✅ ID du post créé si cette reply a été promue
 }
 

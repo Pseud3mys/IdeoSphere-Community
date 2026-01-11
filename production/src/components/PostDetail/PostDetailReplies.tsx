@@ -153,7 +153,7 @@ export function PostDetailReplies({
                         <ArrowUp className="w-3 h-3" />
                       </Button>
                       <span className="text-xs font-medium text-gray-600">
-                        {reply.likes?.length || 0}
+                        {reply.upvotes?.length || 0}
                       </span>
                     </div>
                   </div>

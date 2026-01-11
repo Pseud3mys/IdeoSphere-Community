@@ -261,7 +261,7 @@ export const transformCommentToReply = (raw: RawComment): PostReply => ({
   authorId: raw.authorId,
   content: raw.content,
   createdAt: new Date(raw.createdAt),
-  likes: raw.upvotes || [],
+  upvotes: raw.upvotes || [], // ✅ Garder le nom "upvotes" comme l'API
   likeCount: (raw.upvotes || []).length
 });
 

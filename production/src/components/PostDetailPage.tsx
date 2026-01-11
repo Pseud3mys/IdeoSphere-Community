@@ -240,6 +240,7 @@ export function PostDetailPage({
           onPromoteReplyToPost={actions.promoteReplyToPost}
           onAddReplyToPost={actions.addPostReply}
           onPostClick={onPostClick}
+          onTogglePostLike={actions.togglePostLike}
         />
 
         {/* Zone de texte pour ajouter une reply - en dessous des commentaires */}

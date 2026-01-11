@@ -11,9 +11,12 @@ import { CreateIdeaSidebar } from './create-idea/CreateIdeaSidebar';
 import { 
   MessageSquare,
   Lightbulb,
-  Archive
+  Archive,
+  Lock,
+  UserPlus
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
+import { registerWithSSO, loginWithSSO } from '../api/authService';
 
 interface CreateIdeaPageProps {
   sourcePost?: Post; // Post source si on vient d'un post
@@ -144,6 +147,14 @@ export function CreateIdeaPage({ sourcePost, prefilledParentIds, prefilledGroupI
     toast.success('Brouillon supprimé');
   };
 
+  const handleSignupClick = async () => {
+    await registerWithSSO();
+  };
+  
+  const handleLoginClick = async () => {
+    await loginWithSSO();
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header avec composant séparé */}
@@ -203,15 +214,53 @@ export function CreateIdeaPage({ sourcePost, prefilledParentIds, prefilledGroupI
               onSwitchToIdea={switchToIdeaMode}
             />
           ) : (
-            <CreateCompleteIdea
-              sourcePost={sourcePost}
-              prefilledParentIds={prefilledParentIds}
-              prefilledGroupIds={prefilledGroupIds}
-              onClearPrefilled={onClearPrefilled}
-              onSaveDraft={handleSaveDraft}
-              loadedDraft={loadedDraft}
-              onDraftLoaded={() => setLoadedDraft(null)}
-            />
+            // Afficher le message de connexion SEULEMENT pour le mode "idea"
+            (!currentUser || !currentUser.isRegistered) ? (
+              <Card className="border-2 border-dashed border-gray-300 bg-gray-50/50">
+                <CardContent className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="rounded-full bg-blue-100 p-4 mb-4">
+                    <Lock className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">
+                    Connexion requise pour créer un projet
+                  </h2>
+                  <p className="text-gray-600 text-center mb-6 max-w-md">
+                    Vous devez créer un compte ou vous connecter pour publier des projets complets sur la plateforme.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      onClick={handleSignupClick}
+                      size="lg"
+                      className="gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Créer un compte
+                    </Button>
+                    <Button 
+                      onClick={handleLoginClick}
+                      variant="outline"
+                      size="lg"
+                      className="gap-2"
+                    >
+                      Se connecter
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4 text-center">
+                    Les posts rapides sont accessibles sans compte.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <CreateCompleteIdea
+                sourcePost={sourcePost}
+                prefilledParentIds={prefilledParentIds}
+                prefilledGroupIds={prefilledGroupIds}
+                onClearPrefilled={onClearPrefilled}
+                onSaveDraft={handleSaveDraft}
+                loadedDraft={loadedDraft}
+                onDraftLoaded={() => setLoadedDraft(null)}
+              />
+            )
           )}
         </div>
       </div>
