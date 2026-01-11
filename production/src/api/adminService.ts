@@ -1,6 +1,7 @@
 // src/api/adminService.ts
 import apiClient from './apiClient';
 import { createUnfinalizedAccountOnApi } from './authService';
+import { createPostOnApi } from './contentService';
 
 /**
  * Type pour le contenu signalé
@@ -19,7 +20,7 @@ export interface ReportedContent {
 export interface FieldContact {
   name: string;
   email: string;
-  neighborhood?: string;
+  firstPost?: string;
 }
 
 /**
@@ -71,7 +72,7 @@ export async function handleReport(
 export async function fetchReportedContent(
   limit: number = 20,
   offset: number = 0
-): Promise<{ data: ReportedContent[]; total: number; limit: number; offset: number } | null> {
+): Promise<{ data: ReportedContent[]; total: number; limit: number; offset: number; unauthorized?: boolean } | null> {
   console.log(`🔄 [Admin API] Récupération des contenus signalés (limit: ${limit}, offset: ${offset})`);
   try {
     const response = await apiClient.get('/admin/reported-content', {
@@ -79,7 +80,12 @@ export async function fetchReportedContent(
     });
     console.log(`✅ [Admin API] ${response.data.total} contenus signalés récupérés`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Vérifier si c'est une erreur 403 (non autorisé)
+    if (error.response?.status === 403) {
+      console.warn(`⚠️ [Admin API] Accès refusé (403) - Utilisateur non autorisé`);
+      return { data: [], total: 0, limit, offset, unauthorized: true };
+    }
     console.error(`❌ [Admin API] Erreur lors de la récupération des contenus signalés:`, error);
     return null;
   }
@@ -88,21 +94,45 @@ export async function fetchReportedContent(
 /**
  * Ajoute un nouveau contact terrain en créant un compte invité
  * Utilise createUnfinalizedAccountOnApi de authService
+ * Si firstPost est fourni, crée également un post au nom de cet utilisateur
  */
-export async function addFieldContact(contact: FieldContact): Promise<{ success: boolean; data?: any }> {
+export async function addFieldContact(contact: FieldContact): Promise<{ success: boolean; data?: any; error?: string }> {
   console.log(`🔄 [Admin API] Ajout d'un nouveau contact terrain (compte invité)`);
   try {
-    // Créer un compte invité via l'API d'auth
+    // 1. Créer un compte invité via l'API d'auth
     const user = await createUnfinalizedAccountOnApi({
       name: contact.name,
-      email: contact.email,
-      address: contact.neighborhood // Le quartier devient l'adresse
+      email: contact.email
     });
     
     console.log(`✅ [Admin API] Contact terrain (compte invité) créé avec succès:`, user);
+    
+    // 2. Si firstPost est fourni, créer le post au nom de cet utilisateur
+    if (contact.firstPost && contact.firstPost.trim()) {
+      console.log(`🔄 [Admin API] Création du premier post pour le contact terrain...`);
+      const post = await createPostOnApi({
+        authorId: user.id,
+        content: contact.firstPost.trim(),
+        type: 'general'
+      });
+      
+      if (post) {
+        console.log(`✅ [Admin API] Premier post créé avec succès:`, post.id);
+      } else {
+        console.warn(`⚠️ [Admin API] Impossible de créer le premier post`);
+      }
+    }
+    
     return { success: true, data: user };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`❌ [Admin API] Erreur lors de l'ajout du contact terrain:`, error);
+    
+    // Détecter l'erreur 409 (email déjà existant)
+    if (error.response?.status === 409) {
+      console.warn(`⚠️ [Admin API] Email déjà existant (409 CONFLICT)`);
+      return { success: false, error: 'EMAIL_EXISTS' };
+    }
+    
     return { success: false };
   }
 }

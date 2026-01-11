@@ -91,11 +91,10 @@ export function AuthButtons({
       <div className="flex items-center gap-2">
         <button
           onClick={handleLoginClick}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+          className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
           title="Se connecter"
         >
-          <LogIn className="w-4 h-4" />
-          <span className="hidden sm:inline">Se connecter</span>
+          Se connecter
         </button>
         <button
           onClick={handleSignupClick}

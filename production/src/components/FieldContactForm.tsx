@@ -13,15 +13,15 @@ interface FieldContactFormProps {
   onSubmit: (contact: {
     name: string;
     email: string;
-    neighborhood?: string;
-  }) => Promise<boolean>;
+    firstPost?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function FieldContactForm({ onSubmit }: FieldContactFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    neighborhood: ''
+    firstPost: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -46,22 +46,24 @@ export function FieldContactForm({ onSubmit }: FieldContactFormProps) {
     setIsSubmitting(true);
 
     try {
-      const success = await onSubmit({
+      const result = await onSubmit({
         name: formData.name.trim(),
         email: formData.email.trim(),
-        neighborhood: formData.neighborhood.trim() || undefined
+        firstPost: formData.firstPost.trim() || undefined
       });
 
-      if (success) {
+      if (result.success) {
         setSuccessMessage('Contact ajouté avec succès !');
         // Réinitialiser le formulaire
         setFormData({
           name: '',
           email: '',
-          neighborhood: ''
+          firstPost: ''
         });
         // Effacer le message après 3 secondes
         setTimeout(() => setSuccessMessage(null), 3000);
+      } else if (result.error === 'EMAIL_EXISTS') {
+        setErrorMessage('Cet email est déjà associé à un compte existant');
       } else {
         setErrorMessage('Erreur lors de l\'ajout du contact');
       }
@@ -125,17 +127,20 @@ export function FieldContactForm({ onSubmit }: FieldContactFormProps) {
                 required
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="neighborhood">Quartier</Label>
-              <Input
-                id="neighborhood"
-                type="text"
-                value={formData.neighborhood}
-                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                placeholder="Quartier de résidence"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="firstPost">1er post</Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Ce message sera publié automatiquement au nom de cette personne lors de son premier accès à la plateforme.
+            </p>
+            <Textarea
+              id="firstPost"
+              value={formData.firstPost}
+              onChange={(e) => setFormData({ ...formData, firstPost: e.target.value })}
+              placeholder="Entrez le premier message à publier..."
+              rows={4}
+            />
           </div>
 
           <Button

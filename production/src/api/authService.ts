@@ -223,3 +223,55 @@ export function getUserProfileFromToken(): User | null {
   return null;
 }
 
+/**
+ * Vérifie si l'utilisateur a le rôle admin pour le tenant actuel
+ * Le format du rôle est "admin:{tenant}" (ex: "admin:client")
+ * Le tenant est extrait de la première partie de l'URL (ex: client.localhost)
+ * 
+ * IMPORTANT: Retourne false si l'utilisateur n'est pas authentifié via Keycloak
+ * (les utilisateurs invités n'ont jamais accès à l'admin)
+ */
+export function hasAdminRole(): boolean {
+  // 1. Vérifier d'abord si l'utilisateur est authentifié via Keycloak
+  if (!keycloak.authenticated) {
+    console.warn('⚠️ [AUTH] Utilisateur non authentifié via Keycloak (utilisateur invité)');
+    return false;
+  }
+
+  // 2. Vérifier si on a un token parsé
+  if (!keycloak.tokenParsed) {
+    console.warn('⚠️ [AUTH] Pas de token parsé disponible');
+    return false;
+  }
+
+  // 3. Extraire le tenant depuis l'URL (première partie du domaine)
+  const hostname = window.location.hostname;
+  const tenant = hostname.split('.')[0]; // Ex: "client" depuis "client.localhost"
+  
+  // Le rôle admin est "admin:{tenant}"
+  const adminRole = `admin:${tenant}`;
+  
+  console.log(`🔍 [AUTH] Vérification du rôle: ${adminRole}`);
+  
+  // 4. Vérifier dans resource_access (rôles clients)
+  const resourceAccess = keycloak.tokenParsed.resource_access || {};
+  const clientId = keycloak.clientId || 'ideosphere-front';
+  const clientRoles = resourceAccess[clientId]?.roles || [];
+  
+  // 5. Vérifier aussi dans les realm_access (rôles du realm)
+  const realmRoles = keycloak.tokenParsed.realm_access?.roles || [];
+  
+  // 6. Chercher dans les deux listes
+  const hasRole = clientRoles.includes(adminRole) || realmRoles.includes(adminRole);
+  
+  if (hasRole) {
+    console.log(`✅ [AUTH] Utilisateur a le rôle ${adminRole}`);
+  } else {
+    console.log(`❌ [AUTH] Utilisateur n'a pas le rôle ${adminRole}`);
+    console.log(`📋 [AUTH] Rôles client disponibles:`, clientRoles);
+    console.log(`📋 [AUTH] Rôles realm disponibles:`, realmRoles);
+  }
+  
+  return hasRole;
+}
+

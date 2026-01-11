@@ -16,7 +16,7 @@ interface AdminPageProps {
   reportedContent: ReportedContent[];
   isLoading: boolean;
   // Props pour les contacts terrain
-  onAddContact: (contact: FieldContact) => Promise<boolean>;
+  onAddContact: (contact: FieldContact) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function AdminPage({
