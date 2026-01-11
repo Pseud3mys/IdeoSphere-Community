@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { QrCode, Copy, Check, Users, Share, Smartphone } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface CollaborationQRCodeProps {
   projectId: string;

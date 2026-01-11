@@ -5,7 +5,6 @@ import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Button } from './ui/button';
 import { SourceIndicatorBanner } from './create-idea/SourceIndicatorBanner';
 import { BasicIdeaForm } from './create-idea/BasicIdeaForm';
-import { CollaborationForm } from './create-idea/CollaborationForm';
 import { PublishConfirmationDialog } from './create-idea/PublishConfirmationDialog';
 import { Quote, Send } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
@@ -472,7 +471,6 @@ ${postIntro}
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Formulaire de base */}
         <BasicIdeaForm
           title={title}
           setTitle={setTitle}
@@ -484,18 +482,12 @@ ${postIntro}
           setLocation={setLocation}
           groupIds={groupIds}
           setGroupIds={setGroupIds}
-          sourcePost={derivedSourcePost || undefined}
-        />
-
-        {/* Section collaboration */}
-        <CollaborationForm
-          selectedCoCreators={selectedCoCreators}
-          setSelectedCoCreators={setSelectedCoCreators}
+          // AJOUTER CES PROPS ICI :
           selectedParentIds={selectedParentIds}
           setSelectedParentIds={setSelectedParentIds}
-          users={users}
           ideas={ideas}
           posts={posts}
+          sourcePost={derivedSourcePost || undefined}
         />
 
         {/* Actions */}

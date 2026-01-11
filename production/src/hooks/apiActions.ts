@@ -570,6 +570,9 @@ export function createApiActions(
      */
     loadIdeaTabData: async (ideaId: string, tabType: 'description' | 'discussions' | 'evaluation' | 'versions' | 'lineage' | 'related') => {
       try {
+        // S'assurer qu'un utilisateur existe
+        await ensureGuestUserExists();
+
         if (tabType === 'versions') {
           // 1. APPELER L'API pour obtenir les données de lineage (depuis données mockées)
           const { fetchLineage } = await import('../api/lineageService');
@@ -665,28 +668,36 @@ export function createApiActions(
           
           // Ajouter les enfants au store
           lineageData.children.forEach(child => {
-            if (child.type === 'idea') {
-              const existingIdea = boundSelectors.getIdeaById(child.id);
+            // ✅ Utilisation d'un Type Guard plus explicite pour TypeScript
+            const isIdea = 'summary' in child && 'creatorIds' in child;
+
+            if (isIdea) {
+              // On transtype explicitement en Idea pour accéder aux propriétés sans erreur
+              const childIdea = child as Idea;
+              const existingIdea = boundSelectors.getIdeaById(childIdea.id);
+              
+              // On prépare l'objet avec les types attendus
+              const ideaToStore: Idea = {
+                ...childIdea,
+                // Conversion de la date si nécessaire
+                createdAt: childIdea.createdAt instanceof Date ? childIdea.createdAt : new Date(childIdea.createdAt),
+                
+                // Forcer le lien parent pour que IdeaVersionsTab le trouve
+                sourceIdeas: childIdea.sourceIdeas?.includes(ideaId) 
+                  ? childIdea.sourceIdeas 
+                  : [...(childIdea.sourceIdeas || []), ideaId]
+              };
+
               if (!existingIdea) {
-                console.log(`📥 [apiActions] Ajout idée dérivée au store: ${child.title}`);
-                actions.addIdea({
-                  id: child.id,
-                  title: child.title || '',
-                  summary: child.summary || '',
-                  description: '',
-                  creators: child.authors || [],
-                  createdAt: child.createdAt,
-                  supportCount: 0,
-                  supporters: [],
-                  ratings: [],
-                  ratingCriteria: [],
-                  tags: [],
-                  status: 'published',
-                  sourceIdeas: [ideaId], // ✅ L'idée dérivée provient de l'idée actuelle
-                  sourcePosts: [],
-                  derivedIdeas: [],
-                  discussionIds: []
-                });
+                console.log(`📥 [apiActions] Ajout version dérivée: ${childIdea.title}`);
+                actions.addIdea(ideaToStore);
+              } else {
+                // Mise à jour si le lien vers l'idée actuelle est manquant
+                if (!existingIdea.sourceIdeas?.includes(ideaId)) {
+                  actions.updateIdea(childIdea.id, { 
+                    sourceIdeas: ideaToStore.sourceIdeas 
+                  });
+                }
               }
             }
           });
@@ -733,109 +744,53 @@ export function createApiActions(
           console.log(`📊 [apiActions] Construction du résultat depuis le store pour: ${currentIdea.title}`);
           
           // 5. CONSTRUIRE le résultat en utilisant lineageData et le store
-          console.log(`📊 [apiActions] Début construction, ${lineageData.parents.length} parents à traiter`);
-          const parentsFromStore = lineageData.parents.map(parent => {
-            console.log(`  🔍 [apiActions] Traitement parent:`, { 
-              id: parent.id, 
-              hasTitle: 'title' in parent, 
-              hasSummary: 'summary' in parent,
-              hasCreatorIds: 'creatorIds' in parent,
-              hasContent: 'content' in parent,
-              hasAuthorId: 'authorId' in parent,
-              hasPosts: 'posts' in parent,
-              hasType: 'type' in parent
-            });
-            
-            // ✅ Type guard pour déterminer le type de l'entité de manière robuste
-            if ('summary' in parent && 'creatorIds' in parent) {
-              // C'est une Idea (a summary ET creatorIds)
-              console.log(`    ✓ Identifié comme Idea: ${parent.id}`);
-              const idea = boundSelectors.getIdeaById(parent.id);
-              if (!idea) {
-                console.log(`    ❌ Idea ${parent.id} non trouvée dans le store`);
-                return null;
-              }
-              
-              // Résoudre les créateurs depuis les IDs
-              const authors = (idea.creatorIds || [])
-                .map(id => boundSelectors.getUserById(id))
-                .filter(Boolean) as User[];
-              
-              return {
-                id: idea.id,
-                type: 'idea' as const,
-                title: idea.title,
-                summary: idea.summary,
-                authors: authors,
-                createdAt: idea.createdAt,
-                level: -1,
-                relationshipType: 'parent' as const
-              };
-            } else if ('content' in parent && 'authorId' in parent && 'supporters' in parent) {
-              // C'est un Post (a content, authorId ET supporters)
-              console.log(`    ✓ Identifié comme Post: ${parent.id}`);
-              const post = boundSelectors.getPostById(parent.id);
-              if (!post) {
-                console.log(`    ❌ Post ${parent.id} non trouvé dans le store`);
-                return null;
-              }
-              
-              const author = boundSelectors.getUserById(post.authorId);
-              return {
-                id: post.id,
-                type: 'post' as const,
-                content: post.content,
-                authors: author ? [author] : [],
-                createdAt: post.createdAt,
-                level: -1,
-                relationshipType: 'parent' as const
-              };
-            } else if ('posts' in parent && 'type' in parent) {
-              // C'est un DiscussionTopic (a posts ET type)
-              console.log(`    ✓ Identifié comme DiscussionTopic: ${parent.id}`);
-              const discussion = boundSelectors.getDiscussionTopicById(parent.id);
-              if (!discussion) {
-                console.log(`    ❌ Discussion ${parent.id} non trouvée dans le store`);
-                return null;
-              }
-              
-              const author = boundSelectors.getUserById(discussion.authorId);
-              return {
-                id: discussion.id,
-                type: 'discussion' as const,
-                title: discussion.title,
-                content: discussion.content,
-                authors: author ? [author] : [],
-                createdAt: discussion.createdAt || discussion.timestamp,
-                level: -1,
-                relationshipType: 'parent' as const
-              };
-            }
-            console.log(`    ⚠️ Type de parent non reconnu pour ${parent.id}`);
-            return null;
-          }).filter(Boolean);
-          
-          const childrenFromStore = lineageData.children.map(child => {
-            if (child.type === 'idea') {
-              const idea = boundSelectors.getIdeaById(child.id);
-              // Résoudre les créateurs depuis les IDs
-              const authors = (idea.creatorIds || [])
-                .map(id => boundSelectors.getUserById(id))
-                .filter(Boolean) as User[];
-              
-              return idea ? {
-                id: idea.id,
-                type: 'idea' as const,
-                title: idea.title,
-                summary: idea.summary,
-                authors: authors,
-                createdAt: idea.createdAt,
-                level: 1,
-                relationshipType: 'child' as const
-              } : null;
+        const parentsFromStore = lineageData.parents.map(parent => {
+            // Utiliser directement l'objet 'parent' de l'API s'il n'est pas encore dans le store
+            const authorId = 'authorId' in parent ? parent.authorId : ('creatorIds' in parent ? parent.creatorIds[0] : null);
+            const author = authorId ? boundSelectors.getUserById(authorId) : null;
+
+            if ('summary' in parent) { // Idea
+                return {
+                    id: parent.id,
+                    type: 'idea' as const,
+                    title: parent.title,
+                    summary: parent.summary,
+                    authors: author ? [author] : [],
+                    createdAt: new Date(parent.createdAt),
+                    level: -1,
+                    relationshipType: 'parent' as const
+                };
+            } else if ('content' in parent) { // Post ou Discussion
+                return {
+                    id: parent.id,
+                    type: ('type' in parent ? 'discussion' : 'post') as any,
+                    title: parent.title || '',
+                    content: parent.content,
+                    authors: author ? [author] : [],
+                    createdAt: new Date(parent.createdAt || (parent as any).timestamp),
+                    level: -1,
+                    relationshipType: 'parent' as const
+                };
             }
             return null;
-          }).filter(Boolean);
+        }).filter(Boolean);
+
+        const childrenFromStore = lineageData.children.map(child => {
+            if ('summary' in child) {
+                const author = child.creatorIds?.[0] ? boundSelectors.getUserById(child.creatorIds[0]) : null;
+                return {
+                    id: child.id,
+                    type: 'idea' as const,
+                    title: child.title,
+                    summary: child.summary,
+                    authors: author ? [author] : [],
+                    createdAt: new Date(child.createdAt),
+                    level: 1,
+                    relationshipType: 'child' as const
+                };
+            }
+            return null;
+        }).filter(Boolean);
           
           console.log(`✅ [apiActions] Construit lineage depuis le store: ${parentsFromStore.length} parents, ${childrenFromStore.length} enfants`);
           

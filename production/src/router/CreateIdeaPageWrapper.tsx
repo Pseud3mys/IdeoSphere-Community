@@ -55,7 +55,7 @@ export function CreateIdeaPageWrapper() {
   }
   
   const prefilledParentIds = Array.from(allPrefilledParentIds);
-  console.log('🔄 [CreateIdeaPageWrapper] Fusion des contenus pré-remplis:', prefilledParentIds);
+  //console.log('🔄 [CreateIdeaPageWrapper] Fusion des contenus pré-remplis:', prefilledParentIds);
 
   return (
     <CreateIdeaPage

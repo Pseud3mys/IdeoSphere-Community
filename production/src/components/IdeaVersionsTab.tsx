@@ -27,7 +27,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface IdeaVersionsTabProps {
   idea: Idea;
@@ -61,16 +61,16 @@ export function IdeaVersionsTab({
   const versionSupports = useMemo(() => {
     const supports: {[key: string]: boolean} = {};
     versionIdeas.forEach(versionIdea => {
-      supports[versionIdea.id] = versionIdea.supporters?.includes(currentUser.id) || false; // ✅ supporters est maintenant string[]
+      supports[versionIdea.id] = versionIdea.supporters?.includes(currentUser?.id || '') || false;
     });
     return supports;
-  }, [versionIdeas, currentUser.id]);
+  }, [versionIdeas, currentUser?.id]);
 
   const handleSupport = (versionId: string) => {
     actions.toggleIdeaSupport(versionId);
   };
 
-  const isCreator = idea.creatorIds?.includes(currentUser.id) || false;
+  const isCreator = currentUser?.id ? idea.creatorIds?.includes(currentUser.id) : false;
 
   // Récupérer les discussions pour cette idée depuis le store
   const discussionTopics = allDiscussions.filter(topic => 
@@ -218,7 +218,7 @@ export function IdeaVersionsTab({
       {/* Versions List - maintenant ce sont des idées normales */}
       <div className="space-y-4">
         {versionIdeas.map(versionIdea => {
-          const isAuthor = versionIdea.creatorIds?.includes(currentUser.id) || false;
+          const isAuthor = versionIdea.creatorIds?.includes(currentUser?.id || "") || false;
           const hasSupported = versionSupports[versionIdea.id] || false;
 
           return (
