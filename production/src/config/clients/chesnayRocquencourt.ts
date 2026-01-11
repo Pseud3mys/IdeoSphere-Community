@@ -132,16 +132,16 @@ export const chesnayRocquencourtConfig: ClientConfig = {
       totalSupports: 'soutiens reçus',
     },
     
-    // Section propositions récentes
+    // Section propositions mises en avant
     recentPropositions: {
-      title: 'Propositions récemment partagées',
-      loadingText: 'Chargement des propositions récentes...',
-      emptyText: 'Aucune proposition récente trouvée.',
+      title: 'Propositions mises en avant',
+      loadingText: 'Chargement des propositions mises en avant...',
+      emptyText: 'Aucune proposition mise en avant pour le moment.',
     },
     
     // Call-to-Action principal
     cta: {
-      buttonText: 'Explorer toutes les propositions',
+      buttonText: 'Voir plus de propositions',
     },
   },
 

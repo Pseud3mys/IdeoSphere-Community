@@ -135,35 +135,16 @@ export const betaConfig: ClientConfig = {
       totalSupports: 'votes exprimés',
     },
     
-    // Section propositions récentes
+    // Section propositions mises en avant
     recentPropositions: {
-      title: 'Propositions récentes de nos membres',
-      loadingText: 'Chargement des propositions...',
-      emptyText: 'Aucune proposition récente. Soyez le premier à contribuer !',
+      title: 'Propositions mises en avant',
+      loadingText: 'Chargement des propositions mises en avant...',
+      emptyText: 'Aucune proposition mise en avant pour le moment.',
     },
     
     // Call-to-Action principal
     cta: {
-      buttonText: 'Explorer toutes les propositions',
-      
-      // Badges de valeurs
-      values: [
-        'Démocratie participative',
-        'Co-construction du programme',
-        'Décisions collectives',
-      ],
-    },
-    
-    // Section "Envie de découvrir"
-    discover: {
-      title: 'Envie de découvrir notre plateforme ?',
-      description: 'Explorez les propositions déjà partagées par nos membres et découvrez comment participer à la construction de notre programme collectif.',
-      buttonText: 'Accès démo instantané',
-      features: [
-        'Aucune inscription requise',
-        'Accès immédiat',
-        'Toutes les fonctionnalités',
-      ],
+      buttonText: 'Voir plus de propositions',
     },
   },
 
