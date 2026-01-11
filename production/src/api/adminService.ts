@@ -26,12 +26,13 @@ export interface FieldContact {
  * Signale un contenu
  * POST /api/admin/report
  */
-export async function reportContent(contentType: 'ideas' | 'posts', contentId: string): Promise<boolean> {
+export async function reportContent(contentType: 'ideas' | 'posts', contentId: string, userId: string): Promise<boolean> {
   console.log(`🔄 [Admin API] Signalement de ${contentType}/${contentId}`);
   try {
     await apiClient.post('/admin/report', {
       contentType,
-      contentId
+      contentId,
+      userId
     });
     console.log(`✅ [Admin API] Contenu signalé avec succès`);
     return true;

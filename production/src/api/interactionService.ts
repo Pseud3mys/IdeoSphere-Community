@@ -259,7 +259,7 @@ export async function reportContentOnApi(contentType: 'idea' | 'post', contentId
   try {
     const { reportContent } = await import('./adminService');
     const contentTypeForApi = contentType === 'idea' ? 'ideas' : 'posts';
-    return await reportContent(contentTypeForApi, contentId);
+    return await reportContent(contentTypeForApi, contentId, userId);
   } catch (error) {
     console.error(`❌ Error reporting content ${contentId}:`, error);
     return false;
