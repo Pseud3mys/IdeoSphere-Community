@@ -13,7 +13,7 @@ import {
   getUniqueEngagementForPost,
   getUniqueEngagementForIdea,
   getLineageScore,
-  sortByAlternatingTrendingRandom
+  sortByAlternatingRecentTrending
 } from '../utils/trendingUtils';
 import { 
   Plus,
@@ -141,7 +141,7 @@ export function DiscoveryPage({
         // Algorithme "par défaut" - Alternance entre tendance et aléatoire
         // Pattern : random, tendance #1, random, tendance #2, random, tendance #3, etc.
         const allDiscussions = getAllDiscussionTopics();
-        return sortByAlternatingTrendingRandom(items, allDiscussions);
+        return sortByAlternatingRecentTrending(items, allDiscussions);
       }
     }
   };

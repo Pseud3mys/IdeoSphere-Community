@@ -151,71 +151,68 @@ export function sortByTrending<T extends { type: 'post' | 'idea' } & (Post | Ide
 }
 
 /**
- * Algorithme de tri alterné : mélange de tendance et aléatoire
- * Pattern : random, tendance #1, random, tendance #2, random, tendance #3, etc.
- * 
- * @param items - Tableau d'items à trier
- * @param allDiscussions - Toutes les discussions (pour calculer le score des idées)
- * @returns Tableau trié avec alternance tendance/aléatoire
+ * Algorithme de tri alterné : mélange de récence et de popularité.
+ * Pattern : 1er plus récent, 1er plus populaire, 2ème plus récent, 2ème plus populaire, etc.
  */
-export function sortByAlternatingTrendingRandom<T extends { type: 'post' | 'idea' } & (Post | Idea)>(
+export function sortByAlternatingRecentTrending<T extends { type: 'post' | 'idea' } & (Post | Idea)>(
   items: T[],
   allDiscussions?: DiscussionTopic[]
 ): T[] {
   if (items.length === 0) return items;
-  
-  // 1. Trier tous les items par tendance pour avoir le classement
+
+  // 1. Trier par Popularité (Trending)
   const sortedByTrending = [...items].sort((a, b) => {
     const aScore = a.type === 'post' 
-      ? getPostTrendingScore(a as Post)
+      ? getPostTrendingScore(a as Post) 
       : getIdeaTrendingScore(a as Idea, allDiscussions);
-    
-    const bScore = b.type === 'post'
-      ? getPostTrendingScore(b as Post)
+    const bScore = b.type === 'post' 
+      ? getPostTrendingScore(b as Post) 
       : getIdeaTrendingScore(b as Idea, allDiscussions);
-    
     return bScore - aScore;
   });
-  
-  // 2. Créer un pool aléatoire (mélanger tous les items)
-  const randomPool = [...items].sort(() => Math.random() - 0.5);
-  
-  // 3. Alterner : random, tendance, random, tendance, etc.
+
+  // 2. Trier par Récence (Date)
+  const sortedByRecent = [...items].sort((a, b) => 
+    b.createdAt.getTime() - a.createdAt.getTime()
+  );
+
   const result: T[] = [];
   let trendingIndex = 0;
-  let randomIndex = 0;
+  let recentIndex = 0;
   const usedIds = new Set<string>();
-  
+
+  // On remplit le tableau en alternant
   for (let i = 0; i < items.length; i++) {
-    // Alterner : positions impaires = random, positions paires = tendance
+    // Positions 0, 2, 4... : Priorité au plus récent pour la fraîcheur
     if (i % 2 === 0) {
-      // Position paire (0, 2, 4...) : prendre un item aléatoire
-      while (randomIndex < randomPool.length) {
-        const item = randomPool[randomIndex];
-        const itemId = 'id' in item ? item.id : '';
-        randomIndex++;
-        
-        if (!usedIds.has(itemId)) {
-          usedIds.add(itemId);
+      while (recentIndex < sortedByRecent.length) {
+        const item = sortedByRecent[recentIndex++];
+        if (!usedIds.has(item.id)) {
+          usedIds.add(item.id);
           result.push(item);
           break;
         }
       }
-    } else {
-      // Position impaire (1, 3, 5...) : prendre le prochain item de tendance
+    } 
+    // Positions 1, 3, 5... : Priorité au plus populaire (Trending)
+    else {
       while (trendingIndex < sortedByTrending.length) {
-        const item = sortedByTrending[trendingIndex];
-        const itemId = 'id' in item ? item.id : '';
-        trendingIndex++;
-        
-        if (!usedIds.has(itemId)) {
-          usedIds.add(itemId);
+        const item = sortedByTrending[trendingIndex++];
+        if (!usedIds.has(item.id)) {
+          usedIds.add(item.id);
           result.push(item);
           break;
         }
       }
     }
   }
-  
+
+  // Sécurité : si certains items n'ont pas été ajoutés (cas rares de doublons d'index)
+  if (result.length < items.length) {
+    items.forEach(item => {
+      if (!usedIds.has(item.id)) result.push(item);
+    });
+  }
+
   return result;
 }
