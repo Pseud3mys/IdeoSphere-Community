@@ -137,9 +137,9 @@ export const betaConfig: ClientConfig = {
     
     // Section propositions mises en avant
     recentPropositions: {
-      title: 'Propositions mises en avant',
-      loadingText: 'Chargement des propositions mises en avant...',
-      emptyText: 'Aucune proposition mise en avant pour le moment.',
+      title: 'Propositions les plus soutenues',
+      loadingText: 'Chargement des propositions les plus soutenues...',
+      emptyText: 'Aucune proposition soutenue pour le moment.',
     },
     
     // Call-to-Action principal

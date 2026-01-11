@@ -88,9 +88,9 @@ export const templateConfig: ClientConfig = {
       totalSupports: 'soutiens',
     },
     recentPropositions: {
-      title: 'Propositions récentes',
-      loadingText: 'Chargement...',
-      emptyText: 'Aucune proposition',
+      title: 'Propositions les plus soutenues',
+      loadingText: 'Chargement des propositions les plus soutenues...',
+      emptyText: 'Aucune proposition soutenue pour le moment.',
     },
     cta: {
       buttonText: 'Bouton CTA',

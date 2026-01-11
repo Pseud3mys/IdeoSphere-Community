@@ -320,20 +320,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
                           </>
                         )}
                       </div>
-                      
-                      {/* Afficher le nombre de soutiens ou de likes selon le type */}
-                      {item.type === 'idea' && 'supporters' in item && (
-                        <div className="flex items-center text-primary">
-                          <Heart className="w-4 h-4 mr-1" />
-                          <span>{item.supporters?.length || 0} soutien{(item.supporters?.length || 0) > 1 ? 's' : ''}</span>
-                        </div>
-                      )}
-                      {item.type === 'post' && 'supporters' in item && (
-                        <div className="flex items-center text-primary">
-                          <Heart className="w-4 h-4 mr-1" />
-                          <span>{item.supporters?.length || 0} soutien{(item.supporters?.length || 0) > 1 ? 's' : ''}</span>
-                        </div>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
