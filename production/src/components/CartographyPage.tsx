@@ -22,7 +22,7 @@ export function CartographyPage({ onNavigateBack }: CartographyPageProps) {
             {/* Titre et lien plein écran */}
             <div className="flex items-center justify-between px-2">
               <p className="text-sm text-gray-600">
-                Explorer les idées et les connexions
+                Explorer les idées et les connexions. La carte se met à jour toutes les 24h.
               </p>
               {clientConfig.integrations.kumu.projectUrl && (
                 <Button variant="ghost" size="sm" asChild className="text-xs">

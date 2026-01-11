@@ -47,6 +47,7 @@ export interface FeedIdeaCard {
 
 export interface FeedPostCard {
   id: string;
+  title?: string;
   content: string;
   location?: string;
   authorId: string;
@@ -258,6 +259,7 @@ const transformIdeaToCard = (idea: Idea): FeedIdeaCard => ({
 
 const transformPostToCard = (post: Post): FeedPostCard => ({
     id: post.id,
+    title: post.title,
     content: post.content,
     location: post.location,
     authorId: post.authorId,
