@@ -54,7 +54,7 @@ export function AppHeader({
               <Button 
                 variant="ghost" 
                 onClick={onNavigateToHowItWorks}
-                className="text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4 whitespace-nowrap"
+                className="hidden sm:flex text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4 whitespace-nowrap"
               >
                 {clientConfig.navigation.howItWorksButton}
               </Button>
