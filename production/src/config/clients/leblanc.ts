@@ -86,7 +86,7 @@ export const leblancConfig: ClientConfig = {
     // Section Hero (titre principal)
     hero: {
       title: 'Partagez, explorez et co-construisez des idées ensemble',
-      description: 'Innovation, projets collaboratifs, amélioration continue, initiatives communautaires... Que vous ayez une grande vision ou une petite amélioration à proposer, cette plateforme recueille toutes vos contributions pour faire avancer votre communauté.',
+      description: "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
       
       // Thématiques suggérées (utilisées dans la description)
       themes: [

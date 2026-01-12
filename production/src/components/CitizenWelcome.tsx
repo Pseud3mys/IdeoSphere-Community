@@ -263,18 +263,6 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             </p>
           </div>
 
-          {/* Comment partager une idée */}
-          {!showLocationStep && (
-            <div>
-              <h2 className="text-xl mb-4 text-gray-900">{clientConfig.welcome.howItWorks.title}</h2>
-              <ol className="space-y-2 text-muted-foreground">
-                {clientConfig.welcome.howItWorks.steps.map((step, index) => (
-                  <li key={index}>{index + 1}. {step}</li>
-                ))}
-              </ol>
-            </div>
-          )}
-
           {/* Statistiques */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {recentStats.map((stat, index) => (
