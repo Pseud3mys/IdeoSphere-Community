@@ -1,3 +1,4 @@
+import { transformUser } from '../api/transformService';
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import { User, Idea, Post, DiscussionTopic, Location } from '../types';
 import { toast } from 'sonner@2.0.3';
@@ -290,6 +291,13 @@ export function createApiActions(
         if (!apiContributionsData) {
           console.error('❌ [apiActions] fetchMyContributions: Pas de données de contributions');
           return null;
+        }
+        // CORRECTIF : Les utilisateurs sont DÉJÀ transformés par fetchUserContributionsFromApi
+        if (apiContributionsData.users && Array.isArray(apiContributionsData.users)) {
+          apiContributionsData.users.forEach((user: User) => {
+            // On ajoute directement l'objet 'user' sans appeler transformUser() à nouveau
+            actions.addUser(user); 
+          });
         }
         
         // 2. AJOUTER AU STORE

@@ -14,15 +14,14 @@ import { transformUser, RawUser } from './transformService';
  * @returns Profil utilisateur public ou null si non trouvé
  */
 export async function fetchUserProfile(userId: string): Promise<User | null> {
-  // 1. Nettoyage de l'ID : L'API attend "123" et non "users/123" pour la route /users/<key>
-  const cleanKey = userId.replace('users/', '');
-  
-  console.log(`🌐 [API] fetchUserProfile - key: ${cleanKey}`);
+  const encodedId = encodeURIComponent(userId);
+
+  console.log(`🌐 [API] fetchUserProfile - key: ${encodedId}`);
 
   try {
     // 2. Appel API GET /users/<key>
     // Cette route backend utilise 'sanitize_users', donc pas d'email dans la réponse.
-    const response = await apiClient.get<RawUser>(`/users/${cleanKey}`);
+    const response = await apiClient.get<RawUser>(`/${encodedId}`);
     
     // 3. Transformation des données (RawUser -> User)
     // Gestion des dates, valeurs par défaut, mapping _key -> id
@@ -33,7 +32,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
 
   } catch (error: any) {
     if (error.response && error.response.status === 404) {
-      console.warn(`⚠️ [API] fetchUserProfile - Utilisateur ${cleanKey} introuvable.`);
+      console.warn(`⚠️ [API] fetchUserProfile - Utilisateur ${encodedId} introuvable.`);
       return null;
     }
     console.error(`❌ [API] fetchUserProfile - Erreur:`, error);

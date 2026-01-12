@@ -193,6 +193,7 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
   supportIdeas: Idea[];
   participationPosts: Post[];
   supportPosts: Post[];
+  users: User[];
 } | null> {
   console.log(`[API] fetchUserContributionsFromApi - User ${userId}`);
   try {
@@ -203,6 +204,10 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
 
     // 2. Création de la map d'utilisateurs pour la transformation
     const usersMap = new Map(rawData.users.map(rawUser => [rawUser._id, transformUser(rawUser)]));
+
+    // user pour le retour:
+    const users: User[] = Array.from(usersMap.values());
+    //console.log(`[API] fetchUserContributionsFromApi - Utilisateurs chargés: ${users.map(u => `${u.name} (${u.id})`).join(', ')}`);
 
     // 3. Transformation du contenu des "participations"
     const participationIdeas: Idea[] = [];
@@ -234,6 +239,7 @@ export async function fetchUserContributionsFromApi(userId: string): Promise<{
       supportIdeas,
       participationPosts,
       supportPosts,
+      users
     };
   } catch (error) {
     console.error(`[API] fetchUserContributionsFromApi - Erreur:`, error);
