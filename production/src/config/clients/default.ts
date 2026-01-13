@@ -127,9 +127,9 @@ export const defaultConfig: ClientConfig = {
     
     // Statistiques
     stats: {
-      totalContributions: 'contributions totales',
-      totalIdeas: 'idées partagées',
-      totalSupports: 'soutiens reçus',
+      totalContributions: 'Contributions',
+      totalIdeas: 'Projets partagées',
+      totalSupports: 'Soutiens reçus',
     },
     
     // Section propositions mises en avant
