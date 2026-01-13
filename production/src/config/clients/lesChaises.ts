@@ -8,7 +8,7 @@
 
 import { ClientConfig } from '../types';
 
-export const chesnayRocquencourtConfig: ClientConfig = {
+export const lesChaisesConfig: ClientConfig = {
   // ============================================================================
   // 1. IDENTITÉ ET BRANDING
   // ============================================================================
