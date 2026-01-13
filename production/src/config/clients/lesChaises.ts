@@ -15,10 +15,10 @@ export const chesnayRocquencourtConfig: ClientConfig = {
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere Chesnay Rocquencourt',
+    appName: 'IdeoSphere Les Chaises',
     
     // Tagline / Sous-titre
-    appTagline: 'Plateforme collaborative d\'intelligence collective',
+    appTagline: 'Plateforme collaborative IdeoSphere',
     
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
@@ -327,10 +327,10 @@ Quels bénéfices concrets pour la communauté ?`,
     // Kumu.io - Visualisation de réseaux
     kumu: {
       // URL de l'iframe d'embed Kumu (si disponible)
-      embedUrl: 'https://embed.kumu.io/c383a314a3e14cb07cf4218d2373c6a6',
+      embedUrl: 'https://embed.kumu.io/f9a1bd50e97942f6bbb04d82681fb7a5',
       
       // URL directe vers le projet Kumu
-      projectUrl: 'https://embed.kumu.io/c383a314a3e14cb07cf4218d2373c6a6',
+      projectUrl: 'https://embed.kumu.io/f9a1bd50e97942f6bbb04d82681fb7a5',
       
       // Activer l'affichage de l'iframe
       enabled: true,

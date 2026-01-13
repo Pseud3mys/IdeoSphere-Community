@@ -35,7 +35,6 @@ export interface ClientConfig {
     appName: string;
     appTagline: string;
     appDescriptionShort: string;
-    appMission: string;
     projectStatus: string;
     copyright: string;
   };
@@ -79,7 +78,6 @@ export interface ClientConfig {
     hero: {
       title: string;
       description: string;
-      themes: string[];
     };
     quickIdea: {
       sectionTitle: string;
@@ -97,7 +95,6 @@ export interface ClientConfig {
     };
     howItWorks: {
       title: string;
-      steps: string[];
     };
     stats: {
       totalContributions: string;
@@ -164,34 +161,6 @@ export interface ClientConfig {
       postShareText: (preview: string) => string;
       ideaDialogTitle: string;
       postDialogTitle: string;
-    };
-    signupPage: {
-      title: string;
-      description: (cityName: string) => string;
-      bioHelperText: string;
-      labels: {
-        name: string;
-        email: string;
-        password: string;
-        confirmPassword: string;
-        location: string;
-        bio: string;
-        interests: string;
-      };
-      placeholders: {
-        name: string;
-        email: string;
-        password: string;
-        location: string;
-        bio: string;
-      };
-      buttons: {
-        submit: string;
-        login: string;
-      };
-      messages: {
-        alreadyHaveAccount: string;
-      };
     };
   };
 
