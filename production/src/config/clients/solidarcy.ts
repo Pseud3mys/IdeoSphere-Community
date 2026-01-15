@@ -116,8 +116,6 @@ export const solidarcyConfig: ClientConfig = {
     // Section "Comment ça marche"
     howItWorks: {
       title: '',
-      steps: [
-      ],
     },
     
     // Statistiques
@@ -176,21 +174,26 @@ export const solidarcyConfig: ClientConfig = {
     },
     
     // Contact et communauté
-    contact: {
-      discord: {
+    socialLinks: [
+      {
         url: 'https://discord.gg/WuUY5dtB',
         label: 'Discord',
+        network: 'discord'
       },
-      email: {
+      {
         url: 'mailto:contact@holonsystems.org',
-        address: 'contact@holonsystems.org',
         label: 'Email',
+        network: 'email'
       },
-      github: {
+      {
         url: 'https://github.com/Pseud3mys/IdeoSphere-Community',
-        label: 'GitHub',
+        label: 'Github',
+        network: 'github'
       },
-    },
+      // Exemples supplémentaires :
+      // { url: 'https://instagram.com/ideosphere', label: 'Instagram' },
+      // { url: 'https://ma-liste-citoyenne.fr', label: 'Notre Site Web' },
+    ],
   },
 
   // ============================================================================
@@ -209,49 +212,6 @@ export const solidarcyConfig: ClientConfig = {
       // Titres de dialogue
       ideaDialogTitle: 'Partager cette idée',
       postDialogTitle: 'Partager ce post',
-    },
-    
-    // SignupPage
-    signupPage: {
-      // Titre de la page
-      title: 'Créer un compte',
-      
-      // Description avec nom de ville
-      description: (cityName: string) => `Créez votre compte pour participer pleinement à la communauté ${cityName}`,
-      
-      // Helper text pour la bio
-      bioHelperText: 'Cela aide les autres membres à mieux comprendre vos motivations',
-      
-      // Labels de formulaire
-      labels: {
-        name: 'Nom complet',
-        email: 'Email',
-        password: 'Mot de passe',
-        confirmPassword: 'Confirmer le mot de passe',
-        location: 'Localisation',
-        bio: 'Bio (optionnel)',
-        interests: 'Centres d\'intérêt',
-      },
-      
-      // Placeholders
-      placeholders: {
-        name: 'Votre nom',
-        email: 'votre.email@example.com',
-        password: '••••••••',
-        location: 'Votre lieu, Votre région',
-        bio: 'Parlez de vous, vos motivations...',
-      },
-      
-      // Boutons
-      buttons: {
-        submit: 'Créer mon compte',
-        login: 'Se connecter',
-      },
-      
-      // Messages
-      messages: {
-        alreadyHaveAccount: 'Vous avez déjà un compte ?',
-      },
     },
   },
 
@@ -420,8 +380,6 @@ Quels bénéfices concrets pour la communauté ?`,
       id: 'user-1',
       email: 'marie.dubois@email.com',
       name: 'Marie Dubois',
-      location: 'Arcy',
-      bio: 'Commerçante retraitée passionnée par l\'amélioration du cadre de vie à Arcy',
     },
   },
 };
