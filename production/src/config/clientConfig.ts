@@ -7,9 +7,7 @@
 
 import { ClientConfig } from './types';
 import { defaultConfig } from './clients/default';
-import { betaConfig } from './clients/beta';
 import { leblancConfig } from './clients/leblanc';
-import { amdfConfig } from './clients/amdf';
 import { chesnayRocquencourtConfig } from './clients/chesnayRocquencourt';
 import { solidarcyConfig } from './clients/solidarcy';
 import { saintcyrencommunConfig } from './clients/saintcyrencommun';
@@ -37,9 +35,10 @@ const configs: Record<string, ClientConfig> = {
   'beta': defaultConfig, // betaConfig,
   'test-tenant': defaultConfig,
 
-  // PLUS MAINTENUs
-  'leblanc': defaultConfig,
+  // PLUS MAINTENUS
   'amdf': defaultConfig,
+
+  'leblanc': leblancConfig,
 
   // chesnayRocquencourtConfig
   'chesnay-rocquencourt': chesnayRocquencourtConfig,
