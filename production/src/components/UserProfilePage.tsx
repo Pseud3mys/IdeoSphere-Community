@@ -66,6 +66,10 @@ export function UserProfilePage({
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const contactEmail = clientConfig.footer.socialLinks.find(
+    link => link.network === 'email' || link.url.startsWith('mailto:')
+  )?.label || 'contact@holonsystems.org';
+
   // Synchroniser editedBio avec user.bio quand user change
   useEffect(() => {
     setEditedBio(user.bio || '');
@@ -403,39 +407,6 @@ export function UserProfilePage({
         </CardContent>
       </Card>
 
-      {/* Activité récente */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Zap className="w-5 h-5 text-orange-500" />
-            <span>Activité récente</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivities.map(activity => (
-              <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex-shrink-0 mt-1">
-                  {activity.icon}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{activity.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-
-            {userIdeas.length === 0 && supportedIdeas.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucune activité récente</p>
-                <p className="text-sm">Commencez par créer un projet ou soutenir la communauté !</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Paramètres du compte - Uniquement pour son propre profil ET utilisateur enregistré */}
       {isOwnProfile && user.isRegistered && (
         <Card>
@@ -554,7 +525,7 @@ export function UserProfilePage({
               <p className="text-sm text-blue-800">
                 <strong>Note :</strong> Conformément au RGPD, vous avez le droit de consulter, 
                 modifier ou supprimer vos données personnelles. Pour toute question, 
-                contactez-nous à {clientConfig.footer.contact.email.address}
+                contactez-nous à {contactEmail}
               </p>
             </div>
           </CardContent>
