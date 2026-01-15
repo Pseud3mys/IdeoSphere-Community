@@ -11,6 +11,7 @@ import { Label } from './ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { ContactUserDialog } from './ContactUserDialog';
 import { SharePlatformDialog } from './SharePlatformDialog';
+import { useNavigate } from 'react-router-dom';
 import { 
   User as UserIcon, 
   Edit, 
@@ -33,11 +34,12 @@ import {
   Loader2,
   BarChart3,
   LogOut,
-  Share
+  Share,
+  ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { resizeImageTo200x200, validateImageFile, uploadUserAvatar } from '../api/avatarService';
-import { logout } from '../api/authService';
+import { logout,hasAdminRole } from '../api/authService';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { clientConfig } from '../config/clientConfig';
 
@@ -69,6 +71,9 @@ export function UserProfilePage({
   const contactEmail = clientConfig.footer.socialLinks.find(
     link => link.network === 'email' || link.url.startsWith('mailto:')
   )?.label || 'contact@holonsystems.org';
+  
+  const navigate = useNavigate();
+  const isAdmin = hasAdminRole();
 
   // Synchroniser editedBio avec user.bio quand user change
   useEffect(() => {
@@ -440,6 +445,30 @@ export function UserProfilePage({
                 Se déconnecter
               </Button>
             </div>
+
+            {/* Section Administration (Visible uniquement pour les admins) */}
+            {isAdmin && (
+              <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                <div className="flex items-center space-x-2 mb-3">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <Label className="font-medium text-purple-800">Administration</Label>
+                </div>
+                
+                <p className="text-sm text-purple-700 mb-3">
+                  Accédez au tableau de bord pour gérer les utilisateurs, la modération et la configuration du tenant.
+                </p>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/admin')}
+                  className="bg-white hover:bg-purple-100 border-purple-300 text-purple-700"
+                >
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  Accéder au panel Admin
+                </Button>
+              </div>
+            )}
 
             {/* Section Suppression de compte */}
             <div className="border border-red-200 rounded-lg p-4 bg-red-50">
