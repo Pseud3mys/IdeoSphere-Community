@@ -7,6 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
+import logo_solidarcy from '../../assets/logo_solidarcy.png';
 
 export const solidarcyConfig: ClientConfig = {
   // ============================================================================
@@ -31,6 +32,9 @@ export const solidarcyConfig: ClientConfig = {
     
     // Copyright
     copyright: '© 2025 IdeoSphere. Tous droits réservés.',
+
+    //logo
+    logoUrl: logo_solidarcy,
   },
 
   // ============================================================================
@@ -86,17 +90,8 @@ export const solidarcyConfig: ClientConfig = {
     // Section Hero (titre principal)
     hero: {
       title: 'Partagez, explorez et co-construisez des idées ensemble',
-      description: "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
-      
-      // Thématiques suggérées (utilisées dans la description)
-      themes: [
-        'Innovation',
-        'Projets collaboratifs',
-        'Amélioration continue',
-        'Initiatives communautaires',
-        'Créativité',
-        'Solutions collectives',
-        'Transformation',
+      descriptionParagraphs: [
+        "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
       ],
     },
     

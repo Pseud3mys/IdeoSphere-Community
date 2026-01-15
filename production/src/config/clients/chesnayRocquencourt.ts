@@ -23,6 +23,9 @@ export const chesnayRocquencourtConfig: ClientConfig = {
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
     
+    // Mission principale (utilisée dans la page À propos)
+    appMission: 'Notre mission est de fournir un espace numérique où chaque individu peut partager ses idées, collaborer avec d\'autres et contribuer à des projets qui ont un impact positif sur notre communauté. Nous croyons en la puissance de l\'intelligence collective pour résoudre les défis locaux et créer un avenir meilleur ensemble.',
+
     // Statut du projet
     projectStatus: 'Projet open source',
     
@@ -83,7 +86,9 @@ export const chesnayRocquencourtConfig: ClientConfig = {
     // Section Hero (titre principal)
     hero: {
       title: 'Partagez, explorez et co-construisez des idées ensemble',
-      description: "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
+      descriptionParagraphs: [
+        "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
+      ],
     },
     
     // Section "Partagez votre idée"
@@ -165,21 +170,26 @@ export const chesnayRocquencourtConfig: ClientConfig = {
     },
     
     // Contact et communauté
-    contact: {
-      discord: {
+    socialLinks: [
+      {
         url: 'https://discord.gg/WuUY5dtB',
         label: 'Discord',
+        network: 'discord'
       },
-      email: {
+      {
         url: 'mailto:contact@holonsystems.org',
-        address: 'contact@holonsystems.org',
         label: 'Email',
+        network: 'email'
       },
-      github: {
+      {
         url: 'https://github.com/Pseud3mys/IdeoSphere-Community',
-        label: 'GitHub',
+        label: 'Github',
+        network: 'github'
       },
-    },
+      // Exemples supplémentaires :
+      // { url: 'https://instagram.com/ideosphere', label: 'Instagram' },
+      // { url: 'https://ma-liste-citoyenne.fr', label: 'Notre Site Web' },
+    ],
   },
 
   // ============================================================================

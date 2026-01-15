@@ -23,6 +23,9 @@ export const lesChaisesConfig: ClientConfig = {
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
     
+    // Mission principale (utilisée dans la page À propos)
+    appMission: 'IdeoSphere est une plateforme collaborative open source conçue pour faciliter l\'émergence d\'idées et leur transformation en projets concrets. Notre mission est de créer un espace d\'intelligence collective où les communautés peuvent partager, débattre et co-construire des solutions innovantes ensemble.',
+    
     // Statut du projet
     projectStatus: 'Projet open source',
     
@@ -167,22 +170,26 @@ export const lesChaisesConfig: ClientConfig = {
       terms: 'CGU',
     },
     
-    // Contact et communauté
-    contact: {
-      discord: {
+    socialLinks: [
+      {
         url: 'https://discord.gg/WuUY5dtB',
         label: 'Discord',
+        network: 'discord'
       },
-      email: {
+      {
         url: 'mailto:contact@holonsystems.org',
-        address: 'contact@holonsystems.org',
         label: 'Email',
+        network: 'email'
       },
-      github: {
+      {
         url: 'https://github.com/Pseud3mys/IdeoSphere-Community',
-        label: 'GitHub',
+        label: 'Github',
+        network: 'github'
       },
-    },
+      // Exemples supplémentaires :
+      // { url: 'https://instagram.com/ideosphere', label: 'Instagram' },
+      // { url: 'https://ma-liste-citoyenne.fr', label: 'Notre Site Web' },
+    ],
   },
 
   // ============================================================================

@@ -7,7 +7,6 @@
  */
 
 import { ClientConfig } from '../types';
-import logo_solidarcy from '../../assets/logo_solidarcy.png';
 
 export const defaultConfig: ClientConfig = {
   // ============================================================================
@@ -32,8 +31,6 @@ export const defaultConfig: ClientConfig = {
     
     // Copyright
     copyright: '© 2025 IdeoSphere. Tous droits réservés.',
-
-    logoUrl: logo_solidarcy,
   },
 
   // ============================================================================
