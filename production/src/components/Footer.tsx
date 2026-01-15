@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Separator } from './ui/separator';
-import { Button } from './ui/button';
-import { Mail, MessageCircle, Github } from 'lucide-react';
+import { 
+  Github, 
+  Mail, 
+  MessageCircle, // Pour Discord (souvent utilisé si pas d'icone dédiée)
+  Linkedin, 
+  Facebook, 
+  Instagram, 
+  Twitter, 
+  Globe // Pour le site web par défaut
+} from 'lucide-react';
 import { clientConfig } from '../config/clientConfig';
 
 interface FooterProps {
@@ -11,6 +18,23 @@ interface FooterProps {
 export function Footer({ onNavigate }: FooterProps) {
   // Note : onNavigate n'est plus utilisé avec React Router
   // La navigation se fait automatiquement via les <Link>
+
+  // Fonction utilitaire pour déterminer l'icône
+  const getSocialIcon = (link: { url: string; network?: string }) => {
+    const url = link.url.toLowerCase();
+    const network = link.network?.toLowerCase();
+
+    if (network === 'github' || url.includes('github.com')) return <Github size={14} />;
+    if (network === 'email' || url.startsWith('mailto:')) return <Mail size={14} />;
+    if (network === 'discord' || url.includes('discord.gg') || url.includes('discord.com')) return <MessageCircle size={14} />;
+    if (network === 'linkedin' || url.includes('linkedin.com')) return <Linkedin size={14} />;
+    if (network === 'facebook' || url.includes('facebook.com')) return <Facebook size={14} />;
+    if (network === 'instagram' || url.includes('instagram.com')) return <Instagram size={14} />;
+    if (network === 'twitter' || url.includes('twitter.com') || url.includes('x.com')) return <Twitter size={14} />;
+    
+    // Icône par défaut pour le site web ou lien générique
+    return <Globe size={14} />;
+  };
 
   return (
     <footer className="bg-white border-t">
@@ -56,33 +80,22 @@ export function Footer({ onNavigate }: FooterProps) {
           {/* Colonne 3: Contact et communauté */}
           <div>
             <h4 className="text-sm font-medium text-gray-900 mb-3">{clientConfig.footer.joinUsTitle}</h4>
-            <div className="space-y-2">
-              <a 
-                href={clientConfig.footer.contact.discord.url}
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <MessageCircle size={14} />
-                {clientConfig.footer.contact.discord.label}
-              </a>
-              <a 
-                href={clientConfig.footer.contact.email.url}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <Mail size={14} />
-                {clientConfig.footer.contact.email.label}
-              </a>
-              <a 
-                href={clientConfig.footer.contact.github.url}
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <Github size={14} />
-                {clientConfig.footer.contact.github.label}
-              </a>
-            </div>
+            <ul className="space-y-2">
+              {clientConfig.footer.socialLinks.map((link, index) => (
+                <li key={index}>
+                  <a 
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    {/* Icône automatique */}
+                    {getSocialIcon(link)}
+                    <span>{link.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

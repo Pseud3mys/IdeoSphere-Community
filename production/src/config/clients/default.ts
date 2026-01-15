@@ -7,6 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
+import logo_solidarcy from '../../assets/logo_solidarcy.png';
 
 export const defaultConfig: ClientConfig = {
   // ============================================================================
@@ -31,6 +32,8 @@ export const defaultConfig: ClientConfig = {
     
     // Copyright
     copyright: '© 2025 IdeoSphere. Tous droits réservés.',
+
+    logoUrl: logo_solidarcy,
   },
 
   // ============================================================================
@@ -86,17 +89,10 @@ export const defaultConfig: ClientConfig = {
     // Section Hero (titre principal)
     hero: {
       title: 'Partagez, explorez et co-construisez des idées ensemble',
-      description: 'Innovation, projets collaboratifs, amélioration continue, initiatives communautaires... Que vous ayez une grande vision ou une petite amélioration à proposer, cette plateforme recueille toutes vos contributions pour faire avancer votre communauté.',
-      
-      // Thématiques suggérées (utilisées dans la description)
-      themes: [
-        'Innovation',
-        'Projets collaboratifs',
-        'Amélioration continue',
-        'Initiatives communautaires',
-        'Créativité',
-        'Solutions collectives',
-        'Transformation',
+      // CHANGEMENT: Plusieurs paragraphes possibles
+      descriptionParagraphs: [
+        "Innovation, projets collaboratifs, amélioration continue, initiatives communautaires... Que vous ayez une grande vision ou une petite amélioration à proposer, cette plateforme recueille toutes vos contributions pour faire avancer votre communauté.",
+        "Rejoignez le mouvement dès aujourd'hui et participez activement aux décisions qui vous concernent."
       ],
     },
     
@@ -120,9 +116,7 @@ export const defaultConfig: ClientConfig = {
     
     // Section "Comment ça marche"
     howItWorks: {
-      title: '',
-      steps: [
-      ],
+      title: ''
     },
     
     // Statistiques
@@ -177,25 +171,29 @@ export const defaultConfig: ClientConfig = {
       howItWorks: 'Comment ça marche',
       faq: 'FAQ',
       privacy: 'Confidentialité',
-      terms: 'CGU',
+      terms: 'CGU'
     },
     
-    // Contact et communauté
-    contact: {
-      discord: {
+    socialLinks: [
+      {
         url: 'https://discord.gg/WuUY5dtB',
         label: 'Discord',
+        network: 'discord'
       },
-      email: {
+      {
         url: 'mailto:contact@holonsystems.org',
-        address: 'contact@holonsystems.org',
         label: 'Email',
+        network: 'email'
       },
-      github: {
+      {
         url: 'https://github.com/Pseud3mys/IdeoSphere-Community',
-        label: 'GitHub',
+        label: 'Github',
+        network: 'github'
       },
-    },
+      // Exemples supplémentaires :
+      // { url: 'https://instagram.com/ideosphere', label: 'Instagram' },
+      // { url: 'https://ma-liste-citoyenne.fr', label: 'Notre Site Web' },
+    ],
   },
 
   // ============================================================================
@@ -214,49 +212,6 @@ export const defaultConfig: ClientConfig = {
       // Titres de dialogue
       ideaDialogTitle: 'Partager cette idée',
       postDialogTitle: 'Partager ce post',
-    },
-    
-    // SignupPage
-    signupPage: {
-      // Titre de la page
-      title: 'Créer un compte',
-      
-      // Description avec nom de ville
-      description: (cityName: string) => `Créez votre compte pour participer pleinement à la communauté ${cityName}`,
-      
-      // Helper text pour la bio
-      bioHelperText: 'Cela aide les autres membres à mieux comprendre vos motivations',
-      
-      // Labels de formulaire
-      labels: {
-        name: 'Nom complet',
-        email: 'Email',
-        password: 'Mot de passe',
-        confirmPassword: 'Confirmer le mot de passe',
-        location: 'Localisation',
-        bio: 'Bio (optionnel)',
-        interests: 'Centres d\'intérêt',
-      },
-      
-      // Placeholders
-      placeholders: {
-        name: 'Votre nom',
-        email: 'votre.email@example.com',
-        password: '••••••••',
-        location: 'Votre lieu, Votre région',
-        bio: 'Parlez de vous, vos motivations...',
-      },
-      
-      // Boutons
-      buttons: {
-        submit: 'Créer mon compte',
-        login: 'Se connecter',
-      },
-      
-      // Messages
-      messages: {
-        alreadyHaveAccount: 'Vous avez déjà un compte ?',
-      },
     },
   },
 
@@ -424,9 +379,7 @@ Quels bénéfices concrets pour la communauté ?`,
     mockUser: {
       id: 'user-1',
       email: 'marie.dubois@email.com',
-      name: 'Marie Dubois',
-      location: 'Le Blanc',
-      bio: 'Commerçante retraitée passionnée par l\'amélioration du cadre de vie à Le Blanc',
+      name: 'Marie Dubois'
     },
   },
 };

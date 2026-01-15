@@ -35,8 +35,12 @@ export interface ClientConfig {
     appName: string;
     appTagline: string;
     appDescriptionShort: string;
+    // Mission principale (utilisée dans la page À propos)
+    appMission: string;
     projectStatus: string;
     copyright: string;
+    // NOUVEAU: Permet de mettre un lien d'image en dur (ex: "https://monsite.com/logo.png")
+    logoUrl?: string;
   };
 
   // ============================================================================
@@ -77,7 +81,8 @@ export interface ClientConfig {
     };
     hero: {
       title: string;
-      description: string;
+      // CHANGEMENT: Tableau de strings pour gérer plusieurs paragraphes
+      descriptionParagraphs: string[];
     };
     quickIdea: {
       sectionTitle: string;
@@ -135,21 +140,12 @@ export interface ClientConfig {
       privacy: string;
       terms: string;
     };
-    contact: {
-      discord: {
-        url: string;
-        label: string;
-      };
-      email: {
-        url: string;
-        address: string;
-        label: string;
-      };
-      github: {
-        url: string;
-        label: string;
-      };
-    };
+    socialLinks: Array<{
+      url: string;
+      label: string;
+      // Optionnel : pour forcer une icône si l'URL n'est pas reconnue
+      network?: 'discord' | 'email' | 'github' | 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'website'; 
+    }>;
   };
 
   // ============================================================================

@@ -19,6 +19,10 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
     }
   };
 
+  const githubUrl = clientConfig.footer.socialLinks.find(
+    link => link.network === 'github' || link.url.includes('github')
+  )?.url || 'https://github.com/Pseud3mys/IdeoSphere-Community';
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-6">
@@ -196,12 +200,12 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" size="sm" asChild>
-                <a href={clientConfig.footer.contact.github.url} target="_blank" rel="noopener noreferrer">
+                <a href={githubUrl} target="_blank" rel="noopener noreferrer">
                   Voir le code source
                 </a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href={clientConfig.footer.contact.github.url} target="_blank" rel="noopener noreferrer">
+                <a href={githubUrl} target="_blank" rel="noopener noreferrer">
                   Contribuer au projet
                 </a>
               </Button>

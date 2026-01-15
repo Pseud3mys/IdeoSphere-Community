@@ -1,5 +1,5 @@
 import { User } from '../types';
-import logoImage from '../assets/logo.png';
+import IdeoSphereLogo from '../assets/logo.png';
 import { AuthButtons } from './AuthButtons';
 import { clientConfig } from '../config/clientConfig';
 import { Button } from './ui/button';
@@ -25,6 +25,9 @@ export function AppHeader({
   onNavigateToHowItWorks,
   isWelcomePage = false
 }: AppHeaderProps) {
+
+  const logoSrc = clientConfig.identity.logoUrl || IdeoSphereLogo;
+
   return (
     <header className={`border-b ${isWelcomePage ? 'border-gray-100' : 'border-gray-200'} bg-white sticky top-0 z-50 shadow-sm`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -35,7 +38,12 @@ export function AppHeader({
           >
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                <img src={logoImage} alt="IdeoSphere Logo" className="w-full h-full object-contain" />
+                {/* Utilisation de la source dynamique */}
+                <img 
+                  src={logoSrc} 
+                  alt={clientConfig.identity.appName} 
+                  className="w-full h-full object-contain" 
+                />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl text-gray-900 truncate">{clientConfig.identity.appName}</h1>

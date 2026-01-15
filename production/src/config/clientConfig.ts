@@ -37,11 +37,9 @@ const configs: Record<string, ClientConfig> = {
   'beta': defaultConfig, // betaConfig,
   'test-tenant': defaultConfig,
 
-  // leblanc.ideosphere.community
-  'leblanc': leblancConfig,
-
-  //AMDF
-  'amdf': amdfConfig,
+  // PLUS MAINTENUs
+  'leblanc': defaultConfig,
+  'amdf': defaultConfig,
 
   // chesnayRocquencourtConfig
   'chesnay-rocquencourt': chesnayRocquencourtConfig,
@@ -152,14 +150,6 @@ export function isLocationEnabled() {
 }
 
 /**
- * Obtient l'URL de contact
- */
-export function getContactEmail() {
-  const config = getClientConfig();
-  return config.footer.contact.email.address;
-}
-
-/**
  * Obtient le texte de partage pour une idée
  */
 export function getIdeaShareText(title: string) {
@@ -173,14 +163,6 @@ export function getIdeaShareText(title: string) {
 export function getPostShareText(preview: string) {
   const config = getClientConfig();
   return config.systemMessages.shareDialog.postShareText(preview);
-}
-
-/**
- * Obtient la description de la page d'inscription
- */
-export function getSignupDescription() {
-  const config = getClientConfig();
-  return config.systemMessages.signupPage.description(getCityName());
 }
 
 /**

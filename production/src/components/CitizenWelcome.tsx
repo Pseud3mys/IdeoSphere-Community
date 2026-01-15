@@ -258,9 +258,13 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
             <h1 className="text-4xl mb-4 text-gray-900 leading-tight">
               {clientConfig.welcome.hero.title}
             </h1>
-            <p className="text-lg text-muted-foreground">
-              {clientConfig.welcome.hero.description}
-            </p>
+            
+            {/* Boucle pour afficher les paragraphes */}
+            <div className="text-lg text-muted-foreground space-y-4">
+              {clientConfig.welcome.hero.descriptionParagraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
           </div>
 
           {/* Statistiques */}
