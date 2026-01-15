@@ -176,9 +176,8 @@ export const solidarcyConfig: ClientConfig = {
     // Contact et communauté
     socialLinks: [
       {
-        url: 'https://discord.gg/WuUY5dtB',
-        label: 'Discord',
-        network: 'discord'
+        url: 'https://www.instagram.com/solid.arcy/',
+        label: 'Instagram Solidarcy',
       },
       {
         url: 'mailto:contact@holonsystems.org',

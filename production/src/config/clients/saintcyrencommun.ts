@@ -171,9 +171,9 @@ export const saintcyrencommunConfig: ClientConfig = {
     
     socialLinks: [
       {
-        url: 'https://discord.gg/WuUY5dtB',
-        label: 'Discord',
-        network: 'discord'
+        url: 'https://www.saintcyrencommun.fr/',
+        label: "Saint-Cyr-l'École en commun",
+        network: 'website'
       },
       {
         url: 'mailto:contact@holonsystems.org',
