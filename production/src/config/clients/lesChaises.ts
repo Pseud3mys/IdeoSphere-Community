@@ -88,7 +88,8 @@ export const lesChaisesConfig: ClientConfig = {
       title: "La mairie du 18e, c'est notre maison commune",
       descriptionParagraphs: [
         "les chaises, liste citoyenne et participative du 18e arrondissement, vous invite à co-contruire le programme de la prochaine mandature.",
-        "Vous avez une simple idée à proposer, une problématique à exposer. Partagez la ici même si elle est encore floue ou inaboutie. Cet espace est un laboratoire de collaboration et de mutualisation pour faire d'une idée un projet commun.",
+        "Vous avez une simple idée à proposer, une problématique à exposer ?",
+        "Partagez la ici même si elle est encore floue ou inaboutie. Cet espace est un laboratoire de collaboration et de mutualisation pour faire d'une idée un projet commun.",
       ],
     },
     

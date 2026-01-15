@@ -15,10 +15,10 @@ export const saintcyrencommunConfig: ClientConfig = {
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere St Cyr en Commun',
+    appName: "Saint-Cyr-l'École en commun",
     
     // Tagline / Sous-titre
-    appTagline: 'Plateforme collaborative d\'intelligence collective',
+    appTagline: 'Plateforme d\'intelligence collective IdeoSphere',
     
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
