@@ -37,12 +37,12 @@ export function AppHeader({
             onClick={onHomeClick}
           >
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+              <div className="h-8 sm:h-10 flex items-center justify-center flex-shrink-0">
                 {/* Utilisation de la source dynamique */}
                 <img 
                   src={logoSrc} 
                   alt={clientConfig.identity.appName} 
-                  className="w-full h-full object-contain" 
+                  className="w-auto h-full object-contain" 
                 />
               </div>
               <div className="min-w-0">

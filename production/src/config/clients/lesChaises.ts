@@ -16,10 +16,10 @@ export const lesChaisesConfig: ClientConfig = {
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere Les Chaises',
+    appName: 'IdeoSphere',
     
     // Tagline / Sous-titre
-    appTagline: 'Plateforme collaborative IdeoSphere',
+    appTagline: 'Plateforme d\'intelligence collective',
     
     // Description courte (utilisée dans le footer)
     appDescriptionShort: 'Une plateforme open source pour l\'intelligence collective. Nous facilitons l\'émergence d\'idées, la collaboration et la transformation d\'initiatives en projets concrets.',
