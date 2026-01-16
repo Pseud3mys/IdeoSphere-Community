@@ -28,6 +28,7 @@ export function GroupHubPage() {
     isUserMemberOfGroup,
     isUserAnimatorOfGroup,
     getCurrentUser,
+    actions
   } = useEntityStoreSimple();
   
   const { goToGroupManage, goToCreateWithGroups } = useNavigationActions();
@@ -118,8 +119,11 @@ export function GroupHubPage() {
           {/* --- ONGLET À LA UNE --- */}
           {/* Utilise désormais showcaseItems (API) au lieu du calcul local */}
           <TabsContent value="featured" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {showcaseItems.length > 0 ? showcaseItems.slice(0, 3).map((item) => {
+            <p className="text-sm text-muted-foreground">
+            Découvrez les initiatives qui rassemblent le plus de soutiens en ce moment au sein du groupe.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">              
+              {showcaseItems.length > 0 ? showcaseItems.map((item) => {
                  // Détection du type pour l'affichage (car item est Idea | Post)
                  const isIdea = (item as any).summary !== undefined;
                  return (
@@ -182,9 +186,9 @@ export function GroupHubPage() {
                 <div className="space-y-4">
                   {participationFeed.length > 0 ? participationFeed.map((item) => (
                     item.itemType === 'idea' ? (
-                      <IdeaCard key={item.id} idea={item as any} onIdeaClick={() => navigate(`/content/${item.id}`)} onSupport={() => {}} />
+                      <IdeaCard key={item.id} idea={item as any} onIdeaClick={() => navigate(`/content/${item.id}`)} onSupport={() => actions.toggleIdeaSupport(item.id)} />
                     ) : (
-                      <PostCard key={item.id} post={item as any} onPostClick={() => navigate(`/content/${item.id}`)} onLike={() => {}} />
+                      <PostCard key={item.id} post={item as any} onPostClick={() => navigate(`/content/${item.id}`)} onLike={() => actions.togglePostLike(item.id)} />
                     )
                   )) : (
                     <Card className="p-12 text-center text-muted-foreground">Aucun contenu ne correspond à ce filtre.</Card>
