@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom"; // Ajout de Link pour le lien login/signup
 import { useEntityStoreSimple, useGroupActions, useNavigationActions } from "../hooks";
 import { GroupHeader } from "./group/GroupHeader";
 import { GroupMembersList } from "./group/GroupMembersList";
@@ -8,15 +8,18 @@ import { IdeaCard } from "./IdeaCard";
 import { PostCard } from "./PostCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card } from "./ui/card";
-import { Lightbulb, MessageSquare, Info, ArrowLeft, Plus, FileText } from "lucide-react";
+import { Lightbulb, MessageSquare, Info, ArrowLeft, Star, ListFilter, Lock } from "lucide-react"; // Ajout de Lock
 import { Button } from "./ui/button";
 import { ensureGroupPrefix } from "../utils/idUtils";
+import { Badge } from "./ui/badge";
+import { fetchGroupShowcase } from "../api/groupService"; // Import de la nouvelle fonction API
+import { Idea, Post } from "../types";
 
 export function GroupHubPage() {
   const { groupId: urlGroupId } = useParams<{ groupId: string }>();
-  // Ajouter le préfixe "groups/" si nécessaire
   const groupId = urlGroupId ? ensureGroupPrefix(urlGroupId) : undefined;
   const navigate = useNavigate();
+  
   const {
     getGroupById,
     getGroupFeed,
@@ -25,34 +28,37 @@ export function GroupHubPage() {
     isUserMemberOfGroup,
     isUserAnimatorOfGroup,
     getCurrentUser,
-    getPostsByGroup,
-    getIdeasByGroup,
   } = useEntityStoreSimple();
   
-  const { goToIdea, goToPost, goToGroupManage, goToCreateWithGroups } = useNavigationActions();
+  const { goToGroupManage, goToCreateWithGroups } = useNavigationActions();
   const currentUser = getCurrentUser();
-
   const groupActions = useGroupActions();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("projets");
+  const [activeTab, setActiveTab] = useState("featured");
+  const [feedFilter, setFeedFilter] = useState<"all" | "ideas" | "posts">("all");
+  
+  // NOUVEAU : État pour stocker les données du showcase récupérées via l'API
+  const [showcaseItems, setShowcaseItems] = useState<(Idea | Post)[]>([]);
 
-  // Charger les données du groupe
   useEffect(() => {
     if (!groupId) return;
-
     const loadGroupData = async () => {
       setIsLoading(true);
       try {
-        await groupActions.loadGroupDetails(groupId);
-        await groupActions.loadGroupFeed(groupId);
+        // Exécution en parallèle : détails, feed, et showcase
+        await Promise.all([
+          groupActions.loadGroupDetails(groupId),
+          groupActions.loadGroupFeed(groupId),
+          // Appel direct API pour le showcase
+          fetchGroupShowcase(groupId).then(items => setShowcaseItems(items))
+        ]);
       } catch (error) {
         console.error("Erreur lors du chargement du groupe:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
     loadGroupData();
   }, [groupId]);
 
@@ -61,224 +67,139 @@ export function GroupHubPage() {
   const animators = groupId ? getGroupAnimators(groupId) : [];
   const members = groupId ? getGroupMembers(groupId) : [];
 
-  // Séparer les posts par type pour l'onglet discussions
-  const groupPosts = groupId ? getPostsByGroup(groupId) : [];
-  const groupIdeas = groupId ? getIdeasByGroup(groupId) : [];
+  // Feed fusionné et filtré pour l'onglet "Participer"
+  const participationFeed = useMemo(() => {
+    let combined = [
+      ...ideas.map(i => ({ ...i, itemType: 'idea' as const })),
+      ...posts.map(p => ({ ...p, itemType: 'post' as const }))
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  // Créer un groupe enrichi avec les counts calculés à partir des données réelles
-  const enrichedGroup = group ? {
-    ...group,
-    memberCount: members.length,
-    ideaCount: groupIdeas.length,
-    projectCount: groupPosts.length, // Les posts dans un groupe peuvent être considérés comme des projets
-  } : null;
+    if (feedFilter === "ideas") return combined.filter(item => item.itemType === 'idea');
+    if (feedFilter === "posts") return combined.filter(item => item.itemType === 'post');
+    return combined;
+  }, [ideas, posts, feedFilter]);
 
   const isMember = currentUser && groupId ? isUserMemberOfGroup(currentUser.id, groupId) : false;
   const isAnimator = currentUser && groupId ? isUserAnimatorOfGroup(currentUser.id, groupId) : false;
 
-  const handleJoinGroup = async () => {
-    if (!currentUser || !currentUser.isRegistered || !groupId) {
-      console.log("Veuillez vous enregistrer pour rejoindre un groupe");
-      return;
-    }
-
-    try {
-      await groupActions.joinGroup(groupId);
-    } catch (error) {
-      console.error("Erreur lors de l'adhésion au groupe:", error);
-    }
+  const handleJoin = async () => {
+    if (!currentUser) return navigate('/login');
+    if (groupId) await groupActions.joinGroup(groupId);
   };
 
-  const handleLeaveGroup = async () => {
-    if (!currentUser || !currentUser.isRegistered || !groupId) return;
-
-    try {
-      await groupActions.leaveGroup(groupId);
-    } catch (error) {
-      console.error("Erreur lors de la sortie du groupe:", error);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="text-center">
-          <p className="text-muted-foreground">Chargement du groupe...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!enrichedGroup) {
-    return (
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="text-center">
-          <h2>Groupe introuvable</h2>
-          <p className="text-muted-foreground mt-2">
-            Le groupe que vous recherchez n'existe pas ou a été supprimé.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="max-w-5xl mx-auto px-6 py-12 text-center text-muted-foreground">Chargement...</div>;
+  if (!group) return <div className="max-w-5xl mx-auto px-6 py-12 text-center"><h2>Groupe introuvable</h2></div>;
 
   return (
     <div>
-      {/* En-tête du groupe */}
       <GroupHeader
-        group={enrichedGroup}
+        group={group}
         isMember={isMember}
         isAnimator={isAnimator}
-        onJoin={handleJoinGroup}
-        onLeave={handleLeaveGroup}
-        onManage={() => goToGroupManage(enrichedGroup.id)}
+        onJoin={handleJoin}
+        onLeave={() => groupId && groupActions.leaveGroup(groupId)}
+        onManage={() => goToGroupManage(group.id)}
       />
 
-      {/* Contenu principal */}
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        {/* Bouton retour */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-4 md:mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Retour
         </Button>
 
-        {/* Boutons de création (si membre) */}
-        {isMember && (
-          <Card className="p-4 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-900 mb-1">Contribuer au groupe</h3>
-                <p className="text-sm text-gray-600">
-                  Partagez vos idées et lancez des discussions avec les membres
-                </p>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <Button
-                  variant="outline"
-                  className="flex-1 md:flex-none bg-white hover:bg-blue-50 border-blue-300"
-                  onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Discussion
-                </Button>
-                <Button
-                  className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
-                  onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}
-                >
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Projet
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {/* Conteneur avec scroll horizontal sur mobile */}
-          <div className="w-full overflow-x-auto pb-2 mb-6">
-            <TabsList className="w-full md:w-auto inline-flex">
-              <TabsTrigger value="projets" className="whitespace-nowrap">
-                <Lightbulb className="w-4 h-4 mr-2" />
-                <span className="hidden md:inline">Projets ({groupIdeas.length})</span>
-                <span className="md:hidden">Projets</span>
-              </TabsTrigger>
-              <TabsTrigger value="discussions" className="whitespace-nowrap">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                <span className="hidden md:inline">Discussions ({groupPosts.length})</span>
-                <span className="md:hidden">Disc.</span>
-              </TabsTrigger>
-              <TabsTrigger value="network" className="whitespace-nowrap">
-                <Info className="w-4 h-4 mr-2" />
-                <span className="hidden md:inline">Réseau</span>
-                <span className="md:hidden">Réseau</span>
-              </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="w-full overflow-x-auto pb-2">
+            <TabsList>
+              <TabsTrigger value="featured"><Star className="w-4 h-4 mr-2" />À la une</TabsTrigger>
+              <TabsTrigger value="participate"><MessageSquare className="w-4 h-4 mr-2" />Participer</TabsTrigger>
+              <TabsTrigger value="info"><Info className="w-4 h-4 mr-2" />Infos</TabsTrigger>
             </TabsList>
           </div>
 
-          {/* Onglet Projets */}
-          <TabsContent value="projets">
-            {groupIdeas.length === 0 ? (
-              <Card className="p-12 text-center">
-                <Lightbulb className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h4 className="font-medium text-gray-900 mb-2">Aucun projet pour le moment</h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  Soyez le premier à proposer un projet structuré pour ce groupe
-                </p>
-                {isMember && (
-                  <Button onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Créer un projet
-                  </Button>
+          {/* --- ONGLET À LA UNE --- */}
+          {/* Utilise désormais showcaseItems (API) au lieu du calcul local */}
+          <TabsContent value="featured" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {showcaseItems.length > 0 ? showcaseItems.slice(0, 3).map((item) => {
+                 // Détection du type pour l'affichage (car item est Idea | Post)
+                 const isIdea = (item as any).summary !== undefined;
+                 return (
+                  <Card key={item.id} className="p-4 border-2 border-yellow-100 bg-yellow-50/30 relative overflow-hidden opacity-80 shadow-none">
+                    <div className="absolute top-2 right-2"><Star className="w-5 h-5 text-yellow-500 fill-yellow-500" /></div>
+                    <Badge className="mb-2">{isIdea ? 'Projet' : 'Discussion'}</Badge>
+                    <h4 className="font-bold mb-2 line-clamp-2 text-gray-800">{item.title || "Sans titre"}</h4>
+                    <p className="text-sm text-gray-600 line-clamp-4">
+                      {(item as any).summary || (item as any).content}
+                    </p>
+                    <div className="mt-4 flex items-center text-xs font-medium text-yellow-700">
+                      {item.supporters?.length || 0} soutiens dans ce groupe
+                    </div>
+                  </Card>
+                );
+              }) : (
+                <p className="col-span-3 text-center py-10 text-muted-foreground">Pas encore de contenu populaire.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* --- ONGLET PARTICIPER --- */}
+          <TabsContent value="participate" className="space-y-6">
+            {/* Si NON-MEMBRE : Écran de verrouillage */}
+            {!isMember ? (
+              <Card className="p-12 flex flex-col items-center text-center space-y-4 border-2 border-slate-100 bg-slate-50/50">
+                <div className="bg-white p-4 rounded-full shadow-sm">
+                  <Lock className="w-8 h-8 text-slate-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Espace réservé aux membres</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Rejoignez ce groupe pour accéder aux discussions, aux projets en cours et apporter votre contribution.
+                  </p>
+                </div>
+                {!currentUser ? (
+                  <Button onClick={() => navigate('/login')}>Se connecter pour rejoindre</Button>
+                ) : (
+                  <Button onClick={handleJoin}>Rejoindre le groupe maintenant</Button>
                 )}
               </Card>
             ) : (
-              <div className="space-y-4">
-                {groupIdeas
-                  .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                  .map((idea) => (
-                    <IdeaCard
-                      key={idea.id}
-                      idea={idea}
-                      onClick={() => goToIdea(idea.id)}
-                    />
-                  ))}
-              </div>
+              /* Si MEMBRE : Contenu normal (Style conservé) */
+              <>
+                <div className="flex flex-wrap gap-2 items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                  <div className="text-sm font-medium text-blue-800">Nouvelle contribution :</div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}>+ Discussion</Button>
+                    <Button size="sm" onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>+ Projet</Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-b pb-4">
+                  <ListFilter className="w-4 h-4 text-muted-foreground" />
+                  <Button variant={feedFilter === "all" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("all")}>Tout</Button>
+                  <Button variant={feedFilter === "ideas" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("ideas")}>Projets</Button>
+                  <Button variant={feedFilter === "posts" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("posts")}>Discussions</Button>
+                </div>
+
+                <div className="space-y-4">
+                  {participationFeed.length > 0 ? participationFeed.map((item) => (
+                    item.itemType === 'idea' ? (
+                      <IdeaCard key={item.id} idea={item as any} onIdeaClick={() => navigate(`/content/${item.id}`)} onSupport={() => {}} />
+                    ) : (
+                      <PostCard key={item.id} post={item as any} onPostClick={() => navigate(`/content/${item.id}`)} onLike={() => {}} />
+                    )
+                  )) : (
+                    <Card className="p-12 text-center text-muted-foreground">Aucun contenu ne correspond à ce filtre.</Card>
+                  )}
+                </div>
+              </>
             )}
           </TabsContent>
 
-          {/* Onglet Discussions */}
-          <TabsContent value="discussions">
-            {groupPosts.length === 0 ? (
-              <Card className="p-12 text-center">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h4 className="font-medium text-gray-900 mb-2">Aucune discussion pour le moment</h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  Lancez une discussion pour échanger avec les membres du groupe
-                </p>
-                {isMember && groupId && (
-                  <Button variant="outline" onClick={() => goToCreateWithGroups([groupId], 'post')}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Lancer une discussion
-                  </Button>
-                )}
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {groupPosts
-                  .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                  .map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onClick={() => goToPost(post.id)}
-                    />
-                  ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Onglet Réseau (Liens + Membres fusionnés) */}
-          <TabsContent value="network">
-            <div className="space-y-8">
-              {/* Section Liens */}
-              <div>
-                <GroupLinksModule groupId={enrichedGroup.id} isAnimator={isAnimator} />
-              </div>
-
-              {/* Section Membres */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Membres du groupe</h3>
-                <GroupMembersList
-                  groupId={enrichedGroup.id}
-                  animators={animators}
-                  members={members}
-                  showAll={true}
-                />
-              </div>
+          {/* --- ONGLET INFOS --- */}
+          <TabsContent value="info" className="space-y-8">
+            <GroupLinksModule groupId={group.id} isAnimator={isAnimator} />
+            <div>
+              <h3 className="text-lg font-medium mb-4">Membres du groupe</h3>
+              <GroupMembersList groupId={group.id} animators={animators} members={members} showAll={true} />
             </div>
           </TabsContent>
         </Tabs>

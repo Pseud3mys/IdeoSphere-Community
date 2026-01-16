@@ -143,6 +143,27 @@ export async function fetchGroupById(groupId: string): Promise<{
 }
 
 /**
+ * Récupère les éléments "À la une" (Showcase) d'un groupe.
+ * GET /api/groups/<key>/showcase
+ */
+export async function fetchGroupShowcase(groupId: string): Promise<(Idea | Post)[]> {
+  try {
+    const groupKey = groupId.split('/')[1];
+    // On suppose que l'API renvoie un tableau mixte d'idées et de posts
+    const response = await apiClient.get<RawFeedData>(`/groups/${groupKey}/showcase`);
+    
+    // On réutilise la transformation existante du feedService ou transformService
+    const { ideas, posts } = transformFeedData(response.data);
+    
+    // On retourne un tableau combiné
+    return [...ideas, ...posts];
+  } catch (error) {
+    console.error(`❌ [API groupService.fetchGroupShowcase] Erreur pour ${groupId}`, error);
+    return [];
+  }
+}
+
+/**
  * Récupère le feed d'un groupe (idées et posts).
  * GET /api/groups/<key>/feed
  */
