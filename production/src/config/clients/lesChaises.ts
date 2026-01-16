@@ -7,7 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
-import { logo_leschaises } from '../../assets/logo_leschaises.png';
+import logo_leschaises from '../../assets/logo_leschaises.png';
 
 export const lesChaisesConfig: ClientConfig = {
   // ============================================================================
