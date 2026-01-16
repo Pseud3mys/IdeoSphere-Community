@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { User } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent } from './ui/card';
 import { ArrowLeft, MapPin, Calendar, Target, Heart, MessageSquare } from 'lucide-react';
+import { fetchUserStats, UserStats } from '../api/userService';
 
 interface UserProfilePagePublicProps {
   userId: string;
@@ -11,19 +13,24 @@ interface UserProfilePagePublicProps {
 }
 
 export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicProps) {
-  const { 
-    getCurrentUser, 
-    getUserById,
-    getAllIdeas, 
-    getAllPosts 
-  } = useEntityStoreSimple();
-
+  const { getCurrentUser, getUserById } = useEntityStoreSimple();
   const currentUser = getCurrentUser();
-  const ideas = getAllIdeas();
-  const posts = getAllPosts();
-
-  // Trouver l'utilisateur avec getUserById qui gère les préfixes automatiquement
   const user = getUserById(userId);
+
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingStats(true);
+    fetchUserStats(userId).then((data) => {
+      if (isMounted) {
+        setStats(data);
+        setLoadingStats(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [userId]);
 
   // getUserById retourne unknownUser si non trouvé, vérifier si c'est un vrai utilisateur
   if (!user || user.id === 'unknown') {
@@ -41,13 +48,6 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
   }
 
   const isOwnProfile = currentUser?.id === userId;
-
-  // Calculer les statistiques avec protections
-  const userIdeas = (ideas || []).filter(idea => 
-    idea?.creatorIds?.includes(userId)
-  );
-  const userPosts = (posts || []).filter(post => post?.authorId === userId);
-  const totalSupports = userIdeas.reduce((sum, idea) => sum + (idea.supporters?.length || 0), 0);
 
   // Format de date de création du compte
   const formatMemberSince = (date: Date) => {
@@ -111,37 +111,38 @@ export function UserProfilePagePublic({ userId, onBack }: UserProfilePagePublicP
                 </div>
               )}
 
-              {/* Statistiques de contribution */}
+              {/* Statistiques de contribution (API) */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-medium text-gray-900 mb-4">Contribution à la communauté</h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-blue-600 mb-1">
-                      <Target className="w-4 h-4" />
-                      <span className="text-xl font-semibold">{userIdeas.length + userPosts.length}</span>
+                {loadingStats ? (
+                  <div className="text-center text-gray-400">Chargement des statistiques...</div>
+                ) : stats ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center space-x-1 text-blue-600 mb-1">
+                        <Target className="w-4 h-4" />
+                        <span className="text-xl font-semibold">{stats.ideasCount}</span>
+                      </div>
+                      <p className="text-sm text-gray-600">posts publiés</p>
                     </div>
-                    <p className="text-sm text-gray-600">Idées ou post créées</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-purple-600 mb-1">
-                      <Heart className="w-4 h-4" />
-                      <span className="text-xl font-semibold">{totalSupports}</span>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center space-x-1 text-purple-600 mb-1">
+                        <Heart className="w-4 h-4" />
+                        <span className="text-xl font-semibold">{stats.supportsReceived}</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Soutiens reçus</p>
                     </div>
-                    <p className="text-sm text-gray-600">Soutiens reçus</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-green-600 mb-1">
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-xl font-semibold">
-                        {ideas.filter(idea => idea.supporters?.includes(userId)).length} {/* ✅ supporters est maintenant string[] */}
-                      </span>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center space-x-1 text-green-600 mb-1">
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="text-xl font-semibold">{stats.ideasSupported}</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Idées soutenues</p>
                     </div>
-                    <p className="text-sm text-gray-600">Idées soutenues</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center text-gray-400">Aucune statistique disponible</div>
+                )}
               </div>
             </div>
           </div>

@@ -40,38 +40,26 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
   }
 }
 
+export interface UserStats {
+  ideasCount: number;      // Contributions (Idées + Posts)
+  ideasSupported: number;  // Engagement (Soutiens donnés)
+  supportsReceived: number;// Impact (Soutiens reçus)
+}
+
 /**
- * Charge les statistiques d'un utilisateur
+ * Récupère les statistiques agrégées d'un utilisateur
  */
-export async function fetchUserStats(userId: string): Promise<{
-  ideasCount: number;
-  postsCount: number; // Note: Le backend retourne "ideasCount" qui englobe tout pour l'instant
-  supportsReceived: number;
-  ideasSupported: number;
-} | null> {
-  // Nettoyage de l'ID si nécessaire (ex: "users/123" -> "123")
-  const cleanKey = userId.replace('users/', '');
-  
-  console.log(`🌐 [API] fetchUserStats - key: ${cleanKey}`);
+export async function fetchUserStats(userId: string): Promise<UserStats> {
+  // Gestion de l'ID (users/123 -> 123)
+  const userKey = userId.includes('/') ? userId.split('/')[1] : userId;
   
   try {
-    const response = await apiClient.get<{
-        ideasCount: number;
-        ideasSupported: number;
-        supportsReceived: number;
-    }>(`/users/${cleanKey}/stats`);
-
-    const data = response.data;
-
-    return {
-      ideasCount: data.ideasCount, 
-      postsCount: 0, // Optionnel : si vous voulez séparer plus tard, il faudra adapter l'AQL
-      supportsReceived: data.supportsReceived,
-      ideasSupported: data.ideasSupported
-    };
+    const response = await apiClient.get<UserStats>(`/users/${userKey}/stats`);
+    return response.data;
   } catch (error) {
-    console.error(`❌ [API] fetchUserStats - Erreur:`, error);
-    return null;
+    console.error("Erreur lors de la récupération des stats utilisateur:", error);
+    // Retour par défaut en cas d'erreur pour ne pas casser l'UI
+    return { ideasCount: 0, ideasSupported: 0, supportsReceived: 0 };
   }
 }
 

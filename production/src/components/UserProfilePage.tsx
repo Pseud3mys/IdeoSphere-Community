@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { fetchUserStats, UserStats } from '../api/userService';
 import { User, Idea } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -80,53 +81,21 @@ export function UserProfilePage({
     setEditedBio(user.bio || '');
   }, [user.bio]);
 
-  // Statistiques élogieuses de l'utilisateur
-  const userIdeas = ideas.filter(i => i.creatorIds?.includes(user.id));
-  const supportedIdeas = ideas.filter(i => i.supporters?.includes(user.id));
-  const collaboratedIdeas = ideas.filter(i => 
-    i.creatorIds?.includes(user.id) || 
-    i.ratings?.some(r => r.userId === user.id)
-  );
-  
-  const stats = {
-    ideasCreated: userIdeas.length,
-    totalSupports: userIdeas.reduce((sum, idea) => sum + (idea.supporters?.length || 0), 0),
-    ideasSupported: supportedIdeas.length,
-    collaborations: collaboratedIdeas.length,
-    avgRating: userIdeas.length > 0 
-      ? userIdeas.reduce((sum, idea) => {
-          const ratings = idea.ratings;
-          if (!ratings || ratings.length === 0) return sum;
-          const avgForIdea = ratings.reduce((rSum, r) => rSum + r.value, 0) / ratings.length;
-          return sum + avgForIdea;
-        }, 0) / userIdeas.length 
-      : 0
-  };
+  // Statistiques utilisateur via API
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  // Activités récentes simulées
-  const recentActivities = [
-    {
-      id: '1',
-      type: 'idea_created',
-      description: `A créé l'idée "${userIdeas[0]?.title || 'Nouvelle idée'}"`,
-      time: 'Il y a 2 jours',
-      icon: <Lightbulb className="w-4 h-4 text-blue-600" />
-    },
-    {
-      id: '2', 
-      type: 'idea_supported',
-      description: 'A soutenu 3 nouvelles idées de la communauté',
-      time: 'Il y a 4 jours',
-      icon: <Heart className="w-4 h-4 text-green-600" />
-    },
-    {
-      id: '3',
-      type: 'collaboration',
-      description: 'A rejoint une collaboration sur un projet local',
-      time: 'Il y a 1 semaine',
-      icon: <Users className="w-4 h-4 text-purple-600" />
-    }
-  ].slice(0, userIdeas.length > 0 ? 3 : 1);
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingStats(true);
+    fetchUserStats(user.id).then((data) => {
+      if (isMounted) {
+        setStats(data);
+        setLoadingStats(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [user.id]);
 
   const handleSaveProfile = async () => {
     try {
@@ -341,7 +310,7 @@ export function UserProfilePage({
         </div>
       </div>
 
-      {/* Statistiques élogieuses */}
+      {/* Statistiques élogieuses (API) */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -350,39 +319,35 @@ export function UserProfilePage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
-                <Lightbulb className="w-6 h-6 text-blue-600" />
+          {loadingStats ? (
+            <div className="text-center text-gray-400">Chargement des statistiques...</div>
+          ) : stats ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
+                  <Lightbulb className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="text-2xl text-primary mb-1">{stats.ideasCount}</div>
+                <div className="text-sm text-muted-foreground">Idées publiées</div>
               </div>
-              <div className="text-2xl text-primary mb-1">{stats.ideasCreated}</div>
-              <div className="text-sm text-muted-foreground">Idées créées</div>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-2">
-                <ArrowUp className="w-6 h-6 text-green-600" />
+              <div className="text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-2">
+                  <ArrowUp className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="text-2xl text-green-600 mb-1">{stats.supportsReceived}</div>
+                <div className="text-sm text-muted-foreground">Soutiens reçus</div>
               </div>
-              <div className="text-2xl text-green-600 mb-1">{stats.totalSupports}</div>
-              <div className="text-sm text-muted-foreground">Soutiens reçus</div>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mx-auto mb-2">
-                <Heart className="w-6 h-6 text-purple-600" />
+              <div className="text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mx-auto mb-2">
+                  <Heart className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="text-2xl text-purple-600 mb-1">{stats.ideasSupported}</div>
+                <div className="text-sm text-muted-foreground">Idées soutenues</div>
               </div>
-              <div className="text-2xl text-purple-600 mb-1">{stats.ideasSupported}</div>
-              <div className="text-sm text-muted-foreground">Idées soutenues</div>
             </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mx-auto mb-2">
-                <Users className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="text-2xl text-orange-600 mb-1">{stats.collaborations}</div>
-              <div className="text-sm text-muted-foreground">Collaborations</div>
-            </div>
-          </div>
+          ) : (
+            <div className="text-center text-gray-400">Aucune statistique disponible</div>
+          )}
 
           {/* Section Partager la plateforme */}
           <div className="mt-6 border-t pt-6">
@@ -397,7 +362,6 @@ export function UserProfilePage({
                 </p>
               </div>
             </div>
-            
             <SharePlatformDialog>
               <Button 
                 variant="outline" 
