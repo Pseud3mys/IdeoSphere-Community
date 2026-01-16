@@ -67,10 +67,77 @@ export const lesChaisesConfig: ClientConfig = {
       adjective: 'collaboratif', // Ex: "idée collaborative", "vie collaborative", "post collaboratif"
     },
     
-    // Localisation géographique
+     // Localisation géographique
     location: {
-      cityName: 'Votre Communauté',
+      cityName: 'Paris 18',
       enabled: true,
+      // AJOUT DES 8 CONSEILS DE QUARTIER DU 18EME
+      suggestedLocations: [
+        {
+          label: "Quartier Montmartre",
+          context: "75018, Paris",
+          lon: 2.3430,
+          lat: 48.8864,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Grandes-Carrières – Clichy",
+          context: "75018, Paris",
+          lon: 2.3308,
+          lat: 48.8885,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Clignancourt – Jules Joffrin",
+          context: "75018, Paris",
+          lon: 2.3443,
+          lat: 48.8924,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Goutte d'Or – Château Rouge",
+          context: "75018, Paris",
+          lon: 2.3541,
+          lat: 48.8858,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Amiraux – Simplon – Poissonniers",
+          context: "75018, Paris",
+          lon: 2.3524,
+          lat: 48.8951,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier La Chapelle – Marx Dormoy",
+          context: "75018, Paris",
+          lon: 2.3614,
+          lat: 48.8889,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Moskova – Porte de Montmartre",
+          context: "75018, Paris",
+          lon: 2.3355,
+          lat: 48.8953,
+          postcode: "75018",
+          city: "Paris"
+        },
+        {
+          label: "Quartier Charles Hermite – Évangile",
+          context: "75018, Paris",
+          lon: 2.3636,
+          lat: 48.8974,
+          postcode: "75018",
+          city: "Paris"
+        }
+      ]
     },
   },
 

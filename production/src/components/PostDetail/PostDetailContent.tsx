@@ -80,7 +80,7 @@ export function PostDetailContent({
                       <span className="text-gray-500">•</span>
                       <span className="text-sm text-gray-500">{formatTimeAgo(post.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-500">{postAuthor.location?.label || 'Localisation non renseigné'}</p>
+                    <p className="text-sm text-gray-500">{post.location?.label || 'Localisation non renseigné'}</p>
                   </div>
                 </>
               ) : (

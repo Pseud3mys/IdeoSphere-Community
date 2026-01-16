@@ -26,6 +26,15 @@ export interface GroupType {
   icon: string;
 }
 
+export interface PredefinedLocation {
+  label: string;
+  context?: string;
+  lon: number;
+  lat: number;
+  postcode?: string;
+  city?: string;
+}
+
 // Interface principale de configuration
 export interface ClientConfig {
   // ============================================================================
@@ -67,6 +76,8 @@ export interface ClientConfig {
     location: {
       cityName: string;
       enabled: boolean;
+      // AJOUT : Liste des quartiers/lieux suggérés par défaut
+      suggestedLocations?: PredefinedLocation[];
     };
   };
 

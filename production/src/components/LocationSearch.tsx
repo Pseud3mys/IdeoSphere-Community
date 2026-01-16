@@ -5,6 +5,8 @@ import { MapPin, Loader2, X } from 'lucide-react';
 import { searchLocation } from '../api/geocodingService';
 import { Location } from '../types';
 import { cn } from './ui/utils';
+// IMPORT de la config active
+import { currentConfig } from '../config/clientConfig';
 
 interface LocationSearchProps {
   onLocationSelect: (location: Location | null) => void;
@@ -21,6 +23,19 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Récupération des suggestions depuis la config
+  // On mappe les propriétés pour correspondre exactement au type Location de l'app
+  const suggestedLocations: Location[] = (currentConfig.terminology.location.suggestedLocations || []).map(loc => ({
+    label: loc.label,
+    lon: loc.lon,
+    lat: loc.lat,
+    context: loc.context,
+    city: loc.city,
+    postcode: loc.postcode,
+    // citycode n'est souvent pas critique pour l'affichage, on peut le laisser undefined ou vide
+    citycode: undefined 
+  }));
+
   // Initialize state from props
   useEffect(() => {
     if (initialLocation) {
@@ -36,13 +51,24 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(async () => {
+      // Si on a tapé au moins 3 caractères
       if (query.length >= 3 && query !== selectedLocation?.label) {
         setIsLoading(true);
         const locations = await searchLocation(query);
         setResults(locations);
         setIsLoading(false);
         setIsOpen(true);
-      } else {
+      } 
+      // Si le champ est vide (ou presque), on affiche les suggestions par défaut
+      else if (query.length === 0 && suggestedLocations.length > 0) {
+        setResults(suggestedLocations);
+        // On garde isOpen à false ici pour ne pas ouvrir "tous tout seul" sauf si focus (géré par onFocus)
+        // Mais si on veut qu'effacer le texte réouvre la liste si on est dedans :
+        if (document.activeElement === wrapperRef.current?.querySelector('input')) {
+           setIsOpen(true);
+        }
+      } 
+      else {
         setResults([]);
         setIsOpen(false);
       }
@@ -62,6 +88,16 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [wrapperRef]);
 
+  // Gestion du focus pour afficher les suggestions direct
+  const handleFocus = () => {
+    if (query.length === 0 && suggestedLocations.length > 0) {
+      setResults(suggestedLocations);
+      setIsOpen(true);
+    } else if (results.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
   const handleSelect = (location: Location) => {
     setSelectedLocation(location);
     setQuery(location.label);
@@ -72,8 +108,14 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
   const handleClear = () => {
     setQuery('');
     setSelectedLocation(null);
-    setResults([]);
-    onLocationSelect(null);
+    // Au clear, on remet les suggestions par défaut si elles existent
+    if (suggestedLocations.length > 0) {
+      setResults(suggestedLocations);
+      setIsOpen(true); // On laisse ouvert pour permettre une nouvelle sélection rapide
+    } else {
+      setResults([]);
+      onLocationSelect(null);
+    }
   };
 
   return (
@@ -82,10 +124,11 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
         <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           value={query}
+          onFocus={handleFocus} // AJOUT
           onChange={(e) => {
             setQuery(e.target.value);
             if (selectedLocation && e.target.value !== selectedLocation.label) {
-              setSelectedLocation(null); // Reset selection if user types
+              setSelectedLocation(null);
               onLocationSelect(null);
             }
           }}
@@ -110,6 +153,12 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
 
       {isOpen && results.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-md max-h-60 overflow-auto">
+          {/* Petit titre optionnel pour distinguer les suggestions */}
+          {query.length === 0 && suggestedLocations.length > 0 && (
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-accent/50">
+              Suggestions
+            </div>
+          )}
           <ul className="p-1">
             {results.map((location, index) => (
               <li

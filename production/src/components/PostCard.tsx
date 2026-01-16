@@ -128,10 +128,10 @@ export function PostCard({
           
           {/* Localisation et badges */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
-            {postAuthor?.location && (
+            {latestPost.location && (
               <>
                 <MapPin className="w-4 h-4" />
-                <span>{postAuthor.location.label}</span>
+                <span>{latestPost.location.label}</span>
                 <span>•</span>
               </>
             )}
