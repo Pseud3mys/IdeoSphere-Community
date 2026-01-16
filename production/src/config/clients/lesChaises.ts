@@ -7,6 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
+import { logo_leschaises } from '../../assets/logo_leschaises.png';
 
 export const lesChaisesConfig: ClientConfig = {
   // ============================================================================
@@ -31,6 +32,8 @@ export const lesChaisesConfig: ClientConfig = {
     
     // Copyright
     copyright: '© 2025 IdeoSphere. Tous droits réservés.',
+
+    logoUrl: logo_leschaises,
   },
 
   // ============================================================================
