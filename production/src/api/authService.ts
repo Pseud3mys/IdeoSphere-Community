@@ -57,7 +57,7 @@ export async function createUnfinalizedAccountOnApi(guestData?: { name?: string;
   
   // Générer des données par défaut si absentes pour satisfaire le backend qui veut name/email
   const timestamp = new Date().getTime();
-  const name = guestData?.name || `Invité_${timestamp.toString().slice(-4)}`;
+  const name = guestData?.name || `Utilisateur non connecté (${timestamp.toString().slice(-4)})`;
   const email = guestData?.email || `guest_${timestamp}@temp.local`;
 
   try {

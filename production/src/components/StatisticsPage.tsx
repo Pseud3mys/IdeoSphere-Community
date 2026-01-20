@@ -2,19 +2,12 @@ import { useState, useEffect } from 'react';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import {
   fetchGlobalHealthStats,
-  fetchGroupHealthStats,
-  fetchKumuData,
   fetchRawDataExport,
   GlobalHealthStats,
-  GroupHealthStats,
-  KumuData,
 } from '../api/statisticsService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
-  BarChart, 
-  Bar, 
   LineChart, 
   Line, 
   XAxis, 
@@ -26,28 +19,22 @@ import {
   PieChart,
   Pie,
   Cell,
+  AreaChart,
+  Area
 } from 'recharts';
 import {
   Activity,
   Users,
   FileText,
-  Lightbulb,
   TrendingUp,
   BarChart3,
   Download,
-  ExternalLink,
   AlertCircle,
   CheckCircle,
-  Share2,
+  UserPlus
 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
 import { Alert, AlertDescription } from './ui/alert';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { toast } from 'sonner';
-import { clientConfig } from '../config/clientConfig';
 
 interface StatisticsPageProps {
   onNavigateBack?: () => void;
@@ -57,12 +44,8 @@ const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
   const [globalStats, setGlobalStats] = useState<GlobalHealthStats | null>(null);
-  const [groupStats, setGroupStats] = useState<GroupHealthStats | null>(null);
-  const [kumuData, setKumuData] = useState<KumuData | null>(null);
   const [rawData, setRawData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('global');
-  const [selectedTimeRange, setSelectedTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   
   const {
     getAllUsers,
@@ -81,40 +64,15 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
     loadStatistics();
   }, []);
   
-  // Recharger quand le groupe change
-  useEffect(() => {
-    if (selectedGroupId !== 'global') {
-      loadGroupStatistics(selectedGroupId);
-    } else {
-      setGroupStats(null);
-    }
-  }, [selectedGroupId]);
-  
   const loadStatistics = async () => {
     setIsLoading(true);
     try {
-      const [stats, kumu] = await Promise.all([
-        fetchGlobalHealthStats(users, ideas, posts),
-        fetchKumuData(users, ideas, posts, groups),
-      ]);
+      const stats = await fetchGlobalHealthStats(users, ideas, posts);
       setGlobalStats(stats);
-      setKumuData(kumu);
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  const loadGroupStatistics = async (groupId: string) => {
-    const group = groups.find(g => g.id === groupId);
-    if (!group) return;
-    
-    try {
-      const stats = await fetchGroupHealthStats(groupId, group.name, users, ideas, posts);
-      setGroupStats(stats);
-    } catch (error) {
-      console.error('Erreur lors du chargement des stats du groupe:', error);
     }
   };
   
@@ -123,7 +81,6 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
       const data = await fetchRawDataExport(users, ideas, posts, groups);
       setRawData(data);
       
-      // Télécharger le JSON
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -145,7 +102,7 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
     }
   };
   
-  const currentStats = groupStats || globalStats;
+  const currentStats = globalStats;
   
   if (isLoading || !currentStats) {
     return (
@@ -158,18 +115,9 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
     );
   }
   
-  // Préparer les données pour le graphique de contenu dans le temps
-  const timeRangeData = currentStats.contentOverTime[selectedTimeRange];
+  const contentTimeData = currentStats.contentOverTime.daily;
+  const usersTimeData = currentStats.usersOverTime?.daily || [];
   
-  // Préparer les données pour le graphique de distribution
-  const participationData = [
-    { name: 'Médiane (P50)', value: currentStats.participationDistribution.percentiles.p50 },
-    { name: 'P75', value: currentStats.participationDistribution.percentiles.p75 },
-    { name: 'P90', value: currentStats.participationDistribution.percentiles.p90 },
-    { name: 'P95', value: currentStats.participationDistribution.percentiles.p95 },
-  ];
-  
-  // Interpréter le Gini
   const getGiniInterpretation = (gini: number) => {
     if (gini < 0.3) return { text: 'Excellente égalité', color: 'text-green-600', icon: CheckCircle };
     if (gini < 0.5) return { text: 'Bonne distribution', color: 'text-blue-600', icon: CheckCircle };
@@ -180,12 +128,11 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
   const giniInterpretation = getGiniInterpretation(currentStats.participationDistribution.gini);
   const GiniIcon = giniInterpretation.icon;
   
-  // Données pour le graphique camembert
   const contentTypesData = [
     { name: 'Idées', value: currentStats.totalIdeas },
     { name: 'Posts', value: currentStats.totalPosts },
   ];
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -204,39 +151,10 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
               </Button>
             )}
           </div>
-          
-          {/* Sélecteur de groupe */}
-          <div className="flex gap-4 items-center">
-            <label className="text-sm text-gray-600">Filtrer par groupe:</label>
-            <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-              <SelectTrigger className="w-64">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="global">🌍 Global (tous les groupes)</SelectItem>
-                {groups.map(group => (
-                  <SelectItem key={group.id} value={group.id}>
-                    {group.avatar || '📁'} {group.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {groupStats && (
-              <Badge variant="secondary">{groupStats.groupName}</Badge>
-            )}
-          </div>
         </div>
         
-        {/* Tabs principales */}
-        <Tabs defaultValue="health" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="health">Santé de la plateforme</TabsTrigger>
-            <TabsTrigger value="kumu">Visualisation & Export</TabsTrigger>
-          </TabsList>
-          
-          {/* Tab 1: Santé de la plateforme */}
-          <TabsContent value="health" className="space-y-6">
-            {/* Cartes de statistiques globales */}
+        <div className="space-y-6">
+            {/* Cartes KPI */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -283,7 +201,7 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
                   <Activity className="h-4 w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl">{currentStats.avgContributionsPerUser.toFixed(1)}</div>
+                  <div className="text-2xl">{currentStats.avgContributionsPerUser.toFixed(0) / 10}</div>
                   <p className="text-xs text-gray-500 mt-1">
                     par utilisateur actif
                   </p>
@@ -291,313 +209,241 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
               </Card>
             </div>
             
-            {/* Distribution de participation */}
+            {/* SECTION GRAPHIQUES TEMPORELS */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Distribution de participation
-                  </CardTitle>
-                  <CardDescription>
-                    Analyse de l'égalité de contribution entre utilisateurs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Coefficient de Gini */}
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm">Coefficient de Gini</span>
-                      <Badge variant="secondary" className={giniInterpretation.color}>
-                        <GiniIcon className="h-3 w-3 mr-1" />
-                        {giniInterpretation.text}
-                      </Badge>
-                    </div>
-                    <div className="text-3xl mb-1">
-                      {currentStats.participationDistribution.gini.toFixed(3)}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      0 = égalité parfaite, 1 = inégalité maximale
-                    </p>
-                  </div>
-                  
-                  {/* Index Herfindahl */}
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm">Index Herfindahl-Hirschman</span>
-                    </div>
-                    <div className="text-3xl mb-1">
-                      {currentStats.participationDistribution.herfindahl.toFixed(3)}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Mesure de concentration (0 = dispersion, 1 = concentration)
-                    </p>
-                  </div>
-                  
-                  {/* Graphique des percentiles */}
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={participationData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" fontSize={12} />
-                      <YAxis fontSize={12} />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                {/* Graphique 1 : Contenu */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        Création de contenu
+                    </CardTitle>
+                    <CardDescription>
+                      Évolution journalière
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={contentTimeData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis 
+                          dataKey="date" 
+                          fontSize={11}
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={10}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} dot={false} name="Contenu créé" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Graphique 2 : Utilisateurs (Nouveaux) */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        Croissance de la communauté
+                    </CardTitle>
+                    <CardDescription>
+                      Nouveaux inscrits et visiteurs actifs
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={usersTimeData}>
+                        <defs>
+                          <linearGradient id="colorRegistered" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorAnon" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis 
+                          dataKey="date" 
+                          fontSize={11}
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={10}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                        <Legend />
+                        <Area 
+                            type="monotone" 
+                            dataKey="registered" 
+                            stroke="#10b981" 
+                            fillOpacity={1} 
+                            fill="url(#colorRegistered)" 
+                            name="Nouveaux inscrits" 
+                        />
+                        <Area 
+                            type="monotone" 
+                            dataKey="activeAnonymous" 
+                            stroke="#f59e0b" 
+                            fillOpacity={1} 
+                            fill="url(#colorAnon)" 
+                            name="Visiteurs actifs (sans compte)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+            </div>
+
+            {/* Distribution & Top Contributeurs */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Répartition du contenu */}
-              <Card>
+              {/* Colonne Gauche: Distribution & Pie Chart */}
+              <div className="lg:col-span-1 space-y-6">
+                  {/* Carte Gini simplifiée */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        Égalité
+                      </CardTitle>
+                      <CardDescription>
+                        Distribution de l'effort
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col items-center justify-center p-4">
+                            <div className="text-4xl font-bold mb-2 text-gray-800">
+                                {currentStats.participationDistribution.gini.toFixed(3)}
+                            </div>
+                            <Badge variant="outline" className={`${giniInterpretation.color} mb-2`}>
+                                <GiniIcon className="h-3 w-3 mr-1" />
+                                {giniInterpretation.text}
+                            </Badge>
+                            <p className="text-xs text-center text-gray-500">
+                                Coefficient de Gini<br/>(0 = égalité parfaite)
+                            </p>
+                        </div>
+                    </CardContent>
+                  </Card>
+              
+                  <Card>
+                    <CardHeader>
+                    <CardTitle>Contenu</CardTitle>
+                    <CardDescription>
+                        Répartition par type
+                    </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                        <Pie
+                            data={contentTypesData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                        >
+                            {contentTypesData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex justify-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[0]}}></div>
+                            Idées
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[1]}}></div>
+                            Posts
+                        </div>
+                    </div>
+                    </CardContent>
+                </Card>
+              </div>
+
+              {/* Colonne Droite: Top Contributeurs (2/3 largeur) */}
+              <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Répartition du contenu</CardTitle>
-                  <CardDescription>
-                    Distribution entre idées et posts
-                  </CardDescription>
+                    <CardTitle>Top Contributeurs</CardTitle>
+                    <CardDescription>
+                    Membres ayant le plus fort impact (qualité x diversité)
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={contentTypesData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {contentTypesData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                    <div className="space-y-4">
+                    {currentStats.topContributors.map((contributor, index) => {
+                        // Utiliser le nom renvoyé par le backend si possible, sinon fallback
+                        const user = users.find(u => u.id === contributor.userId);
+                        const displayName = contributor.name || user?.name || 'Utilisateur inconnu';
+                        
+                        return (
+                        <div key={contributor.userId} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className={`
+                                flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
+                                ${index === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}
+                            `}>
+                                #{index + 1}
+                            </div>
+                            
+                            <div className="flex-1">
+                                <div className="font-medium text-gray-900">{displayName}</div>
+                                <div className="flex gap-3 text-xs text-gray-500 mt-1">
+                                    <span className="flex items-center">
+                                        Impact: <span className="font-semibold ml-1 text-primary">{contributor.score.toFixed(1)}</span>
+                                    </span>
+                                    <span>·</span>
+                                    <span className="flex items-center">
+                                        Masse d'activité: <span className="font-semibold ml-1">{contributor.totalContributions.toFixed(1)}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            {index === 0 && (
+                                <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                    🏆 Top Impact
+                                </Badge>
+                            )}
+                        </div>
+                        );
+                    })}
+                    
+                    {currentStats.topContributors.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            Pas encore assez de données pour établir le classement.
+                        </div>
+                    )}
+                    </div>
                 </CardContent>
               </Card>
             </div>
-            
-            {/* Contenu dans le temps */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Contenu dans le temps</CardTitle>
-                    <CardDescription>
-                      Évolution de la création de contenu
-                    </CardDescription>
-                  </div>
-                  <Select value={selectedTimeRange} onValueChange={(v: any) => setSelectedTimeRange(v)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Journalier</SelectItem>
-                      <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                      <SelectItem value="monthly">Mensuel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={timeRangeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey={selectedTimeRange === 'daily' ? 'date' : selectedTimeRange === 'weekly' ? 'week' : 'month'} 
-                      fontSize={11}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis fontSize={12} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} name="Contenu créé" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            {/* Top contributeurs */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Top contributeurs</CardTitle>
-                <CardDescription>
-                  Les 10 utilisateurs les plus actifs
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {currentStats.topContributors.slice(0, 10).map((contributor, index) => {
-                    const user = users.find(u => u.id === contributor.userId);
-                    if (!user) return null;
-                    
-                    return (
-                      <div key={contributor.userId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm font-semibold text-gray-500 w-6">
-                          #{index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <div>{user.name}</div>
-                          <div className="text-xs text-gray-500">
-                            {contributor.ideas} idées · {contributor.posts} posts · {contributor.supportsGiven} soutiens
-                          </div>
-                        </div>
-                        <div className="text-sm">
-                          <Badge variant="secondary">
-                            {contributor.totalContributions} contributions
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Tab 2: Visualisation Kumu */}
-          <TabsContent value="kumu" className="space-y-6">
-            {/* Visualisation Kumu iframe */}
-            {clientConfig.integrations.kumu.enabled && clientConfig.integrations.kumu.embedUrl && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Share2 className="h-5 w-5" />
-                        Graphe de réseau - Kumu.io
-                      </CardTitle>
-                      <CardDescription>
-                        Visualisation interactive des connexions entre les entités de la plateforme
-                      </CardDescription>
-                    </div>
-                    {clientConfig.integrations.kumu.projectUrl && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={clientConfig.integrations.kumu.projectUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Ouvrir dans Kumu
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="w-full overflow-hidden rounded-lg border border-gray-200">
-                    <iframe
-                      src={clientConfig.integrations.kumu.embedUrl}
-                      width={clientConfig.integrations.kumu.width}
-                      height={clientConfig.integrations.kumu.height}
-                      style={{ border: 0, display: 'block' }}
-                      title="Visualisation Kumu"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3">
-                    Interagissez avec le graphe : cliquez et glissez les nœuds, zoomez, explorez les connexions.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Exporter les données pour Kumu
-                </CardTitle>
-                <CardDescription>
-                  Téléchargez les données au format JSON pour les importer dans votre propre visualisation Kumu
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Kumu.io est une plateforme de visualisation de réseaux. Téléchargez les données au format JSON pour les importer dans Kumu.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => {
-                        if (kumuData) {
-                          const blob = new Blob([JSON.stringify(kumuData, null, 2)], { type: 'application/json' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `kumu-data-${new Date().toISOString().split('T')[0]}.json`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }
-                      }}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Télécharger pour Kumu
-                    </Button>
-                  </div>
-                  
-                  <Separator />
-                  
-                  {/* URL d'import automatique */}
-                  <div className="space-y-2">
-                    <Label>URL d'import automatique Kumu</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        readOnly 
-                        value={`${window.location.origin}/api/export_kumu.json`}
-                        className="font-mono text-sm"
-                      />
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/api/export_kumu.json`);
-                          toast.success('URL copiée dans le presse-papier !');
-                        }}
-                      >
-                        Copier
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Utilisez cette URL dans Kumu pour importer automatiquement vos données (nécessite configuration backend).
-                    </p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <h4>Structure des données</h4>
-                    <p className="text-sm text-gray-600">
-                      Les données exportées contiennent deux tableaux :
-                    </p>
-                    <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                      <li><strong>nodes</strong> : chaque entité (utilisateur, idée, post, groupe)</li>
-                      <li><strong>connections</strong> : les relations entre entités</li>
-                    </ul>
-                  </div>
-                  
-                  <Button variant="outline" asChild>
-                    <a href="https://docs.kumu.io/guides/import.html" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Documentation Kumu
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
             
             {/* Export de données brutes */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="h-5 w-5" />
-                  Export de données brutes
+                  Export de données
                 </CardTitle>
                 <CardDescription>
-                  Téléchargez ou consultez toutes les données de la plateforme au format JSON
+                  Accédez aux données brutes pour vos propres analyses
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -607,7 +453,7 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
                     Télécharger JSON
                   </Button>
                   <Button variant="outline" onClick={handleViewRawData}>
-                    Prévisualiser les données
+                    Prévisualiser
                   </Button>
                 </div>
                 
@@ -619,28 +465,14 @@ export function StatisticsPage({ onNavigateBack }: StatisticsPageProps) {
                         {rawData.users.length} users · {rawData.ideas.length} ideas · {rawData.posts.length} posts
                       </Badge>
                     </div>
-                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto max-h-96 text-xs">
+                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto max-h-64 text-xs font-mono">
                       {JSON.stringify(rawData, null, 2)}
                     </pre>
                   </div>
                 )}
-                
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Cet export contient toutes les données de la plateforme. Vous pouvez l'utiliser pour :
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Analyse externe dans des outils comme Excel, Python, R</li>
-                      <li>Backup / sauvegarde des données</li>
-                      <li>Import dans d'autres systèmes</li>
-                      <li>Création de visualisations personnalisées</li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
