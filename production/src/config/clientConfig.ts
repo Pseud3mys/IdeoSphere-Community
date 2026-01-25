@@ -12,6 +12,7 @@ import { chesnayRocquencourtConfig } from './clients/chesnayRocquencourt';
 import { solidarcyConfig } from './clients/solidarcy';
 import { saintcyrencommunConfig } from './clients/saintcyrencommun';
 import { lesChaisesConfig } from './clients/lesChaises';
+import { vivonsnimesConfig } from './clients/VivonsNimes';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -48,6 +49,7 @@ const configs: Record<string, ClientConfig> = {
   'saintcyrencommun': saintcyrencommunConfig,
 
   'leschaises': lesChaisesConfig,
+  'vivonsnimes': vivonsnimesConfig,
 };
 
 // ============================================================================
