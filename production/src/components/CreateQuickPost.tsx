@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin, Users, X, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { clientConfig } from '../config/clientConfig';
 import { LocationSearch } from './LocationSearch';
 
@@ -95,7 +95,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
   };
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-6 pt-6">
       {/* Affichage du post source avec bouton de reset intégré */}
       {derivedSourcePost && (
         <Card className="border-blue-200 bg-blue-50/30">
@@ -131,132 +131,117 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
         </Card>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5" />
-              <span>Votre post</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Sujet (optionnel) */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Sujet de votre post (optionnel)</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={clientConfig.examples.post.titlePlaceholder}
-                className="text-base"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Le thème principal de votre message</span>
-                <span>{title.length}/100</span>
-              </div>
-            </div>
+  <form onSubmit={handleSubmit} className="space-y-4">
+<Card>
+  <CardContent className="space-y-4 pt-6">
+    {/* Message principal en haut, style réseau social */}
+    <div className="flex items-start gap-3">
+      <Avatar className="w-10 h-10 mt-1">
+        <AvatarImage src={effectiveUser.avatar} />
+        <AvatarFallback>{effectiveUser.name[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <Textarea
+          id="content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={clientConfig.examples.post.contentPlaceholder}
+          rows={3}
+          required
+          className="resize-none border-2 border-gray-200 focus:border-blue-500 rounded-lg p-3 focus:ring-0 bg-white min-h-[80px] transition-colors"
+          style={{fontSize: '1rem'}}
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-2 px-1">
+          <span className="hidden sm:inline">Exprimez-vous librement</span>
+          <span>{getWordCount(content)} mots</span>
+        </div>
+      </div>
+    </div>
 
-            {/* Message */}
-            <div className="space-y-2">
-              <Label htmlFor="content">Votre message</Label>
-              <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={clientConfig.examples.post.contentPlaceholder}
-                rows={4}
-                required
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Exprimez-vous librement</span>
-                <span>{getWordCount(content)} mots</span>
-              </div>
-            </div>
+    {/* Options visibles en mode "bandeau" compact sous le champ principal */}
+    <div className="flex flex-wrap gap-2 px-2">
+      {/* Sujet (optionnel) */}
+      <div className="flex flex-1 gap-2 w-full min-w-0">
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Titre"
+          className="text-sm border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-2 h-9 focus:ring-0 focus:border-blue-500 transition-colors flex-1 min-w-0"
+          maxLength={100}
+        />
+        <div className="flex-1 min-w-0">
+          <LocationSearch
+        initialLocation={location}
+        onLocationSelect={(loc) => setLocation(loc || '')}
+        placeholder="Lieu"
+          />
+        </div>
+      </div>
 
-            {/* Groupes liés (optionnel) */}
-            <div className="space-y-2">
-              <Label htmlFor="post-group" className="flex items-center space-x-2">
-                <Users className="w-4 h-4" />
-                <span>Groupes liés (optionnel)</span>
-              </Label>
-              {groupIds.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {groupIds.map((gId) => {
-                    const group = userGroups.find(g => g.id === gId);
-                    return group ? (
-                      <Badge key={gId} variant="secondary" className="flex items-center gap-1">
-                        {group.name}
-                        <button
-                          type="button"
-                          onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
-                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              )}
-              <Select 
-                value="select" 
-                onValueChange={(value: string) => {
-                  if (value !== 'select' && !groupIds.includes(value)) {
-                    setGroupIds([...groupIds, value]);
-                  }
-                }}
-              >
-                <SelectTrigger id="post-group">
-                  <SelectValue placeholder="Ajouter un groupe" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
-                  {userGroups
-                    .filter(group => !groupIds.includes(group.id))
-                    .map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Associez votre post à un ou plusieurs groupes pour le partager avec leurs membres
-              </p>
-            </div>
+      {/* Groupes liés (optionnel) - en dernier */}
+      {groupIds.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap items-center">
+          {groupIds.map((gId) => {
+            const group = userGroups.find(g => g.id === gId);
+            return group ? (
+              <Badge key={gId} variant="secondary" className="flex items-center gap-1 text-xs px-2 py-1">
+                {group.name}
+                <button
+                  type="button"
+                  onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
+                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ) : null;
+          })}
+        </div>
+      )}
+    </div>
 
-            {/* Localisation optionnelle */}
-            <div className="space-y-2">
-              <Label htmlFor="post-location" className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>Localisation (optionnelle)</span>
-              </Label>
-              <LocationSearch
-                initialLocation={location}
-                onLocationSelect={(loc) => setLocation(loc || '')}
-                placeholder={clientConfig.examples.post.locationPlaceholder}
-              />
-              <p className="text-xs text-muted-foreground">
-                Précisez où votre post s'applique si il concerne un lieu spécifique
-              </p>
-            </div>
-
-            {/* Bouton d'expansion vers idée */}
-            <div className="pt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center space-x-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                onClick={handleDevelopToIdea}
-              >
-                <Lightbulb className="w-4 h-4" />
-                <span>Développer en projet complet</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
+    {/* Bouton d'expansion vers idée */}
+    <div className="pt-2 flex items-center justify-between px-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex items-center space-x-1 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+        onClick={handleDevelopToIdea}
+      >
+        <Lightbulb className="w-4 h-4" />
+        <span>Développer en projet complet</span>
+        <ArrowRight className="w-4 h-4" />
+      </Button>
+      
+      {userGroups.length > 0 && (
+        <Select
+          value="select"
+          onValueChange={(value: string) => {
+            if (value !== 'select' && !groupIds.includes(value)) {
+              setGroupIds([...groupIds, value]);
+            }
+          }}
+        >
+          <SelectTrigger className="h-8 w-auto text-xs border-gray-200">
+            <Users className="w-3 h-3 mr-1" />
+            <SelectValue placeholder="Ajouter un groupe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
+            {userGroups
+              .filter(group => !groupIds.includes(group.id))
+              .map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
+  </CardContent>
+</Card>
         {/* Actions */}
         <div className="flex justify-end space-x-3">
           <Button type="submit" className="flex items-center space-x-2">
