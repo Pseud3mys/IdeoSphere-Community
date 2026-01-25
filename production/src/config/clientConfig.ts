@@ -49,7 +49,7 @@ const configs: Record<string, ClientConfig> = {
   'saintcyrencommun': saintcyrencommunConfig,
 
   'leschaises': lesChaisesConfig,
-  'vivonsnimes': vivonsnimesConfig,
+  'vivons-nimes': vivonsnimesConfig,
 };
 
 // ============================================================================
