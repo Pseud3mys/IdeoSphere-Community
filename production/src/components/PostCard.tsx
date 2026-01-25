@@ -211,8 +211,11 @@ export function PostCard({
                   size="sm" 
                   className="text-xs text-muted-foreground hover:text-gray-600 h-8 px-3 sm:h-6 sm:px-2"
                   onClick={(e) => e.stopPropagation()}
+                  title="Ignorer ou Signaler"
                 >
-                  Ignorer/Signaler
+                  {/* Mobile: flag only, desktop: text only */}
+                  <span className="sm:hidden"><Flag className="w-4 h-4" /></span>
+                  <span className="hidden sm:inline">Ignorer/Signaler</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
