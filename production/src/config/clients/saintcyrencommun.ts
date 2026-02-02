@@ -7,7 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
-import logoStCyr from '../../assets/logo_saintcyrlecole.jpeg';
+import logoStCyr from '../../assets/logo_saintcyr.jpeg';
 
 export const saintcyrencommunConfig: ClientConfig = {
   // ============================================================================
