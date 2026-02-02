@@ -7,6 +7,7 @@
  */
 
 import { ClientConfig } from '../types';
+import logoStCyr from '../../assets/logo_saintcyrlecole.jpeg';
 
 export const saintcyrencommunConfig: ClientConfig = {
   // ============================================================================
@@ -31,6 +32,9 @@ export const saintcyrencommunConfig: ClientConfig = {
     
     // Copyright
     copyright: '© 2025 IdeoSphere. Tous droits réservés.',
+
+    //logo
+    logoUrl: logoStCyr,
   },
 
   // ============================================================================
