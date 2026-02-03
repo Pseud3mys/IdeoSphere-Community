@@ -13,6 +13,7 @@ import { solidarcyConfig } from './clients/solidarcy';
 import { saintcyrencommunConfig } from './clients/saintcyrencommun';
 import { lesChaisesConfig } from './clients/lesChaises';
 import { vivonsnimesConfig } from './clients/VivonsNimes';
+import { ddniceConfig } from './clients/ddnice';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -50,6 +51,8 @@ const configs: Record<string, ClientConfig> = {
 
   'leschaises': lesChaisesConfig,
   'vivons-nimes': vivonsnimesConfig,
+
+  'ddnice': ddniceConfig,
 };
 
 // ============================================================================
