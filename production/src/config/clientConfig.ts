@@ -14,6 +14,7 @@ import { saintcyrencommunConfig } from './clients/saintcyrencommun';
 import { lesChaisesConfig } from './clients/lesChaises';
 import { vivonsnimesConfig } from './clients/VivonsNimes';
 import { ddniceConfig } from './clients/ddnice';
+import { ehessConfig } from './clients/ehess';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -41,6 +42,7 @@ const configs: Record<string, ClientConfig> = {
   'amdf': defaultConfig,
 
   'leblanc': leblancConfig,
+  'ehess': ehessConfig,
 
   // chesnayRocquencourtConfig
   'chesnay-rocquencourt': chesnayRocquencourtConfig,
