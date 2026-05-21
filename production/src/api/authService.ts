@@ -6,46 +6,48 @@ import { keycloak } from './keycloak';
 import { transformUser, RawUser } from './transformService';
 import { currentConfig } from '../config/clientConfig';
 
-// Variable d'état simple (comme dans votre ancien code qui fonctionnait)
 let initialized = false;
+// 1. On ajoute une variable pour stocker la promesse globale
+let initPromise: Promise<boolean> | null = null; 
 
-/**
- * Initialise Keycloak.
- * Reprend la logique "classique" : on vérifie si c'est déjà fait, sinon on lance init.
- */
 export const initAuth = async (): Promise<boolean> => {
-  // 1. Si déjà initialisé, on retourne l'état actuel
+  // 2. Si déjà initialisé avec succès, on retourne direct
   if (initialized) {
     return keycloak.authenticated || false;
   }
 
-  try {
-    console.log('🔒 [AUTH] Initialisation Keycloak (check-sso)...');
-    
-    // 2. Initialisation avec check-sso
-    const authenticated = await keycloak.init({
-      onLoad: 'check-sso',
-      silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-      //checkLoginIframe: false, // Désactivé pour éviter les warnings de cookies tiers
-      pkceMethod: 'S256' // Sécurité renforcée
-    });
+  // 3. LE VERROU : Si une initialisation est DÉJÀ en cours, 
+  // on retourne la promesse existante. Tous les appels simultanés attendront le même résultat !
+  if (initPromise) {
+    return initPromise;
+  }
 
+  console.log('🔒 [AUTH] Initialisation Keycloak (check-sso)...');
+  
+  // 4. On stocke la promesse d'initialisation
+  initPromise = keycloak.init({
+    onLoad: 'check-sso',
+    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+    pkceMethod: 'S256'
+  }).then((authenticated) => {
     initialized = true;
     console.log(`🔓 [AUTH] Initialisation terminée. Authentifié: ${authenticated}`);
 
     if (authenticated) {
-      // Setup du refresh token automatique
       setInterval(() => {
         keycloak.updateToken(70).catch(console.error);
       }, 60000);
     }
 
     return authenticated;
-  } catch (error) {
+  }).catch((error) => {
     console.error("❌ [AUTH] Erreur d'initialisation de Keycloak:", error);
-    // En cas d'erreur, on ne marque PAS initialized à true pour permettre une nouvelle tentative
+    // En cas d'erreur (réseau, etc.), on libère le verrou pour permettre un nouvel essai plus tard
+    initPromise = null; 
     return false;
-  }
+  });
+
+  return initPromise;
 };
 
 /**
