@@ -164,15 +164,26 @@ export function CitizenWelcome({ onEnterPlatform, onEnterPlatformWithTempUser, o
   };
 
   // Statistiques basées sur les données de l'API
-  const recentStats = homeData ? [
-    { value: homeData.totalContributions.toString(), label: clientConfig.welcome.stats.totalContributions },
-    { value: homeData.totalIdeas.toString(), label: clientConfig.welcome.stats.totalIdeas },
-    { value: homeData.totalSupports.toString(), label: clientConfig.welcome.stats.totalSupports }
-  ] : [
-    { value: "...", label: clientConfig.welcome.stats.totalContributions },
-    { value: "...", label: clientConfig.welcome.stats.totalIdeas },
-    { value: "...", label: clientConfig.welcome.stats.totalSupports }
-  ];
+  const recentStats = (() => {
+    if (!homeData) {
+      return [
+        { value: "...", label: clientConfig.welcome.stats.totalContributions },
+        { value: "...", label: clientConfig.welcome.stats.totalIdeas },
+        { value: "...", label: clientConfig.welcome.stats.totalSupports }
+      ];
+    }
+
+    const stats = [
+      { key: 'totalContributions', value: homeData.totalContributions, label: clientConfig.welcome.stats.totalContributions },
+      { key: 'totalIdeas', value: homeData.totalIdeas, label: clientConfig.welcome.stats.totalIdeas },
+      { key: 'totalSupports', value: homeData.totalSupports, label: clientConfig.welcome.stats.totalSupports }
+    ];
+
+    // Exclure spécifiquement "totalIdeas" (projets partagées) quand sa valeur est exactement 0
+    return stats
+      .filter(s => !(s.key === 'totalIdeas' && s.value === 0))
+      .map(s => ({ value: s.value.toString(), label: s.label }));
+  })();
 
   // Fonction pour formater la date
   const formatTimeAgo = (date: Date) => {

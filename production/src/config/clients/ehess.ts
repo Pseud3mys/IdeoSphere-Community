@@ -87,7 +87,7 @@ export const ehessConfig: ClientConfig = {
     hero: {
       title: 'Imaginez les futurs espaces de vie de l\'EHESS',
       descriptionParagraphs: [
-        "Des petits espaces, un grand espace informel, des usages encore ouverts. Qu'est-ce qui donnerait envie d'y rester, d'y travailler, d'y souffler, d'y vivre autrement ? Ajoutez ce qui vous passe par la tête ou allez liker celle des autres.",
+        "200 m² d'espace à imaginer ! 100 m² de petits espaces et 100 m² d'espaces communs. Ajoutez ce qui vous passe par la tête ou allez liker/commenter les propositions des autres.",
       ],
     },
     
