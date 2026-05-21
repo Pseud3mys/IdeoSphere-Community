@@ -15,7 +15,7 @@ export const ehessConfig: ClientConfig = {
   
   identity: {
     // Nom de l'application
-    appName: 'IdeoSphere Leblanc',
+    appName: 'IdeoSphere Ehess',
     
     // Tagline / Sous-titre
     appTagline: 'Plateforme collaborative d\'intelligence collective',
@@ -85,16 +85,16 @@ export const ehessConfig: ClientConfig = {
     
     // Section Hero (titre principal)
     hero: {
-      title: 'Partagez, explorez et co-construisez votre nouveauc batiemment',
+      title: 'Imaginez les futurs espaces de vie de l\'EHESS',
       descriptionParagraphs: [
-        "Vous avez une idée pour améliorer le quotidien, créer du lien ou imaginer de nouveaux usages ensemble ? Partagez-la ici, même si elle est encore floue. Cet espace permet de proposer, d'échanger et de faire évoluer les idées collectivement, jusqu'à les transformer en projets concrets.",
+        "Des petits espaces, un grand espace informel, des usages encore ouverts. Qu'est-ce qui donnerait envie d'y rester, d'y travailler, d'y souffler, d'y vivre autrement ? Ajoutez ce qui vous passe par la tête ou allez liker celle des autres.",
       ],
     },
     
     // Section "Partagez votre idée"
     quickIdea: {
       sectionTitle: 'Partagez votre idée en quelques mots',
-      placeholder: 'Ex: Créer un espace de co-working collaboratif pour favoriser les échanges et l\'entraide...',
+      placeholder: '“un lieu où rester après un séminaire”, “plus de couleurs”, “une salle de sieste ?”',
       buttonText: 'Continuer',
       
       // Étape de finalisation
@@ -360,7 +360,7 @@ Quels bénéfices concrets pour la communauté ?`,
     showBetaBanner: false,
     
     // Activer les newsletters
-    enableNewsletters: true,
+    enableNewsletters: false,
   },
 
   // ============================================================================
