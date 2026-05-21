@@ -75,7 +75,7 @@ export async function createUnfinalizedAccountOnApi(guestData?: { name?: string;
 
   // 2. Aucun invité existant ou échec de récupération : création d'un NOUVEAU compte
   const timestamp = new Date().getTime();
-  const name = guestData?.name || `visiteur (${timestamp.toString().slice(-4)})`;
+  const name = guestData?.name || `Visiteur ${timestamp.toString().slice(-4)}`;
   const email = guestData?.email || `guest_${timestamp}@temp.local`;
 
   try {
