@@ -49,13 +49,29 @@ export const initAuth = async (): Promise<boolean> => {
 };
 
 /**
- * Crée un compte invité (non authentifié) via l'API.
+ * Crée un compte invité (non authentifié) via l'API, ou récupère l'existant via LocalStorage.
  * Utilisé par createTemporaryGuest dans userActions.ts
  */
 export async function createUnfinalizedAccountOnApi(guestData?: { name?: string; email?: string; address?: string }): Promise<User> {
-  console.log('👤 [AUTH] Création compte invité...', guestData);
-  
-  // Générer des données par défaut si absentes pour satisfaire le backend qui veut name/email
+  console.log('👤 [AUTH] Vérification ou création d\'un compte invité...');
+
+  // 1. On vérifie si un compte invité existe déjà dans ce navigateur
+  const storedGuestEmail = localStorage.getItem('ideosphere_guest_email');
+
+  // Si on a un email stocké et qu'on n'est pas en train d'en forcer un nouveau
+  if (storedGuestEmail && !guestData?.email) {
+    try {
+      // On utilise la route existante POST /users/login pour récupérer l'utilisateur par email
+      const response = await apiClient.post('/users/login', { email: storedGuestEmail });
+      console.log('✅ [AUTH] Compte invité existant récupéré depuis la session locale');
+      return transformUser(response.data);
+    } catch (error) {
+      console.warn('⚠️ [AUTH] Ancien compte invité introuvable en base (peut-être supprimé), on en recrée un...');
+      localStorage.removeItem('ideosphere_guest_email');
+    }
+  }
+
+  // 2. Aucun invité existant ou échec de récupération : création d'un NOUVEAU compte
   const timestamp = new Date().getTime();
   const name = guestData?.name || `Utilisateur non connecté (${timestamp.toString().slice(-4)})`;
   const email = guestData?.email || `guest_${timestamp}@temp.local`;
@@ -73,7 +89,12 @@ export async function createUnfinalizedAccountOnApi(guestData?: { name?: string;
       createdAt: new Date().toISOString()
     });
 
-    return transformUser(response.data);
+    const newUser = transformUser(response.data);
+
+    // 3. On sauvegarde l'email généré dans le navigateur pour les prochains rechargements
+    localStorage.setItem('ideosphere_guest_email', newUser.email);
+
+    return newUser;
   } catch (error) {
     console.error('❌ [AUTH] Erreur création invité:', error);
     throw error;
@@ -116,6 +137,8 @@ export async function registerWithSSO(): Promise<void> {
 
 export function logout(): void {
   console.log('[AUTH] Déconnexion...');
+  // On nettoie la trace de l'invité pour repartir sur un compte vierge si besoin
+  localStorage.removeItem('ideosphere_guest_email');
   // Redirection vers l'accueil après logout
   keycloak.logout({ redirectUri: window.location.origin });
 }
@@ -124,10 +147,7 @@ export function logout(): void {
  * Synchronise la session : Gère les 3 cas (Nouveau, Invité, Existant)
  */
 export async function syncUserSession(): Promise<User | null> {
-  // 1. MODE MOCK
-  if (currentConfig.auth?.mode === 'mock') {
-    return MockAuthService.getUserProfile();
-  }
+  // 1. mode mock supprime.
 
   // 2. MODE KEYCLOAK
   const keycloakProfile = getUserProfileFromToken();

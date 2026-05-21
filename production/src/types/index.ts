@@ -18,6 +18,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
+  keycloakId?: string;
   bio?: string;
   location?: Location;  // Localisation de l'utilisateur (géocodée)
   address?: string;     // DEPRECATED - utiliser location.label à la place
