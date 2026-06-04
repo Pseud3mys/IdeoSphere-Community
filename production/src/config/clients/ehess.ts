@@ -87,7 +87,8 @@ export const ehessConfig: ClientConfig = {
     hero: {
       title: "Aidez nous à la conception du futur bâtiment de l'EHESS-FMSH au campus Condorcet.",
       descriptionParagraphs: [
-        "L'agence Encore Heureux mène une action de concertation afin d'alimenter la conception du projet architectural. C'est la \"permanence architecturale\", à savoir la présence alternée de deux architectes sur les sites EHESS de Raspail et Condorcet depuis mars. Elle prend aussi la forme de ce forum en ligne, conçue par des étudiant·es de l'EHESS, pour que vous puissiez échanger sur vos besoins et vos usages à distance. N'hésitez pas à aimer les posts qui vous parlent et à nous décrire les espaces que vous imaginez !",
+        "L'agence Encore Heureux mène une action de concertation afin d'alimenter la conception du projet architectural. C'est la \"permanence architecturale\", à savoir la présence alternée de deux architectes sur les sites EHESS de Raspail et Condorcet depuis mars. Elle prend aussi la forme de ce forum en ligne, conçue par des étudiant·es de l'EHESS, pour que vous puissiez échanger sur vos besoins et vos usages à distance.",
+        "N'hésitez pas à aimer les posts qui vous parlent et à nous décrire les espaces que vous imaginez !",
       ],
     },
     
