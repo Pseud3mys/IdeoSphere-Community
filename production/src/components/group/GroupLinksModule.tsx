@@ -113,12 +113,12 @@ export function GroupLinksModule({ groupId, isAnimator = false }: GroupLinksModu
   const hasNoLinks = parentLinks.length === 0 && childLinks.length === 0 && partnerLinks.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-hidden">
       {/* Header avec bouton de création */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 min-w-0">
           <Network className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-medium">Liens avec d'autres groupes</h3>
+          <h3 className="text-lg font-medium break-words">Liens avec d'autres groupes</h3>
         </div>
         {isAnimator && (
           <Button
@@ -134,10 +134,10 @@ export function GroupLinksModule({ groupId, isAnimator = false }: GroupLinksModu
 
       {/* Message si aucun lien */}
       {hasNoLinks && (
-        <Card className="p-8 text-center border-dashed">
+        <Card className="p-8 text-center border-dashed max-w-full overflow-hidden">
           <LinkIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h4 className="mb-2">Aucun lien pour le moment</h4>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-4 break-words">
             {isAnimator
               ? "Créez des liens pour connecter ce groupe à d'autres groupes du territoire."
               : "Ce groupe n'est pas encore lié à d'autres groupes."}
@@ -148,9 +148,9 @@ export function GroupLinksModule({ groupId, isAnimator = false }: GroupLinksModu
       {/* Groupes parents */}
       {parentLinks.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground min-w-0">
             <ArrowUp className="h-4 w-4 text-blue-500" />
-            <span>Groupes parents ({parentLinks.length})</span>
+            <span className="break-words">Groupes parents ({parentLinks.length})</span>
           </div>
           <div className="space-y-2">
             {parentLinks.map((link) => (
@@ -171,9 +171,9 @@ export function GroupLinksModule({ groupId, isAnimator = false }: GroupLinksModu
       {/* Groupes enfants */}
       {childLinks.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground min-w-0">
             <ArrowDown className="h-4 w-4 text-green-500" />
-            <span>Groupes enfants ({childLinks.length})</span>
+            <span className="break-words">Groupes enfants ({childLinks.length})</span>
           </div>
           <div className="space-y-2">
             {childLinks.map((link) => (
@@ -194,9 +194,9 @@ export function GroupLinksModule({ groupId, isAnimator = false }: GroupLinksModu
       {/* Groupes connectés (inspiration & collaboration) */}
       {partnerLinks.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground min-w-0">
             <ArrowLeftRight className="h-4 w-4 text-purple-500" />
-            <span>Inspiration & Collaboration ({partnerLinks.length})</span>
+            <span className="break-words">Inspiration & Collaboration ({partnerLinks.length})</span>
           </div>
           <div className="space-y-2">
             {partnerLinks.map((link) => (
@@ -265,10 +265,10 @@ function GroupLinkItem({
   }
 
   return (
-    <div className="group flex items-center justify-between py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+    <div className="group flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors max-w-full overflow-hidden">
       {/* Contenu cliquable */}
       <div 
-        className="flex items-center gap-3 flex-1 cursor-pointer"
+        className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
         onClick={() => goToGroup(linkedGroupId)}
       >
         {/* Avatar */}
@@ -278,12 +278,12 @@ function GroupLinkItem({
         
         {/* Infos */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 truncate">{linkedGroup.name}</span>
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <span className="font-medium text-gray-900 break-words">{linkedGroup.name}</span>
             <GroupTypeBadge type={linkedGroup.type} size="sm" />
           </div>
           {linkedGroup.shortDescription && (
-            <p className="text-sm text-gray-500 truncate mt-0.5">
+            <p className="text-sm text-gray-500 mt-0.5 break-words line-clamp-2">
               {linkedGroup.shortDescription}
             </p>
           )}
@@ -303,7 +303,7 @@ function GroupLinkItem({
             onDelete(link.id);
           }}
           disabled={isDeleting}
-          className="ml-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="sm:ml-2 h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity self-end sm:self-auto"
         >
           {isDeleting ? (
             <Loader2 className="h-4 w-4 animate-spin" />

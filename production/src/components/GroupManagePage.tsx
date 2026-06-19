@@ -419,7 +419,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
         </TabsContent>
 
         {/* Onglet Liens */}
-        <TabsContent value="links">
+        <TabsContent value="links" className="space-y-6 max-w-full overflow-hidden">
           <GroupLinksModule groupId={groupId} isAnimator={true} />
         </TabsContent>
       </Tabs>
