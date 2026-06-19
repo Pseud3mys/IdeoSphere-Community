@@ -86,7 +86,7 @@ export function AdminPage({
           </TabsTrigger>
           <TabsTrigger value="group-validation" className="flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
-            Validation groupe
+            création groupe
           </TabsTrigger>
         </TabsList>
 

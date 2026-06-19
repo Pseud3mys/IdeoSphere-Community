@@ -98,12 +98,8 @@ export function AdminDirectGroupCreationTab() {
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-blue-600" />
-          Validation directe d'un groupe
+          Création directe d'un groupe
         </CardTitle>
-        <CardDescription>
-          Création immédiate par un admin, sans étape de co-fondateurs.
-        </CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -140,9 +136,9 @@ export function AdminDirectGroupCreationTab() {
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Décrivez brièvement les objectifs et activités du groupe..."
                     rows={3}
-                    maxLength={300}
+                    maxLength={1000}
                   />
-                  <p className="text-sm text-gray-500 mt-1">{description.length}/300 caractères</p>
+                  <p className="text-sm text-gray-500 mt-1">{description.length}/1000 caractères</p>
                 </div>
 
                 <div>
