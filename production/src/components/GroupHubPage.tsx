@@ -160,10 +160,9 @@ export function GroupHubPage() {
             )}
 
             <div className="flex flex-wrap gap-2 items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-              <div className="text-sm font-medium text-blue-800">Nouvelle contribution :</div>
+              <div className="text-sm font-medium text-blue-800">Publier sur ce groupe :</div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}>+ Discussion</Button>
-                <Button size="sm" onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>+ Projet</Button>
+                <Button size="sm" variant="outline" onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}>+ Poster</Button>
               </div>
             </div>
 
