@@ -245,11 +245,6 @@ export function ShareGroupDialog({ groupId, groupName, children }: ShareGroupDia
               </Button>
             </div>
           </div>
-
-          <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded">
-            <strong>👥 Invitez vos voisins !</strong><br />
-            Plus le groupe compte de membres actifs, plus les discussions et projets auront d'impact sur votre territoire.
-          </div>
         </div>
       </DialogContent>
     </Dialog>

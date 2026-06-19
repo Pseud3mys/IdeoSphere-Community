@@ -8,7 +8,7 @@ import { IdeaCard } from "./IdeaCard";
 import { PostCard } from "./PostCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card } from "./ui/card";
-import { Lightbulb, MessageSquare, Info, ArrowLeft, Star, ListFilter, Lock } from "lucide-react"; // Ajout de Lock
+import { Lightbulb, MessageSquare, Info, ArrowLeft, Star, ListFilter } from "lucide-react";
 import { Button } from "./ui/button";
 import { ensureGroupPrefix } from "../utils/idUtils";
 import { Badge } from "./ui/badge";
@@ -147,55 +147,44 @@ export function GroupHubPage() {
 
           {/* --- ONGLET PARTICIPER --- */}
           <TabsContent value="participate" className="space-y-6">
-            {/* Si NON-MEMBRE : Écran de verrouillage */}
-            {!isMember ? (
-              <Card className="p-12 flex flex-col items-center text-center space-y-4 border-2 border-slate-100 bg-slate-50/50">
-                <div className="bg-white p-4 rounded-full shadow-sm">
-                  <Lock className="w-8 h-8 text-slate-400" />
-                </div>
+            {!currentUser && (
+              <Card className="p-4 flex items-center justify-between gap-4 border border-slate-100 bg-slate-50/50">
                 <div>
-                  <h3 className="text-lg font-semibold">Espace réservé aux membres</h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
-                    Rejoignez ce groupe pour accéder aux discussions, aux projets en cours et apporter votre contribution.
+                  <h3 className="font-semibold">Connexion recommandée</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Connectez-vous pour publier et interagir avec le groupe.
                   </p>
                 </div>
-                {!currentUser ? (
-                  <Button onClick={() => navigate('/login')}>Se connecter pour rejoindre</Button>
-                ) : (
-                  <Button onClick={handleJoin}>Rejoindre le groupe maintenant</Button>
-                )}
+                <Button onClick={() => navigate('/login')}>Se connecter</Button>
               </Card>
-            ) : (
-              /* Si MEMBRE : Contenu normal (Style conservé) */
-              <>
-                <div className="flex flex-wrap gap-2 items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                  <div className="text-sm font-medium text-blue-800">Nouvelle contribution :</div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}>+ Discussion</Button>
-                    <Button size="sm" onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>+ Projet</Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <ListFilter className="w-4 h-4 text-muted-foreground" />
-                  <Button variant={feedFilter === "all" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("all")}>Tout</Button>
-                  <Button variant={feedFilter === "ideas" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("ideas")}>Projets</Button>
-                  <Button variant={feedFilter === "posts" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("posts")}>Discussions</Button>
-                </div>
-
-                <div className="space-y-4">
-                  {participationFeed.length > 0 ? participationFeed.map((item) => (
-                    item.itemType === 'idea' ? (
-                      <IdeaCard key={item.id} idea={item as any} onIdeaClick={() => navigate(`/content/${item.id}`)} onSupport={() => actions.toggleIdeaSupport(item.id)} />
-                    ) : (
-                      <PostCard key={item.id} post={item as any} onPostClick={() => navigate(`/content/${item.id}`)} onLike={() => actions.togglePostLike(item.id)} />
-                    )
-                  )) : (
-                    <Card className="p-12 text-center text-muted-foreground">Aucun contenu ne correspond à ce filtre.</Card>
-                  )}
-                </div>
-              </>
             )}
+
+            <div className="flex flex-wrap gap-2 items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+              <div className="text-sm font-medium text-blue-800">Nouvelle contribution :</div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => groupId && goToCreateWithGroups([groupId], 'post')}>+ Discussion</Button>
+                <Button size="sm" onClick={() => groupId && goToCreateWithGroups([groupId], 'idea')}>+ Projet</Button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 border-b pb-4">
+              <ListFilter className="w-4 h-4 text-muted-foreground" />
+              <Button variant={feedFilter === "all" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("all")}>Tout</Button>
+              <Button variant={feedFilter === "ideas" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("ideas")}>Projets</Button>
+              <Button variant={feedFilter === "posts" ? "default" : "ghost"} size="sm" onClick={() => setFeedFilter("posts")}>Discussions</Button>
+            </div>
+
+            <div className="space-y-4">
+              {participationFeed.length > 0 ? participationFeed.map((item) => (
+                item.itemType === 'idea' ? (
+                  <IdeaCard key={item.id} idea={item as any} onIdeaClick={() => navigate(`/content/${item.id}`)} onSupport={() => actions.toggleIdeaSupport(item.id)} />
+                ) : (
+                  <PostCard key={item.id} post={item as any} onPostClick={() => navigate(`/content/${item.id}`)} onLike={() => actions.togglePostLike(item.id)} />
+                )
+              )) : (
+                <Card className="p-12 text-center text-muted-foreground">Aucun contenu ne correspond à ce filtre.</Card>
+              )}
+            </div>
           </TabsContent>
 
           {/* --- ONGLET INFOS --- */}
