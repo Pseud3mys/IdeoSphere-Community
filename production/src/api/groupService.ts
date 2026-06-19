@@ -170,8 +170,7 @@ export async function fetchGroupShowcase(groupId: string): Promise<(Idea | Post)
 export async function fetchGroupFeed(groupId: string, userId: string): Promise<{ ideas: Idea[], posts: Post[] }> {
   try {
     const groupKey = groupId.split('/')[1];
-    // AJOUT: Extraire la clé de l'utilisateur
-    const userKey = userId.split('/')[1];
+    const userKey = userId.includes('/') ? userId.split('/')[1] : userId;
 
     const response = await apiClient.get<RawFeedData>(
       `/groups/${groupKey}/feed`,
