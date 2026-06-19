@@ -88,7 +88,7 @@ export function ShareGroupDialog({ groupId, groupName, children }: ShareGroupDia
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const qrSize = 400;
+      const qrSize = 800;
       const margin = 40;
       const textHeight = 80;
       canvas.width = qrSize + (margin * 2);
