@@ -246,19 +246,9 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 />
               </div>
 
-              {/* Description courte */}
+              {/* Description */}
               <div>
-                <label className="text-sm mb-2 block">Description courte</label>
-                <Input
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  placeholder="Une phrase qui résume le groupe"
-                />
-              </div>
-
-              {/* Description complète */}
-              <div>
-                <label className="text-sm mb-2 block">Description complète</label>
+                <label className="text-sm mb-2 block">Description</label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
