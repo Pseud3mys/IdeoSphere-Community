@@ -142,7 +142,7 @@ export function CreateGroupLinkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="w-[min(42rem,calc(100vw-1rem))] max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {step === 1 ? 'Type de connexion' : 'Choisir un groupe'}
@@ -155,7 +155,7 @@ export function CreateGroupLinkDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="flex-1 space-y-6 py-4 overflow-y-auto overflow-x-hidden pr-1">
           {/* ÉTAPE 1 : Type de lien */}
           {step === 1 && (
             <div className="space-y-3">
@@ -170,17 +170,17 @@ export function CreateGroupLinkDialog({
                   onClick={() => setLinkType('vertical')}
                 >
                   <RadioGroupItem value="vertical" id="vertical" className="mt-1" />
-                  <label htmlFor="vertical" className="flex-1 cursor-pointer">
+                  <label htmlFor="vertical" className="flex-1 min-w-0 cursor-pointer">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <ArrowDown className="h-5 w-5 text-blue-600" />
                       </div>
-                      <span className="font-semibold text-gray-900">Groupe parent/enfant</span>
+                      <span className="font-semibold text-gray-900 break-words">Groupe parent/enfant</span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600 mb-2 break-words">
                       Pour organiser votre groupe en sous-groupes thématiques ou géographiques.
                     </p>
-                    <div className="text-xs text-gray-500 bg-white/80 rounded px-2 py-1 inline-block">
+                    <div className="text-xs text-gray-500 bg-white/80 rounded px-2 py-1 inline-block max-w-full break-words">
                       Exemple : Ville → Quartiers, Thème général → Thèmes spécifiques
                     </div>
                   </label>
@@ -196,17 +196,17 @@ export function CreateGroupLinkDialog({
                   onClick={() => setLinkType('horizontal')}
                 >
                   <RadioGroupItem value="horizontal" id="horizontal" className="mt-1" />
-                  <label htmlFor="horizontal" className="flex-1 cursor-pointer">
+                  <label htmlFor="horizontal" className="flex-1 min-w-0 cursor-pointer">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <Lightbulb className="h-5 w-5 text-purple-600" />
                       </div>
-                      <span className="font-semibold text-gray-900">Inspiration & Collaboration</span>
+                      <span className="font-semibold text-gray-900 break-words">Inspiration & Collaboration</span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600 mb-2 break-words">
                       Pour créer des ponts entre groupes complémentaires, échanger des idées et collaborer.
                     </p>
-                    <div className="text-xs text-gray-500 bg-white/80 rounded px-2 py-1 inline-block">
+                    <div className="text-xs text-gray-500 bg-white/80 rounded px-2 py-1 inline-block max-w-full break-words">
                       Exemple : Groupes voisins, thématiques similaires, partenaires
                     </div>
                   </label>
@@ -255,7 +255,7 @@ export function CreateGroupLinkDialog({
               </div>
 
               {/* Liste des groupes */}
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+              <div className="space-y-2 max-h-80 overflow-y-auto overflow-x-hidden pr-2">
                 {availableGroups.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
@@ -280,7 +280,7 @@ export function CreateGroupLinkDialog({
           )}
         </div>
 
-        <DialogFooter className="flex items-center justify-between">
+        <DialogFooter className="flex items-center justify-between shrink-0 border-t pt-4">
           <div>
             {step === 2 && (
               <Button
