@@ -140,7 +140,7 @@ export function GroupHubPage() {
                   </Card>
                 );
               }) : (
-                <p className="col-span-3 text-center py-10 text-muted-foreground">Pas encore de contenu populaire.</p>
+                <p className="col-span-3 text-center py-10 text-muted-foreground">Pas encore de contenu à la une.</p>
               )}
             </div>
           </TabsContent>
