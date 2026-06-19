@@ -61,7 +61,7 @@ export function GroupHubPage() {
       }
     };
     loadGroupData();
-  }, [groupId]);
+  }, [groupId, currentUser?.id]);
 
   const group = groupId ? getGroupById(groupId) : null;
   const { ideas, posts } = groupId ? getGroupFeed(groupId) : { ideas: [], posts: [] };
@@ -147,17 +147,6 @@ export function GroupHubPage() {
 
           {/* --- ONGLET PARTICIPER --- */}
           <TabsContent value="participate" className="space-y-6">
-            {!currentUser && (
-              <Card className="p-4 flex items-center justify-between gap-4 border border-slate-100 bg-slate-50/50">
-                <div>
-                  <h3 className="font-semibold">Connexion recommandée</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connectez-vous pour publier et interagir avec le groupe.
-                  </p>
-                </div>
-                <Button onClick={() => navigate('/login')}>Se connecter</Button>
-              </Card>
-            )}
 
             <div className="flex flex-wrap gap-2 items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
               <div className="text-sm font-medium text-blue-800">Publier sur ce groupe :</div>

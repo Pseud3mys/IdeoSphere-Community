@@ -65,16 +65,12 @@ export function useGroupActions() {
 
   /**
    * Charge le feed d'un groupe (idées et posts)
-   * NOTE TEMPORAIRE: Protection désactivée, on vérifie seulement isRegistered
    */
   const loadGroupFeed = async (groupId: string) => {
-    if (!currentUser || !currentUser.isRegistered) {
-      console.warn('⚠️ [useGroupActions.loadGroupFeed] Utilisateur non enregistré - skip');
-      return;
-    }
+    const userId = currentUser?.id || 'guest';
 
     try {
-      const { ideas, posts } = await groupService.fetchGroupFeed(groupId, currentUser.id);
+      const { ideas, posts } = await groupService.fetchGroupFeed(groupId, userId);
       
       // Ajouter les idées au store
       ideas.forEach(idea => actions.addIdea(idea));
@@ -82,7 +78,7 @@ export function useGroupActions() {
       // Ajouter les posts au store
       posts.forEach(post => actions.addPost(post));
       
-      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} pour utilisateur ${currentUser.id} : ${ideas.length} idées, ${posts.length} posts`);
+      console.log(`✅ [useGroupActions.loadGroupFeed] Feed du groupe ${groupId} pour utilisateur ${userId} : ${ideas.length} idées, ${posts.length} posts`);
     } catch (error) {
       console.error(`❌ [useGroupActions.loadGroupFeed] Erreur pour ${groupId}:`, error);
       throw error;
