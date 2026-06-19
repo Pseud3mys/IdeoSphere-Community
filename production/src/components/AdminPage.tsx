@@ -6,9 +6,10 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink, Users } from 'lucide-react';
+import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink, Users, Sparkles } from 'lucide-react';
 import { ReportedContent, FieldContact } from '../api/adminService';
 import { FieldContactForm } from './FieldContactForm';
+import { AdminDirectGroupCreationTab } from './AdminDirectGroupCreationTab';
 
 interface AdminPageProps {
   onDeleteReport: (contentType: 'ideas' | 'posts', contentId: string) => Promise<void>;
@@ -82,6 +83,10 @@ export function AdminPage({
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Contacts Terrain
+          </TabsTrigger>
+          <TabsTrigger value="group-validation" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Validation groupe
           </TabsTrigger>
         </TabsList>
 
@@ -205,6 +210,10 @@ export function AdminPage({
             {/* Formulaire d'ajout */}
             <FieldContactForm onSubmit={onAddContact} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="group-validation" className="mt-6">
+          <AdminDirectGroupCreationTab />
         </TabsContent>
       </Tabs>
     </div>

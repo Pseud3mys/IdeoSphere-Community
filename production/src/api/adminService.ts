@@ -2,6 +2,8 @@
 import apiClient from './apiClient';
 import { createUnfinalizedAccountOnApi } from './authService';
 import { createPostOnApi } from './contentService';
+import { Group, Location } from '../types';
+import { RawGroup, transformGroup } from './transformService';
 
 /**
  * Type pour le contenu signalé
@@ -21,6 +23,45 @@ export interface FieldContact {
   name: string;
   email: string;
   firstPost?: string;
+}
+
+/**
+ * Crée et valide directement un groupe pour un admin.
+ * POST /api/admin/groups/direct
+ */
+export async function createDirectGroup(
+  groupData: {
+    name: string;
+    description: string;
+    shortDescription: string;
+    type: Group['type'];
+    avatar?: string;
+    location: Location;
+    tags: string[];
+  },
+  initiatorId: string
+): Promise<Group> {
+  console.log(`🔄 [Admin API] Création directe d'un groupe par ${initiatorId}`);
+
+  try {
+    const response = await apiClient.post('/admin/groups/direct', {
+      ...groupData,
+      initiatorId
+    });
+
+    const rawGroup: RawGroup | undefined = response.data?.group ?? response.data?.data ?? response.data;
+
+    if (!rawGroup || !rawGroup._id) {
+      throw new Error('Réponse invalide du backend pour la création directe de groupe');
+    }
+
+    const group = transformGroup(rawGroup);
+    console.log(`✅ [Admin API] Groupe actif créé directement: ${group.id}`);
+    return group;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la création directe du groupe:`, error);
+    throw error;
+  }
 }
 
 /**

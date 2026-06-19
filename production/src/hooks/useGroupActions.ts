@@ -9,6 +9,7 @@
 
 import { useEntityStoreSimple } from './useEntityStoreSimple';
 import * as groupService from '../api/groupService';
+import * as adminService from '../api/adminService';
 import { Group, Location } from '../types';
 
 export function useGroupActions() {
@@ -203,6 +204,38 @@ export function useGroupActions() {
       return pendingGroup;
     } catch (error) {
       console.error('❌ [useGroupActions.createPendingGroup] Erreur:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Crée et valide directement un groupe pour un admin.
+   */
+  const createDirectGroup = async (
+    groupData: {
+      name: string;
+      description: string;
+      shortDescription: string;
+      type: Group['type'];
+      avatar?: string;
+      location: Location;
+      tags: string[];
+    }
+  ) => {
+    if (!currentUser || !currentUser.isRegistered) {
+      console.error('❌ [useGroupActions.createDirectGroup] Utilisateur non enregistré');
+      throw new Error('Utilisateur non enregistré');
+    }
+
+    try {
+      const group = await adminService.createDirectGroup(groupData, currentUser.id);
+
+      actions.addGroup(group);
+
+      console.log(`✅ [useGroupActions.createDirectGroup] Groupe actif ${group.id} créé et injecté dans le store`);
+      return group;
+    } catch (error) {
+      console.error('❌ [useGroupActions.createDirectGroup] Erreur:', error);
       throw error;
     }
   };
@@ -437,6 +470,7 @@ export function useGroupActions() {
     
     // Phase 2
     createPendingGroup,
+    createDirectGroup,
     confirmGroupFounder,
     loadMyGroups,
     loadPendingGroupDetails,
