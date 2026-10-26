@@ -102,6 +102,12 @@ Aussi : onboarding guidé (`OnboardingTour`), QR code de collaboration, partage 
 - Ajouter un **contact terrain** depuis l'admin écrase `ideosphere_guest_email` dans le `localStorage` de l'admin : `createUnfinalizedAccountOnApi` y écrit systématiquement ([authService.ts:97](production/src/api/authService.ts#L97)).
 - Les stats « top contributeurs », « utilisateurs actifs » et Gini sont toujours vides ou à 0 (bug d'agrégation backend).
 
+**Feeds potentiellement vides ou courts :**
+- `fetchFeed` appelle `/feed/neighbors-activity` **sans `page`** : seule la page 1 (10 éléments max) est jamais chargée, et il n'y a pas de « charger plus ».
+- Le front écarte les posts `isDiscussion` ([feedService.ts](production/src/api/feedService.ts)), y compris ceux que la complétion aléatoire du backend a ajoutés. Un feed de 10 éléments côté API peut donc en afficher moins. **Prévu** : à la place, afficher l'idée mère de la discussion (déjà dédoublonnée côté serveur, voir récap backend), pour que le contenu travaillé ne disparaisse pas.
+- Le feed de groupe (`/groups/:k/feed`) n'est pas paginé non plus.
+- Aucune gestion du feed vide ou trop court (pas de repli côté front). Voir la complétion incohérente côté backend, §6 du récap backend.
+
 **Code mort ou incohérences :**
 - `AuthProvider` est monté deux fois (`main.tsx` et `App.tsx`). C'est sans conséquence grâce au verrou d'init, mais redondant.
 - `BrowserRouter initialEntries` est un reste de `MemoryRouter`, sans effet.
