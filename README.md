@@ -5,7 +5,7 @@ Welcome to the IdeoSphere Community project ! Feel free to join our community on
 
 ## Overview
 
-IdeoSphere community is designed to facilitate collaboration and idea sharing among users. It includes a variety of features and components that enhance user interaction and content management. More [ideosphere.community](https://ideosphere.community/). Or check the current [standalone demo](https://demo-municipal.ideosphere.community/).
+IdeoSphere community is designed to facilitate collaboration and idea sharing among users. It includes a variety of features and components that enhance user interaction and content management. More [ideosphere.social](https://ideosphere.social/). Or check the current [standalone demo](https://demo-municipal.ideosphere.social/).
 
 ## Project Structure
 

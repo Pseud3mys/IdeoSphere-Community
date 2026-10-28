@@ -31,10 +31,10 @@ IdeoSphere charge désormais **automatiquement** la bonne configuration selon l'
 | URL | Config chargée | Type |
 |-----|---------------|------|
 | `http://localhost:3000` | `default` | Mairie |
-| `https://alpha.ideosphere.community` | `default` | Mairie |
-| `https://liste.ideosphere.community` | `listeCitoyenne` | Liste citoyenne |
-| `https://demo-liste.ideosphere.community` | `listeCitoyenne` | Liste citoyenne |
-| `https://autre.ideosphere.community` | `default` (fallback) | Mairie |
+| `https://alpha.ideosphere.social` | `default` | Mairie |
+| `https://liste.ideosphere.social` | `listeCitoyenne` | Liste citoyenne |
+| `https://demo-liste.ideosphere.social` | `listeCitoyenne` | Liste citoyenne |
+| `https://autre.ideosphere.social` | `default` (fallback) | Mairie |
 
 ---
 
@@ -68,7 +68,7 @@ const configs: Record<string, ClientConfig> = {
 
 ### 3️⃣ Tester
 
-Accédez à `https://entreprise.ideosphere.community` → Votre config est chargée ! 🎉
+Accédez à `https://entreprise.ideosphere.social` → Votre config est chargée ! 🎉
 
 ---
 
@@ -267,7 +267,7 @@ const configs = {
 };
 ```
 
-**Résultat** : Accessible sur `https://entreprise.ideosphere.community` !
+**Résultat** : Accessible sur `https://entreprise.ideosphere.social` !
 
 ---
 

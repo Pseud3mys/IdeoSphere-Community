@@ -28,7 +28,7 @@ Permettre de déployer **une seule instance** d'IdeoSphere pour **plusieurs clie
 ### Flux de chargement
 
 ```
-1. L'utilisateur accède à une URL (ex: liste.ideosphere.community)
+1. L'utilisateur accède à une URL (ex: liste.ideosphere.social)
    ↓
 2. clientConfig.ts extrait le sous-domaine ("liste")
    ↓
@@ -65,11 +65,11 @@ const configs: Record<string, ClientConfig> = {
 | URL | Sous-domaine extrait | Configuration chargée |
 |-----|---------------------|----------------------|
 | `http://localhost:3000` | `localhost` | `defaultConfig` |
-| `https://alpha.ideosphere.community` | `alpha` | `defaultConfig` |
-| `https://demo.ideosphere.community` | `demo` | `defaultConfig` |
-| `https://liste.ideosphere.community` | `liste` | `listeCitoyenneConfig` |
-| `https://demo-liste.ideosphere.community` | `demo-liste` | `listeCitoyenneConfig` |
-| `https://xyz.ideosphere.community` | `xyz` | `defaultConfig` (fallback) |
+| `https://alpha.ideosphere.social` | `alpha` | `defaultConfig` |
+| `https://demo.ideosphere.social` | `demo` | `defaultConfig` |
+| `https://liste.ideosphere.social` | `liste` | `listeCitoyenneConfig` |
+| `https://demo-liste.ideosphere.social` | `demo-liste` | `listeCitoyenneConfig` |
+| `https://xyz.ideosphere.social` | `xyz` | `defaultConfig` (fallback) |
 
 ---
 
@@ -147,7 +147,7 @@ const configs: Record<string, ClientConfig> = {
 
 ### Étape 3 : Tester
 
-Accédez à `https://entreprise.ideosphere.community` et votre nouvelle configuration sera chargée automatiquement ! 🎉
+Accédez à `https://entreprise.ideosphere.social` et votre nouvelle configuration sera chargée automatiquement ! 🎉
 
 ---
 
@@ -162,7 +162,7 @@ export const getClientConfig = (): ClientConfig => {
     return configs['default'];
   }
 
-  // Récupère le hostname (ex: "alpha.ideosphere.community" ou "localhost")
+  // Récupère le hostname (ex: "alpha.ideosphere.social" ou "localhost")
   const hostname = window.location.hostname;
 
   // Extrait le sous-domaine (la partie avant le premier point)
@@ -271,9 +271,9 @@ Le build Next.js/Vite génère un bundle unique. La configuration est chargée *
 Pour chaque client, configurez un enregistrement DNS pointant vers votre serveur :
 
 ```
-alpha.ideosphere.community        → A     51.120.123.45
-liste.ideosphere.community        → A     51.120.123.45
-entreprise.ideosphere.community   → A     51.120.123.45
+alpha.ideosphere.social        → A     51.120.123.45
+liste.ideosphere.social        → A     51.120.123.45
+entreprise.ideosphere.social   → A     51.120.123.45
 ```
 
 Tous les sous-domaines pointent vers la **même instance** de l'application. C'est le code qui détermine quelle configuration charger.

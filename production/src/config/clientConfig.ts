@@ -25,9 +25,9 @@ import { ehessConfig } from './clients/ehess';
  * 
  * Exemples d'URLs supportées :
  * - localhost → default
- * - alpha.ideosphere.community → default
- * - liste.ideosphere.community → listeCitoyenne
- * - demo-liste.ideosphere.community → listeCitoyenne
+ * - alpha.ideosphere.social → default
+ * - liste.ideosphere.social → listeCitoyenne
+ * - demo-liste.ideosphere.social → listeCitoyenne
  */
 const configs: Record<string, ClientConfig> = {
   // Configuration par défaut (utilisée pour localhost et autres sous-domaines non mappés)
@@ -68,9 +68,9 @@ const configs: Record<string, ClientConfig> = {
  * 
  * Exemples :
  * - Sur "localhost:3000" → config par défaut
- * - Sur "alpha.ideosphere.community" → config par défaut
- * - Sur "liste.ideosphere.community" → config liste citoyenne
- * - Sur "demo-liste.ideosphere.community" → config liste citoyenne
+ * - Sur "alpha.ideosphere.social" → config par défaut
+ * - Sur "liste.ideosphere.social" → config liste citoyenne
+ * - Sur "demo-liste.ideosphere.social" → config liste citoyenne
  */
 export const getClientConfig = (): ClientConfig => {
   // Vérifier si on est côté serveur (lors du build)
@@ -78,11 +78,11 @@ export const getClientConfig = (): ClientConfig => {
     return configs['default'];
   }
 
-  // Récupère le hostname (ex: "alpha.ideosphere.community" ou "localhost")
+  // Récupère le hostname (ex: "alpha.ideosphere.social" ou "localhost")
   const hostname = window.location.hostname;
 
   // Extrait le sous-domaine (la partie avant le premier point)
-  // Pour "alpha.ideosphere.community" → "alpha"
+  // Pour "alpha.ideosphere.social" → "alpha"
   // Pour "localhost" → "localhost"
   const subdomain = hostname.split('.')[0];
 

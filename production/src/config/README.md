@@ -224,11 +224,11 @@ Le fichier **`clientConfig.ts`** charge automatiquement la bonne configuration s
 ```typescript
 // Mapping sous-domaine → configuration
 const configs = {
-  'default': defaultConfig,          // localhost, alpha.ideosphere.community
+  'default': defaultConfig,          // localhost, alpha.ideosphere.social
   'localhost': defaultConfig,
   'alpha': defaultConfig,
   
-  'liste': listeCitoyenneConfig,     // liste.ideosphere.community
+  'liste': listeCitoyenneConfig,     // liste.ideosphere.social
   'demo-liste': listeCitoyenneConfig,
   'liste-citoyenne': listeCitoyenneConfig,
 };
@@ -236,9 +236,9 @@ const configs = {
 
 **Exemples d'URLs** :
 - `http://localhost:3000` → Configuration par défaut
-- `https://alpha.ideosphere.community` → Configuration par défaut
-- `https://liste.ideosphere.community` → Configuration liste citoyenne
-- `https://demo-liste.ideosphere.community` → Configuration liste citoyenne
+- `https://alpha.ideosphere.social` → Configuration par défaut
+- `https://liste.ideosphere.social` → Configuration liste citoyenne
+- `https://demo-liste.ideosphere.social` → Configuration liste citoyenne
 
 ---
 
@@ -282,7 +282,7 @@ const configs: Record<string, ClientConfig> = {
 
 **Étape 3 : Tester**
 
-Accédez à `http://mon-sous-domaine.ideosphere.community` et votre configuration sera automatiquement chargée !
+Accédez à `http://mon-sous-domaine.ideosphere.social` et votre configuration sera automatiquement chargée !
 
 ### Configurations disponibles
 

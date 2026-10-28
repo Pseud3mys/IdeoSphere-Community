@@ -69,7 +69,7 @@ auth: {
   mode: 'mock',
   mockUser: {
     id: 'user-demo',
-    email: 'demo@ideosphere.community',
+    email: 'demo@ideosphere.social',
     name: 'Utilisateur Démo',
     location: 'Paris',
     bio: 'Compte de test pour Figma Make',
@@ -85,7 +85,7 @@ auth: {
 auth: {
   mode: 'keycloak',
   keycloak: {
-    url: 'https://auth.ideosphere.community',
+    url: 'https://auth.ideosphere.social',
     realm: 'ideosphere-prod',
     clientId: 'ideosphere-web-app',
   }
