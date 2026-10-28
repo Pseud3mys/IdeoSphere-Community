@@ -47,6 +47,48 @@ export interface ModerationRecord {
   reviewedAt: string | null;
   reviewNote: string | null;
   restoreReport: { restoredEdges: number; skippedEdges: { collection: string; key: string; reason: string }[] } | null;
+  history: { action: string; from: ModerationStatus | null; by: string; at: string; note: string | null }[];
+}
+
+let banReasonsCache: ModerationReason[] | null = null;
+
+/**
+ * Motifs proposés pour un bannissement manuel
+ * GET /api/admin/moderation/reasons
+ */
+export async function fetchBanReasons(): Promise<ModerationReason[]> {
+  if (banReasonsCache) return banReasonsCache;
+  try {
+    const response = await apiClient.get('/admin/moderation/reasons');
+    banReasonsCache = response.data;
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la récupération des motifs de bannissement:`, error);
+    return [];
+  }
+}
+
+/**
+ * Bannit à la main un contenu vu sur le site (retiré et archivé, restaurable)
+ * POST /api/admin/moderation/ban
+ */
+export async function banContent(
+  contentId: string,
+  category: string,
+  options: { commentId?: string; note?: string } = {}
+): Promise<{ success: boolean; data?: ModerationRecord; error?: string }> {
+  try {
+    const response = await apiClient.post('/admin/moderation/ban', {
+      contentId,
+      category,
+      commentId: options.commentId,
+      note: options.note || undefined,
+    });
+    return { success: true, data: response.data.data };
+  } catch (error: any) {
+    console.error(`❌ [Admin API] Erreur lors du bannissement de ${contentId}:`, error);
+    return { success: false, error: error.response?.data?.message };
+  }
 }
 
 /**

@@ -20,6 +20,7 @@ import { RecommendToGroupDialog } from '../group/RecommendToGroupDialog';
 import { canEditPost } from '../../utils/contentEditUtils';
 import { EditPostDialog } from '../EditPostDialog';
 import { formatTimeAgo } from './formatTimeAgo';
+import { AdminBanButton } from '../AdminBanDialog';
 
 interface PostDetailContentProps {
   post: Post;
@@ -216,6 +217,9 @@ export function PostDetailContent({
               >
                 <Flag className="w-3.5 h-3.5" />
               </Button>
+
+              {/* Admin : bannir le post */}
+              <AdminBanButton contentId={post.id} kind="post" />
             </div>
           </div>
         </div>

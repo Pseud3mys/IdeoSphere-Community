@@ -41,7 +41,7 @@ const TYPE_LABEL: Record<ModerationRecord['contentType'], string> = {
 };
 
 const ACTION_DONE: Record<ModerationAction, string> = {
-  remove: 'Contenu banni : il est retiré du site et archivé',
+  remove: 'Contenu retiré du site et archivé',
   dismiss: 'Contenu gardé en ligne',
   confirm: 'Retrait confirmé',
   restore: 'Contenu restauré',
@@ -54,9 +54,10 @@ function formatDate(iso: string | null) {
   });
 }
 
-function decidedByLabel(decidedBy: string | null) {
-  if (!decidedBy) return '';
-  return decidedBy === 'mistral' ? 'Mistral (automatique)' : 'Admin';
+function decidedByLabel(record: ModerationRecord) {
+  if (!record.decidedBy) return '';
+  if (record.decidedBy === 'mistral') return 'Mistral (automatique)';
+  return record.history.some((h) => h.action === 'ban') ? 'Banni à la main par un admin' : 'Admin';
 }
 
 export function AdminModerationTab() {
@@ -149,7 +150,7 @@ export function AdminModerationTab() {
                   <Badge variant="outline">{TYPE_LABEL[record.contentType]}</Badge>
                   <Badge variant="outline" className={status.className}>{status.label}</Badge>
                   <span className="text-sm text-gray-500">
-                    {decidedByLabel(record.decidedBy)} · {formatDate(record.createdAt)}
+                    {decidedByLabel(record)} · {formatDate(record.createdAt)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
@@ -220,6 +221,14 @@ export function AdminModerationTab() {
                     <Button variant="destructive" disabled={busy} onClick={() => act(record, 'confirm')}>
                       <Ban className="w-4 h-4" />
                       Confirmer le retrait
+                    </Button>
+                  )}
+                  {/* Fausse manip : un contenu gardé en ligne ou restauré peut être retiré après coup */}
+                  {(record.status === 'dismissed' || record.status === 'restored') && (
+                    <Button variant="destructive" disabled={busy || !record.online} onClick={() => act(record, 'remove')}
+                      title={record.online ? undefined : "Le contenu n'est plus en ligne"}>
+                      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
+                      Retirer
                     </Button>
                   )}
                   {record.online && (

@@ -35,6 +35,7 @@ import { toast } from 'sonner@2.0.3';
 import { canEditIdea } from '../utils/contentEditUtils';
 import { EditIdeaDialog } from './EditIdeaDialog';
 import { ContentActionDialogs } from './ContentActionDialogs';
+import { AdminBanButton } from './AdminBanDialog';
 
 interface IdeaDetailPageProps {
   idea: Idea;
@@ -278,6 +279,9 @@ export function IdeaDetailPage({
               <span className="text-xs">Signaler</span>
             </Button>
           )}
+
+          {/* Admin : bannir le projet (mobile) */}
+          <AdminBanButton contentId={latestIdea.id} kind="idea" className="w-full justify-center h-11 mt-2" />
         </div>
 
         {/* Version desktop */}
@@ -377,6 +381,9 @@ export function IdeaDetailPage({
                   <Flag className="w-3.5 h-3.5" />
                 </Button>
               )}
+
+              {/* Admin : bannir le projet (desktop) */}
+              <AdminBanButton contentId={latestIdea.id} kind="idea" />
             </div>
           </div>
         </div>

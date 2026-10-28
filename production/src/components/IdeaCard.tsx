@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Heart, Eye, MapPin, Flag } from 'lucide-react';
+import { Heart, Eye, MapPin, Flag, Ban } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { ContentActionDialogs } from './ContentActionDialogs';
@@ -13,6 +13,7 @@ import { CreatorAvatar } from './CreatorAvatar';
 import { CreatorNames } from './CreatorNames';
 import { getFirstCreator } from '../utils/userValidation';
 import { GroupBadgeList } from './group/GroupBadgeList';
+import { AdminBanDialog, isAdminUser } from './AdminBanDialog';
 
 interface IdeaCardProps {
   idea: Idea;
@@ -59,6 +60,7 @@ export function IdeaCard({
 }: IdeaCardProps) {
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
 
   const { getCurrentUser, getIdeaById, getUserById } = useEntityStoreSimple();
   
@@ -241,6 +243,18 @@ export function IdeaCard({
                     Signaler
                   </DropdownMenuItem>
                 )}
+                {isAdminUser() && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsBanDialogOpen(true);
+                    }}
+                    className="text-destructive"
+                  >
+                    <Ban className="w-4 h-4 mr-2" />
+                    Bannir (admin)
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -289,6 +303,9 @@ export function IdeaCard({
         onReportCancel={handleReportCancel}
         onReportConfirm={handleReportConfirm}
       />
+      {isAdminUser() && (
+        <AdminBanDialog open={isBanDialogOpen} onOpenChange={setIsBanDialogOpen} contentId={latestIdea.id} kind="idea" />
+      )}
     </div>
   );
 }

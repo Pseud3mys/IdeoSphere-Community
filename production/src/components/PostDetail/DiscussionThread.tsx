@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { getValidAvatar } from '../../api/avatarService';
 import { formatTimeAgo } from './formatTimeAgo';
+import { AdminBanButton } from '../AdminBanDialog';
 
 interface DiscussionThreadProps {
   post: Post;
@@ -227,6 +228,7 @@ export function DiscussionThread({
                             <MessageSquare className="w-3 h-3 mr-1" />
                             {isReplying ? 'Annuler' : 'Répondre'}
                           </Button>
+                          <AdminBanButton contentId={post.id} commentId={reply.id} kind="comment" className="h-6 px-2" />
                         </div>
                       )}
                       
@@ -335,6 +337,7 @@ export function DiscussionThread({
                                     <ArrowUp className="w-3 h-3" />
                                     <span className="text-xs">{subReply.upvotes?.length || 0}</span>
                                   </button>
+                                  <AdminBanButton contentId={derivedPost.id} commentId={subReply.id} kind="comment" showLabel={false} className="h-6 px-1.5" />
                                 </div>
                                 <p className="text-gray-900 text-sm leading-relaxed font-normal">{subReply.content}</p>
                               </div>
