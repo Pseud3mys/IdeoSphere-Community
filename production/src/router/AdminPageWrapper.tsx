@@ -70,7 +70,7 @@ export function AdminPageWrapper() {
     try {
       const result = await handleReport(contentType, contentId, 'delete');
       if (result.success) {
-        toast.success('Contenu supprimé avec succès');
+        toast.success('Contenu retiré et archivé (restaurable dans « Modération auto »)');
         // Recharger la liste
         await loadReportedContent();
       } else {
