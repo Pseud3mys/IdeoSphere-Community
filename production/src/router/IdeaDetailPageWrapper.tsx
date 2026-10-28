@@ -4,6 +4,8 @@ import { IdeaDetailPage } from '../components/IdeaDetailPage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Idea } from '../types';
+import { RemovedContentNotice } from '../components/RemovedContentNotice';
+import type { RemovalInfo } from '../api/contentService';
 
 /**
  * IdeaDetailPageWrapper
@@ -26,7 +28,8 @@ export function IdeaDetailPageWrapper() {
   const navigation = useNavigationActions();
   const { getIdeaById, actions } = useEntityStoreSimple();
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [removal, setRemoval] = useState<RemovalInfo | null>(null);
+
   // ✅ Utiliser directement le store au lieu d'un state local
   // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
   const idea = getIdeaById(ideaId || '');
@@ -44,7 +47,8 @@ export function IdeaDetailPageWrapper() {
       try {
         await actions.ensureGuestUserExists();
         
-        const { fetchIdeaDetails } = await import('../api/contentService');
+        const { fetchIdeaDetails, fetchRemovalInfo } = await import('../api/contentService');
+        setRemoval(null);
         const { fetchDiscussions } = await import('../api/detailsService');
         const { getIdeaRatingsOnApi } = await import('../api/interactionService');
         
@@ -60,6 +64,12 @@ export function IdeaDetailPageWrapper() {
           const apiResponse = await fetchIdeaDetails(ideaId);
 
           if (!apiResponse) {
+            // Retirée par la modération : on explique au lieu de rediriger sans rien dire
+            const info = await fetchRemovalInfo(ideaId);
+            if (info) {
+              setRemoval(info);
+              return;
+            }
             console.error(`❌ Idée ${ideaId} non trouvée`);
             navigate('/discovery');
             return;
@@ -155,6 +165,11 @@ export function IdeaDetailPageWrapper() {
         </div>
       </div>
     );
+  }
+
+  // Idée retirée par la modération (passe avant une éventuelle copie restée dans le store)
+  if (removal) {
+    return <RemovedContentNotice kind="idea" info={removal} />;
   }
 
   // Si l'idée n'existe pas, rediriger (déjà fait dans useEffect, mais garde pour sécurité)

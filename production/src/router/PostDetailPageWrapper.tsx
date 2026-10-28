@@ -4,6 +4,8 @@ import { PostDetailPage } from '../components/PostDetailPage';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useNavigationActions } from '../hooks/useNavigationActions';
 import { Post } from '../types';
+import { RemovedContentNotice } from '../components/RemovedContentNotice';
+import type { RemovalInfo } from '../api/contentService';
 
 /**
  * PostDetailPageWrapper
@@ -26,7 +28,8 @@ export function PostDetailPageWrapper() {
   const { getPostById, actions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [removal, setRemoval] = useState<RemovalInfo | null>(null);
+
   // ✅ Utiliser directement le store au lieu d'un state local
   // Cela permet au composant de se re-rendre automatiquement quand le store est mis à jour
   const post = getPostById(postId || '');
@@ -42,7 +45,8 @@ export function PostDetailPageWrapper() {
       setIsLoading(true);
 
       try {
-        const { fetchPostDetails } = await import('../api/contentService');
+        const { fetchPostDetails, fetchRemovalInfo } = await import('../api/contentService');
+        setRemoval(null);
         
         // ✅ TOUJOURS charger les détails complets depuis l'API
         // Cela garantit que nous avons toujours les commentaires, même si le post
@@ -51,6 +55,12 @@ export function PostDetailPageWrapper() {
         const apiResponse = await fetchPostDetails(postId);
 
         if (!apiResponse) {
+          // Retiré par la modération : on explique au lieu de rediriger sans rien dire
+          const info = await fetchRemovalInfo(postId);
+          if (info) {
+            setRemoval(info);
+            return;
+          }
           console.error(`❌ Post ${postId} non trouvé`);
           navigate('/discovery');
           return;
@@ -105,6 +115,11 @@ export function PostDetailPageWrapper() {
         </div>
       </div>
     );
+  }
+
+  // Post retiré par la modération (passe avant une éventuelle copie restée dans le store)
+  if (removal) {
+    return <RemovedContentNotice kind="post" info={removal} />;
   }
 
   // Si le post n'existe pas
