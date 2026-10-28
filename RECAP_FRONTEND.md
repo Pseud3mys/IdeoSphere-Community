@@ -1,6 +1,6 @@
 # Récap Frontend — IdeoSphere Community
 
-État constaté en lisant le code de `production/` le 2026-10-26. Le README racine parle d'un dossier `standalone/`, qui n'existe pas : seul `production/` est actif.
+État constaté en lisant le code de `production/` le 2026-10-26. Seul `production/` est actif (pas de dossier `standalone/`).
 
 ## 1. Stack et déploiement
 
@@ -28,7 +28,7 @@ src/
 
 Flux de données type : page → wrapper → `useEntityStoreSimple()` → action (`apiActions`, `contentActions`…) → service `api/*` → backend → `transformService` → store normalisé (`users`, `ideas`, `posts`, `groups`, `groupMemberships`…) → sélecteurs → page.
 
-**Le store est en mémoire.** Seuls `currentUserId` est persisté en `localStorage`, avec l'email invité, les brouillons d'idée et les items « vus » de Discovery. Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
+**Le store est en mémoire.** Seuls sont persistés en `localStorage` : l'email invité (`ideosphere_guest_email`), l'id d'invité du widget (`quickpost_guest_user_id`), les brouillons d'idée (`ideosphere-drafts`) et les items « vus » de Discovery (`seenItems`). Le `currentUserId` n'est **pas** persisté : il est reconstruit à chaque chargement (Keycloak, ou invité retrouvé par son email). Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
 
 ## 3. Multi-client (white-label)
 
@@ -112,5 +112,5 @@ Aussi : onboarding guidé (`OnboardingTour`), QR code de collaboration, partage 
 - `AuthProvider` est monté deux fois (`main.tsx` et `App.tsx`). C'est sans conséquence grâce au verrou d'init, mais redondant.
 - `BrowserRouter initialEntries` est un reste de `MemoryRouter`, sans effet.
 - `ProtectedRoute`, `LoginDialog`, `MockLoginDialog`, `MockAuthService`, `auth.mode` et `mockUser` de la config ne sont pas utilisés. Dans `data/`, seuls `unknownUser` et `defaultRatingCriteria` servent encore.
-- Les docs dans `src/docs`, `src/*.md` et `components/*/README.md` décrivent souvent des états antérieurs (Supabase, MemoryRouter, mock). Ce récap s'y substitue pour l'état actuel.
+- Les docs périmées de `src/` (architecture, hooks, store, router, routing, config…) ont été supprimées le 2026-10-28 ; ce récap les remplace. Les `.md` restants dans `src/` portent un avertissement en haut quand une partie a été retirée.
 - `package.json` à la racine de `IdeoSphere Community/` (react-router 7) n'est pas utilisé par l'app. `scripts/generate-kumu-graph.py` génère un graphe Kumu **du code** (dossiers, fichiers, imports), sans lien avec la plateforme.

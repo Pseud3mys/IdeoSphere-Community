@@ -1,5 +1,6 @@
-
 # Spécifications d'Implémentation Frontend : Système de Notification
+
+> ⚠️ **Spécification NON implémentée** (vérifié le 2026-10-28). Ni `types/notifications.ts`, ni `NotificationContext`, ni route backend `/notifications` n'existent. Aujourd'hui, les notifications sont calculées localement dans `MyContributionsPage` à partir des soutiens et commentaires. À traiter comme une proposition.
 
 Ce document structure l'intégration du nouveau système de notification côté client.
 

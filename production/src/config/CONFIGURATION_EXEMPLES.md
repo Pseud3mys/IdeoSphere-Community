@@ -1,5 +1,7 @@
 # Configuration des Exemples et Placeholders - IdeoSphere
 
+> ⚠️ **Partiellement mis à jour le 2026-10-28.** La structure `examples` correspond à `config/types.ts`. Les listes de composants utilisateurs, la section de migration et le statut « 100 % configurable » ont été retirés (non vérifiés, et certains composants cités n'existent plus). Les textes d'exemple par contexte sont des suggestions, pas l'état d'un client réel.
+
 ## Vue d'ensemble
 
 Les **exemples et placeholders** sont cruciaux pour l'expérience utilisateur : ils donnent le ton, inspirent les utilisateurs et définissent le style de contribution attendu. Tous les exemples sont maintenant centralisés dans `/config/clientConfig.ts`.
@@ -59,20 +61,6 @@ examples: {
   },
 }
 ```
-
-## Composants utilisant les exemples
-
-| Composant | Utilise |
-|-----------|---------|
-| `CreateQuickPost.tsx` | `post.*` |
-| `BasicIdeaForm.tsx` | `idea.titlePlaceholder`, `idea.summaryPlaceholder`, `idea.locationPlaceholder` |
-| `DetailedDescriptionSection.tsx` | `idea.descriptionTemplate.*` |
-| `CreateGroupFlow.tsx` | `group.*` |
-| `GroupManagePage.tsx` | `group.*` |
-| `IdeaDiscussionsTab.tsx` | `discussion.topicTitlePlaceholder` |
-| `SignupPage.tsx` | `profile.*` |
-| `CollaborationForm.tsx` | `collaboration.searchPlaceholder` |
-| `CollaborationSection.tsx` | `collaboration.searchPlaceholder` |
 
 ## Exemples par contexte
 
@@ -322,28 +310,3 @@ withoutSourcePost: `...Décrivez le problème ou l'opportunité...`
 ### 4. Ton cohérent
 
 Assurez-vous que tous les placeholders utilisent le même niveau de formalité et le même vocabulaire.
-
-## Migration technique
-
-Tous les placeholders hardcodés ont été migrés vers la configuration centralisée :
-
-| Avant | Après |
-|-------|-------|
-| `placeholder="Ex: Commission Culture"` | `placeholder={clientConfig.examples.group.namePlaceholder}` |
-| `placeholder="Décrivez votre idée..."` | `placeholder={clientConfig.examples.idea.summaryPlaceholder}` |
-
-## Vérification
-
-Pour vérifier qu'aucun placeholder n'est hardcodé :
-
-```bash
-# Rechercher les placeholders Ex: encore hardcodés
-grep -r 'placeholder="Ex:' components/
-
-# Devrait retourner 0 résultats
-```
-
----
-
-**Dernière mise à jour** : Décembre 2024  
-**Status** : ✅ 100% des placeholders contextuels sont configurables

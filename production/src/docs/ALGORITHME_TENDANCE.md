@@ -1,5 +1,7 @@
 # Algorithme de Tendance - IdeoSphere
 
+> ⚠️ **Partiellement mis à jour le 2026-10-28.** Ne décrit que le tri « Tendances » côté front (`utils/trendingUtils.ts`, utilisé par `DiscoveryPage` et `MyIdeasPage`), vérifié dans le code. Le classement réel des feeds est fait côté backend (voir `IdeoSphere Engine/RECAP_BACKEND.md`). La section « Filtres disponibles » a été retirée : le code n'a que 3 tris (`default`, `chronological`, `trending`).
+
 ## 📊 Vue d'ensemble
 
 L'algorithme de tendance d'IdeoSphere calcule un score qui combine :
@@ -155,30 +157,6 @@ Décroissance = 0.5^(84/168) = 0.5^0.5 ≈ 0.707
 
 Score final = 7.2 × 0.707 ≈ 5.1
 ```
-
----
-
-## 📑 Filtres disponibles
-
-### 1. "Tendance" (trending)
-Trie par score de tendance (engagement × récence)
-
-**Cas d'usage** : Voir ce qui est populaire EN CE MOMENT
-
-### 2. "Plus populaire" (popular)
-Trie par engagement unique uniquement (sans décroissance)
-
-**Cas d'usage** : Voir ce qui a généré le plus d'engagement, peu importe quand
-
-### 3. "Par défaut" (default)
-Utilise le score de tendance mais avec normalisation par jour
-
-**Cas d'usage** : Feed équilibré entre récent et populaire
-
-### 4. "Plus récent" (recent)
-Trie chronologiquement
-
-**Cas d'usage** : Voir les nouveautés
 
 ---
 

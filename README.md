@@ -1,3 +1,4 @@
+> ⚠️ **Partially updated on 2026-10-28.** The `standalone/` folder described previously does not exist; only `production/` is active. The clone URL below is a placeholder.
 
 # IdeoSphere Community
 
@@ -9,7 +10,6 @@ IdeoSphere community is designed to facilitate collaboration and idea sharing am
 
 ## Project Structure
 
-- **standalone/**: Contains the source code and resources for the standalone version of the application.
 - **production/**: Contains the source code and resources for the production-ready version of the application.
 - **README.md**: This file provides an overview and instructions for the project.
 - **LICENSE**: Licensing information for the project.
@@ -23,22 +23,21 @@ IdeoSphere community is designed to facilitate collaboration and idea sharing am
    ```
 
 2. **Install dependencies**:
-   Navigate to both the `standalone` and `production` directories and run:
+   Go to the `production` directory and run:
    ```
    npm install
    ```
 
 3. **Run the application**:
-   For standalone:
    ```
-   cd standalone
-   npm start
+   cd production
+   npm run dev
    ```
+   Open `test-tenant.localhost:3000` so the backend can resolve the tenant (see `RECAP_FRONTEND.md`).
 
 ## Usage guidelines
 
-- Explore the components and features available in both the standalone and production versions.
-- Refer to the individual `README.md` files in the `standalone` and `production` directories for more detailed instructions and information.
+- See `RECAP_FRONTEND.md` for the current state of the frontend.
 
 
 ## Licence

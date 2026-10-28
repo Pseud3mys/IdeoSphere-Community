@@ -1,5 +1,7 @@
 # Scripts de Métadonnées
 
+> ⚠️ **Partiellement mis à jour le 2026-10-28.** Ce script génère un graphe Kumu **du code** (dossiers, fichiers, imports), sans lien avec la plateforme. Les chiffres d'exemple (nombre de fichiers et de connexions) ont été retirés car périmés.
+
 ## generate-kumu-graph.py
 
 Script Python qui génère un graphe JSON pour visualiser la structure du code dans [Kumu](https://kumu.io).
@@ -170,17 +172,3 @@ Le fichier JSON contient deux sections principales :
 - `import` : Dépendance entre deux fichiers (imports ES6/CommonJS)
 - `folder-hierarchy` : Relation parent-enfant entre dossiers
 - `file-in-folder` : Un fichier appartient à un dossier
-
-### Exemple de résultat
-
-Après import dans Kumu, vous verrez :
-- **229 fichiers** représentés comme des cercles (taille proportionnelle au nombre de lignes)
-- **19 dossiers** représentés comme des carrés
-- **758 connexions d'imports** (flèches bleues) montrant les dépendances
-- **991 connexions totales** incluant la hiérarchie des dossiers
-
-Le graphe vous permet de :
-- Identifier les fichiers centraux (beaucoup d'imports)
-- Détecter les dépendances circulaires
-- Visualiser l'architecture par modules
-- Repérer les fichiers volumineux qui mériteraient d'être refactorisés

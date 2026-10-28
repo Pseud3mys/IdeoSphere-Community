@@ -1,5 +1,7 @@
 # QuickPostWidget
 
+> ⚠️ **Partiellement mis à jour le 2026-10-28.** La section « redimensionnement automatique » a été retirée : le message `quickpost_resize` et le `ResizeObserver` n'existent pas dans le code. Les messages `quickpost_created` et `quickpost_closed` existent. Le widget stocke son invité dans `localStorage.quickpost_guest_user_id`, distinct de `ideosphere_guest_email` utilisé par le reste de l'app.
+
 Composant réutilisable pour créer rapidement des posts avec support optionnel d'un feed de suggestions.
 
 ## � Principes de design pour widgets embarqués (iframe)
@@ -104,32 +106,6 @@ Le composant `QuickPostWidgetStandalone` parse automatiquement les paramètres.
 - **Avec groupIds** : appelle `fetchGroupFeed()` pour récupérer les posts du groupe
 - **Avec tags uniquement** : récupère le feed général et filtre par tags
 - Affiche 4-6 posts avec bouton "Soutenir"
-
-## 📐 Intégration iframe avec redimensionnement automatique
-
-Le widget envoie automatiquement sa hauteur via `postMessage`. Côté parent :
-
-```html
-<iframe 
-  id="quickpost-widget"
-  src="https://votre-domaine.com/widget/quick-post?groups=groups/123"
-  width="100%"
-  style="border: none; background: transparent;"
-  allowtransparency="true">
-</iframe>
-
-<script>
-window.addEventListener('message', (event) => {
-  if (event.data.type === 'quickpost_resize') {
-    const iframe = document.getElementById('quickpost-widget');
-    iframe.style.height = event.data.height + 'px';
-  }
-});
-</script>
-```
-
-Le widget communique sa hauteur en temps réel via `ResizeObserver`.
-
 
 ## 📍 Exemple d'intégration
 
