@@ -65,7 +65,7 @@
         // Si le frontend fait un appel à '/api/...'
         '/api': {
           // Redirige-le vers votre backend
-          target: 'http://localhost:5000',
+          target: process.env.VITE_PROXY_TARGET || 'http://localhost:5000',
         }
       }
     }
