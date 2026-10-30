@@ -6,10 +6,11 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink, Users, Sparkles } from 'lucide-react';
+import { Shield, Trash2, CheckCircle, AlertTriangle, Loader2, ExternalLink, Users, Sparkles, ShieldAlert } from 'lucide-react';
 import { ReportedContent, FieldContact } from '../api/adminService';
 import { FieldContactForm } from './FieldContactForm';
 import { AdminDirectGroupCreationTab } from './AdminDirectGroupCreationTab';
+import { AdminModerationTab } from './AdminModerationTab';
 
 interface AdminPageProps {
   onDeleteReport: (contentType: 'ideas' | 'posts', contentId: string) => Promise<void>;
@@ -69,11 +70,15 @@ export function AdminPage({
       </div>
 
       {/* Onglets */}
-      <Tabs defaultValue="moderation" className="w-full">
+      <Tabs defaultValue="auto-moderation" className="w-full">
         <TabsList>
+          <TabsTrigger value="auto-moderation" className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4" />
+            Modération auto
+          </TabsTrigger>
           <TabsTrigger value="moderation" className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
-            Modération
+            Signalements
             {reportedContent.length > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {reportedContent.length}
@@ -89,6 +94,10 @@ export function AdminPage({
             création groupe
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="auto-moderation" className="mt-6">
+          <AdminModerationTab />
+        </TabsContent>
 
         <TabsContent value="moderation" className="mt-6">
           {isLoading ? (
@@ -181,7 +190,7 @@ export function AdminPage({
                         ) : (
                           <Trash2 className="w-4 h-4" />
                         )}
-                        Supprimer le contenu
+                        Retirer le contenu
                       </Button>
                       
                       <Button

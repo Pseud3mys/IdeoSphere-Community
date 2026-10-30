@@ -17,6 +17,120 @@ export interface ReportedContent {
 }
 
 /**
+ * Modération automatique (Mistral) : un dossier par contenu signalé ou retiré
+ */
+export type ModerationView = 'pending' | 'removed' | 'history';
+export type ModerationAction = 'remove' | 'dismiss' | 'confirm' | 'restore';
+export type ModerationStatus = 'flagged' | 'removed' | 'confirmed' | 'restored' | 'dismissed';
+
+export interface ModerationReason {
+  category: string;
+  label: string;
+  score?: number;
+}
+
+export interface ModerationRecord {
+  key: string;
+  status: ModerationStatus;
+  contentType: 'ideas' | 'posts' | 'comment';
+  contentId: string;          // pour un commentaire : le post parent
+  commentId: string | null;
+  title: string | null;
+  text: string;
+  online: boolean;            // le contenu est-il visible sur le site ?
+  authors: { id: string; name: string }[];
+  decidedBy: string | null;   // "mistral" ou "admin:..."
+  createdAt: string;
+  reasons: ModerationReason[];
+  categoryScores: Record<string, number>;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  restoreReport: { restoredEdges: number; skippedEdges: { collection: string; key: string; reason: string }[] } | null;
+  history: { action: string; from: ModerationStatus | null; by: string; at: string; note: string | null }[];
+}
+
+let banReasonsCache: ModerationReason[] | null = null;
+
+/**
+ * Motifs proposés pour un bannissement manuel
+ * GET /api/admin/moderation/reasons
+ */
+export async function fetchBanReasons(): Promise<ModerationReason[]> {
+  if (banReasonsCache) return banReasonsCache;
+  try {
+    const response = await apiClient.get('/admin/moderation/reasons');
+    banReasonsCache = response.data;
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la récupération des motifs de bannissement:`, error);
+    return [];
+  }
+}
+
+/**
+ * Bannit à la main un contenu vu sur le site (retiré et archivé, restaurable)
+ * POST /api/admin/moderation/ban
+ */
+export async function banContent(
+  contentId: string,
+  category: string,
+  options: { commentId?: string; note?: string } = {}
+): Promise<{ success: boolean; data?: ModerationRecord; error?: string }> {
+  try {
+    const response = await apiClient.post('/admin/moderation/ban', {
+      contentId,
+      category,
+      commentId: options.commentId,
+      note: options.note || undefined,
+    });
+    return { success: true, data: response.data.data };
+  } catch (error: any) {
+    console.error(`❌ [Admin API] Erreur lors du bannissement de ${contentId}:`, error);
+    return { success: false, error: error.response?.data?.message };
+  }
+}
+
+/**
+ * Liste les dossiers de modération d'une vue
+ * GET /api/admin/moderation?view=pending|removed|history
+ */
+export async function fetchModerationRecords(
+  view: ModerationView,
+  limit: number = 50,
+  offset: number = 0
+): Promise<{ data: ModerationRecord[]; counts: Record<ModerationView, number>; unauthorized?: boolean } | null> {
+  try {
+    const response = await apiClient.get('/admin/moderation', { params: { view, limit, offset } });
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 403) {
+      return { data: [], counts: { pending: 0, removed: 0, history: 0 }, unauthorized: true };
+    }
+    console.error(`❌ [Admin API] Erreur lors de la récupération des dossiers de modération:`, error);
+    return null;
+  }
+}
+
+/**
+ * Applique une décision admin sur un dossier
+ * POST /api/admin/moderation/{key}/{action}
+ */
+export async function applyModerationAction(
+  key: string,
+  action: ModerationAction,
+  note?: string
+): Promise<{ success: boolean; data?: ModerationRecord; error?: string }> {
+  try {
+    const response = await apiClient.post(`/admin/moderation/${key}/${action}`, note ? { note } : {});
+    return { success: true, data: response.data.data };
+  } catch (error: any) {
+    console.error(`❌ [Admin API] Erreur lors de l'action ${action} sur le dossier ${key}:`, error);
+    return { success: false, error: error.response?.data?.message };
+  }
+}
+
+/**
  * Type pour un contact terrain (simplifié)
  */
 export interface FieldContact {

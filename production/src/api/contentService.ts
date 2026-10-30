@@ -155,6 +155,31 @@ export async function fetchPostDetails(postId: string): Promise<{ post: Post; us
 }
 
 /**
+ * Contenu retiré par la modération (renseigné par l'API dans sa réponse 404).
+ * Pas de motif : il est public ici, seul l'auteur le reçoit.
+ */
+export interface RemovalInfo {
+  removed: true;
+  removedBy: 'auto' | 'admin';
+  confirmedByAdmin: boolean;
+  removedAt: string | null;
+}
+
+/**
+ * Pour un contenu introuvable : a-t-il été retiré par la modération, et par qui ?
+ * Corresponds à GET /posts/{key} ou /ideas/{key} (404 avec un champ `moderation`)
+ */
+export async function fetchRemovalInfo(contentId: string): Promise<RemovalInfo | null> {
+  const [collection, key] = contentId.split('/');
+  try {
+    await apiClient.get(`/${collection}/${key}`);
+    return null;
+  } catch (error: any) {
+    return error.response?.status === 404 ? error.response.data?.moderation ?? null : null;
+  }
+}
+
+/**
  * Récupère le profil complet d'un utilisateur.
  * Corresponds à GET /users/{key}
  */
