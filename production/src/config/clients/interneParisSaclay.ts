@@ -61,5 +61,9 @@ export const interneParisSaclayConfig = defineClient({
 
   // Désactivée tant que la carte Kumu du client n'existe pas (étape 6 de add_tenant.md) :
   // sinon c'est la carte de démonstration par défaut qui s'afficherait.
-  cartography: { enabled: false },
+  
+  cartography: {
+    embedUrl: 'https://embed.kumu.io/621d7ff05a2e8c22fed1fe625171a255',
+    projectUrl: 'https://embed.kumu.io/621d7ff05a2e8c22fed1fe625171a255',
+  },
 });
