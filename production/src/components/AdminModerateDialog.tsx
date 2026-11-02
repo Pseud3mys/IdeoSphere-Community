@@ -28,14 +28,17 @@ const KIND_LABEL: Record<ModerateTargetKind, string> = {
 
 // Ce qu'aurait fait la modération automatique avec ces scores
 const VERDICT: Record<ContentEvaluation['action'], { text: string; className: string }> = {
-  remove: { text: 'Au-dessus du seuil de retrait automatique', className: 'bg-red-50 border-red-200 text-red-700' },
+  remove: { text: 'Serait retiré automatiquement', className: 'bg-red-50 border-red-200 text-red-700' },
   flag: { text: 'Serait signalé aux admins, sans être retiré', className: 'bg-amber-50 border-amber-200 text-amber-700' },
   none: { text: 'Rien à signaler pour Mistral', className: 'bg-gray-50 text-gray-700' },
 };
 
 type Step = 'loading' | 'choose' | 'evaluating' | 'result' | 'ban';
 
-const percent = (score: number) => (score > 0 && score < 0.01 ? '< 1 %' : `${Math.round(score * 100)} %`);
+// Scores au dixième de pourcent ; en dessous de 0,1 %, la catégorie n'est pas affichée
+const MIN_SHOWN_SCORE = 0.001;
+const percent = (score: number) =>
+  `${(score * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 
 const formatEvaluatedAt = (iso: string) =>
   new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -254,21 +257,14 @@ function ChoiceButton({ icon: Icon, title, text, onClick, danger = false }: {
 function EvaluationResult({ evaluation }: { evaluation: ContentEvaluation }) {
   const { thresholds } = evaluation;
   const verdict = VERDICT[evaluation.action];
-  // Les catégories sous 1 % sont résumées en une ligne
-  const visible = evaluation.scores.filter((s) => s.score >= 0.01);
-  const rows = visible.length > 0 ? visible : evaluation.scores.slice(0, 1);
-  const hidden = evaluation.scores.length - rows.length;
+  // Les catégories à 0 ou sous 0,1 % ne sont pas affichées
+  const rows = evaluation.scores.filter((s) => s.score >= MIN_SHOWN_SCORE);
   const color = (score: number) =>
     score >= thresholds.remove ? '#ef4444' : score >= thresholds.flag ? '#f59e0b' : '#9ca3af';
 
   return (
     <div className="space-y-3">
-      <div className={`rounded-md border p-3 text-sm ${verdict.className}`}>
-        <span className="font-medium">{verdict.text}</span>
-        <span className="block text-xs">
-          Seuils actuels : signalement {percent(thresholds.flag)}, retrait {percent(thresholds.remove)}
-        </span>
-      </div>
+      <div className={`rounded-md border p-3 text-sm font-medium ${verdict.className}`}>{verdict.text}</div>
       {evaluation.evaluatedAt && (
         <p className="text-xs text-gray-500">Évalué par Mistral le {formatEvaluatedAt(evaluation.evaluatedAt)}</p>
       )}
@@ -277,16 +273,12 @@ function EvaluationResult({ evaluation }: { evaluation: ContentEvaluation }) {
           <div key={s.category} className="flex items-center gap-3 text-sm">
             <span className="shrink-0 text-gray-700" style={{ width: '9rem' }}>{s.label}</span>
             <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
-              <div className="h-full" style={{ width: `${Math.round(s.score * 100)}%`, backgroundColor: color(s.score) }} />
+              <div className="h-full" style={{ width: `${s.score * 100}%`, backgroundColor: color(s.score) }} />
             </div>
-            <span className="w-12 text-right text-gray-600">{percent(s.score)}</span>
+            <span className="text-right text-gray-600" style={{ width: '3.5rem' }}>{percent(s.score)}</span>
           </div>
         ))}
-        {hidden > 0 && (
-          <p className="text-xs text-gray-500">
-            {hidden} autre{hidden > 1 ? 's' : ''} catégorie{hidden > 1 ? 's' : ''} sous 1 %
-          </p>
-        )}
+        {rows.length === 0 && <p className="text-sm text-gray-500">Aucune catégorie au-dessus de 0,1 %.</p>}
       </div>
     </div>
   );
