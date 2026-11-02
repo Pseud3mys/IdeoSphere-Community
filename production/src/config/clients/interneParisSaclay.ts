@@ -57,6 +57,8 @@ export const interneParisSaclayConfig = defineClient({
     { id: 'community', label: 'Service', labelPlural: 'Services', description: 'Les échanges d\'un service ou d\'un métier', icon: '👥' },
     { id: 'project', label: 'Projet', labelPlural: 'Projets', description: 'Un projet porté par plusieurs services', icon: '🎯' },
     { id: 'challenge', label: 'Chantier', labelPlural: 'Chantiers', description: 'Un chantier transversal (simplification, accueil…)', icon: '💡' },
+    // L'id 'local' est réutilisé : ici la localisation désigne les services, pas des quartiers
+    { id: 'local', label: 'Atelier', labelPlural: 'Ateliers', description: 'Un espace ponctuel pour prolonger un atelier ou une réunion et associer les absents', icon: '🗓️' },
   ],
 
   // Désactivée tant que la carte Kumu du client n'existe pas (étape 6 de add_tenant.md) :
