@@ -72,10 +72,26 @@ export async function fetchBanReasons(): Promise<ModerationReason[]> {
  * Évaluation Mistral demandée par un admin : rien n'est retiré, l'admin décide ensuite
  */
 export interface ContentEvaluation {
-  action: 'none' | 'flag' | 'remove';   // ce qu'aurait fait la modération automatique
+  action: 'none' | 'flag' | 'remove';   // ce qu'aurait fait la modération automatique (seuils actuels)
   scores: Required<ModerationReason>[]; // catégories prises en compte, de la plus haute à la plus basse
   reasons: Required<ModerationReason>[];
   thresholds: { remove: number; flag: number };
+  evaluatedAt: string | null;
+}
+
+/**
+ * Dernière évaluation Mistral du contenu, gardée en base : réaffichée sans rappeler Mistral.
+ * null s'il n'y en a pas (ou si le texte a changé depuis).
+ * GET /api/admin/moderation/evaluation?contentId=&commentId=
+ */
+export async function fetchLastEvaluation(contentId: string, commentId?: string): Promise<ContentEvaluation | null> {
+  try {
+    const response = await apiClient.get('/admin/moderation/evaluation', { params: { contentId, commentId } });
+    return response.data.status === 'done' ? response.data : null;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la lecture de l'évaluation de ${contentId}:`, error);
+    return null;
+  }
 }
 
 /**
@@ -86,7 +102,7 @@ export async function evaluateContent(
   contentId: string,
   commentId?: string,
   timeoutMs: number = 30000
-): Promise<{ success: boolean; evaluationId?: string; data?: ContentEvaluation; error?: string }> {
+): Promise<{ success: boolean; data?: ContentEvaluation; error?: string }> {
   try {
     const start = await apiClient.post('/admin/moderation/evaluate', { contentId, commentId });
     const evaluationId: string = start.data.evaluationId;
@@ -94,7 +110,7 @@ export async function evaluateContent(
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const response = await apiClient.get(`/admin/moderation/evaluate/${evaluationId}`);
-      if (response.data.status === 'done') return { success: true, evaluationId, data: response.data };
+      if (response.data.status === 'done') return { success: true, data: response.data };
       if (response.data.status === 'error') return { success: false, error: response.data.message };
     }
     return { success: false, error: "Mistral n'a pas répondu à temps." };
@@ -107,12 +123,12 @@ export async function evaluateContent(
 /**
  * Bannit à la main un contenu vu sur le site (retiré et archivé, restaurable)
  * POST /api/admin/moderation/ban
- * evaluationId : évaluation Mistral faite juste avant, dont les scores sont joints au dossier
+ * Si le contenu a été évalué par Mistral, le serveur joint l'évaluation au dossier.
  */
 export async function banContent(
   contentId: string,
   category: string,
-  options: { commentId?: string; note?: string; evaluationId?: string } = {}
+  options: { commentId?: string; note?: string } = {}
 ): Promise<{ success: boolean; data?: ModerationRecord; error?: string }> {
   try {
     const response = await apiClient.post('/admin/moderation/ban', {
@@ -120,7 +136,6 @@ export async function banContent(
       category,
       commentId: options.commentId,
       note: options.note || undefined,
-      evaluationId: options.evaluationId,
     });
     return { success: true, data: response.data.data };
   } catch (error: any) {

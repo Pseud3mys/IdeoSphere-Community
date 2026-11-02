@@ -1,17 +1,20 @@
 // src/components/AdminModerateDialog.tsx
 // Bouton « Modérer » des admins, à la place de « Signaler » (inutile à un admin). Deux choix :
-// - Évaluer avec Mistral : les scores s'affichent, rien n'est retiré, l'admin décide ensuite ;
+// - Évaluer avec Mistral : les scores s'affichent, rien n'est retiré, l'admin décide ensuite.
+//   L'évaluation est gardée en base : rouvrir la fenêtre la réaffiche sans rappeler Mistral ;
 // - Bannir : le contenu (idée, post ou commentaire) est retiré du site et archivé ; il reste
 //   restaurable dans Administration > Modération auto.
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Ban, Loader2, ScanSearch, Shield, LucideIcon } from 'lucide-react';
+import { Ban, Loader2, RefreshCw, ScanSearch, Shield, LucideIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { banContent, evaluateContent, fetchBanReasons, ContentEvaluation, ModerationReason } from '../api/adminService';
+import {
+  banContent, evaluateContent, fetchBanReasons, fetchLastEvaluation, ContentEvaluation, ModerationReason,
+} from '../api/adminService';
 import { hasAdminRole } from '../api/authService';
 import { keycloak } from '../api/keycloak';
 
@@ -30,9 +33,12 @@ const VERDICT: Record<ContentEvaluation['action'], { text: string; className: st
   none: { text: 'Rien à signaler pour Mistral', className: 'bg-gray-50 text-gray-700' },
 };
 
-type Step = 'choose' | 'evaluating' | 'result' | 'ban';
+type Step = 'loading' | 'choose' | 'evaluating' | 'result' | 'ban';
 
 const percent = (score: number) => (score > 0 && score < 0.01 ? '< 1 %' : `${Math.round(score * 100)} %`);
+
+const formatEvaluatedAt = (iso: string) =>
+  new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 // hasAdminRole() relit le jeton et écrit dans la console : on le calcule une fois par jeton
 let adminCache: { token: string | undefined; value: boolean } | null = null;
@@ -53,8 +59,8 @@ interface AdminModerateDialogProps {
 }
 
 export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, kind, onBanned }: AdminModerateDialogProps) {
-  const [step, setStep] = useState<Step>('choose');
-  const [evaluation, setEvaluation] = useState<{ id: string; data: ContentEvaluation } | null>(null);
+  const [step, setStep] = useState<Step>('loading');
+  const [evaluation, setEvaluation] = useState<ContentEvaluation | null>(null);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [reasons, setReasons] = useState<ModerationReason[]>([]);
   const [category, setCategory] = useState('');
@@ -63,16 +69,22 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
   // Une réponse de Mistral arrivée après fermeture (ou après une nouvelle demande) est ignorée
   const request = useRef(0);
 
+  // À l'ouverture : si le contenu a déjà été évalué (et n'a pas changé depuis), on réaffiche le récap
   useEffect(() => {
     if (!open) return;
-    request.current += 1;
-    setStep('choose');
+    const current = ++request.current;
+    setStep('loading');
     setEvaluation(null);
     setEvaluationError(null);
     setCategory('');
     setNote('');
     fetchBanReasons().then(setReasons);
-  }, [open]);
+    fetchLastEvaluation(contentId, commentId).then((saved) => {
+      if (current !== request.current) return;
+      setEvaluation(saved);
+      setStep(saved ? 'result' : 'choose');
+    });
+  }, [open, contentId, commentId]);
 
   useEffect(() => {
     if (step === 'ban' && !category && reasons.length > 0) setCategory(reasons[0].category);
@@ -85,8 +97,8 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
     setEvaluationError(null);
     const result = await evaluateContent(contentId, commentId);
     if (current !== request.current) return;
-    if (result.success && result.data && result.evaluationId) {
-      setEvaluation({ id: result.evaluationId, data: result.data });
+    if (result.success && result.data) {
+      setEvaluation(result.data);
     } else {
       setEvaluationError(result.error || "L'évaluation a échoué.");
     }
@@ -95,14 +107,14 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
 
   const goToBan = () => {
     // Motif pré-rempli : la catégorie la plus grave selon Mistral, si elle fait partie des motifs proposés
-    const suggested = evaluation?.data.reasons[0]?.category;
+    const suggested = evaluation?.reasons[0]?.category;
     if (suggested && reasons.some((r) => r.category === suggested)) setCategory(suggested);
     setStep('ban');
   };
 
   const submit = async () => {
     setIsSubmitting(true);
-    const result = await banContent(contentId, category, { commentId, note, evaluationId: evaluation?.id });
+    const result = await banContent(contentId, category, { commentId, note });
     setIsSubmitting(false);
     if (!result.success) {
       toast.error(result.error || 'Impossible de bannir ce contenu');
@@ -137,17 +149,17 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
           </div>
         )}
 
-        {step === 'evaluating' && (
+        {(step === 'loading' || step === 'evaluating') && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-600">
             <Loader2 className="w-5 h-5 animate-spin" />
-            Mistral analyse le contenu…
+            {step === 'evaluating' ? 'Mistral analyse le contenu…' : 'Chargement…'}
           </div>
         )}
 
         {step === 'result' && evaluationError && (
           <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{evaluationError}</p>
         )}
-        {step === 'result' && evaluation && <EvaluationResult evaluation={evaluation.data} />}
+        {step === 'result' && evaluation && <EvaluationResult evaluation={evaluation} />}
 
         {step === 'ban' && (
           <div className="space-y-4">
@@ -181,7 +193,7 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
         )}
 
         <DialogFooter>
-          {(step === 'choose' || step === 'evaluating') && (
+          {(step === 'loading' || step === 'choose' || step === 'evaluating') && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
           )}
           {step === 'result' && evaluationError && (
@@ -192,6 +204,10 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
           )}
           {step === 'result' && evaluation && (
             <>
+              <Button variant="ghost" onClick={evaluate} title="Nouvel appel à Mistral">
+                <RefreshCw className="w-4 h-4" />
+                Réévaluer
+              </Button>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Garder en ligne</Button>
               <Button variant="destructive" onClick={goToBan}>
                 <Ban className="w-4 h-4" />
@@ -253,6 +269,9 @@ function EvaluationResult({ evaluation }: { evaluation: ContentEvaluation }) {
           Seuils actuels : signalement {percent(thresholds.flag)}, retrait {percent(thresholds.remove)}
         </span>
       </div>
+      {evaluation.evaluatedAt && (
+        <p className="text-xs text-gray-500">Évalué par Mistral le {formatEvaluatedAt(evaluation.evaluatedAt)}</p>
+      )}
       <div className="space-y-2">
         {rows.map((s) => (
           <div key={s.category} className="flex items-center gap-3 text-sm">
