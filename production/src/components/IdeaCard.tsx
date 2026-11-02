@@ -26,6 +26,7 @@ interface IdeaCardProps {
   chainContext?: ItemChainContext;
   onPostClick?: (postId: string) => void;
   onLike?: (postId: string) => void;
+  contextGroupId?: string; // Groupe de la page courante : son badge est masqué
 }
 
 function formatTimeAgo(date: Date | undefined): string {
@@ -56,13 +57,14 @@ export function IdeaCard({
   onReport,
   chainContext,
   onPostClick,
-  onLike
+  onLike,
+  contextGroupId
 }: IdeaCardProps) {
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
 
-  const { getCurrentUser, getIdeaById, getUserById } = useEntityStoreSimple();
+  const { getCurrentUser, getIdeaById, getUserById, getGroupById } = useEntityStoreSimple();
   
   const user = currentUser || getCurrentUser();
   const latestIdea = getIdeaById(idea.id) || idea;
@@ -112,6 +114,7 @@ export function IdeaCard({
   };
 
   const firstCreator = getFirstCreator(latestIdea.creatorIds, getUserById);
+  const groupIds = (latestIdea.groupIds || []).filter(id => id !== contextGroupId && getGroupById(id));
 
   return (
     <div 
@@ -130,7 +133,7 @@ export function IdeaCard({
           
           {/* Localisation et badges */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
-            {latestIdea.location && (
+            {latestIdea.location?.label && (
               <>
                 <MapPin className="w-4 h-4" />
                 <span>{latestIdea.location.label}</span>
@@ -149,10 +152,10 @@ export function IdeaCard({
                 />
               </>
             )}
-            {latestIdea.groupIds && latestIdea.groupIds.length > 0 && (
+            {groupIds.length > 0 && (
               <>
                 <span>•</span>
-                <GroupBadgeList groupIds={latestIdea.groupIds} maxDisplay={2} />
+                <GroupBadgeList groupIds={groupIds} maxDisplay={2} />
               </>
             )}
           </div>

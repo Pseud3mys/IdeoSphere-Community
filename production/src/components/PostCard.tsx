@@ -26,6 +26,7 @@ interface PostCardProps {
   chainContext?: ItemChainContext;
   onIdeaClick?: (ideaId: string) => void;
   onSupport?: (ideaId: string) => void;
+  contextGroupId?: string; // Groupe de la page courante : son badge est masqué
 }
 
 // Simple function to format time distance
@@ -57,13 +58,14 @@ export function PostCard({
   onReport,
   chainContext,
   onIdeaClick,
-  onSupport
+  onSupport,
+  contextGroupId
 }: PostCardProps) {
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
 
-  const { getCurrentUser, getPostById, getUserById } = useEntityStoreSimple();
+  const { getCurrentUser, getPostById, getUserById, getGroupById } = useEntityStoreSimple();
   
   const user = currentUser || getCurrentUser();
   const latestPost = getPostById(post.id) || post;
@@ -72,6 +74,7 @@ export function PostCard({
   const isSupporting = user && (latestPost.supporters?.includes(user.id) || false);
   const supportCount = latestPost.supporters?.length || 0;
   const timeAgo = formatTimeAgo(latestPost.createdAt);
+  const groupIds = (latestPost.groupIds || []).filter(id => id !== contextGroupId && getGroupById(id));
 
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -124,13 +127,16 @@ export function PostCard({
             <h3 
               className="line-clamp-1 mb-3 group-hover:text-primary transition-colors cursor-pointer hover:underline"
             >
-              {latestPost.title || (latestPost.content.split('\n')[0].slice(0, 60) + (latestPost.content.length > 60 ? '...' : ''))}
+              {latestPost.title || (() => {
+                const firstLine = latestPost.content.split('\n')[0];
+                return firstLine.length > 60 ? firstLine.slice(0, 60) + '...' : firstLine;
+              })()}
             </h3>
           </Link>
           
           {/* Localisation et badges */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 flex-wrap">
-            {latestPost.location && (
+            {latestPost.location?.label && (
               <>
                 <MapPin className="w-4 h-4" />
                 <span>{latestPost.location.label}</span>
@@ -149,10 +155,10 @@ export function PostCard({
                 />
               </>
             )}
-            {latestPost.groupIds && latestPost.groupIds.length > 0 && (
+            {groupIds.length > 0 && (
               <>
                 <span>•</span>
-                <GroupBadgeList groupIds={latestPost.groupIds} maxDisplay={2} />
+                <GroupBadgeList groupIds={groupIds} maxDisplay={2} />
               </>
             )}
           </div>

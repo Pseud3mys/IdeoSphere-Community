@@ -23,7 +23,7 @@ interface CreateQuickPostProps {
 
 export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
-  const { store, getCurrentUser, getUserById, getUserGroups, getPostById, actions, rawActions } = useEntityStoreSimple();
+  const { store, getCurrentUser, getUserById, getUserGroups, getGroupById, getPostById, actions, rawActions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
   // ✅ Récupérer uniquement les groupes dont l'utilisateur est membre
@@ -183,7 +183,8 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
       {groupIds.length > 0 && (
         <div className="flex gap-1.5 flex-wrap items-center">
           {groupIds.map((gId) => {
-            const group = userGroups.find(g => g.id === gId);
+            // Groupe pré-rempli (ex: depuis la page du groupe) : affiché même si l'auteur n'en est pas membre
+            const group = userGroups.find(g => g.id === gId) || getGroupById(gId);
             return group ? (
               <Badge key={gId} variant="secondary" className="flex items-center gap-1 text-xs px-2 py-1">
                 {group.name}

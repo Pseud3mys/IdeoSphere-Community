@@ -1,4 +1,4 @@
-import { GroupHubPage } from "../components/GroupHubPage";
+import { GroupHubPage } from "../components/group/GroupHubPage";
 
 /**
  * Wrapper pour la page hub d'un groupe
