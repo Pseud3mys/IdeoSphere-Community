@@ -108,6 +108,78 @@ export const getClientConfig = (): ClientConfig => {
 export const currentConfig = getClientConfig();
 
 // ============================================================================
+// 3bis. SOUS-DOMAINE INCONNU
+// ============================================================================
+
+// Domaines dont le premier label désigne un client (localhost : pour tester en dev)
+const PLATFORM_DOMAINS = ['ideosphere.social', 'localhost'];
+
+// Clés de `configs` qui ne sont pas des clients (dev, démo, anciens alias) :
+// jamais proposées en suggestion
+const NON_CLIENT_KEYS = new Set(['default', 'localhost', 'beta', 'test-tenant']);
+
+// Sous-domaines servis volontairement avec la config par défaut
+const DEFAULT_CONFIG_SUBDOMAINS = new Set(['www', 'alpha']);
+
+const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+// Distance de Levenshtein
+function editDistance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j++) {
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    previous = current;
+  }
+  return previous[b.length];
+}
+
+export interface UnknownTenant {
+  subdomain: string;
+  /** Sous-domaine d'un client existant, proposé seulement s'il ressemble à celui saisi */
+  suggestion?: string;
+  platformDomain: string;
+}
+
+/**
+ * Détecte un sous-domaine de la plateforme qui ne correspond à aucun client
+ * (ex: "leblank.ideosphere.social", "teeest-tenant.localhost"). Retourne null pour
+ * localhost seul, les IP, les domaines personnalisés et les clients connus.
+ *
+ * Une suggestion n'est donnée que si le nom est très proche d'un client existant,
+ * pour ne pas révéler la liste des clients.
+ */
+export function detectUnknownTenant(hostname: string): UnknownTenant | null {
+  const host = hostname.toLowerCase();
+  const platformDomain = PLATFORM_DOMAINS.find(domain => host.endsWith(`.${domain}`));
+  if (!platformDomain) return null;
+
+  // Même règle que getClientConfig : le premier label du hostname
+  const subdomain = host.split('.')[0];
+  if (!subdomain || DEFAULT_CONFIG_SUBDOMAINS.has(subdomain) || configs[subdomain]) return null;
+
+  const typed = squash(subdomain);
+  let best: { key: string; distance: number } | undefined;
+  for (const key of Object.keys(configs)) {
+    if (NON_CLIENT_KEYS.has(key)) continue;
+    const candidate = squash(key);
+    const distance = editDistance(typed, candidate);
+    const maxDistance = candidate.length >= 6 ? 2 : 1;
+    if (distance <= maxDistance && (!best || distance < best.distance)) {
+      best = { key, distance };
+    }
+  }
+
+  return { subdomain, suggestion: best?.key, platformDomain };
+}
+
+// ============================================================================
 // 4. HELPERS
 // ============================================================================
 
