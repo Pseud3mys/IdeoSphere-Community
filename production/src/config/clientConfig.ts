@@ -12,9 +12,8 @@ import { chesnayRocquencourtConfig } from './clients/chesnayRocquencourt';
 import { solidarcyConfig } from './clients/solidarcy';
 import { saintcyrencommunConfig } from './clients/saintcyrencommun';
 import { lesChaisesConfig } from './clients/lesChaises';
-import { vivonsnimesConfig } from './clients/VivonsNimes';
-import { ddniceConfig } from './clients/ddnice';
 import { ehessConfig } from './clients/ehess';
+import { interneParisSaclayConfig } from './clients/interneParisSaclay';
 
 // ============================================================================
 // 1. MAPPING DES CONFIGURATIONS PAR SOUS-DOMAINE
@@ -38,9 +37,6 @@ const configs: Record<string, ClientConfig> = {
   'beta': defaultConfig, // betaConfig,
   'test-tenant': defaultConfig,
 
-  // PLUS MAINTENUS
-  'amdf': defaultConfig,
-
   'leblanc': leblancConfig,
   'ehess': ehessConfig,
 
@@ -52,9 +48,8 @@ const configs: Record<string, ClientConfig> = {
   'saintcyrencommun': saintcyrencommunConfig,
 
   'leschaises': lesChaisesConfig,
-  'vivons-nimes': vivonsnimesConfig,
 
-  'ddnice': ddniceConfig,
+  'interne-paris-saclay': interneParisSaclayConfig,
 };
 
 // ============================================================================
