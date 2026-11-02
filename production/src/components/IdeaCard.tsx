@@ -114,7 +114,9 @@ export function IdeaCard({
   };
 
   const firstCreator = getFirstCreator(latestIdea.creatorIds, getUserById);
-  const groupIds = (latestIdea.groupIds || []).filter(id => id !== contextGroupId && getGroupById(id));
+  const groupIds = (latestIdea.groupIds || []).filter(id => id !== contextGroupId);
+  // Le séparateur n'est affiché que si au moins un badge est visible (groupe chargé)
+  const hasVisibleGroup = groupIds.some(id => getGroupById(id));
 
   return (
     <div 
@@ -154,7 +156,7 @@ export function IdeaCard({
             )}
             {groupIds.length > 0 && (
               <>
-                <span>•</span>
+                {hasVisibleGroup && <span>•</span>}
                 <GroupBadgeList groupIds={groupIds} maxDisplay={2} />
               </>
             )}

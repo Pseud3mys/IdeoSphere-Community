@@ -74,7 +74,9 @@ export function PostCard({
   const isSupporting = user && (latestPost.supporters?.includes(user.id) || false);
   const supportCount = latestPost.supporters?.length || 0;
   const timeAgo = formatTimeAgo(latestPost.createdAt);
-  const groupIds = (latestPost.groupIds || []).filter(id => id !== contextGroupId && getGroupById(id));
+  const groupIds = (latestPost.groupIds || []).filter(id => id !== contextGroupId);
+  // Le séparateur n'est affiché que si au moins un badge est visible (groupe chargé)
+  const hasVisibleGroup = groupIds.some(id => getGroupById(id));
 
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -157,7 +159,7 @@ export function PostCard({
             )}
             {groupIds.length > 0 && (
               <>
-                <span>•</span>
+                {hasVisibleGroup && <span>•</span>}
                 <GroupBadgeList groupIds={groupIds} maxDisplay={2} />
               </>
             )}

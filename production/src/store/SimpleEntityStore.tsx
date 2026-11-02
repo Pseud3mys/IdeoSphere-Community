@@ -583,16 +583,18 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             }, {} as Record<string, PendingGroupCreation>);
           };
 
+          // Fusion avec ce qui a déjà été chargé depuis l'API pendant l'initialisation
+          // (ex: liste des groupes) : les données de l'API, plus récentes, sont conservées.
           return {
             ...prev,
-            users: normalizedUsers,
-            ideas: normalizeIdeas(initialData.ideas || []),
-            posts: normalizePosts(initialData.posts || []),
-            discussionTopics: normalizeDiscussionTopics(initialData.discussionTopics || []),
-            groups: normalizeGroups(initialData.groups || []),
-            groupMemberships: normalizeGroupMemberships(initialData.groupMemberships || []),
-            pendingGroupCreations: normalizePendingGroups(initialData.pendingGroups || []),
-            groupLinks: normalizeGroupLinks((initialData as any).groupLinks || []),
+            users: { ...normalizedUsers, ...prev.users },
+            ideas: { ...normalizeIdeas(initialData.ideas || []), ...prev.ideas },
+            posts: { ...normalizePosts(initialData.posts || []), ...prev.posts },
+            discussionTopics: { ...normalizeDiscussionTopics(initialData.discussionTopics || []), ...prev.discussionTopics },
+            groups: { ...normalizeGroups(initialData.groups || []), ...prev.groups },
+            groupMemberships: { ...normalizeGroupMemberships(initialData.groupMemberships || []), ...prev.groupMemberships },
+            pendingGroupCreations: { ...normalizePendingGroups(initialData.pendingGroups || []), ...prev.pendingGroupCreations },
+            groupLinks: { ...normalizeGroupLinks((initialData as any).groupLinks || []), ...prev.groupLinks },
             currentUserId: initialData.currentUserId || null, // ✅ null par défaut, pas de string vide
             isInitialized: true // ✅ Marquer comme initialisé
           };

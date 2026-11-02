@@ -170,6 +170,7 @@ export function QuickPostFeed({
     supportCount: post.supportCount || 0,
     replyCount: post.replies?.length || 0,
     tags: post.tags || [],
+    groupIds: post.groupIds || [],
     type: 'post'
   });
 

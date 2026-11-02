@@ -42,6 +42,7 @@ export interface FeedIdeaCard {
   supporters: string[]; // ✅ AJOUTER CETTE LIGNE
   supportCount: number;
   tags: string[];
+  groupIds: string[]; // Groupes du contenu (badges dans le feed)
   type: 'idea';
 }
 
@@ -56,6 +57,7 @@ export interface FeedPostCard {
   supportCount: number;
   replyCount: number;
   tags: string[];
+  groupIds: string[]; // Groupes du contenu (badges dans le feed)
   type: 'post';
 }
 
@@ -260,6 +262,7 @@ const transformIdeaToCard = (idea: Idea): FeedIdeaCard => ({
     supporters: idea.supporters || [],
     supportCount: idea.supportCount,
     tags: idea.tags || [],
+    groupIds: idea.groupIds || [],
     type: 'idea',
 });
 
@@ -275,5 +278,6 @@ const transformPostToCard = (post: Post): FeedPostCard => ({
     // Correction 2: Gère 'replies' (pour Post) et 'posts' (pour DiscussionTopic)
     replyCount: (post.replies || post.posts || []).length,
     tags: post.tags || [],
+    groupIds: post.groupIds || [],
     type: 'post',
 });

@@ -13,7 +13,8 @@
 }
 
 .gh-container {
-  max-width: 48rem;
+  /* Même largeur que les autres pages (Explorer, Groupes, Créer : max-w-5xl px-4) */
+  max-width: 64rem;
   margin: 0 auto;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -242,11 +243,6 @@
 /* ---------- Responsive ---------- */
 
 @media (min-width: 640px) {
-  .gh-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-
   .gh-top {
     padding: 1rem 0 1.25rem;
   }
