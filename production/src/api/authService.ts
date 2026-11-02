@@ -51,26 +51,39 @@ export const initAuth = async (): Promise<boolean> => {
 };
 
 /**
+ * Retrouve le compte invité mémorisé dans ce navigateur (email en localStorage).
+ * Ne crée jamais de compte : renvoie null s'il n'y en a pas, ou s'il n'existe plus en base.
+ */
+export async function restoreStoredGuest(): Promise<User | null> {
+  const storedGuestEmail = localStorage.getItem('ideosphere_guest_email');
+  if (!storedGuestEmail) return null;
+
+  try {
+    // On utilise la route existante POST /users/login pour récupérer l'utilisateur par email
+    const response = await apiClient.post('/users/login', { email: storedGuestEmail });
+    console.log('✅ [AUTH] Compte invité existant récupéré depuis la session locale');
+    return transformUser(response.data);
+  } catch (error: any) {
+    // On n'oublie l'invité que s'il n'existe plus (pas sur une simple erreur réseau)
+    if (error?.response?.status === 404) {
+      console.warn('⚠️ [AUTH] Ancien compte invité introuvable en base (peut-être supprimé)');
+      localStorage.removeItem('ideosphere_guest_email');
+    }
+    return null;
+  }
+}
+
+/**
  * Crée un compte invité (non authentifié) via l'API, ou récupère l'existant via LocalStorage.
- * Utilisé par createTemporaryGuest dans userActions.ts
+ * Préférer ensureCurrentUser (hooks/guestSession.ts), qui attend Keycloak et évite les doublons.
  */
 export async function createUnfinalizedAccountOnApi(guestData?: { name?: string; email?: string; address?: string }): Promise<User> {
   console.log('👤 [AUTH] Vérification ou création d\'un compte invité...');
 
-  // 1. On vérifie si un compte invité existe déjà dans ce navigateur
-  const storedGuestEmail = localStorage.getItem('ideosphere_guest_email');
-
-  // Si on a un email stocké et qu'on n'est pas en train d'en forcer un nouveau
-  if (storedGuestEmail && !guestData?.email) {
-    try {
-      // On utilise la route existante POST /users/login pour récupérer l'utilisateur par email
-      const response = await apiClient.post('/users/login', { email: storedGuestEmail });
-      console.log('✅ [AUTH] Compte invité existant récupéré depuis la session locale');
-      return transformUser(response.data);
-    } catch (error) {
-      console.warn('⚠️ [AUTH] Ancien compte invité introuvable en base (peut-être supprimé), on en recrée un...');
-      localStorage.removeItem('ideosphere_guest_email');
-    }
+  // 1. Si un compte invité existe déjà dans ce navigateur (et qu'on n'en force pas un nouveau), le reprendre
+  if (!guestData?.email) {
+    const storedGuest = await restoreStoredGuest();
+    if (storedGuest) return storedGuest;
   }
 
   // 2. Aucun invité existant ou échec de récupération : création d'un NOUVEAU compte
@@ -145,10 +158,21 @@ export function logout(): void {
   keycloak.logout({ redirectUri: window.location.origin });
 }
 
+let syncPromise: Promise<User | null> | null = null;
+
 /**
  * Synchronise la session : Gère les 3 cas (Nouveau, Invité, Existant)
+ * Un seul appel par chargement de page : les appels suivants (AuthProvider,
+ * guestSession...) reçoivent le même résultat, sans relancer GET/POST /users.
  */
-export async function syncUserSession(): Promise<User | null> {
+export function syncUserSession(): Promise<User | null> {
+  if (!syncPromise) {
+    syncPromise = doSyncUserSession();
+  }
+  return syncPromise;
+}
+
+async function doSyncUserSession(): Promise<User | null> {
   // 1. mode mock supprime.
 
   // 2. MODE KEYCLOAK

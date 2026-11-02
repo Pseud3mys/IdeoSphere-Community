@@ -1,35 +1,32 @@
 // src/auth/AuthSyncBridge.tsx
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '../context/authContext';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 
+/**
+ * Pose l'utilisateur courant dans le store au démarrage :
+ * - session Keycloak : le membre synchronisé par AuthProvider (+ ses groupes) ;
+ * - sinon : l'invité mémorisé dans ce navigateur, s'il y en a un.
+ * Ne crée jamais de compte invité : c'est fait à la première action (voir hooks/guestSession.ts).
+ */
 export function AuthSyncBridge() {
   const { isAuthenticated, user, isLoading } = useAuth();
-  const { actions, apiActions, store, getCurrentUser } = useEntityStoreSimple();
+  const { actions, apiActions, store, getUserById } = useEntityStoreSimple();
+  const groupsLoadedFor = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      // Si l'user n'est pas encore dans le store ou si c'est un user différent
+    if (isLoading) return;
+
+    if (isAuthenticated && user) {
       if (store.currentUserId !== user.id) {
         console.log('🔄 [AuthSync] Synchro User -> Store:', user.name);
-        console.log('📝 [AuthSync] Bio de l\'utilisateur:', user.bio);
-        
-        const safeUser = {
-          ...user,
-          isRegistered: true // Force l'état enregistré pour l'UI
-        };
-        
-        // Ajouter l'utilisateur au store s'il n'existe pas
-        if (!store.users[user.id]) {
-          actions.addUser(safeUser);
-        }
-        
-        // Définir comme utilisateur courant
+        actions.addUser({ ...user, isRegistered: true }); // Force l'état enregistré pour l'UI
         actions.setCurrentUserId(user.id);
-        
-        console.log('✅ [AuthSync] Utilisateur synchronisé:', user.id);
-        
-        // ✅ Charger les groupes de l'utilisateur
+      }
+
+      // Charger les groupes une seule fois par membre (même si une action l'a déjà posé dans le store)
+      if (groupsLoadedFor.current !== user.id) {
+        groupsLoadedFor.current = user.id;
         apiActions.loadUserGroups(user.id).then(result => {
           if (result) {
             console.log(`✅ [AuthSync] Groupes chargés pour ${user.name}:`, {
@@ -39,21 +36,15 @@ export function AuthSyncBridge() {
           }
         });
       }
-    } else if (!isLoading && !isAuthenticated) {
-      // Utilisateur déconnecté - MAIS ne pas clear si c'est un invité
-      if (store.currentUserId) {
-        const currentUser = getCurrentUser();
-        const isGuestUser = currentUser?.id.startsWith('guest-') || currentUser?.isRegistered === false;
-        
-        if (!isGuestUser) {
-          console.log('🚪 [AuthSync] Déconnexion détectée, clear du currentUserId');
-          actions.setCurrentUserId(null);
-        } else {
-          console.log('👤 [AuthSync] Utilisateur invité détecté, conservation du currentUserId');
-        }
+    } else if (!isAuthenticated) {
+      // Pas de session Keycloak : retrouver l'invité mémorisé (aucune création ici)
+      const current = store.currentUserId ? getUserById(store.currentUserId) : null;
+      if (!current?.id.startsWith('users/')) {
+        apiActions.resolveSession();
       }
     }
-  }, [isAuthenticated, user, isLoading, actions, apiActions, store.currentUserId, store.users, getCurrentUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user, isLoading, store.currentUserId]);
 
   return null;
 }

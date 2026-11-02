@@ -2,59 +2,33 @@ import { transformUser } from '../api/transformService';
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import { User, Idea, Post, DiscussionTopic, Location } from '../types';
 import { toast } from 'sonner@2.0.3';
+import { ensureCurrentUser, resolveSession } from './guestSession';
 
 /**
  * Actions API pour l'Entity Store
  * Gère le chargement des données depuis les services API
  */
 export function createApiActions(
-  store: SimpleEntityStore,
+  getStore: () => SimpleEntityStore,
   actions: any,
   boundSelectors: any,
   storeUpdater: StoreUpdater
 ) {
   /**
-   * ✅ FONCTION CENTRALISÉE pour créer un compte invité sur le backend
-   * Cette fonction doit être utilisée partout où on a besoin d'un utilisateur
-   * Elle crée un VRAI compte sur le backend avec un ID commençant par "users/"
+   * Utilisateur courant pour une ACTION (soutenir, publier...) : membre Keycloak,
+   * invité mémorisé, ou à défaut nouveau compte invité. Voir hooks/guestSession.ts.
    */
-  const ensureGuestUserExists = async (): Promise<User | null> => {
-    const currentUser = boundSelectors.getCurrentUser();
-    
-    // Vérifier si on a déjà un utilisateur valide (ID commence par "users/")
-    if (currentUser?.id && currentUser.id.startsWith('users/')) {
-      console.log('✅ [ensureGuestUserExists] Utilisateur valide existant:', currentUser.id);
-      return currentUser;
-    }
-    
-    // Sinon, créer un compte invité sur le backend
-    console.log('👤 [ensureGuestUserExists] Création d\'un compte invité sur le backend...');
-    
-    try {
-      const { createUnfinalizedAccountOnApi } = await import('../api/authService');
-      const guestUser = await createUnfinalizedAccountOnApi();
-      
-      if (guestUser && guestUser.id.startsWith('users/')) {
-        console.log(`✅ [ensureGuestUserExists] Compte invité créé: ${guestUser.id}`);
-        
-        // Ajouter au store et définir comme utilisateur actuel
-        actions.addUser(guestUser);
-        actions.setCurrentUserId(guestUser.id);
-        actions.setHasEnteredPlatform(true);
-        
-        return guestUser;
-      } else {
-        console.error('❌ [ensureGuestUserExists] ID invalide ou création échouée');
-        return null;
-      }
-    } catch (error) {
-      console.error('❌ [ensureGuestUserExists] Erreur:', error);
-      return null;
-    }
-  };
+  const ensureGuestUserExists = (): Promise<User | null> => ensureCurrentUser(getStore, actions);
 
-  return {
+  /**
+   * Utilisateur courant pour une LECTURE : membre Keycloak ou invité mémorisé,
+   * sans jamais créer de compte (null pour un simple visiteur).
+   */
+  const resolveCurrentSession = (): Promise<User | null> => resolveSession(getStore, actions);
+
+  const apiActions = {
     ensureGuestUserExists,
+    resolveSession: resolveCurrentSession,
     /**
      * ⚠️ FONCTION UNIQUE DE CHARGEMENT INITIAL
      * Charge TOUTES les données mockées UNE SEULE FOIS au démarrage
@@ -116,40 +90,28 @@ export function createApiActions(
     
     /**
      * Charge le feed de découverte avec système de cache
-     * ✅ Utilise ensureGuestUserExists() pour créer un compte invité si nécessaire
+     * Reprend la session existante sans créer de compte (feed public pour un simple visiteur)
      */
     fetchFeed: async (forceRefresh: boolean = false) => {
       try {
-        // ✅ S'assurer qu'on a un utilisateur valide (crée un compte invité si nécessaire)
-        const currentUser = await ensureGuestUserExists();
-        
-        if (!currentUser) {
-          console.error('❌ [apiActions] fetchFeed - Impossible de créer un compte invité');
-          // Fallback : retourner des données vides
-          return {
-            posts: [],
-            ideas: [],
-            totalPosts: 0,
-            totalIdeas: 0,
-            totalItems: 0
-          };
-        }
-        
-        const userId = currentUser.id;
+        // Lecture : reprendre la session existante (membre ou invité mémorisé) sans créer de compte.
+        // Simple visiteur : feed public weighted-random ci-dessous.
+        const currentUser = await resolveCurrentSession();
+        const userId = currentUser?.id ?? '';
         const isValidBackendUser = userId.startsWith('users/');
         
         // Vérifier si on a déjà les données en cache (valide pendant 5 minutes)
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
         const now = Date.now();
-        const lastFetched = store.feedLastFetched;
+        const lastFetched = getStore().feedLastFetched;
         const isCacheValid = lastFetched && (now - lastFetched) < CACHE_DURATION;
         
-        if (!forceRefresh && isCacheValid && store.feedIdeaIds.length > 0) {
-          console.log(`♻️ [apiActions] fetchFeed - Utilisation du cache (${store.feedIdeaIds.length} idées, ${store.feedPostIds.length} posts)`);
+        if (!forceRefresh && isCacheValid && getStore().feedIdeaIds.length > 0) {
+          console.log(`♻️ [apiActions] fetchFeed - Utilisation du cache (${getStore().feedIdeaIds.length} idées, ${getStore().feedPostIds.length} posts)`);
           
           // Récupérer directement depuis le store
-          const ideasFromStore = store.feedIdeaIds.map((id: string) => boundSelectors.getIdeaById(id)).filter(Boolean);
-          const postsFromStore = store.feedPostIds.map((id: string) => boundSelectors.getPostById(id)).filter(Boolean);
+          const ideasFromStore = getStore().feedIdeaIds.map((id: string) => boundSelectors.getIdeaById(id)).filter(Boolean);
+          const postsFromStore = getStore().feedPostIds.map((id: string) => boundSelectors.getPostById(id)).filter(Boolean);
           
           return {
             posts: postsFromStore,
@@ -262,7 +224,7 @@ export function createApiActions(
         // Vérifier si on a déjà les données en cache (valide pendant 5 minutes)
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
         const now = Date.now();
-        const lastFetched = store.contributionsLastFetched;
+        const lastFetched = getStore().contributionsLastFetched;
         const isCacheValid = lastFetched && (now - lastFetched) < CACHE_DURATION;
         
         // Si le cache est valide et on a déjà des données, on les utilise
@@ -334,14 +296,14 @@ export function createApiActions(
         const participationPosts = allPostIds
           .map(id => boundSelectors.getPostById(id))
           .filter(Boolean)
-          .filter(post => post.author?.id === currentUser.id);
+          .filter(post => post.authorId === currentUser.id);
           
         const supportPosts = allPostIds
           .map(id => boundSelectors.getPostById(id))
           .filter(Boolean)
           .filter(post => 
             post.supporters?.includes(currentUser.id) &&
-            post.author?.id !== currentUser.id
+            post.authorId !== currentUser.id
           );
         
         const contributionsFromStore = {
@@ -409,8 +371,6 @@ export function createApiActions(
      */
     loadLineage: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
-        await ensureGuestUserExists();
-
         const { fetchLineage } = await import('../api/lineageService');
         const result = await fetchLineage(itemId, itemType);
         
@@ -518,8 +478,6 @@ export function createApiActions(
      */
     loadDiscussions: async (itemId: string, itemType: 'idea' | 'post') => {
       try {
-        await ensureGuestUserExists();
-
         const { fetchDiscussions } = await import('../api/detailsService');
         const { discussions, users } = await fetchDiscussions(itemId, itemType);
         
@@ -558,8 +516,6 @@ export function createApiActions(
      */
     loadIdeaRatings: async (ideaId: string) => {
       try {
-        await ensureGuestUserExists();
-
         const { fetchIdeaRatings } = await import('../api/detailsService');
         const ratings = await fetchIdeaRatings(ideaId);
         
@@ -585,9 +541,6 @@ export function createApiActions(
      */
     loadIdeaTabData: async (ideaId: string, tabType: 'description' | 'discussions' | 'evaluation' | 'versions' | 'lineage' | 'related') => {
       try {
-        // S'assurer qu'un utilisateur existe
-        await ensureGuestUserExists();
-
         if (tabType === 'versions') {
           // 1. APPELER L'API pour obtenir les données de lineage (depuis données mockées)
           const { fetchLineage } = await import('../api/lineageService');
@@ -844,7 +797,7 @@ export function createApiActions(
         
         if (tabType === 'discussions') {
           // Charger les discussions liées à l'idée
-          const discussions = await actions.loadDiscussions(ideaId, 'idea');
+          const discussions = await apiActions.loadDiscussions(ideaId, 'idea');
           
           // L'idée est déjà dans le store, elle a été mise à jour par loadDiscussions
           const currentIdea = boundSelectors.getIdeaById(ideaId);
@@ -856,7 +809,7 @@ export function createApiActions(
         
         if (tabType === 'evaluation') {
           // Charger les évaluations de l'idée
-          const ratings = await actions.loadIdeaRatings(ideaId);
+          const ratings = await apiActions.loadIdeaRatings(ideaId);
           
           // L'idée est déjà dans le store, elle a été mise à jour par loadIdeaRatings
           const currentIdea = boundSelectors.getIdeaById(ideaId);
@@ -964,8 +917,12 @@ export function createApiActions(
       sourcePostIds?: string[];
     }) => {
       try {
-        const currentUser = boundSelectors.getCurrentUser();
-        
+        // Publier est une action : sans authorId explicite, il faut un utilisateur
+        // (membre, invité mémorisé, ou nouveau compte invité)
+        const currentUser = payload.authorId
+          ? boundSelectors.getCurrentUser()
+          : await ensureGuestUserExists();
+
         // ✅ Si un authorId est fourni, on vérifie que cet utilisateur existe
         // Sinon, on vérifie qu'un utilisateur est connecté
         if (payload.authorId) {
@@ -1053,7 +1010,7 @@ export function createApiActions(
         storeUpdater(prevStore => {
           const newGroups = { ...prevStore.groups };
           const newMemberships = { ...prevStore.groupMemberships };
-          const newPendingGroups = { ...prevStore.pendingGroups };
+          const newPendingGroups = { ...prevStore.pendingGroupCreations };
           
           // Ajouter les groupes actifs
           groupsWithMemberships.forEach(({ group, membership }) => {
@@ -1070,7 +1027,7 @@ export function createApiActions(
           return {
             groups: newGroups,
             groupMemberships: newMemberships,
-            pendingGroups: newPendingGroups
+            pendingGroupCreations: newPendingGroups
           };
         });
         
@@ -1162,4 +1119,6 @@ export function createApiActions(
       }
     }
   };
+
+  return apiActions;
 }

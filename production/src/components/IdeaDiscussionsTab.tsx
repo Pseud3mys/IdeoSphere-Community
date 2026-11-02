@@ -375,13 +375,13 @@ export function IdeaDiscussionsTab({
                       size="sm"
                       onClick={() => handleUpvote('topic', latestTopic.id)}
                       className={`flex items-center space-x-1 h-9 px-3 sm:h-8 sm:px-2 ${
-                        latestTopic.upvotes?.includes(currentUser.id) 
+                        latestTopic.upvotes?.includes(currentUser?.id ?? '') 
                           ? 'text-primary hover:text-primary/80' 
                           : ''
                       }`}
                     >
                       <ThumbsUp className={`w-3 h-3 ${
-                        latestTopic.upvotes?.includes(currentUser.id) ? 'fill-current' : ''
+                        latestTopic.upvotes?.includes(currentUser?.id ?? '') ? 'fill-current' : ''
                       }`} />
                       <span className="text-xs">{latestTopic.upvotes?.length || 0}</span>
                     </Button>
@@ -394,7 +394,7 @@ export function IdeaDiscussionsTab({
                         const postAuthor = getUserById(post.authorId);
                         if (!postAuthor) return null; // Skip si l'utilisateur n'existe pas
                         
-                        const isAuthorOfTopic = topicAuthor.id === currentUser.id;
+                        const isAuthorOfTopic = topicAuthor.id === currentUser?.id;
                         const isQuestionTopic = latestTopic.type === 'question';
                         const canSelectAnswer = isAuthorOfTopic && isQuestionTopic;
                         const isSelectedAnswer = post.isAnswer;
@@ -432,13 +432,13 @@ export function IdeaDiscussionsTab({
                                   size="sm"
                                   onClick={() => handleUpvote('post', post.id, latestTopic.id)}
                                   className={`flex items-center space-x-1 h-8 px-2 ${
-                                    post.upvotes?.includes(currentUser.id) 
+                                    post.upvotes?.includes(currentUser?.id ?? '') 
                                       ? 'text-primary hover:text-primary/80' 
                                       : ''
                                   }`}
                                 >
                                   <ThumbsUp className={`w-3 h-3 ${
-                                    post.upvotes?.includes(currentUser.id) ? 'fill-current' : ''
+                                    post.upvotes?.includes(currentUser?.id ?? '') ? 'fill-current' : ''
                                   }`} />
                                   <span className="text-xs">{post.upvotes?.length || 0}</span>
                                 </Button>

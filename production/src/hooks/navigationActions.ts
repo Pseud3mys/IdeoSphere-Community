@@ -10,7 +10,7 @@ import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
  * Ce fichier ne contient plus que les actions UI pures (onboarding, entrée plateforme).
  */
 export function createNavigationActions(
-  store: SimpleEntityStore,
+  getStore: () => SimpleEntityStore,
   actions: any,
   boundSelectors: any,
   storeUpdater: StoreUpdater

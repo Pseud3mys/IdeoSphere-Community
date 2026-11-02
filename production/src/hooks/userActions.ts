@@ -1,12 +1,13 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import { User, Location } from '../types';
+import { ensureCurrentUser } from './guestSession';
 
 /**
  * Actions utilisateur pour l'Entity Store
  * Gère la création de comptes, authentification et gestion des utilisateurs
  */
 export function createUserActions(
-  store: SimpleEntityStore,
+  getStore: () => SimpleEntityStore,
   actions: any,
   boundSelectors: any,
   navigationActions: any,
@@ -51,6 +52,12 @@ export function createUserActions(
     
     createTemporaryGuest: async (guestData?: { name?: string; email?: string; address?: string }) => {
       try {
+        // Sans données saisies : passer par ensureCurrentUser (attend Keycloak, reprend
+        // l'invité mémorisé, évite les doublons). Un membre connecté n'obtient pas d'invité.
+        if (!guestData?.name && !guestData?.email) {
+          return await ensureCurrentUser(getStore, actions);
+        }
+
         // ✅ Appeler le service API pour créer un compte non finalisé
         const { createUnfinalizedAccountOnApi } = await import('../api/authService');
         const tempUser = await createUnfinalizedAccountOnApi(guestData);

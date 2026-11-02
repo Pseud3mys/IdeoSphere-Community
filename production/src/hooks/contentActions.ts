@@ -2,19 +2,24 @@ import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
 import { toast } from 'sonner@2.0.3';
 import { User } from '../types';
+import { ensureCurrentUser } from './guestSession';
 
 /**
  * Actions de contenu pour l'Entity Store
  * Gère les interactions avec le contenu (like, support, ignore, report, etc.)
  */
 export function createContentActions(
-  store: SimpleEntityStore,
+  getStore: () => SimpleEntityStore,
   actions: any,
   boundSelectors: any,
   navigationActions: any,
   storeUpdater: StoreUpdater,
   navigate?: (path: string) => void
 ) {
+  // Utilisateur pour une action (membre, invité mémorisé, ou nouveau compte invité).
+  // Après l'appel, getCurrentUser() / prevStore le voient immédiatement.
+  const requireUser = () => ensureCurrentUser(getStore, actions);
+
   // Fonction générique pour lier du contenu (discussions, posts, idées) à un contenu (post ou idée)
   const linkContentToContent = (params: {
     sourceType: 'idea' | 'post' | 'discussion';
@@ -49,6 +54,7 @@ export function createContentActions(
     // Actions de soutien et interaction
     toggleIdeaSupport: async (ideaId: string) => {
       try {
+        await requireUser();
         const { toggleSupportOnApi } = await import('../api/interactionService');
         
         // Utiliser storeUpdater avec une fonction pour éviter les stale closures
@@ -98,6 +104,7 @@ export function createContentActions(
     
     togglePostLike: async (postId: string) => {
       try {
+        await requireUser();
         const { toggleSupportOnApi } = await import('../api/interactionService');
         
         // Utiliser storeUpdater avec une fonction pour éviter les stale closures
@@ -147,7 +154,7 @@ export function createContentActions(
     // Actions d'évaluation
     rateIdea: async (ideaId: string, criterionId: string, value: number) => {
       // ✅ Récupérer l'utilisateur pour l'appel API initial
-      const currentUser = boundSelectors.getCurrentUser();
+      const currentUser = await requireUser();
       if (!currentUser) return;
       
       try {
@@ -251,7 +258,7 @@ export function createContentActions(
     
     // Actions de modération
     ignoreIdea: async (ideaId: string) => {
-      const currentUser = boundSelectors.getCurrentUser();
+      const currentUser = await requireUser();
       if (!currentUser) return;
       
       try {
@@ -271,7 +278,7 @@ export function createContentActions(
     },
     
     reportIdea: async (ideaId: string, reason: string = 'Contenu inapproprié') => {
-      const currentUser = boundSelectors.getCurrentUser();
+      const currentUser = await requireUser();
       if (!currentUser) return;
       
       try {
@@ -291,7 +298,7 @@ export function createContentActions(
     },
     
     ignorePost: async (postId: string) => {
-      const currentUser = boundSelectors.getCurrentUser();
+      const currentUser = await requireUser();
       if (!currentUser) return;
       
       try {
@@ -311,7 +318,7 @@ export function createContentActions(
     },
     
     reportPost: async (postId: string, reason: string = 'Contenu inapproprié') => {
-      const currentUser = boundSelectors.getCurrentUser();
+      const currentUser = await requireUser();
       if (!currentUser) return;
       
       try {
@@ -463,7 +470,7 @@ export function createContentActions(
       try {
         const { addPostReplyOnApi } = await import('../api/interactionService');
         
-        const currentUser = boundSelectors.getCurrentUser();
+        const currentUser = await requireUser();
         if (!currentUser) {
           console.error('❌ Utilisateur non connecté');
           return null;
@@ -506,6 +513,7 @@ export function createContentActions(
     
     likePostReply: async (postId: string, replyId: string) => {
       try {
+        await requireUser();
         const { togglePostReplyLikeOnApi } = await import('../api/interactionService');
         
         storeUpdater(prevStore => {
@@ -566,7 +574,7 @@ export function createContentActions(
       try {
         const { promoteReplyToPostOnApi } = await import('../api/replyPromotionService');
         
-        const currentUser = boundSelectors.getCurrentUser();
+        const currentUser = await requireUser();
         if (!currentUser) {
           console.error('❌ Utilisateur non connecté');
           return null;
@@ -629,6 +637,7 @@ export function createContentActions(
     // Actions de discussion
     upvoteDiscussionTopic: async (topicId: string) => {
       try {
+        await requireUser();
         const { upvoteDiscussionTopicOnApi } = await import('../api/interactionService');
         
         storeUpdater(prevStore => {
@@ -674,6 +683,7 @@ export function createContentActions(
     
     upvoteDiscussionPost: async (topicId: string, postId: string) => {
       try {
+        await requireUser();
         const { upvoteDiscussionPostOnApi } = await import('../api/interactionService');
         
         storeUpdater(prevStore => {
@@ -739,7 +749,7 @@ export function createContentActions(
       try {
         const { createDiscussionTopicOnApi } = await import('../api/interactionService');
         
-        const currentUser = boundSelectors.getCurrentUser();
+        const currentUser = await requireUser();
         if (!currentUser) {
           console.error('❌ Utilisateur non connecté');
           return null;
@@ -794,7 +804,7 @@ export function createContentActions(
       try {
         const { createDiscussionPostOnApi } = await import('../api/interactionService');
         
-        const currentUser = boundSelectors.getCurrentUser();
+        const currentUser = await requireUser();
         if (!currentUser) {
           console.error('❌ Utilisateur non connecté');
           return null;
@@ -847,7 +857,7 @@ export function createContentActions(
       try {
         const { markDiscussionPostAsAnswerOnApi } = await import('../api/interactionService');
         
-        const currentUser = boundSelectors.getCurrentUser();
+        const currentUser = await requireUser();
         if (!currentUser) {
           console.error('❌ Utilisateur non connecté');
           return;

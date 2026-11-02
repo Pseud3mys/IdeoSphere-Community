@@ -45,8 +45,8 @@ export function IdeaDetailPageWrapper() {
       setIsLoading(true);
 
       try {
-        await actions.ensureGuestUserExists();
-        
+        // Pas de création de compte invité pour afficher une idée : elle se fait à la
+        // première action (soutenir, commenter...). Voir hooks/guestSession.ts.
         const { fetchIdeaDetails, fetchRemovalInfo } = await import('../api/contentService');
         setRemoval(null);
         const { fetchDiscussions } = await import('../api/detailsService');

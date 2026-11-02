@@ -28,7 +28,7 @@ src/
 
 Flux de données type : page → wrapper → `useEntityStoreSimple()` → action (`apiActions`, `contentActions`…) → service `api/*` → backend → `transformService` → store normalisé (`users`, `ideas`, `posts`, `groups`, `groupMemberships`…) → sélecteurs → page.
 
-**Le store est en mémoire.** Seuls sont persistés en `localStorage` : l'email invité (`ideosphere_guest_email`), l'id d'invité du widget (`quickpost_guest_user_id`), les brouillons d'idée (`ideosphere-drafts`) et les items « vus » de Discovery (`seenItems`). Le `currentUserId` est écrit en `localStorage` (`ideosphere_currentUserId`) mais remis à `null` par `initializeStore` au démarrage : en pratique, il est reconstruit à chaque chargement (Keycloak, ou invité retrouvé par son email). Voir [REVUE_FRONTEND.md](REVUE_FRONTEND.md). Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
+**Le store est en mémoire.** Seuls sont persistés en `localStorage` : l'email invité (`ideosphere_guest_email`), l'id d'invité du widget (`quickpost_guest_user_id`), les brouillons d'idée (`ideosphere-drafts`) et les items « vus » de Discovery (`seenItems`). Le `currentUserId` n'est **pas** persisté : au démarrage, `AuthSyncBridge` le reconstruit (membre Keycloak, ou invité retrouvé par son email via `resolveSession`, voir `hooks/guestSession.ts`). Voir [REVUE_FRONTEND.md](REVUE_FRONTEND.md). Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
 
 ## 3. Multi-client (white-label)
 
@@ -52,7 +52,7 @@ Ajouter un client : dupliquer `default.ts`, l'enregistrer dans `clientConfig.ts`
   2. S'il existe mais sans keycloakId ou non enregistré : `PATCH /users/<id>` pour lier le compte Keycloak.
   3. En cas de 404 : `POST /users`. Le `keycloakId` envoyé est ignoré par le backend ; le compte est lié au login suivant, par l'étape 2.
 - `AuthSyncBridge` copie l'utilisateur dans le store, le force à `isRegistered=true` et charge ses groupes.
-- **Mode invité** : à l'entrée sur la plateforme (`CitizenWelcome`), `createTemporaryGuest` fait `POST /users` avec l'email `guest_<timestamp>@temp.local` et garde cet email en `localStorage` pour le retrouver ensuite (`POST /users/login`). Un invité peut poster, commenter, soutenir et noter.
+- **Mode invité** : un compte invité est créé à la **première action** (entrer depuis l'accueil, soutenir, commenter, publier...), jamais pour simplement afficher une page : `ensureCurrentUser` dans `hooks/guestSession.ts`. Il fait `POST /users` avec l'email `guest_<timestamp>@temp.local` et garde cet email en `localStorage` ; au chargement suivant, `resolveSession` retrouve l'invité (`POST /users/login`) sans en créer. Un invité peut poster, commenter, soutenir et noter.
 - **Créer une idée** demande un compte enregistré (`canCreateIdea`), car le backend exige un JWT.
 - **Admin** : `hasAdminRole()` cherche le rôle `admin:<sous-domaine>` dans le token. Il protège la page `/admin` côté client ; le backend revérifie.
 - Login et inscription redirigent vers Keycloak, avec retour sur `/my-contributions` après login.

@@ -14,14 +14,14 @@ export function UserProfilePagePublicWrapper() {
   const { getUserById, apiActions } = useEntityStoreSimple();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Si pas d'userId, rediriger vers discovery
-  if (!userId) {
-    navigate('/discovery');
-    return null;
-  }
-
   // Charger le profil complet de l'utilisateur au montage
   useEffect(() => {
+    // Si pas d'userId, rediriger vers discovery
+    if (!userId) {
+      navigate('/discovery');
+      return;
+    }
+
     const loadUser = async () => {
       console.log('🔄 [UserProfilePagePublicWrapper] Chargement profil utilisateur:', userId);
       setIsLoading(true);
@@ -56,12 +56,18 @@ export function UserProfilePagePublicWrapper() {
     };
     
     loadUser();
-  }, [userId, getUserById, apiActions]);
+    // getUserById lit toujours l'état courant : inutile (et coûteux) de relancer à chaque changement du store
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, apiActions]);
 
   // Handler pour retourner en arrière
   const handleBack = () => {
     navigate(-1);
   };
+
+  if (!userId) {
+    return null;
+  }
 
   // Afficher un loader pendant le chargement
   if (isLoading) {

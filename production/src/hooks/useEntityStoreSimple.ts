@@ -1,4 +1,4 @@
-import { useSimpleEntityStore } from '../store/SimpleEntityStore';
+import { useSimpleEntityStore, SimpleEntityStore } from '../store/SimpleEntityStore';
 import * as selectors from '../store/simpleSelectors';
 import { User } from '../types';
 import { useEffect, useRef, useMemo } from 'react';
@@ -15,76 +15,70 @@ import { createApiActions } from './apiActions';
 let storeInitialized = false;
 
 /**
- * Hook principal pour utiliser l'Entity Store simplifié
- * Combine le store, les actions et les selectors en une interface simple
- * Architecture: Composants -> useStore -> API Services -> Data
+ * Sélecteurs liés au store. Ils lisent getStore() AU MOMENT DE L'APPEL :
+ * même appelés depuis une closure ancienne (code async, après une écriture),
+ * ils renvoient l'état le plus récent.
  */
-export function useEntityStoreSimple() {
-  const { store, actions, storeUpdater } = useSimpleEntityStore();
-  const navigate = useNavigate();
-  const initializationRef = useRef(false);
-  // useMemo est déjà importé en haut du fichier
-
-  // 1. Stabiliser les sélecteurs
-  const boundSelectors = useMemo(() => ({
+function createBoundSelectors(getStore: () => SimpleEntityStore) {
+  return {
     // System selectors
-    isStoreInitialized: () => selectors.isStoreInitialized(store),
-    getCurrentUser: () => selectors.getCurrentUser(store),
-    getUserById: (userId: string) => selectors.getUserById(store)(userId),
-    userExists: (userId: string) => selectors.userExists(store)(userId),
-    getAllUsers: () => selectors.getAllUsers(store),
-    getAllIdeas: () => selectors.getAllIdeas(store),
-    getIdeaById: (ideaId: string) => selectors.getIdeaById(store)(ideaId),
-    getFeaturedIdeas: () => selectors.getFeaturedIdeas(store),
-    getPublishedIdeas: () => selectors.getPublishedIdeas(store),
-    getUserIdeas: (userId: string) => selectors.getUserIdeas(store)(userId),
-    getDraftIdeas: () => selectors.getDraftIdeas(store),
-    getAllPosts: () => selectors.getAllPosts(store),
-    getPostById: (postId: string) => selectors.getPostById(store)(postId),
-    getUserPosts: (userId: string) => selectors.getUserPosts(store)(userId),
-    getPostsByIds: (postIds: string[]) => selectors.getPostsByIds(store)(postIds),
-    getAllDiscussionTopics: () => selectors.getAllDiscussionTopics(store),
-    getDiscussionTopicById: (topicId: string) => selectors.getDiscussionTopicById(store)(topicId),
-    getDiscussionTopicsByIds: (topicIds: string[]) => selectors.getDiscussionTopicsByIds(store)(topicIds),
-    getFeedItems: () => selectors.getFeedItems(store),
-    getFeedItemsFlat: () => selectors.getFeedItemsFlat(store),
-    getHomePageData: () => selectors.getHomePageData(store),
-    searchIdeas: (query: string) => selectors.searchIdeas(store)(query),
-    searchPosts: (query: string) => selectors.searchPosts(store)(query),
-    getUserStats: (userId: string) => selectors.getUserStats(store)(userId),
-    getAllGroups: () => selectors.getAllGroups(store),
-    getGroupById: (groupId: string) => selectors.getGroupById(store)(groupId),
-    getActiveGroups: () => selectors.getActiveGroups(store),
-    getGroupsByType: (type: string) => selectors.getGroupsByType(store)(type as any),
-    getUserGroups: (userId: string) => selectors.getUserGroups(store)(userId),
-    getUserGroupsWithMemberships: (userId: string) => selectors.getUserGroupsWithMemberships(store)(userId),
-    getGroupMembership: (userId: string, groupId: string) => selectors.getGroupMembership(store)(userId, groupId),
-    isUserMemberOfGroup: (userId: string, groupId: string) => selectors.isUserMemberOfGroup(store)(userId, groupId),
-    isUserAnimatorOfGroup: (userId: string, groupId: string) => selectors.isUserAnimatorOfGroup(store)(userId, groupId),
-    getGroupMembers: (groupId: string) => selectors.getGroupMembers(store)(groupId),
-    getGroupAnimators: (groupId: string) => selectors.getGroupAnimators(store)(groupId),
-    searchGroups: (query: string) => selectors.searchGroups(store)(query),
-    getGroupIdeas: (groupId: string) => selectors.getGroupIdeas(store)(groupId),
-    getGroupPosts: (groupId: string) => selectors.getGroupPosts(store)(groupId),
-    getGroupFeed: (groupId: string) => selectors.getGroupFeed(store)(groupId),
-    getIdeasByGroup: (groupId: string) => selectors.getGroupIdeas(store)(groupId),
-    getPostsByGroup: (groupId: string) => selectors.getGroupPosts(store)(groupId),
-    getAllPendingGroupCreations: () => selectors.getAllPendingGroupCreations(store),
-    getPendingGroupCreationById: (pendingId: string) => selectors.getPendingGroupCreationById(store)(pendingId),
-    getUserPendingGroupCreations: (userId: string) => selectors.getUserPendingGroupCreations(store)(userId),
-    getPendingGroupStatus: (pendingId: string, userId: string) => selectors.getPendingGroupStatus(store)(pendingId, userId),
-    getAllGroupLinks: () => selectors.getAllGroupLinks(store),
-    getGroupLinkById: (linkId: string) => selectors.getGroupLinkById(store)(linkId),
-    getGroupLinks: (groupId: string) => selectors.getGroupLinks(store)(groupId),
-    getGroupParents: (groupId: string) => selectors.getGroupParents(store)(groupId),
-    getGroupChildren: (groupId: string) => selectors.getGroupChildren(store)(groupId),
-    getGroupPartners: (groupId: string) => selectors.getGroupPartners(store)(groupId),
-    hasGroupLink: (groupId1: string, groupId2: string) => selectors.hasGroupLink(store)(groupId1, groupId2),
+    isStoreInitialized: () => selectors.isStoreInitialized(getStore()),
+    getCurrentUser: () => selectors.getCurrentUser(getStore()),
+    getUserById: (userId: string) => selectors.getUserById(getStore())(userId),
+    userExists: (userId: string) => selectors.userExists(getStore())(userId),
+    getAllUsers: () => selectors.getAllUsers(getStore()),
+    getAllIdeas: () => selectors.getAllIdeas(getStore()),
+    getIdeaById: (ideaId: string) => selectors.getIdeaById(getStore())(ideaId),
+    getFeaturedIdeas: () => selectors.getFeaturedIdeas(getStore()),
+    getPublishedIdeas: () => selectors.getPublishedIdeas(getStore()),
+    getUserIdeas: (userId: string) => selectors.getUserIdeas(getStore())(userId),
+    getDraftIdeas: () => selectors.getDraftIdeas(getStore()),
+    getAllPosts: () => selectors.getAllPosts(getStore()),
+    getPostById: (postId: string) => selectors.getPostById(getStore())(postId),
+    getUserPosts: (userId: string) => selectors.getUserPosts(getStore())(userId),
+    getPostsByIds: (postIds: string[]) => selectors.getPostsByIds(getStore())(postIds),
+    getAllDiscussionTopics: () => selectors.getAllDiscussionTopics(getStore()),
+    getDiscussionTopicById: (topicId: string) => selectors.getDiscussionTopicById(getStore())(topicId),
+    getDiscussionTopicsByIds: (topicIds: string[]) => selectors.getDiscussionTopicsByIds(getStore())(topicIds),
+    getFeedItems: () => selectors.getFeedItems(getStore()),
+    getFeedItemsFlat: () => selectors.getFeedItemsFlat(getStore()),
+    getHomePageData: () => selectors.getHomePageData(getStore()),
+    searchIdeas: (query: string) => selectors.searchIdeas(getStore())(query),
+    searchPosts: (query: string) => selectors.searchPosts(getStore())(query),
+    getUserStats: (userId: string) => selectors.getUserStats(getStore())(userId),
+    getAllGroups: () => selectors.getAllGroups(getStore()),
+    getGroupById: (groupId: string) => selectors.getGroupById(getStore())(groupId),
+    getActiveGroups: () => selectors.getActiveGroups(getStore()),
+    getGroupsByType: (type: string) => selectors.getGroupsByType(getStore())(type as any),
+    getUserGroups: (userId: string) => selectors.getUserGroups(getStore())(userId),
+    getUserGroupsWithMemberships: (userId: string) => selectors.getUserGroupsWithMemberships(getStore())(userId),
+    getGroupMembership: (userId: string, groupId: string) => selectors.getGroupMembership(getStore())(userId, groupId),
+    isUserMemberOfGroup: (userId: string, groupId: string) => selectors.isUserMemberOfGroup(getStore())(userId, groupId),
+    isUserAnimatorOfGroup: (userId: string, groupId: string) => selectors.isUserAnimatorOfGroup(getStore())(userId, groupId),
+    getGroupMembers: (groupId: string) => selectors.getGroupMembers(getStore())(groupId),
+    getGroupAnimators: (groupId: string) => selectors.getGroupAnimators(getStore())(groupId),
+    searchGroups: (query: string) => selectors.searchGroups(getStore())(query),
+    getGroupIdeas: (groupId: string) => selectors.getGroupIdeas(getStore())(groupId),
+    getGroupPosts: (groupId: string) => selectors.getGroupPosts(getStore())(groupId),
+    getGroupFeed: (groupId: string) => selectors.getGroupFeed(getStore())(groupId),
+    getIdeasByGroup: (groupId: string) => selectors.getGroupIdeas(getStore())(groupId),
+    getPostsByGroup: (groupId: string) => selectors.getGroupPosts(getStore())(groupId),
+    getAllPendingGroupCreations: () => selectors.getAllPendingGroupCreations(getStore()),
+    getPendingGroupCreationById: (pendingId: string) => selectors.getPendingGroupCreationById(getStore())(pendingId),
+    getUserPendingGroupCreations: (userId: string) => selectors.getUserPendingGroupCreations(getStore())(userId),
+    getPendingGroupStatus: (pendingId: string, userId: string) => selectors.getPendingGroupStatus(getStore())(pendingId, userId),
+    getAllGroupLinks: () => selectors.getAllGroupLinks(getStore()),
+    getGroupLinkById: (linkId: string) => selectors.getGroupLinkById(getStore())(linkId),
+    getGroupLinks: (groupId: string) => selectors.getGroupLinks(getStore())(groupId),
+    getGroupParents: (groupId: string) => selectors.getGroupParents(getStore())(groupId),
+    getGroupChildren: (groupId: string) => selectors.getGroupChildren(getStore())(groupId),
+    getGroupPartners: (groupId: string) => selectors.getGroupPartners(getStore())(groupId),
+    hasGroupLink: (groupId1: string, groupId2: string) => selectors.hasGroupLink(getStore())(groupId1, groupId2),
     getMyContributions: () => {
-      const currentUser = selectors.getCurrentUser(store);
+      const currentUser = selectors.getCurrentUser(getStore());
       if (!currentUser) return null;
-      const allIdeas = selectors.getAllIdeas(store);
-      const allPosts = selectors.getAllPosts(store);
+      const allIdeas = selectors.getAllIdeas(getStore());
+      const allPosts = selectors.getAllPosts(getStore());
       function deduplicateById<T extends { id: string }>(items: T[]): T[] {
         const seen = new Set<string>();
         return items.filter(item => {
@@ -133,58 +127,73 @@ export function useEntityStoreSimple() {
       };
     },
     getDiscussionsForIdea: (ideaId: string) => {
-      const allDiscussions = selectors.getAllDiscussionTopics(store);
-      const idea = selectors.getIdeaById(store)(ideaId);
+      const allDiscussions = selectors.getAllDiscussionTopics(getStore());
+      const idea = selectors.getIdeaById(getStore())(ideaId);
       if (!idea) return [];
       return allDiscussions.filter(discussion => 
         idea.discussionIds?.includes(discussion.id)
       );
     }
-  }), [store]);
+  };
+}
+
+
+/**
+ * Hook principal pour utiliser l'Entity Store simplifié
+ * Combine le store, les actions et les selectors en une interface simple
+ * Architecture: Composants -> useStore -> API Services -> Data
+ */
+export function useEntityStoreSimple() {
+  const { store, actions, storeUpdater, getStore } = useSimpleEntityStore();
+  const navigate = useNavigate();
+  const initializationRef = useRef(false);
+  // useMemo est déjà importé en haut du fichier
+
+  // 1. Sélecteurs
+  // - liveSelectors : identité stable, pour les modules d'actions (ne les recrée pas)
+  // - boundSelectors : nouvelle identité à chaque changement du store, pour que les
+  //   useMemo/useEffect des composants qui en dépendent se recalculent
+  // Les deux lisent l'état le plus récent via getStore().
+  const liveSelectors = useMemo(() => createBoundSelectors(getStore), [getStore]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundSelectors = useMemo(() => createBoundSelectors(getStore), [getStore, store]);
 
   // ⚠️ INITIALISATION UNIQUE DES DONNÉES
+  // (L'utilisateur courant n'est pas géré ici : voir AuthSyncBridge et guestSession.)
   useEffect(() => {
-    const isStoreEmpty = Object.keys(store.users).length === 0;
+    const isStoreEmpty = Object.keys(getStore().users).length === 0;
     if (isStoreEmpty && !storeInitialized && !initializationRef.current) {
       initializationRef.current = true;
       storeInitialized = true;
       console.log('🔄 [useEntityStoreSimple] Chargement des données initiales...');
-      const apiActionsInit = createApiActions(store, actions, boundSelectors, storeUpdater);
-      apiActionsInit.loadInitialData().then(async (success) => {
+      const apiActionsInit = createApiActions(getStore, actions, liveSelectors, storeUpdater);
+      apiActionsInit.loadInitialData().then((success) => {
         if (success) {
           console.log('✅ [useEntityStoreSimple] Données initiales chargées avec succès');
-          if (store.currentUserId && store.currentUserId !== 'unknown-user') {
-            const userInStore = selectors.getUserById(store)(store.currentUserId);
-            if (!userInStore) {
-              console.warn(`⚠️ [useEntityStoreSimple] Utilisateur restauré ${store.currentUserId} non trouvé dans le store. Retour à unknownUser.`);
-              actions.setCurrentUserId(null);
-            } else {
-              console.log(`✅ [useEntityStoreSimple] Utilisateur ${userInStore.name} restauré depuis localStorage`);
-            }
-          }
         } else {
           console.error('❌ [useEntityStoreSimple] Échec du chargement des données initiales');
         }
       });
     }
-  }, [store, actions, storeUpdater, boundSelectors]);
+  }, [getStore, actions, storeUpdater, liveSelectors]);
 
-  // 2. Stabiliser les modules d'actions
+  // 2. Modules d'actions : stables (ne dépendent plus du contenu du store),
+  // ils lisent l'état courant via getStore() et liveSelectors
   const navigationActions = useMemo(() => 
-    createNavigationActions(store, actions, boundSelectors, storeUpdater), 
-    [store, actions, boundSelectors, storeUpdater]
+    createNavigationActions(getStore, actions, liveSelectors, storeUpdater), 
+    [getStore, actions, liveSelectors, storeUpdater]
   );
   const contentActions = useMemo(() => 
-    createContentActions(store, actions, boundSelectors, navigationActions, storeUpdater, navigate),
-    [store, actions, boundSelectors, navigationActions, storeUpdater, navigate]
+    createContentActions(getStore, actions, liveSelectors, navigationActions, storeUpdater, navigate),
+    [getStore, actions, liveSelectors, navigationActions, storeUpdater, navigate]
   );
   const userActions = useMemo(() => 
-    createUserActions(store, actions, boundSelectors, navigationActions, storeUpdater),
-    [store, actions, boundSelectors, navigationActions, storeUpdater]
+    createUserActions(getStore, actions, liveSelectors, navigationActions, storeUpdater),
+    [getStore, actions, liveSelectors, navigationActions, storeUpdater]
   );
   const apiActions = useMemo(() => 
-    createApiActions(store, actions, boundSelectors, storeUpdater),
-    [store, actions, boundSelectors, storeUpdater]
+    createApiActions(getStore, actions, liveSelectors, storeUpdater),
+    [getStore, actions, liveSelectors, storeUpdater]
   );
 
   // 3. Stabiliser l'objet final

@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, useRef, ReactNode } from 'react';
 import { User, Idea, Post, DiscussionTopic, PrefilledContent, Group, GroupMembership, PendingGroupCreation, GroupLink, Location } from '../types';
 import { unknownUser } from '../data/users';
 
 // Store simple avec les données principales
-interface SimpleEntityStore {
+export interface SimpleEntityStore {
   // Données principales (normalisées par ID)
   users: Record<string, User>;
   ideas: Record<string, Idea>;
@@ -141,18 +141,22 @@ type SimpleEntityStoreContext = {
   store: SimpleEntityStore;
   actions: SimpleEntityActions;
   storeUpdater: StoreUpdater;
+  /** État le plus récent, y compris juste après une écriture (avant le re-rendu) */
+  getStore: () => SimpleEntityStore;
 } | null;
 
 // Créer le context
 const SimpleEntityStoreContext = createContext<SimpleEntityStoreContext>(null);
 
-// Store initial avec persistance du currentUserId
+// Store initial. currentUserId n'est pas persisté : au démarrage, l'identité est
+// retrouvée par AuthSyncBridge (membre Keycloak, ou invité mémorisé par son email,
+// voir hooks/guestSession.ts).
 const createInitialStore = (): SimpleEntityStore => {
-  // Restaurer currentUserId depuis localStorage si disponible
-  const savedUserId = typeof window !== 'undefined' 
-    ? localStorage.getItem('ideosphere_currentUserId') 
-    : null;
-  
+  // Ancienne clé, plus utilisée
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('ideosphere_currentUserId');
+  }
+
   return {
     users: {},
     ideas: {},
@@ -165,7 +169,7 @@ const createInitialStore = (): SimpleEntityStore => {
     isInitialized: false, // Pas encore initialisé
     hasEnteredPlatform: false,
     showOnboarding: false,
-    currentUserId: savedUserId, // Restauré depuis localStorage
+    currentUserId: null,
     discussionPosts: {},
     prefilledSourceIdea: null,
     prefilledLinkedContent: [],
@@ -265,7 +269,22 @@ interface SimpleEntityStoreProviderProps {
 }
 
 export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProviderProps) {
-  const [store, setStore] = useState<SimpleEntityStore>(createInitialStore);
+  const [store, setStoreState] = useState<SimpleEntityStore>(createInitialStore);
+
+  // Source de vérité synchrone : chaque écriture met la ref à jour immédiatement,
+  // puis déclenche le re-rendu. Une lecture faite juste après une écriture (dans
+  // une action async) voit donc la nouvelle valeur, et chaque fonction de mise à
+  // jour n'est exécutée qu'une seule fois (pas de rejeu par React).
+  const storeRef = useRef(store);
+  const getStore = useMemo(() => () => storeRef.current, []);
+  const setStore = useMemo(() => (
+    update: SimpleEntityStore | ((prev: SimpleEntityStore) => SimpleEntityStore)
+  ) => {
+    const next = typeof update === 'function' ? update(storeRef.current) : update;
+    if (next === storeRef.current) return;
+    storeRef.current = next;
+    setStoreState(next);
+  }, []);
 
   // StoreUpdater qui peut accepter une fonction pour éviter les stale closures
   const storeUpdater: StoreUpdater = useMemo(() => (newStoreData) => {
@@ -273,7 +292,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
       const updates = typeof newStoreData === 'function' ? newStoreData(prevStore) : newStoreData;
       return { ...prevStore, ...updates };
     });
-  }, []);
+  }, [setStore]);
 
   const actions: SimpleEntityActions = useMemo(() => ({
     // Users
@@ -521,17 +540,7 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
     // NOTE MIGRATION REACT ROUTER (Phase 5) : Actions obsolètes supprimées
     setHasEnteredPlatform: (entered) => setStore(prev => ({ ...prev, hasEnteredPlatform: entered })),
     setShowOnboarding: (show) => setStore(prev => ({ ...prev, showOnboarding: show })),
-    setCurrentUserId: (id) => {
-      // Persister dans localStorage
-      if (typeof window !== 'undefined') {
-        if (id) {
-          localStorage.setItem('ideosphere_currentUserId', id);
-        } else {
-          localStorage.removeItem('ideosphere_currentUserId');
-        }
-      }
-      setStore(prev => ({ ...prev, currentUserId: id }));
-    },
+    setCurrentUserId: (id) => setStore(prev => ({ ...prev, currentUserId: id })),
 
     // Temporary Actions
     setDiscussionPosts: (posts) => setStore(prev => ({ ...prev, discussionPosts: posts })),
@@ -595,7 +604,8 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
             groupMemberships: { ...normalizeGroupMemberships(initialData.groupMemberships || []), ...prev.groupMemberships },
             pendingGroupCreations: { ...normalizePendingGroups(initialData.pendingGroups || []), ...prev.pendingGroupCreations },
             groupLinks: { ...normalizeGroupLinks((initialData as any).groupLinks || []), ...prev.groupLinks },
-            currentUserId: initialData.currentUserId || null, // ✅ null par défaut, pas de string vide
+            // Ne pas écraser un utilisateur déjà posé (AuthSyncBridge, invité retrouvé...)
+            currentUserId: prev.currentUserId ?? initialData.currentUserId ?? null,
             isInitialized: true // ✅ Marquer comme initialisé
           };
         });
@@ -603,9 +613,9 @@ export function SimpleEntityStoreProvider({ children }: SimpleEntityStoreProvide
         console.error('❌ Erreur lors de l\'initialisation du store:', error);
       }
     }
-  }), []);
+  }), [setStore]);
 
-  const contextValue = useMemo(() => ({ store, actions, storeUpdater }), [store, actions, storeUpdater]);
+  const contextValue = useMemo(() => ({ store, actions, storeUpdater, getStore }), [store, actions, storeUpdater, getStore]);
 
   return (
     <SimpleEntityStoreContext.Provider value={contextValue}>
