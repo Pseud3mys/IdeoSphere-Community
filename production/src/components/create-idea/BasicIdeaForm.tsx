@@ -123,7 +123,7 @@ export function BasicIdeaForm({
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={clientConfig.examples.idea.titlePlaceholder}
+                placeholder={clientConfig.placeholders.idea.title}
                 required
                 className="text-lg"
               />
@@ -139,7 +139,7 @@ export function BasicIdeaForm({
                 id="summary"
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                placeholder={clientConfig.examples.idea.summaryPlaceholder}
+                placeholder={clientConfig.placeholders.idea.summary}
                 rows={2}
                 required
               />
@@ -213,7 +213,7 @@ export function BasicIdeaForm({
                 <LocationSearch
                   initialLocation={location}
                   onLocationSelect={(loc) => setLocation(loc || '')}
-                  placeholder={clientConfig.examples.idea.locationPlaceholder}
+                  placeholder={clientConfig.placeholders.idea.location}
                   className="h-8 text-xs"
                 />
               </div>

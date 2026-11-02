@@ -1,305 +1,54 @@
 /**
- * Template de Configuration Client - IdeoSphere
- * 
- * Copiez ce fichier et renommez-le pour créer une nouvelle configuration client.
- * Exemple: production.ts, staging.ts, client-specifique.ts
+ * Configuration client - <Nom du client>
+ * Seul ce qui diffère de la configuration par défaut (default.ts) est déclaré ici.
+ *
+ * Mise en service :
+ *   1. Copier ce fichier en `clients/<client>.ts`.
+ *   2. Dans `clientConfig.ts`, l'importer et l'ajouter à `configs` avec son sous-domaine.
+ * Exemples par cas d'usage (territoire, projet, équipes) : CONFIGURATION_EXEMPLES.md
  */
 
-import { ClientConfig } from '../types';
+import { defineClient } from '../defineClient';
+// import logo from '../../assets/logo_<client>.png';
 
-export const templateConfig: ClientConfig = {
-  // ============================================================================
-  // 1. IDENTITÉ ET BRANDING
-  // ============================================================================
-  
+export const templateConfig = defineClient({
   identity: {
-    appName: 'IdeoSphere',
-    appTagline: 'Votre tagline personnalisée',
-    appDescriptionShort: 'Description courte de votre instance',
-    appMission: 'Mission détaillée de votre organisation...',
-    projectStatus: 'Statut du projet',
-    copyright: '© 2025 Votre Organisation. Tous droits réservés.',
+    appName: 'Nom de la plateforme',
+    // logoUrl: logo,
   },
 
-  // ============================================================================
-  // 2. TERMINOLOGIE CONTEXTUELLE
-  // ============================================================================
-  
-  clientType: 'association', // ou 'mairie', 'entreprise', 'ong', 'listeCitoyenne'
-  
-  terminology: {
-    member: {
-      singular: 'membre',
-      singularFeminine: 'membre',
-      plural: 'membres',
-    },
-    organization: {
-      singular: 'organisation',
-      plural: 'organisations',
-    },
-    territory: {
-      local: 'communauté',
-    },
-    participation: {
-      adjective: 'collaboratif',
-    },
-    location: {
-      cityName: 'Votre Ville',
-      enabled: true,
-    },
-  },
+  features: { showBetaBanner: false, enableNewsletters: false },
 
-  // ============================================================================
-  // 3. PAGE D'ACCUEIL
-  // ============================================================================
-  
   welcome: {
-    betaBanner: {
-      title: 'Titre de la bannière',
-      description: 'Description de la bannière',
-      feedbackInstructions: 'Instructions pour le feedback',
-    },
-    hero: {
-      title: 'Titre principal de la page d\'accueil',
-      description: 'Description principale',
-      themes: ['Thème 1', 'Thème 2', 'Thème 3'],
-    },
-    quickIdea: {
-      sectionTitle: 'Titre de la section',
-      placeholder: 'Placeholder...',
-      buttonText: 'Texte du bouton',
-      finalizationTitle: 'Titre finalisation',
-      locationSectionTitle: 'Titre section localisation',
-      locationPlaceholder: 'Placeholder localisation',
-      followUpSectionTitle: 'Titre section suivi',
-      followUpDescription: 'Description section suivi',
-      namePlaceholder: 'Nom...',
-      emailPlaceholder: 'Email...',
-      submitButtonText: 'Soumettre',
-      skipButtonText: 'Passer',
-    },
-    howItWorks: {
-      title: 'Comment ça marche ?',
-      steps: ['Étape 1', 'Étape 2', 'Étape 3', 'Étape 4'],
-    },
-    stats: {
-      totalContributions: 'contributions',
-      totalIdeas: 'idées',
-      totalSupports: 'soutiens',
-    },
-    recentPropositions: {
-      title: 'Propositions les plus soutenues',
-      loadingText: 'Chargement des propositions les plus soutenues...',
-      emptyText: 'Aucune proposition soutenue pour le moment.',
-    },
-    cta: {
-      buttonText: 'Bouton CTA',
-      values: ['Valeur 1', 'Valeur 2', 'Valeur 3'],
-    },
-    discover: {
-      title: 'Titre découverte',
-      description: 'Description découverte',
-      buttonText: 'Bouton découverte',
-      features: ['Feature 1', 'Feature 2', 'Feature 3'],
-    },
-  },
-
-  // ============================================================================
-  // 4. NAVIGATION ET HEADER
-  // ============================================================================
-  
-  navigation: {
-    howItWorksButton: 'Comment ça marche ?',
-    helpButton: {
-      title: 'Aide',
-      icon: '?',
-    },
-  },
-
-  // ============================================================================
-  // 6. FOOTER
-  // ============================================================================
-  
-  footer: {
-    learnMoreTitle: 'En savoir plus',
-    joinUsTitle: 'Nous rejoindre',
-    links: {
-      about: 'À propos',
-      howItWorks: 'Fonctionnement',
-      faq: 'FAQ',
-      privacy: 'Confidentialité',
-      terms: 'CGU',
-    },
-    contact: {
-      discord: {
-        url: 'https://discord.gg/votre-serveur',
-        label: 'Discord',
-      },
-      email: {
-        url: 'mailto:contact@example.com',
-        address: 'contact@example.com',
-        label: 'Email',
-      },
-      github: {
-        url: 'https://github.com/votre-org/votre-repo',
-        label: 'GitHub',
-      },
-    },
-  },
-
-  // ============================================================================
-  // 9. MESSAGES SYSTÈME
-  // ============================================================================
-  
-  systemMessages: {
-    shareDialog: {
-      ideaShareText: (title: string) => `Découvrez cette idée : ${title}`,
-      postShareText: (preview: string) => `Découvrez ce post : ${preview}`,
-      ideaDialogTitle: 'Partager cette idée',
-      postDialogTitle: 'Partager ce post',
-    },
-    signupPage: {
-      title: 'Créer un compte',
-      description: (cityName: string) => `Rejoignez la communauté ${cityName}`,
-      bioHelperText: 'Présentez-vous',
-      labels: {
-        name: 'Nom',
-        email: 'Email',
-        password: 'Mot de passe',
-        confirmPassword: 'Confirmer',
-        location: 'Localisation',
-        bio: 'Bio',
-        interests: 'Centres d\'intérêt',
-      },
-      placeholders: {
-        name: 'Votre nom',
-        email: 'email@example.com',
-        password: '••••••••',
-        location: 'Votre ville',
-        bio: 'À propos de vous...',
-      },
-      buttons: {
-        submit: 'Créer',
-        login: 'Se connecter',
-      },
-      messages: {
-        alreadyHaveAccount: 'Déjà un compte ?',
-      },
-    },
-  },
-
-  // ============================================================================
-  // 9. EXEMPLES ET PLACEHOLDERS
-  // ============================================================================
-  
-  examples: {
-    post: {
-      titlePlaceholder: 'Titre...',
-      contentPlaceholder: 'Contenu...',
-      locationPlaceholder: 'Localisation...',
-    },
-    idea: {
-      titlePlaceholder: 'Titre de l\'idée...',
-      summaryPlaceholder: 'Résumé...',
-      locationPlaceholder: 'Localisation...',
-      descriptionTemplate: {
-        withSourcePost: (authorName: string) => `## Contexte\n\nSuite au post de ${authorName}...\n\n## Solution\n\n...`,
-        withoutSourcePost: `## Contexte\n\n...\n\n## Solution\n\n...`,
-      },
-    },
-    group: {
-      namePlaceholder: 'Nom du groupe',
-      locationPlaceholder: 'Localisation',
-      tagsPlaceholder: 'tags, séparés, par, virgules',
-    },
-    discussion: {
-      topicTitlePlaceholder: 'Titre de la discussion...',
-    },
-    profile: {
-      birthYearPlaceholder: 'Ex: 1990',
-      bioPlaceholder: 'Votre bio...',
-    },
-    collaboration: {
-      searchPlaceholder: 'Rechercher un membre...',
-    },
-  },
-
-  // ============================================================================
-  // 10. TYPES DE GROUPES
-  // ============================================================================
-  
-  groupTypes: {
-    types: [
-      {
-        id: 'community',
-        label: 'Communauté',
-        labelPlural: 'Communautés',
-        description: 'Un espace pour rassembler des personnes',
-        icon: '👥',
-      },
-      {
-        id: 'project',
-        label: 'Projet',
-        labelPlural: 'Projets',
-        description: 'Un groupe dédié à un projet',
-        icon: '🎯',
-      },
+    title: 'Titre de la page d\'accueil',
+    descriptionParagraphs: [
+      'Une ou deux phrases qui expliquent à quoi sert l\'espace.',
     ],
+    // quickIdeaPlaceholder: 'Ex: ...',
   },
 
-  // ============================================================================
-  // 11. INTÉGRATIONS EXTERNES
-  // ============================================================================
-  
-  integrations: {
-    kumu: {
-      embedUrl: '',
-      projectUrl: '',
-      enabled: false,
-      width: '100%',
-      height: '600px',
-    },
-  },
+  // terminology: {
+  //   member: { singular: 'habitant', plural: 'habitants' },
+  //   community: 'commune',
+  // },
 
-  // ============================================================================
-  // 12. CONFIGURATION AVANCÉE
-  // ============================================================================
-  
-  features: {
-    showBetaBanner: false,
-    enableNewsletters: false,
-  },
+  // locations: {
+  //   suggestions: [
+  //     { label: 'Quartier ...', context: '36300, Le Blanc', lon: 1.06, lat: 46.63 },
+  //   ],
+  //   addressSearch: true, // false en interne : uniquement services / sites
+  // },
 
-  // ============================================================================
-  // 13. AUTHENTIFICATION
-  // ============================================================================
-  
-  auth: {
-    // ========================================================================
-    // OPTION 1 : MODE MOCK (Développement / Démo)
-    // ========================================================================
-    // Parfait pour : Figma Make, StackBlitz, développement local
-    // Utilisateur pré-connecté automatiquement
-    // ========================================================================
-    
-    mode: 'mock',
-    mockUser: {
-      id: 'user-demo',
-      email: 'demo@example.com',
-      name: 'Utilisateur Démo',
-    },
-    
-    // ========================================================================
-    // OPTION 2 : MODE KEYCLOAK (Production)
-    // ========================================================================
-    // Décommentez et configurez pour utiliser Keycloak
-    // ========================================================================
-    
-    // mode: 'keycloak',
-    // keycloak: {
-    //   url: 'https://auth.votre-domaine.com',       // URL de votre serveur Keycloak
-    //   realm: 'ideosphere',                         // Nom de votre realm
-    //   clientId: 'ideosphere-web-app',              // ID de votre client
-    // },
+  // placeholders: { ... },
+  // groupTypes: [ ... ],
+
+  // socialLinks: [
+  //   { url: 'https://site-du-client.fr', label: 'Site web', network: 'website' },
+  //   { url: 'mailto:contact@holonsystems.org', label: 'Email', network: 'email' },
+  // ],
+
+  cartography: {
+    embedUrl: 'https://embed.kumu.io/<id>',
+    projectUrl: 'https://embed.kumu.io/<id>',
   },
-};
+});

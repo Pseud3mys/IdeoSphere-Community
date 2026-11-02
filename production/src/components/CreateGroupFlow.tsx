@@ -231,7 +231,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={clientConfig.examples.group.namePlaceholder}
+                placeholder={clientConfig.placeholders.group.name}
                 maxLength={100}
               />
             </div>
@@ -276,7 +276,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
               <LocationSearch
                 initialLocation={location}
                 onLocationSelect={(loc) => setLocation(loc || '')}
-                placeholder={clientConfig.examples.group.locationPlaceholder}
+                placeholder={clientConfig.placeholders.group.location}
               />
             </div>
 
@@ -286,7 +286,7 @@ export function CreateGroupFlow({ isOpen, onClose }: CreateGroupFlowProps) {
                 id="tags"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                placeholder={clientConfig.examples.group.tagsPlaceholder}
+                placeholder={clientConfig.placeholders.group.tags}
               />
             </div>
 

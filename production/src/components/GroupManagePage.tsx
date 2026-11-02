@@ -242,7 +242,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={clientConfig.examples.group.namePlaceholder}
+                  placeholder={clientConfig.placeholders.group.name}
                 />
               </div>
 
@@ -277,7 +277,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <LocationSearch
                   initialLocation={formData.location}
                   onLocationSelect={(loc) => setFormData({ ...formData, location: loc || '' })}
-                  placeholder={clientConfig.examples.group.locationPlaceholder}
+                  placeholder={clientConfig.placeholders.group.location}
                 />
               </div>
 
@@ -287,7 +287,7 @@ export function GroupManagePage({ groupId }: GroupManagePageProps) {
                 <Input
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder={clientConfig.examples.group.tagsPlaceholder}
+                  placeholder={clientConfig.placeholders.group.tags}
                 />
               </div>
 

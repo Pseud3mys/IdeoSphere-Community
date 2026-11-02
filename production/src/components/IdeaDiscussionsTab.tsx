@@ -9,7 +9,6 @@ import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { CreateVersionDialog } from './CreateVersionDialog';
-import { clientConfig } from '../config/clientConfig';
 import { 
   Heart, 
   MessageSquare,
@@ -263,7 +262,7 @@ export function IdeaDiscussionsTab({
                   id="topic-title"
                   value={newTopicTitle}
                   onChange={(e) => setNewTopicTitle(e.target.value)}
-                  placeholder={clientConfig.examples.discussion.topicTitlePlaceholder}
+                  placeholder="Ex: Question sur la mise en œuvre..."
                 />
               </div>
               <div className="space-y-2">

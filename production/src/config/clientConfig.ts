@@ -108,124 +108,29 @@ export const getClientConfig = (): ClientConfig => {
 export const currentConfig = getClientConfig();
 
 // ============================================================================
-// 4. HELPERS - Fonctions utilitaires pour accéder à la configuration
+// 4. HELPERS
 // ============================================================================
 
 /**
- * Obtient le terme pour "membre" selon le genre et le nombre
+ * Terme désignant les membres (ex: "membres", "habitants", "collaborateurs")
  */
-export function getMemberTerm(options: { plural?: boolean; feminine?: boolean } = {}) {
-  const { plural = false, feminine = false } = options;
-  const config = getClientConfig();
-  
-  if (plural) {
-    return config.terminology.member.plural;
-  }
-  
-  if (feminine) {
-    return config.terminology.member.singularFeminine;
-  }
-  
-  return config.terminology.member.singular;
+export function getMemberTerm(options: { plural?: boolean } = {}) {
+  const { member } = getClientConfig().terminology;
+  return options.plural ? member.plural : member.singular;
 }
 
 /**
- * Obtient le terme pour "organisation"
- */
-export function getOrganizationTerm(plural = false) {
-  const config = getClientConfig();
-  return plural 
-    ? config.terminology.organization.plural 
-    : config.terminology.organization.singular;
-}
-
-/**
- * Obtient le nom de la ville/localisation
- */
-export function getCityName() {
-  const config = getClientConfig();
-  return config.terminology.location.cityName;
-}
-
-/**
- * Vérifie si la localisation est activée
- */
-export function isLocationEnabled() {
-  const config = getClientConfig();
-  return config.terminology.location.enabled;
-}
-
-/**
- * Obtient le texte de partage pour une idée
- */
-export function getIdeaShareText(title: string) {
-  const config = getClientConfig();
-  return config.systemMessages.shareDialog.ideaShareText(title);
-}
-
-/**
- * Obtient le texte de partage pour un post
- */
-export function getPostShareText(preview: string) {
-  const config = getClientConfig();
-  return config.systemMessages.shareDialog.postShareText(preview);
-}
-
-/**
- * Obtient tous les types de groupes disponibles
+ * Types de groupes disponibles pour ce client
  */
 export function getGroupTypes() {
-  const config = getClientConfig();
-  return config.groupTypes.types;
+  return getClientConfig().groupTypes;
 }
 
 /**
- * Obtient les informations d'un type de groupe spécifique
+ * Informations d'un type de groupe
  */
 export function getGroupTypeInfo(typeId: string) {
-  const config = getClientConfig();
-  return config.groupTypes.types.find(type => type.id === typeId);
-}
-
-/**
- * Obtient le label d'un type de groupe
- */
-export function getGroupTypeLabel(typeId: string, plural = false) {
-  const typeInfo = getGroupTypeInfo(typeId);
-  if (!typeInfo) return typeId;
-  return plural ? typeInfo.labelPlural : typeInfo.label;
-}
-
-/**
- * Obtient les IDs de tous les types de groupes disponibles
- */
-export function getGroupTypeIds(): string[] {
-  const config = getClientConfig();
-  return config.groupTypes.types.map(type => type.id);
-}
-
-/**
- * Obtient le mode d'authentification configuré
- */
-export function getAuthMode() {
-  const config = getClientConfig();
-  return config.auth.mode;
-}
-
-/**
- * Obtient la configuration Keycloak (si mode Keycloak)
- */
-export function getKeycloakConfig() {
-  const config = getClientConfig();
-  return config.auth.keycloak;
-}
-
-/**
- * Obtient l'utilisateur mock (si mode mock)
- */
-export function getMockUser() {
-  const config = getClientConfig();
-  return config.auth.mockUser;
+  return getClientConfig().groupTypes.find(type => type.id === typeId);
 }
 
 // ============================================================================

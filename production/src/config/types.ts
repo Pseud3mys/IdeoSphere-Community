@@ -1,23 +1,18 @@
 /**
  * Types de configuration - IdeoSphere
- * 
- * Ce fichier définit l'interface TypeScript pour toutes les configurations client.
+ *
+ * Seul ce qui peut réellement changer d'un client à l'autre vit dans la config.
+ * Les textes d'interface communs à toutes les instances sont écrits directement
+ * dans les composants.
+ *
+ * - `clients/default.ts` contient une configuration complète (ClientConfig).
+ * - Chaque client ne déclare que ce qui diffère du défaut (ClientOverrides),
+ *   fusionné avec le défaut via `defineClient()`.
  */
-
-// Types de clients supportés
-export type ClientType = 'mairie' | 'entreprise' | 'association' | 'ong' | 'listeCitoyenne';
 
 // Types d'authentification supportés
 export type AuthMode = 'mock' | 'keycloak';
 
-// Configuration Keycloak
-export interface KeycloakConfig {
-  url: string;
-  realm: string;
-  clientId: string;
-}
-
-// Type pour un type de groupe
 export interface GroupType {
   id: string;
   label: string;
@@ -35,215 +30,96 @@ export interface PredefinedLocation {
   city?: string;
 }
 
-// Interface principale de configuration
+export interface SocialLink {
+  url: string;
+  label: string;
+  // Optionnel : pour forcer une icône si l'URL n'est pas reconnue
+  network?: 'discord' | 'email' | 'github' | 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'website';
+}
+
 export interface ClientConfig {
-  // ============================================================================
-  // 1. IDENTITÉ ET BRANDING
-  // ============================================================================
+  // 1. IDENTITÉ — header, footer, page À propos, partages
   identity: {
     appName: string;
     appTagline: string;
-    appDescriptionShort: string;
-    // Mission principale (utilisée dans la page À propos)
-    appMission: string;
-    projectStatus: string;
-    copyright: string;
-    // NOUVEAU: Permet de mettre un lien d'image en dur (ex: "https://monsite.com/logo.png")
-    logoUrl?: string;
+    appDescriptionShort: string; // footer
+    appMission: string;          // page À propos
+    logoUrl?: string;            // logo importé ou URL ; logo IdeoSphere sinon
   };
 
-  // ============================================================================
-  // 2. TERMINOLOGIE CONTEXTUELLE
-  // ============================================================================
-  clientType: ClientType;
-  
+  // 2. FONCTIONNALITÉS ACTIVABLES
+  features: {
+    showBetaBanner: boolean;     // bandeau bêta sur la page d'accueil
+    enableNewsletters: boolean;  // inscription newsletter sur la page d'accueil
+  };
+
+  // 3. PAGE D'ACCUEIL
+  welcome: {
+    title: string;
+    descriptionParagraphs: string[];
+    quickIdeaPlaceholder: string;
+  };
+
+  // 4. VOCABULAIRE
   terminology: {
     member: {
       singular: string;
-      singularFeminine: string;
       plural: string;
     };
-    organization: {
-      singular: string;
-      plural: string;
-    };
-    territory: {
-      local: string;
-    };
-    participation: {
-      adjective: string;
-    };
-    location: {
-      cityName: string;
-      enabled: boolean;
-      // AJOUT : Liste des quartiers/lieux suggérés par défaut
-      suggestedLocations?: PredefinedLocation[];
-    };
+    community: string; // "l'espace collaboratif de votre <community>"
   };
 
-  // ============================================================================
-  // 3. PAGE D'ACCUEIL (CITIZENWELCOME)
-  // ============================================================================
-  welcome: {
-    betaBanner: {
-      title: string;
-      description: string;
-      feedbackInstructions: string;
-    };
-    hero: {
-      title: string;
-      // CHANGEMENT: Tableau de strings pour gérer plusieurs paragraphes
-      descriptionParagraphs: string[];
-    };
-    quickIdea: {
-      sectionTitle: string;
-      placeholder: string;
-      buttonText: string;
-      finalizationTitle: string;
-      locationSectionTitle: string;
-      locationPlaceholder: string;
-      followUpSectionTitle: string;
-      followUpDescription: string;
-      namePlaceholder: string;
-      emailPlaceholder: string;
-      submitButtonText: string;
-      skipButtonText: string;
-    };
-    howItWorks: {
-      title: string;
-    };
-    stats: {
-      totalContributions: string;
-      totalIdeas: string;
-      totalSupports: string;
-    };
-    recentPropositions: {
-      title: string;
-      loadingText: string;
-      emptyText: string;
-    };
-    cta: {
-      buttonText: string;
-    };
+  // 5. LOCALISATION des contributions
+  // Territoire : quartiers + adresses. Interne : services / sous-services / sites,
+  // sans recherche d'adresse. Un sous-service se décrit via `context`
+  // (ex: { label: 'R&D – IA', context: 'R&D · Site de Saclay' }).
+  locations: {
+    suggestions?: PredefinedLocation[]; // proposés au focus et filtrés pendant la saisie
+    addressSearch: boolean;             // recherche d'adresses (API de géocodage)
   };
 
-  // ============================================================================
-  // 4. NAVIGATION ET HEADER
-  // ============================================================================
-  navigation: {
-    howItWorksButton: string;
-    helpButton: {
-      title: string;
-      icon: string;
-    };
-  };
-
-  // ============================================================================
-  // 6. FOOTER
-  // ============================================================================
-  footer: {
-    learnMoreTitle: string;
-    joinUsTitle: string;
-    links: {
-      about: string;
-      howItWorks: string;
-      faq: string;
-      privacy: string;
-      terms: string;
-    };
-    socialLinks: Array<{
-      url: string;
-      label: string;
-      // Optionnel : pour forcer une icône si l'URL n'est pas reconnue
-      network?: 'discord' | 'email' | 'github' | 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'website'; 
-    }>;
-  };
-
-  // ============================================================================
-  // 9. MESSAGES SYSTÈME
-  // ============================================================================
-  systemMessages: {
-    shareDialog: {
-      ideaShareText: (title: string) => string;
-      postShareText: (preview: string) => string;
-      ideaDialogTitle: string;
-      postDialogTitle: string;
-    };
-  };
-
-  // ============================================================================
-  // 9. EXEMPLES ET PLACEHOLDERS
-  // ============================================================================
-  examples: {
-    post: {
-      titlePlaceholder: string;
-      contentPlaceholder: string;
-      locationPlaceholder: string;
-    };
+  // 6. PLACEHOLDERS DES FORMULAIRES — donnent le ton des contributions
+  placeholders: {
+    postContent: string;
     idea: {
-      titlePlaceholder: string;
-      summaryPlaceholder: string;
-      locationPlaceholder: string;
-      descriptionTemplate: {
-        withSourcePost: (authorName: string) => string;
-        withoutSourcePost: string;
-      };
+      title: string;
+      summary: string;
+      location: string;
     };
     group: {
-      namePlaceholder: string;
-      locationPlaceholder: string;
-      tagsPlaceholder: string;
-    };
-    discussion: {
-      topicTitlePlaceholder: string;
-    };
-    profile: {
-      birthYearPlaceholder: string;
-      bioPlaceholder: string;
-    };
-    collaboration: {
-      searchPlaceholder: string;
+      name: string;
+      location: string;
+      tags: string;
     };
   };
 
-  // ============================================================================
-  // 10. TYPES DE GROUPES
-  // ============================================================================
-  groupTypes: {
-    types: GroupType[];
+  // 7. TYPES DE GROUPES
+  groupTypes: GroupType[];
+
+  // 8. LIENS EXTERNES — footer, contact (email), dépôt GitHub (page À propos)
+  socialLinks: SocialLink[];
+
+  // 9. CARTOGRAPHIE (Kumu)
+  cartography: {
+    enabled: boolean;
+    embedUrl: string;
+    projectUrl: string;
   };
 
-  // ============================================================================
-  // 11. INTÉGRATIONS EXTERNES
-  // ============================================================================
-  integrations: {
-    kumu: {
-      embedUrl: string;
-      projectUrl: string;
-      enabled: boolean;
-      width: string;
-      height: string;
-    };
-  };
-
-  // ============================================================================
-  // 12. CONFIGURATION AVANCÉE
-  // ============================================================================
-  features: {
-    showBetaBanner: boolean;
-    enableNewsletters: boolean;
-  };
-
-  // ============================================================================
-  // 13. AUTHENTIFICATION
-  // ============================================================================
+  // 10. AUTHENTIFICATION — 'mock' pour le dev/démo, 'keycloak' en production
   auth: {
     mode: AuthMode;
-    keycloak?: KeycloakConfig;
-    mockUser?: {
-      id: string;
-      email: string;
-      name: string;
-    };
   };
 }
+
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends (infer U)[]
+    ? U[]
+    : T[K] extends object
+      ? DeepPartial<T[K]>
+      : T[K];
+};
+
+// Ce qu'un client déclare : uniquement ce qui diffère du défaut.
+// Les tableaux (paragraphes, liens, lieux, types de groupes) remplacent celui du défaut.
+export type ClientOverrides = DeepPartial<ClientConfig>;

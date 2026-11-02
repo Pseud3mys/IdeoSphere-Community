@@ -64,7 +64,7 @@ export function AppHeader({
                 onClick={onNavigateToHowItWorks}
                 className="hidden sm:flex text-muted-foreground hover:text-gray-900 text-sm sm:text-base px-2 sm:px-4 whitespace-nowrap"
               >
-                {clientConfig.navigation.howItWorksButton}
+                Comment ça marche ?
               </Button>
             )}
             
@@ -73,9 +73,9 @@ export function AppHeader({
               <button
                 onClick={onHelpClick}
                 className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center text-primary transition-colors text-sm sm:text-base"
-                title={clientConfig.navigation.helpButton.title}
+                title="Aide et visite guidée"
               >
-                {clientConfig.navigation.helpButton.icon}
+                ?
               </button>
             )}
             

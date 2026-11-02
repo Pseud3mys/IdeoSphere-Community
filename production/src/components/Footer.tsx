@@ -48,40 +48,40 @@ export function Footer({ onNavigate }: FooterProps) {
               {clientConfig.identity.appDescriptionShort}
             </p>
             <div className="text-xs text-gray-500">
-              {clientConfig.identity.projectStatus}
+              Projet open source
             </div>
           </div>
 
           {/* Colonne 2: Navigation */}
           <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-3">{clientConfig.footer.learnMoreTitle}</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">En savoir plus</h4>
             <div className="space-y-2">
               <Link 
                 to="/about" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                {clientConfig.footer.links.about}
+                À propos
               </Link>
               <Link 
                 to="/how-it-works" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                {clientConfig.footer.links.howItWorks}
+                Comment ça marche
               </Link>
               <Link 
                 to="/faq" 
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                {clientConfig.footer.links.faq}
+                FAQ
               </Link>
             </div>
           </div>
 
           {/* Colonne 3: Contact et communauté */}
           <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-3">{clientConfig.footer.joinUsTitle}</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Nous rejoindre</h4>
             <ul className="space-y-2">
-              {clientConfig.footer.socialLinks.map((link, index) => (
+              {clientConfig.socialLinks.map((link, index) => (
                 <li key={index}>
                   <a 
                     href={link.url}
@@ -103,7 +103,7 @@ export function Footer({ onNavigate }: FooterProps) {
         <div className="pt-6 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="text-xs text-gray-500">
-              {clientConfig.identity.copyright}
+              © {new Date().getFullYear()} IdeoSphere. Tous droits réservés.
             </div>
             
             <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -111,13 +111,13 @@ export function Footer({ onNavigate }: FooterProps) {
                 to="/privacy" 
                 className="text-gray-500 hover:text-gray-900 transition-colors"
               >
-                {clientConfig.footer.links.privacy}
+                Confidentialité
               </Link>
               <Link 
                 to="/terms" 
                 className="text-gray-500 hover:text-gray-900 transition-colors"
               >
-                {clientConfig.footer.links.terms}
+                CGU
               </Link>
             </div>
           </div>

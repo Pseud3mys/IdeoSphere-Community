@@ -19,7 +19,7 @@ export function AboutPage({ onNavigateBack }: AboutPageProps) {
     }
   };
 
-  const githubUrl = clientConfig.footer.socialLinks.find(
+  const githubUrl = clientConfig.socialLinks.find(
     link => link.network === 'github' || link.url.includes('github')
   )?.url || 'https://github.com/Pseud3mys/IdeoSphere-Community';
 

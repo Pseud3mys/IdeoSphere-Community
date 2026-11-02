@@ -113,7 +113,6 @@ export function CitizenWelcomeWrapper() {
       onNewsletterSubscribe={handleNewsletterSubscribe}
       onLoginSSO={handleLoginSSO}
       onRegisterSSO={handleRegisterSSO}
-      cityName="Le Blanc"
     />
   );
 }

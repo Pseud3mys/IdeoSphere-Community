@@ -69,7 +69,7 @@ export function UserProfilePage({
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const contactEmail = clientConfig.footer.socialLinks.find(
+  const contactEmail = clientConfig.socialLinks.find(
     link => link.network === 'email' || link.url.startsWith('mailto:')
   )?.label || 'contact@holonsystems.org';
   

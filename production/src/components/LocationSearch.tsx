@@ -15,6 +15,9 @@ interface LocationSearchProps {
   className?: string;
 }
 
+// Comparaison insensible à la casse et aux accents
+const normalize = (text: string) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 export function LocationSearch({ onLocationSelect, initialLocation, placeholder = "Rechercher une adresse, une ville...", className }: LocationSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Location[]>([]);
@@ -25,7 +28,8 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
 
   // Récupération des suggestions depuis la config
   // On mappe les propriétés pour correspondre exactement au type Location de l'app
-  const suggestedLocations: Location[] = (currentConfig.terminology.location.suggestedLocations || []).map(loc => ({
+  const { addressSearch } = currentConfig.locations;
+  const suggestedLocations: Location[] = (currentConfig.locations.suggestions || []).map(loc => ({
     label: loc.label,
     lon: loc.lon,
     lat: loc.lat,
@@ -35,6 +39,12 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
     // citycode n'est souvent pas critique pour l'affichage, on peut le laisser undefined ou vide
     citycode: undefined 
   }));
+
+  // Suggestions (quartiers, services, sites...) correspondant à la saisie
+  const matchSuggestions = (text: string) => {
+    const needle = normalize(text);
+    return suggestedLocations.filter(loc => normalize(`${loc.label} ${loc.context ?? ''}`).includes(needle));
+  };
 
   // Initialize state from props
   useEffect(() => {
@@ -51,13 +61,17 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // Si on a tapé au moins 3 caractères
-      if (query.length >= 3 && query !== selectedLocation?.label) {
-        setIsLoading(true);
-        const locations = await searchLocation(query);
-        setResults(locations);
-        setIsLoading(false);
-        setIsOpen(true);
+      // Saisie en cours : suggestions correspondantes, puis adresses (à partir de 3 caractères)
+      if (query.length > 0 && query !== selectedLocation?.label) {
+        const matches = matchSuggestions(query);
+        let addresses: Location[] = [];
+        if (addressSearch && query.length >= 3) {
+          setIsLoading(true);
+          addresses = await searchLocation(query);
+          setIsLoading(false);
+        }
+        setResults([...matches, ...addresses]);
+        setIsOpen(matches.length + addresses.length > 0);
       } 
       // Si le champ est vide (ou presque), on affiche les suggestions par défaut
       else if (query.length === 0 && suggestedLocations.length > 0) {
@@ -108,13 +122,13 @@ export function LocationSearch({ onLocationSelect, initialLocation, placeholder 
   const handleClear = () => {
     setQuery('');
     setSelectedLocation(null);
+    onLocationSelect(null);
     // Au clear, on remet les suggestions par défaut si elles existent
     if (suggestedLocations.length > 0) {
       setResults(suggestedLocations);
       setIsOpen(true); // On laisse ouvert pour permettre une nouvelle sélection rapide
     } else {
       setResults([]);
-      onLocationSelect(null);
     }
   };
 

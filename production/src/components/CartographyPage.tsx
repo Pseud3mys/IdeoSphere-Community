@@ -17,17 +17,17 @@ export function CartographyPage({ onNavigateBack }: CartographyPageProps) {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
         
         {/* Visualisation Kumu */}
-        {clientConfig.integrations.kumu.enabled && clientConfig.integrations.kumu.embedUrl ? (
+        {clientConfig.cartography.enabled && clientConfig.cartography.embedUrl ? (
           <div className="space-y-3">
             {/* Titre et lien plein écran */}
             <div className="flex items-center justify-between px-2">
               <p className="text-sm text-gray-600">
                 Explorer les idées et les connexions. La carte se met à jour toutes les 24h.
               </p>
-              {clientConfig.integrations.kumu.projectUrl && (
+              {clientConfig.cartography.projectUrl && (
                 <Button variant="ghost" size="sm" asChild className="text-xs">
                   <a 
-                    href={clientConfig.integrations.kumu.projectUrl} 
+                    href={clientConfig.cartography.projectUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
@@ -41,9 +41,9 @@ export function CartographyPage({ onNavigateBack }: CartographyPageProps) {
             {/* Carte */}
             <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
               <iframe
-                src={clientConfig.integrations.kumu.embedUrl}
+                src={clientConfig.cartography.embedUrl}
                 width="100%"
-                height={clientConfig.integrations.kumu.height || "600"}
+                height="600px"
                 style={{ border: 0, display: 'block', minHeight: '70vh' }}
                 title="Cartographie"
                 className="w-full"

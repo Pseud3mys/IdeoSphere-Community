@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ArrowLeft, UserPlus, MapPin, Calendar, AlertCircle, CheckCircle2, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { clientConfig } from '../../config/clientConfig';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 
 interface SignupPageProps {
@@ -188,7 +187,7 @@ export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps)
                   max={currentYear - 16}
                   value={formData.birthYear}
                   onChange={(e) => handleInputChange('birthYear', e.target.value)}
-                  placeholder={clientConfig.examples.profile.birthYearPlaceholder}
+                  placeholder="Ex: 1985"
                   required
                   disabled={isLoading}
                 />
@@ -223,13 +222,10 @@ export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps)
                   id="bio"
                   value={formData.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder={clientConfig.examples.profile.bioPlaceholder}
+                  placeholder="Ex: Passionné(e) d'innovation et de collaboration, je souhaite contribuer à l'émergence de projets impactants..."
                   rows={3}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {clientConfig.systemMessages.signupPage.bioHelperText}
-                </p>
               </div>
 
               {/* Actions */}

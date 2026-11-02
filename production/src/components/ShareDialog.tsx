@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Copy, Check, Share, Smartphone } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import QRCode from 'qrcode';
-import { getIdeaShareText, getPostShareText, clientConfig } from '../config/clientConfig';
+import { clientConfig } from '../config/clientConfig';
 
 interface ShareDialogProps {
   contentId: string;
@@ -78,12 +78,12 @@ export function ShareDialog({ contentId, contentTitle, contentType, children }: 
 
   const shareTitle = contentType === 'idea' ? contentTitle : `Post ${clientConfig.identity.appName}`;
   const shareText = contentType === 'idea'
-    ? getIdeaShareText(contentTitle)
-    : getPostShareText(previewText);
+    ? `Découvrez cette idée : ${contentTitle}`
+    : `Découvrez ce post : ${previewText}`;
 
   const dialogTitle = contentType === 'idea' 
-    ? clientConfig.systemMessages.shareDialog.ideaDialogTitle 
-    : clientConfig.systemMessages.shareDialog.postDialogTitle;
+    ? 'Partager cette idée' 
+    : 'Partager ce post';
   const dialogDescription = contentType === 'idea'
     ? 'Partagez cette idée avec vos amis et voisins pour recueillir plus de soutiens.'
     : 'Partagez ce post avec vos amis et voisins pour encourager les discussions.';

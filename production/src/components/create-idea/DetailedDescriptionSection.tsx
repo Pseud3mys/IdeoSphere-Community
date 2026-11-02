@@ -4,7 +4,24 @@ import { RichTextEditor } from '../RichTextEditor';
 import { FileText } from 'lucide-react';
 import { Post } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
-import { clientConfig } from '../../config/clientConfig';
+
+// Trame proposée pour structurer la description d'une idée
+const descriptionTemplate = (context: string) => `## Contexte et enjeu
+
+${context}
+
+## Solution proposée
+
+Expliquez en détail votre idée et comment elle répond au besoin...
+
+## Mise en œuvre
+
+- Étape 1 : ...
+- Étape 2 : ...
+
+## Impact attendu
+
+Quels bénéfices concrets pour la communauté ?`;
 
 interface DetailedDescriptionSectionProps {
   description: string;
@@ -42,8 +59,8 @@ export function DetailedDescriptionSection({
           onChange={onDescriptionChange}
           placeholder={
             sourcePost && sourcePostAuthor
-              ? clientConfig.examples.idea.descriptionTemplate.withSourcePost(sourcePostAuthor.name)
-              : clientConfig.examples.idea.descriptionTemplate.withoutSourcePost
+              ? descriptionTemplate(`Suite au post de ${sourcePostAuthor.name}, je pense que...`)
+              : descriptionTemplate("Décrivez le problème ou l'opportunité que vous avez identifié...")
           }
           minHeight="400px"
         />

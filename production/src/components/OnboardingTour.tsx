@@ -17,7 +17,7 @@ export function OnboardingTour({ isVisible, onClose, onComplete }: OnboardingTou
   const steps = [
     {
       title: "Bienvenue dans votre communauté !",
-      description: `Vous êtes maintenant dans ${clientConfig.identity.appName}, l'espace collaboratif de votre ${clientConfig.terminology.territory.local}.`,
+      description: `Vous êtes maintenant dans ${clientConfig.identity.appName}, l'espace collaboratif de votre ${clientConfig.terminology.community}.`,
       icon: Users,
       content: (
         <div className="space-y-4">

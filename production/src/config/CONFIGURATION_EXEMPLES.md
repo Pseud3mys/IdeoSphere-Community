@@ -1,312 +1,111 @@
-# Configuration des Exemples et Placeholders - IdeoSphere
+# Configuration client — guide et exemples
 
-> ⚠️ **Partiellement mis à jour le 2026-10-28.** La structure `examples` correspond à `config/types.ts`. Les listes de composants utilisateurs, la section de migration et le statut « 100 % configurable » ont été retirés (non vérifiés, et certains composants cités n'existent plus). Les textes d'exemple par contexte sont des suggestions, pas l'état d'un client réel.
+## Principe
 
-## Vue d'ensemble
+- `types.ts` décrit tout ce qui est configurable (`ClientConfig`).
+- `clients/default.ts` est une configuration complète, utilisée pour les sous-domaines non mappés (localhost, beta…).
+- Chaque client (`clients/<client>.ts`) ne déclare **que ce qui diffère** du défaut, via `defineClient({...})`. Les objets sont fusionnés avec le défaut ; les tableaux (paragraphes, liens, lieux, types de groupes) le remplacent.
+- Le sous-domaine est associé à une config dans `clientConfig.ts` (`configs`).
 
-Les **exemples et placeholders** sont cruciaux pour l'expérience utilisateur : ils donnent le ton, inspirent les utilisateurs et définissent le style de contribution attendu. Tous les exemples sont maintenant centralisés dans `/config/clientConfig.ts`.
+Les textes d'interface communs à toutes les instances (footer, header, dialogue de partage, trame de description d'idée…) ne sont pas dans la config : ils sont écrits dans les composants.
 
-## Pourquoi c'est important
+Pour ajouter un client : copier `clients/_template.ts.example` en `clients/<client>.ts`, l'importer et l'ajouter dans `configs` (`clientConfig.ts`).
 
-Les placeholders ne sont pas de simples textes techniques. Ils :
+## Ce qui change selon le cas d'usage
 
-1. **Inspirent** : Donnent des idées concrètes de ce qu'on peut partager
-2. **Rassurent** : Montrent le niveau de détail attendu
-3. **Alignent** : Définissent le ton (formel/informel, technique/simple)
-4. **Contextualisent** : Adaptent l'app au domaine (mairie, entreprise, asso)
+Les cas d'usage reprennent ceux de la vitrine (ideosphere.social).
 
-## Structure de configuration
+| Réglage | Écouter son territoire | Co-construire un projet | Faire dialoguer ses équipes | Prolonger un atelier |
+|---|---|---|---|---|
+| Public | externe (habitants) | externe (futurs usagers) | interne (agents, collaborateurs) | interne (participants) |
+| `terminology.member` | habitant / habitants | participant / participants | collaborateur / collaborateurs | participant / participants |
+| `terminology.community` | commune | projet | structure | groupe |
+| `groupTypes` | quartier, collectif, thématique | thème, espace, usage | service / métier, projet, chantier transversal | atelier, thème |
+| `locations.suggestions` | quartiers | bâtiments, espaces | grands services, sous-services, sites | selon l'atelier |
+| `locations.addressSearch` | oui | selon le projet | non | non |
+| `placeholders` | idées du quotidien local | besoins et usages du lieu | irritants et améliorations internes | suites d'atelier |
+| `features.enableNewsletters` | souvent oui | selon le projet | non | non |
 
-```typescript
-examples: {
-  // Posts (messages courts)
-  post: {
-    titlePlaceholder: string,
-    contentPlaceholder: string,
-    locationPlaceholder: string,
-  },
-  
-  // Idées (projets structurés)
+## Exemples
+
+### Territoire (commune, collectif citoyen)
+
+```ts
+terminology: {
+  member: { singular: 'habitant', plural: 'habitants' },
+  community: 'commune',
+},
+groupTypes: [
+  { id: 'local', label: 'Quartier', labelPlural: 'Quartiers', description: 'Les échanges d\'un quartier', icon: '📍' },
+  { id: 'community', label: 'Collectif', labelPlural: 'Collectifs', description: 'Un collectif ou une association du territoire', icon: '👥' },
+  { id: 'challenge', label: 'Thématique', labelPlural: 'Thématiques', description: 'Un sujet ouvert toute l\'année (cadre de vie, mobilités…)', icon: '💡' },
+],
+placeholders: {
+  postContent: 'Une remarque, une question, une idée pour la commune...',
   idea: {
-    titlePlaceholder: string,
-    summaryPlaceholder: string,
-    locationPlaceholder: string,
-    descriptionTemplate: {
-      withSourcePost: (authorName: string) => string,
-      withoutSourcePost: string,
-    },
+    title: 'Ex: Pédibus pour l\'école des Tilleuls',
+    summary: 'Décrivez votre idée en une phrase qui donne envie de la soutenir...',
+    location: 'Ex: Place de la Mairie, Quartier Centre',
   },
-  
-  // Groupes
-  group: {
-    namePlaceholder: string,
-    locationPlaceholder: string,
-    tagsPlaceholder: string,
-  },
-  
-  // Discussions
-  discussion: {
-    topicTitlePlaceholder: string,
-  },
-  
-  // Profil utilisateur
-  profile: {
-    birthYearPlaceholder: string,
-    bioPlaceholder: string,
-  },
-  
-  // Collaboration
-  collaboration: {
-    searchPlaceholder: string,
-  },
-}
+  group: { name: 'Ex: Parents d\'élèves du centre', location: 'Ex: Quartier Centre', tags: 'Ex: école, mobilité, sécurité' },
+},
 ```
 
-## Exemples par contexte
+### Projet (bâtiment, tiers-lieu)
 
-### Mairie / Collectivité
+```ts
+terminology: {
+  member: { singular: 'participant', plural: 'participants' },
+  community: 'projet',
+},
+welcome: {
+  quickIdeaPlaceholder: '“un lieu où rester après un séminaire”, “plus de couleurs”, “une salle de sieste ?”',
+},
+groupTypes: [
+  { id: 'community', label: 'Usage', labelPlural: 'Usages', description: 'Une façon d\'utiliser le lieu (travail, détente, accueil…)', icon: '👥' },
+  { id: 'local', label: 'Espace', labelPlural: 'Espaces', description: 'Une partie du bâtiment', icon: '📍' },
+  { id: 'challenge', label: 'Thème', labelPlural: 'Thèmes', description: 'Un sujet transversal (accessibilité, énergie…)', icon: '💡' },
+],
+```
 
-```typescript
-examples: {
-  post: {
-    titlePlaceholder: 'Ex: Réflexion sur les horaires de la bibliothèque...',
-    contentPlaceholder: 'Partagez votre réflexion, observation ou idée citoyenne...',
-    locationPlaceholder: 'Ex: Place de la République, Quartier Centre-ville',
-  },
+### Équipes (usage interne)
+
+```ts
+terminology: {
+  member: { singular: 'collaborateur', plural: 'collaborateurs' },
+  community: 'structure',
+},
+features: { showBetaBanner: false, enableNewsletters: false },
+groupTypes: [
+  { id: 'community', label: 'Service', labelPlural: 'Services', description: 'Les échanges d\'un service ou d\'un métier', icon: '👥' },
+  { id: 'project', label: 'Projet', labelPlural: 'Projets', description: 'Un projet porté par plusieurs services', icon: '🎯' },
+  { id: 'challenge', label: 'Chantier', labelPlural: 'Chantiers', description: 'Un chantier transversal (simplification, accueil…)', icon: '💡' },
+],
+locations: {
+  // Un sous-service se rattache à son service via `context` : taper « R&D » propose les deux.
+  // lon/lat : coordonnées du site concerné.
+  suggestions: [
+    { label: 'Ressources humaines', context: 'Siège', lon: 2.2945, lat: 48.8584 },
+    { label: 'R&D', context: 'Site de Saclay', lon: 2.1667, lat: 48.7128 },
+    { label: 'R&D – IA', context: 'R&D · Site de Saclay', lon: 2.1667, lat: 48.7128 },
+    { label: 'Production', context: 'Site de Lyon', lon: 4.8357, lat: 45.764 },
+  ],
+  addressSearch: false,
+},
+placeholders: {
+  postContent: 'Un irritant, une observation de terrain, une idée d\'amélioration...',
   idea: {
-    titlePlaceholder: 'Ex: Jardin partagé rue de la Mairie',
-    summaryPlaceholder: 'Décrivez votre projet en une phrase qui donne envie...',
-    locationPlaceholder: 'Ex: Place de la République, Le Blanc',
-    descriptionTemplate: {
-      withSourcePost: (authorName: string) => `## Contexte et enjeu
-
-Suite au post de ${authorName}, je pense que notre commune pourrait...
-
-## Solution proposée
-
-Expliquez en détail votre idée et comment elle bénéficie aux citoyens...
-
-## Mise en œuvre
-
-- Étape 1 : ...
-- Étape 2 : ...
-
-## Impact attendu
-
-Quels bénéfices concrets pour les habitants ?`,
-      withoutSourcePost: `## Contexte et enjeu
-
-Décrivez le problème ou l'opportunité identifié dans notre commune...
-
-## Solution proposée
-
-Expliquez en détail votre idée citoyenne...
-
-## Mise en œuvre
-
-- Étape 1 : ...
-- Étape 2 : ...
-
-## Impact attendu
-
-Quels bénéfices concrets pour les citoyens ?`,
-    },
+    title: 'Ex: Simplifier le formulaire de réservation de salle',
+    summary: 'Résumez votre proposition en une phrase...',
+    location: 'Ex: Service accueil, Tous sites',
   },
-  group: {
-    namePlaceholder: 'Ex: Commission Culture',
-    locationPlaceholder: 'Ex: Le Blanc',
-    tagsPlaceholder: 'Ex: culture, événements, patrimoine',
-  },
-  discussion: {
-    topicTitlePlaceholder: 'Ex: Question sur le budget de mise en œuvre...',
-  },
-  profile: {
-    birthYearPlaceholder: 'Ex: 1985',
-    bioPlaceholder: 'Ex: Passionné(e) d\'urbanisme et d\'écologie, je souhaite contribuer à l\'amélioration de notre commune...',
-  },
-  collaboration: {
-    searchPlaceholder: 'Rechercher un citoyen à inviter comme co-créateur...',
-  },
-}
+  group: { name: 'Ex: Chantier simplification', location: 'Ex: Siège', tags: 'Ex: accueil, outils, process' },
+},
 ```
 
-### Entreprise
+## Bonnes pratiques pour les placeholders
 
-```typescript
-examples: {
-  post: {
-    titlePlaceholder: 'Ex: Amélioration du processus de validation...',
-    contentPlaceholder: 'Partagez votre observation ou suggestion d\'amélioration...',
-    locationPlaceholder: 'Ex: Service RH, Pôle Innovation',
-  },
-  idea: {
-    titlePlaceholder: 'Ex: Plateforme de partage de compétences internes',
-    summaryPlaceholder: 'Résumez votre proposition d\'innovation en une phrase...',
-    locationPlaceholder: 'Ex: Siège, Tous sites',
-    descriptionTemplate: {
-      withSourcePost: (authorName: string) => `## Contexte et enjeu
-
-Suite au post de ${authorName}, je propose une solution pour améliorer...
-
-## Solution proposée
-
-Description détaillée de l'innovation proposée...
-
-## Mise en œuvre
-
-- Phase 1 : ...
-- Phase 2 : ...
-
-## ROI et bénéfices
-
-Quels gains pour l'entreprise et les équipes ?`,
-      withoutSourcePost: `## Contexte et enjeu
-
-Décrivez le problème business ou l'opportunité identifiée...
-
-## Solution proposée
-
-Description détaillée de votre proposition d'innovation...
-
-## Mise en œuvre
-
-- Phase 1 : ...
-- Phase 2 : ...
-
-## ROI et bénéfices
-
-Quels gains pour l'entreprise et les équipes ?`,
-    },
-  },
-  group: {
-    namePlaceholder: 'Ex: Task Force Innovation Produit',
-    locationPlaceholder: 'Ex: Paris HQ',
-    tagsPlaceholder: 'Ex: innovation, produit, amélioration continue',
-  },
-  discussion: {
-    topicTitlePlaceholder: 'Ex: Questions sur la faisabilité technique...',
-  },
-  profile: {
-    birthYearPlaceholder: 'Ex: 1985',
-    bioPlaceholder: 'Ex: Chef de projet IT, passionné d\'innovation et d\'agilité, 5 ans dans la tech...',
-  },
-  collaboration: {
-    searchPlaceholder: 'Rechercher un collaborateur à inviter...',
-  },
-}
-```
-
-### Association / ONG
-
-```typescript
-examples: {
-  post: {
-    titlePlaceholder: 'Ex: Retour sur la dernière action terrain...',
-    contentPlaceholder: 'Partagez votre observation ou proposition militante...',
-    locationPlaceholder: 'Ex: Site de Bordeaux, Action du 15/03',
-  },
-  idea: {
-    titlePlaceholder: 'Ex: Campagne de sensibilisation dans les écoles',
-    summaryPlaceholder: 'Résumez votre projet militant en une phrase percutante...',
-    locationPlaceholder: 'Ex: Région Nouvelle-Aquitaine',
-    descriptionTemplate: {
-      withSourcePost: (authorName: string) => `## Contexte et enjeu
-
-Suite au post de ${authorName}, je propose une action concrète pour...
-
-## Action proposée
-
-Description détaillée du projet militant...
-
-## Plan d'action
-
-- Étape 1 : ...
-- Étape 2 : ...
-
-## Impact espéré
-
-Quels changements concrets pour notre cause ?`,
-      withoutSourcePost: `## Contexte et enjeu
-
-Décrivez le problème social/écologique identifié...
-
-## Action proposée
-
-Description détaillée de votre projet militant...
-
-## Plan d'action
-
-- Étape 1 : ...
-- Étape 2 : ...
-
-## Impact espéré
-
-Quels changements concrets pour notre cause ?`,
-    },
-  },
-  group: {
-    namePlaceholder: 'Ex: Groupe Action Climat',
-    locationPlaceholder: 'Ex: Lyon et environs',
-    tagsPlaceholder: 'Ex: climat, action, mobilisation',
-  },
-  discussion: {
-    topicTitlePlaceholder: 'Ex: Coordination de l\'action du mois prochain...',
-  },
-  profile: {
-    birthYearPlaceholder: 'Ex: 1990',
-    bioPlaceholder: 'Ex: Militant écologiste depuis 2015, spécialisé en mobilisation citoyenne...',
-  },
-  collaboration: {
-    searchPlaceholder: 'Rechercher un membre à inviter comme co-organisateur...',
-  },
-}
-```
-
-## Template de description détaillée
-
-Le template de description est particulièrement important car il guide la structure des projets. Il existe en deux variantes :
-
-### Avec post source
-
-Quand un utilisateur transforme un post en idée, on pré-remplit avec une référence à l'auteur original.
-
-```typescript
-withSourcePost: (authorName: string) => `...Suite au post de ${authorName}...`
-```
-
-### Sans post source
-
-Quand l'utilisateur crée une idée from scratch.
-
-```typescript
-withoutSourcePost: `...Décrivez le problème ou l'opportunité...`
-```
-
-## Bonnes pratiques
-
-### 1. Exemples concrets et réalistes
-
-❌ Mauvais : `Ex: Une idée`
-✅ Bon : `Ex: Jardin partagé rue de la Mairie`
-
-### 2. Niveau de détail approprié
-
-**Posts** : Courts et informels
-```
-'Partagez votre observation ou question...'
-```
-
-**Idées** : Plus structurés et professionnels
-```
-'Décrivez votre projet en une phrase percutante qui donne envie d'en savoir plus...'
-```
-
-### 3. Vocabulaire du domaine
-
-**Mairie** : citoyens, commune, territoire, services publics
-**Entreprise** : collaborateurs, innovation, ROI, process
-**Association** : membres, militant, action, mobilisation
-
-### 4. Ton cohérent
-
-Assurez-vous que tous les placeholders utilisent le même niveau de formalité et le même vocabulaire.
+- **Concrets** : `Ex: Jardin partagé rue de la Mairie` plutôt que `Ex: Une idée`.
+- **Bon niveau de détail** : les posts sont courts et informels, les idées plus structurées.
+- **Vocabulaire du contexte** : habitants, commune, quartier pour un territoire ; collègues, services, process en interne.
+- **Ton cohérent** : même niveau de formalité dans tous les placeholders d'un client.

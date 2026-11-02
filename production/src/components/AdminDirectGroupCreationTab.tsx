@@ -123,7 +123,7 @@ export function AdminDirectGroupCreationTab() {
                     id="admin-group-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder={clientConfig.examples.group.namePlaceholder}
+                    placeholder={clientConfig.placeholders.group.name}
                     maxLength={100}
                   />
                 </div>
@@ -168,7 +168,7 @@ export function AdminDirectGroupCreationTab() {
                   <LocationSearch
                     initialLocation={location}
                     onLocationSelect={(loc) => setLocation(loc || '')}
-                    placeholder={clientConfig.examples.group.locationPlaceholder}
+                    placeholder={clientConfig.placeholders.group.location}
                   />
                 </div>
 
@@ -178,7 +178,7 @@ export function AdminDirectGroupCreationTab() {
                     id="admin-group-tags"
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
-                    placeholder={clientConfig.examples.group.tagsPlaceholder}
+                    placeholder={clientConfig.placeholders.group.tags}
                   />
                 </div>
 

@@ -145,7 +145,7 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
           id="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={clientConfig.examples.post.contentPlaceholder}
+          placeholder={clientConfig.placeholders.postContent}
           rows={3}
           required
           className="resize-none border-2 border-gray-200 focus:border-blue-500 rounded-lg p-3 focus:ring-0 bg-white min-h-[80px] transition-colors"

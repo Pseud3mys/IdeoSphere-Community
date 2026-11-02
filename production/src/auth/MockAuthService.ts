@@ -1,10 +1,12 @@
 // src/auth/MockAuthService.ts
 import { User } from '../types';
-import { currentConfig } from '../config/clientConfig';
 import { users } from '../data/users';
 
 const MOCK_STORAGE_KEY = 'mock_auth_is_logged_in';
 const MOCK_EMAIL_KEY = 'mock_auth_email';
+
+// Utilisateur de test utilisé en mode 'mock'
+const MOCK_USER = { name: 'Marie Dubois', email: 'marie.dubois@email.com' };
 
 export const MockAuthService = {
   init: async (): Promise<boolean> => {
@@ -13,7 +15,7 @@ export const MockAuthService = {
     
     // Si connecté mais pas d'email stocké, utiliser l'email par défaut
     if (isLoggedIn && !localStorage.getItem(MOCK_EMAIL_KEY)) {
-      const defaultEmail = currentConfig.auth?.mockUser?.email || 'marie.dubois@email.com';
+      const defaultEmail = MOCK_USER.email;
       console.log('🔄 [MockAuth] Initialisation de l\'email par défaut:', defaultEmail);
       localStorage.setItem(MOCK_EMAIL_KEY, defaultEmail);
     }
@@ -24,7 +26,7 @@ export const MockAuthService = {
   login: async (email?: string): Promise<void> => {
     console.log('⚠️ [MockAuth] Connexion simulée...', email);
     // Utiliser l'email fourni, ou l'email par défaut
-    const emailToStore = email || currentConfig.auth?.mockUser?.email || 'marie.dubois@email.com';
+    const emailToStore = email || MOCK_USER.email;
     localStorage.setItem(MOCK_EMAIL_KEY, emailToStore);
     localStorage.setItem(MOCK_STORAGE_KEY, 'true');
     window.location.reload(); // Simule le retour du SSO
@@ -34,7 +36,7 @@ export const MockAuthService = {
     console.log('⚠️ [MockAuth] Inscription simulée...');
     // Initialiser avec l'email par défaut si pas déjà défini
     if (!localStorage.getItem(MOCK_EMAIL_KEY)) {
-      const defaultEmail = currentConfig.auth?.mockUser?.email || 'marie.dubois@email.com';
+      const defaultEmail = MOCK_USER.email;
       localStorage.setItem(MOCK_EMAIL_KEY, defaultEmail);
     }
     localStorage.setItem(MOCK_STORAGE_KEY, 'true');
@@ -64,21 +66,17 @@ export const MockAuthService = {
       return mockUser;
     }
 
-    // Fallback sur la config si aucun email stocké ou utilisateur non trouvé
-    const mockUserConfig = currentConfig.auth?.mockUser || { 
-      name: 'Mock User', 
-      email: 'mock@test.com' 
-    };
+    // Fallback si aucun email stocké ou utilisateur non trouvé
 
     console.warn('⚠️ [MockAuth] Aucun utilisateur trouvé pour email:', storedEmail, '- Utilisation du fallback');
 
     return {
       id: 'mock-user-fallback',
-      name: mockUserConfig.name,
-      email: mockUserConfig.email,
+      name: MOCK_USER.name,
+      email: MOCK_USER.email,
       avatar: '',
-      bio: (mockUserConfig as any).bio || 'Utilisateur de test',
-      address: (mockUserConfig as any).location || '',
+      bio: 'Utilisateur de test',
+      address: '',
       birthYear: 1990,
       createdAt: new Date(),
       isRegistered: true
