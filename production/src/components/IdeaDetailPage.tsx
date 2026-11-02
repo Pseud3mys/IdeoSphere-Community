@@ -35,7 +35,7 @@ import { toast } from 'sonner@2.0.3';
 import { canEditIdea } from '../utils/contentEditUtils';
 import { EditIdeaDialog } from './EditIdeaDialog';
 import { ContentActionDialogs } from './ContentActionDialogs';
-import { AdminBanButton } from './AdminBanDialog';
+import { AdminModerateButton, isAdminUser } from './AdminModerateDialog';
 
 interface IdeaDetailPageProps {
   idea: Idea;
@@ -267,8 +267,8 @@ export function IdeaDetailPage({
             </EditIdeaDialog>
           )}
           
-          {/* Bouton Signaler mobile - discret */}
-          {onReport && (
+          {/* Bouton Signaler mobile - discret (un admin a « Modérer » à la place) */}
+          {onReport && !isAdminUser() && (
             <Button 
               variant="ghost" 
               className="w-full flex items-center justify-center space-x-2 h-11 mt-4 text-gray-400 hover:text-red-600 hover:bg-red-50"
@@ -280,8 +280,8 @@ export function IdeaDetailPage({
             </Button>
           )}
 
-          {/* Admin : bannir le projet (mobile) */}
-          <AdminBanButton contentId={latestIdea.id} kind="idea" className="w-full justify-center h-11 mt-2" />
+          {/* Admin : modérer le projet (mobile) */}
+          <AdminModerateButton contentId={latestIdea.id} kind="idea" className="w-full justify-center h-11 mt-4" />
         </div>
 
         {/* Version desktop */}
@@ -369,8 +369,8 @@ export function IdeaDetailPage({
                 </EditIdeaDialog>
               )}
               
-              {/* Bouton Signaler desktop - discret */}
-              {onReport && (
+              {/* Bouton Signaler desktop - discret (un admin a « Modérer » à la place) */}
+              {onReport && !isAdminUser() && (
                 <Button 
                   variant="ghost"
                   size="sm"
@@ -382,8 +382,8 @@ export function IdeaDetailPage({
                 </Button>
               )}
 
-              {/* Admin : bannir le projet (desktop) */}
-              <AdminBanButton contentId={latestIdea.id} kind="idea" />
+              {/* Admin : modérer le projet (desktop) */}
+              <AdminModerateButton contentId={latestIdea.id} kind="idea" />
             </div>
           </div>
         </div>

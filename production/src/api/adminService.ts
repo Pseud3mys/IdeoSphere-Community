@@ -69,13 +69,50 @@ export async function fetchBanReasons(): Promise<ModerationReason[]> {
 }
 
 /**
+ * Évaluation Mistral demandée par un admin : rien n'est retiré, l'admin décide ensuite
+ */
+export interface ContentEvaluation {
+  action: 'none' | 'flag' | 'remove';   // ce qu'aurait fait la modération automatique
+  scores: Required<ModerationReason>[]; // catégories prises en compte, de la plus haute à la plus basse
+  reasons: Required<ModerationReason>[];
+  thresholds: { remove: number; flag: number };
+}
+
+/**
+ * Demande à Mistral d'évaluer un contenu et attend sa réponse (en général quelques secondes)
+ * POST /api/admin/moderation/evaluate, puis GET /api/admin/moderation/evaluate/{id} chaque seconde
+ */
+export async function evaluateContent(
+  contentId: string,
+  commentId?: string,
+  timeoutMs: number = 30000
+): Promise<{ success: boolean; evaluationId?: string; data?: ContentEvaluation; error?: string }> {
+  try {
+    const start = await apiClient.post('/admin/moderation/evaluate', { contentId, commentId });
+    const evaluationId: string = start.data.evaluationId;
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await apiClient.get(`/admin/moderation/evaluate/${evaluationId}`);
+      if (response.data.status === 'done') return { success: true, evaluationId, data: response.data };
+      if (response.data.status === 'error') return { success: false, error: response.data.message };
+    }
+    return { success: false, error: "Mistral n'a pas répondu à temps." };
+  } catch (error: any) {
+    console.error(`❌ [Admin API] Erreur lors de l'évaluation de ${contentId}:`, error);
+    return { success: false, error: error.response?.data?.message };
+  }
+}
+
+/**
  * Bannit à la main un contenu vu sur le site (retiré et archivé, restaurable)
  * POST /api/admin/moderation/ban
+ * evaluationId : évaluation Mistral faite juste avant, dont les scores sont joints au dossier
  */
 export async function banContent(
   contentId: string,
   category: string,
-  options: { commentId?: string; note?: string } = {}
+  options: { commentId?: string; note?: string; evaluationId?: string } = {}
 ): Promise<{ success: boolean; data?: ModerationRecord; error?: string }> {
   try {
     const response = await apiClient.post('/admin/moderation/ban', {
@@ -83,6 +120,7 @@ export async function banContent(
       category,
       commentId: options.commentId,
       note: options.note || undefined,
+      evaluationId: options.evaluationId,
     });
     return { success: true, data: response.data.data };
   } catch (error: any) {

@@ -20,7 +20,7 @@ import { RecommendToGroupDialog } from '../group/RecommendToGroupDialog';
 import { canEditPost } from '../../utils/contentEditUtils';
 import { EditPostDialog } from '../EditPostDialog';
 import { formatTimeAgo } from './formatTimeAgo';
-import { AdminBanButton } from '../AdminBanDialog';
+import { AdminModerateButton, isAdminUser } from '../AdminModerateDialog';
 
 interface PostDetailContentProps {
   post: Post;
@@ -207,19 +207,21 @@ export function PostDetailContent({
                 </Button>
               </RecommendToGroupDialog>
               
-              {/* Bouton Signaler - discret */}
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-1 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                onClick={onReportClick}
-                title="Signaler un contenu inapproprié"
-              >
-                <Flag className="w-3.5 h-3.5" />
-              </Button>
+              {/* Bouton Signaler - discret (un admin a « Modérer » à la place) */}
+              {!isAdminUser() && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={onReportClick}
+                  title="Signaler un contenu inapproprié"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                </Button>
+              )}
 
-              {/* Admin : bannir le post */}
-              <AdminBanButton contentId={post.id} kind="post" />
+              {/* Admin : modérer le post */}
+              <AdminModerateButton contentId={post.id} kind="post" />
             </div>
           </div>
         </div>
