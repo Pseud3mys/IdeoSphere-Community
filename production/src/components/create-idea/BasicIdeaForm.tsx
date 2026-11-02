@@ -4,15 +4,15 @@ import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
 import { RichTextEditor } from '../RichTextEditor';
 import { ContentLinkSearch } from '../ContentLinkSearch';
-import { Lightbulb, FileText, MapPin, Users, X, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { Lightbulb, FileText, MapPin, X, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import { Post, Location, Idea, User } from '../../types';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
 import { clientConfig } from '../../config/clientConfig';
 import { LocationSearch } from '../LocationSearch';
+import { GroupPicker } from '../group/GroupPicker';
 
 interface BasicIdeaFormProps {
   title: string;
@@ -49,10 +49,8 @@ export function BasicIdeaForm({
   posts = [],
   sourcePost
 }: BasicIdeaFormProps) {
-  const { getUserById, getUserGroups, getCurrentUser } = useEntityStoreSimple();
+  const { getUserById } = useEntityStoreSimple();
   const sourcePostAuthor = sourcePost ? getUserById(sourcePost.authorId) : null;
-  const currentUser = getCurrentUser();
-  const userGroups = currentUser ? getUserGroups(currentUser.id) : [];
 
   const getWordCount = (text: string) => {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
@@ -150,60 +148,13 @@ export function BasicIdeaForm({
             </div>
           </div>
 
+          {/* Groupes où publier */}
+          {setGroupIds && <GroupPicker selectedIds={groupIds} onChange={setGroupIds} />}
+
           <Separator className="opacity-50" />
 
           {/* Options secondaires (Visibilité réduite) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {setGroupIds && (
-              <div className="space-y-2 opacity-80 focus-within:opacity-100 transition-opacity">
-                <Label htmlFor="idea-group" className="flex items-center space-x-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <Users className="w-3 h-3" />
-                  <span>Groupes liés (optionnel)</span>
-                </Label>
-                {groupIds.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {groupIds.map((gId) => {
-                      const group = userGroups.find(g => g.id === gId);
-                      return group ? (
-                        <Badge key={gId} variant="secondary" className="flex items-center gap-1 text-[10px]">
-                          {group.name}
-                          <button
-                            type="button"
-                            onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
-                            className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-                <Select 
-                  value="select" 
-                  onValueChange={(value) => {
-                    if (value !== 'select' && !groupIds.includes(value)) {
-                      setGroupIds([...groupIds, value]);
-                    }
-                  }}
-                >
-                  <SelectTrigger id="idea-group" className="h-8 text-xs">
-                    <SelectValue placeholder="Ajouter un groupe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
-                    {userGroups
-                      .filter(group => !groupIds.includes(group.id))
-                      .map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
             {setLocation && (
               <div className="space-y-2 opacity-80 focus-within:opacity-100 transition-opacity">
                 <Label htmlFor="location" className="flex items-center space-x-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">

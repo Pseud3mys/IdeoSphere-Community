@@ -8,11 +8,10 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
-import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin, Users, X, RefreshCw } from 'lucide-react';
+import { MessageSquare, Lightbulb, ArrowRight, Quote, MapPin, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { clientConfig } from '../config/clientConfig';
+import { GroupPicker } from './group/GroupPicker';
 import { LocationSearch } from './LocationSearch';
 
 interface CreateQuickPostProps {
@@ -23,11 +22,9 @@ interface CreateQuickPostProps {
 
 export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea }: CreateQuickPostProps) {
   // Récupération du currentUser depuis l'Entity Store
-  const { store, getCurrentUser, getUserById, getUserGroups, getGroupById, getPostById, actions, rawActions } = useEntityStoreSimple();
+  const { store, getCurrentUser, getUserById, getPostById, actions, rawActions } = useEntityStoreSimple();
   const navigation = useNavigationActions();
   const currentUser = getCurrentUser();
-  // ✅ Récupérer uniquement les groupes dont l'utilisateur est membre
-  const userGroups = currentUser ? getUserGroups(currentUser.id) : [];
 
   // ✅ Utiliser unknownUser comme fallback pour les invités
   const effectiveUser = currentUser || { id: 'unknown', name: 'Invité', email: '' } as any;
@@ -158,6 +155,11 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
       </div>
     </div>
 
+    {/* Groupes où publier : visible juste sous le texte */}
+    <div className="px-2">
+      <GroupPicker selectedIds={groupIds} onChange={setGroupIds} />
+    </div>
+
     {/* Options visibles en mode "bandeau" compact sous le champ principal */}
     <div className="flex flex-wrap gap-2 px-2">
       {/* Sujet (optionnel) */}
@@ -179,27 +181,6 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
         </div>
       </div>
 
-      {/* Groupes liés (optionnel) - en dernier */}
-      {groupIds.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap items-center">
-          {groupIds.map((gId) => {
-            // Groupe pré-rempli (ex: depuis la page du groupe) : affiché même si l'auteur n'en est pas membre
-            const group = userGroups.find(g => g.id === gId) || getGroupById(gId);
-            return group ? (
-              <Badge key={gId} variant="secondary" className="flex items-center gap-1 text-xs px-2 py-1">
-                {group.name}
-                <button
-                  type="button"
-                  onClick={() => setGroupIds(groupIds.filter(id => id !== gId))}
-                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ) : null;
-          })}
-        </div>
-      )}
     </div>
 
     {/* Bouton d'expansion vers idée */}
@@ -215,31 +196,6 @@ export function CreateQuickPost({ sourcePost, prefilledGroupIds, onSwitchToIdea 
         <ArrowRight className="w-4 h-4" />
       </Button>
       
-      {userGroups.length > 0 && (
-        <Select
-          value="select"
-          onValueChange={(value: string) => {
-            if (value !== 'select' && !groupIds.includes(value)) {
-              setGroupIds([...groupIds, value]);
-            }
-          }}
-        >
-          <SelectTrigger className="h-8 w-auto text-xs border-gray-200">
-            <Users className="w-3 h-3 mr-1" />
-            <SelectValue placeholder="Ajouter un groupe" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="select" disabled>Sélectionner un groupe</SelectItem>
-            {userGroups
-              .filter(group => !groupIds.includes(group.id))
-              .map((group) => (
-                <SelectItem key={group.id} value={group.id}>
-                  {group.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
-      )}
     </div>
   </CardContent>
 </Card>
