@@ -6,20 +6,20 @@ import { Textarea } from '../ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ArrowLeft, UserPlus, MapPin, Calendar, AlertCircle, CheckCircle2, User as UserIcon } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
 import { useEntityStoreSimple } from '../../hooks/useEntityStoreSimple';
+import { useAuth } from '../../context/authContext';
+import { LocationSearch } from '../LocationSearch';
+import { Location } from '../../types';
 
 interface SignupPageProps {
   onBack: () => void;
-  onSignup: (userData: {
-    name: string;
-    email: string;
-    password: string;
-    address?: string;
+  onSignup: (profileData: {
     bio?: string;
     birthYear: number;
+    location?: Location;
   }) => Promise<boolean>;
   onSocialLogin?: (provider: string) => Promise<boolean>;
+  onLoginSSO?: () => void;
   onRegisterSSO?: () => void;
   prefilledData?: {
     name?: string;
@@ -29,18 +29,19 @@ interface SignupPageProps {
 
 /**
  * Page de finalisation de profil
- * L'utilisateur arrive ici après s'être authentifié via SSO
- * Il doit compléter son profil avec les informations supplémentaires
+ * - Membre connecté via SSO : complète son profil (année de naissance, lieu, bio)
+ * - Invité ou visiteur : la création de compte passe par Keycloak (boutons SSO)
  */
-export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps) {
+export function SignupPage({ onBack, onSignup, onLoginSSO, onRegisterSSO }: SignupPageProps) {
   const { getCurrentUser } = useEntityStoreSimple();
+  const { isLoading: authLoading } = useAuth();
   const currentUser = getCurrentUser();
   
   const [formData, setFormData] = useState({
-    address: currentUser?.address || '',
     birthYear: currentUser?.birthYear?.toString() || '',
     bio: currentUser?.bio || ''
   });
+  const [location, setLocation] = useState<Location | null>(currentUser?.location || null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -73,28 +74,14 @@ export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps)
     setIsLoading(true);
     
     try {
-      // Si l'utilisateur est déjà connecté via SSO, on met à jour son profil
-      // Sinon, on crée un nouveau compte (fallback)
-      const userData = {
-        name: currentUser?.name || prefilledData?.name || 'Utilisateur',
-        email: currentUser?.email || prefilledData?.email || '',
-        password: '', // Pas de mot de passe car SSO
-        address: formData.address.trim() || undefined,
+      // Mise à jour du profil du membre connecté (le toast est affiché par onSignup)
+      const success = await onSignup({
         bio: formData.bio.trim() || undefined,
-        birthYear: parseInt(formData.birthYear)
-      };
+        birthYear: parseInt(formData.birthYear),
+        location: location || undefined
+      });
       
-      const success = await onSignup(userData);
-      
-      if (success) {
-        toast.success('Profil complété avec succès ! Bienvenue sur IdeoSphere ! 🎉');
-        // Reset form
-        setFormData({
-          address: '',
-          birthYear: '',
-          bio: ''
-        });
-      } else {
+      if (!success) {
         setError('Une erreur est survenue lors de la mise à jour du profil');
       }
     } catch (error) {
@@ -106,6 +93,52 @@ export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps)
   };
 
   const currentYear = new Date().getFullYear();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Chargement...</p>
+      </div>
+    );
+  }
+
+  // Pas de compte membre : on ne peut pas créer de compte ici, seulement via Keycloak
+  if (!currentUser?.isRegistered) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-ideosphere-blue-light to-white p-4">
+        <div className="max-w-md mx-auto py-8">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="mb-6 flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retour</span>
+          </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                Créer un compte
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Un compte permet de publier des projets et de rejoindre des groupes.
+                Vous pourrez compléter votre profil juste après.
+              </p>
+              <Button className="w-full" onClick={onRegisterSSO} disabled={!onRegisterSSO}>
+                Créer mon compte
+              </Button>
+              <Button variant="outline" className="w-full" onClick={onLoginSSO} disabled={!onLoginSSO}>
+                J'ai déjà un compte
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ideosphere-blue-light to-white p-4">
@@ -196,19 +229,16 @@ export function SignupPage({ onBack, onSignup, prefilledData }: SignupPageProps)
                 </p>
               </div>
 
-              {/* Adresse */}
+              {/* Adresse (géocodée, comme les autres champs de localisation) */}
               <div className="space-y-2">
                 <div className="flex items-center space-x-2 mb-2">
                   <MapPin className="w-4 h-4 text-primary" />
                   <Label htmlFor="address">Adresse (optionnel)</Label>
                 </div>
-                <Input
-                  id="address"
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+                <LocationSearch
+                  initialLocation={location || undefined}
+                  onLocationSelect={(loc) => setLocation(loc)}
                   placeholder="123 rue de la République, Le Blanc"
-                  disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
                   Nous permet de vous proposer des projets près de chez vous

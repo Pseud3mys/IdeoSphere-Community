@@ -1,4 +1,4 @@
-import { User } from '../types';
+import { User, Location } from '../types';
 import { toast } from 'sonner@2.0.3';
 
 /**
@@ -17,13 +17,10 @@ export function useAuthHandlers(
   switchToUserByEmail: (email: string) => User | null,
   checkEmailExists: (email: string, password?: string) => Promise<User | null>,
   loginWithSocialProvider: (provider: string, socialData: { email: string; name: string; avatar?: string }) => Promise<User | null>,
-  signupUser: (userData: {
-    name: string;
-    email: string;
-    password: string;
-    address?: string;
+  signupUser: (profileData: {
     bio?: string;
     birthYear?: number;
+    location?: Location;
   }) => Promise<User | null>,
   subscribeToNewsletter: (email: string, frequency?: string, location?: string) => Promise<boolean>,
   loginWithSSO?: () => void,
@@ -105,26 +102,24 @@ export function useAuthHandlers(
   };
 
   /**
-   * Gère la création d'un nouveau compte utilisateur
+   * Gère la finalisation du profil (page /signup), après inscription via Keycloak
    * ✅ Utilise l'action signupUser du store
    */
-  const handleSignup = async (userData: {
-    name: string;
-    email: string;
-    password: string;
-    location?: string;
+  const handleSignup = async (profileData: {
+    bio?: string;
     birthYear?: number;
+    location?: Location;
   }): Promise<boolean> => {
     try {
       // ✅ Appel à l'action du store
-      const newUser = await signupUser(userData);
+      const updatedUser = await signupUser(profileData);
       
-      if (newUser) {
-        toast.success(`Bienvenue ${newUser.name} ! Votre compte a été créé avec succès 🎉`);
+      if (updatedUser) {
+        toast.success(`Profil complété, bienvenue ${updatedUser.name} ! 🎉`);
         handleEnterPlatform();
         return true;
       } else {
-        toast.error('Cet email est déjà utilisé. Essayez de vous connecter.');
+        toast.error('Erreur lors de la mise à jour du profil. Veuillez réessayer.');
         return false;
       }
       
@@ -132,8 +127,8 @@ export function useAuthHandlers(
       console.error('❌ [hook/useAuthHandlers] handleSignup:', error);
       
       // Gérer les différents types d'erreur
-      if (error?.message === 'EMAIL_EXISTS') {
-        toast.error('Cet email est déjà utilisé. Essayez de vous connecter ou utilisez un autre email.');
+      if (error?.message === 'NOT_AUTHENTICATED') {
+        toast.error("Créez d'abord votre compte, puis complétez votre profil.");
         return false;
       }
       
@@ -143,7 +138,7 @@ export function useAuthHandlers(
       }
       
       // Erreur générique
-      toast.error('Erreur lors de la création du compte. Veuillez réessayer.');
+      toast.error('Erreur lors de la mise à jour du profil. Veuillez réessayer.');
       return false;
     }
   };

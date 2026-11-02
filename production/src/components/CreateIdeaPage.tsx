@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Post } from '../types';
+import { Post, Location } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -36,7 +36,7 @@ interface Draft {
   createdAt: Date | string;
   sourcePostIds?: string[];
   selectedParentIds?: string[]; // Liens vers contenus (idées/posts)
-  location?: string; // Localisation du projet
+  location?: Location | string; // Localisation du projet
   groupIds?: string[]; // Groupes associés
 }
 
@@ -98,8 +98,13 @@ export function CreateIdeaPage({ sourcePost, prefilledParentIds, prefilledGroupI
   const [loadedDraft, setLoadedDraft] = useState<Draft | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>(() => {
     // Charger les brouillons du localStorage
-    const saved = localStorage.getItem('ideosphere-drafts');
-    return saved ? JSON.parse(saved) : [];
+    // Un contenu corrompu ne doit pas faire planter la page
+    try {
+      const saved = localStorage.getItem('ideosphere-drafts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const switchToIdeaMode = () => {
@@ -111,13 +116,13 @@ export function CreateIdeaPage({ sourcePost, prefilledParentIds, prefilledGroupI
     summary: string, 
     description?: string, 
     selectedParentIds?: string[],
-    location?: string,
+    location?: Location | string,
     groupIds?: string[]
   ) => {
     const newDraft: Draft = {
       id: Date.now().toString(),
       title: title || 'Brouillon sans titre',
-      summary: summary || description?.slice(0, 100) + '...' || '',
+      summary: summary || (description ? description.slice(0, 100) + '...' : ''),
       description: description,
       type: creationMode,
       createdAt: new Date(),

@@ -55,10 +55,9 @@ function AppRouter() {
  * Composant racine de l'application
  * 
  * Architecture :
- * ErrorBoundary > SimpleEntityStoreProvider > AuthProvider > MemoryRouter > AuthSyncBridge + Routes
- * 
- * NOTE : Utilise MemoryRouter pour la compatibilité avec Figma Make.
- * Pour un déploiement réel, remplacer MemoryRouter par BrowserRouter.
+ * ErrorBoundary > SimpleEntityStoreProvider > AuthProvider > BrowserRouter > AuthSyncBridge + Routes
+ *
+ * AuthProvider n'est monté qu'ici (pas dans main.tsx).
  */
 export default function App() {
   console.log('🚀 [App] Initialisation avec React Router + Auth Hybride (Mock/Keycloak)');
@@ -76,7 +75,7 @@ export default function App() {
     >
       <SimpleEntityStoreProvider>
         <AuthProvider>
-          <BrowserRouter initialEntries={['/']}>
+          <BrowserRouter>
             <AppRouter />
           </BrowserRouter>
         </AuthProvider>

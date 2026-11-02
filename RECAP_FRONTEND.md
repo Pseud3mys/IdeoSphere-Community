@@ -28,7 +28,7 @@ src/
 
 Flux de données type : page → wrapper → `useEntityStoreSimple()` → action (`apiActions`, `contentActions`…) → service `api/*` → backend → `transformService` → store normalisé (`users`, `ideas`, `posts`, `groups`, `groupMemberships`…) → sélecteurs → page.
 
-**Le store est en mémoire.** Seuls sont persistés en `localStorage` : l'email invité (`ideosphere_guest_email`), l'id d'invité du widget (`quickpost_guest_user_id`), les brouillons d'idée (`ideosphere-drafts`) et les items « vus » de Discovery (`seenItems`). Le `currentUserId` n'est **pas** persisté : il est reconstruit à chaque chargement (Keycloak, ou invité retrouvé par son email). Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
+**Le store est en mémoire.** Seuls sont persistés en `localStorage` : l'email invité (`ideosphere_guest_email`), l'id d'invité du widget (`quickpost_guest_user_id`), les brouillons d'idée (`ideosphere-drafts`) et les items « vus » de Discovery (`seenItems`). Le `currentUserId` est écrit en `localStorage` (`ideosphere_currentUserId`) mais remis à `null` par `initializeStore` au démarrage : en pratique, il est reconstruit à chaque chargement (Keycloak, ou invité retrouvé par son email). Voir [REVUE_FRONTEND.md](REVUE_FRONTEND.md). Les mises à jour (soutien, upvote) sont **optimistes** : le store change avant la réponse de l'API, sans retour arrière en cas d'échec.
 
 ## 3. Multi-client (white-label)
 
@@ -109,8 +109,7 @@ Aussi : onboarding guidé (`OnboardingTour`), QR code de collaboration, partage 
 - Aucune gestion du feed vide ou trop court (pas de repli côté front). Voir la complétion incohérente côté backend, §6 du récap backend.
 
 **Code mort ou incohérences :**
-- `AuthProvider` est monté deux fois (`main.tsx` et `App.tsx`). C'est sans conséquence grâce au verrou d'init, mais redondant.
-- `BrowserRouter initialEntries` est un reste de `MemoryRouter`, sans effet.
+- `AuthProvider` était monté deux fois (`main.tsx` et `App.tsx`), ce qui lançait deux synchros de compte en parallèle. Corrigé le 2026-11-02 : il n'est plus monté que dans `App.tsx` (voir [REVUE_FRONTEND.md](REVUE_FRONTEND.md)).
 - `ProtectedRoute`, `LoginDialog`, `MockLoginDialog`, `MockAuthService`, `auth.mode` et `mockUser` de la config ne sont pas utilisés. Dans `data/`, seuls `unknownUser` et `defaultRatingCriteria` servent encore.
 - Les docs périmées de `src/` (architecture, hooks, store, router, routing, config…) ont été supprimées le 2026-10-28 ; ce récap les remplace. Les `.md` restants dans `src/` portent un avertissement en haut quand une partie a été retirée.
 - `package.json` à la racine de `IdeoSphere Community/` (react-router 7) n'est pas utilisé par l'app. `scripts/generate-kumu-graph.py` génère un graphe Kumu **du code** (dossiers, fichiers, imports), sans lien avec la plateforme.

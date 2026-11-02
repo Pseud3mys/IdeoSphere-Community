@@ -178,11 +178,17 @@ export function UserProfilePage({
   const handleDeleteAccount = async () => {
     try {
       // Utiliser l'action du store pour supprimer le compte
+      const wasRegistered = user.isRegistered;
       const success = await actions.deleteCurrentUser();
-      
+
       if (success) {
         toast.success('Compte supprimé avec succès');
-        onBack();
+        if (wasRegistered) {
+          // Le compte Keycloak est supprimé côté serveur : fermer aussi la session SSO
+          logout();
+        } else {
+          navigate('/');
+        }
       } else {
         toast.error('Erreur lors de la suppression du compte');
       }

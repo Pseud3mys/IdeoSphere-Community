@@ -8,6 +8,17 @@ import { BasicIdeaForm } from './create-idea/BasicIdeaForm';
 import { PublishConfirmationDialog } from './create-idea/PublishConfirmationDialog';
 import { Quote, Send } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { registerWithSSO } from '../api/authService';
+
+// Les anciens brouillons stockaient la localisation en texte JSON : la reconvertir en objet
+function restoreLocation(location: Location | string): Location | string {
+  if (typeof location !== 'string' || !location.startsWith('{')) return location;
+  try {
+    return JSON.parse(location) as Location;
+  } catch {
+    return location;
+  }
+}
 
 interface CreateCompleteIdeaProps {
   sourcePost?: Post;
@@ -19,7 +30,7 @@ interface CreateCompleteIdeaProps {
     summary: string, 
     description?: string, 
     selectedParentIds?: string[],
-    location?: string,
+    location?: Location | string,
     groupIds?: string[]
   ) => void;
   loadedDraft?: {
@@ -31,7 +42,7 @@ interface CreateCompleteIdeaProps {
     createdAt: Date | string;
     sourcePostIds?: string[];
     selectedParentIds?: string[]; // Liens vers contenus
-    location?: string; // Localisation
+    location?: Location | string; // Localisation (objet ; texte JSON pour les anciens brouillons)
     groupIds?: string[]; // Groupes associés
   } | null;
   onDraftLoaded?: () => void;
@@ -205,7 +216,7 @@ ${postIntro}
   const [location, setLocation] = useState<Location | string>(() => {
     // Charger depuis le brouillon en priorité
     if (loadedDraft?.location) {
-      return loadedDraft.location;
+      return restoreLocation(loadedDraft.location);
     }
     // Vérifier si un des contenus pré-remplis a une location
     const sourceIdeaId = prefilledParentIds?.find(id => ideas.find(i => i.id === id));
@@ -256,7 +267,7 @@ ${postIntro}
       rawActions.setDraftIdeaSummary(summary);
       rawActions.setDraftIdeaDescription(description);
       rawActions.setPrefilledSelectedParentIds(selectedParentIds);
-      rawActions.setPrefilledLocation(typeof location === 'string' ? location : JSON.stringify(location));
+      rawActions.setPrefilledLocation(location);
       rawActions.setPrefilledGroupIds(groupIds);
     }
   }, [title, summary, description, selectedParentIds, location, groupIds, loadedDraft, rawActions]);
@@ -280,7 +291,7 @@ ${postIntro}
         setSelectedParentIds(loadedDraft.selectedParentIds);
       }
       if (loadedDraft.location) {
-        setLocation(loadedDraft.location);
+        setLocation(restoreLocation(loadedDraft.location));
       }
       if (loadedDraft.groupIds && loadedDraft.groupIds.length > 0) {
         setGroupIds(loadedDraft.groupIds);
@@ -315,7 +326,7 @@ ${postIntro}
             summary, 
             description, 
             selectedParentIds, 
-            typeof location === 'string' ? location : JSON.stringify(location), 
+            location, 
             groupIds
           );
           lastAutoSaveRef.current = currentSignature;
@@ -339,7 +350,8 @@ ${postIntro}
     // Vérifier si l'utilisateur peut créer des idées
     if (!actions.canCreateIdea()) {
       toast.error('Vous devez créer un compte pour publier un projet');
-      navigation.goToSignup();
+      // Création directe chez Keycloak (/signup sert seulement à compléter le profil d'un membre connecté)
+      registerWithSSO();
       return;
     }
     
@@ -406,11 +418,14 @@ ${postIntro}
       discussionIds: [] // Ne pas copier les discussions
     });
     
-    // Navigate to the created idea
-    if (newIdea) {
-      navigation.goToIdea(newIdea.id);
+    // Échec (déjà signalé par un toast dans publishIdea) : garder la saisie pour pouvoir réessayer
+    if (!newIdea) {
+      return;
     }
-    
+
+    // Navigate to the created idea
+    navigation.goToIdea(newIdea.id);
+
     // Reset form
     setTitle('');
     setSummary('');
@@ -496,7 +511,7 @@ ${postIntro}
             <Button 
               type="button" 
               variant="outline"
-              onClick={() => onSaveDraft(title, summary, description, selectedParentIds, typeof location === 'string' ? location : JSON.stringify(location), groupIds)}
+              onClick={() => onSaveDraft(title, summary, description, selectedParentIds, location, groupIds)}
               className="flex items-center space-x-2"
             >
               <Quote className="w-4 h-4" />

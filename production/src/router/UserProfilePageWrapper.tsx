@@ -10,7 +10,7 @@ import { useAuth } from '../context/authContext';
  */
 export function UserProfilePageWrapper() {
   const navigate = useNavigate();
-  const { actions, store } = useEntityStoreSimple();
+  const { store } = useEntityStoreSimple();
   const { isLoading: authLoading } = useAuth();
   
   // Récupérer l'utilisateur courant directement depuis le store pour que le composant se re-rende quand il change
@@ -36,16 +36,12 @@ export function UserProfilePageWrapper() {
     navigate(-1);
   };
 
-  // Handler pour mettre à jour le profil
-  const handleUpdateProfile = (updates: Partial<typeof currentUser>) => {
-    actions.updateCurrentUser(updates);
-  };
-
+  // Pas de onUpdateProfile : UserProfilePage enregistre déjà via actions.updateCurrentUser
+  // (le repasser ici envoyait chaque modification deux fois à l'API)
   return (
     <UserProfilePage
       user={currentUser}
       isOwnProfile={true}
-      onUpdateProfile={handleUpdateProfile}
       onBack={handleBack}
     />
   );

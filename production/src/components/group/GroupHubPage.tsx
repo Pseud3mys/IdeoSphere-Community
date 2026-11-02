@@ -11,6 +11,7 @@ import { ArrowLeft, Check, Heart, Info, Plus, Settings, Share, Users } from "luc
 import { toast } from "sonner@2.0.3";
 import { ensureGroupPrefix } from "../../utils/idUtils";
 import { fetchGroupShowcase } from "../../api/groupService";
+import { registerWithSSO } from "../../api/authService";
 import { Idea, Post, User } from "../../types";
 import "./GroupHubPage.css";
 
@@ -150,7 +151,8 @@ export function GroupHubPage() {
     if (!groupId) return;
     if (!currentUser?.isRegistered) {
       toast.info("Créez un compte pour rejoindre ce groupe. Pas besoin de compte pour publier ou soutenir.", {
-        action: { label: "Créer un compte", onClick: () => navigate('/signup') }
+        // Création directe chez Keycloak (/signup sert seulement à compléter le profil d'un membre connecté)
+        action: { label: "Créer un compte", onClick: () => registerWithSSO() }
       });
       return;
     }

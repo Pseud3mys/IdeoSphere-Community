@@ -101,7 +101,7 @@ interface SimpleEntityActions {
   setPrefilledSourceIdea: (id: string | null) => void;
   setPrefilledLinkedContent: (content: PrefilledContent[]) => void;
   setPrefilledSelectedDiscussions: (discussions: string[]) => void;
-  setPrefilledLocation: (location: string | null) => void;
+  setPrefilledLocation: (location: Location | string | null) => void;
   setPrefilledSourcePostId: (id: string | null) => void;
   setPrefilledGroupIds: (groupIds: string[]) => void;
   setPrefilledSelectedParentIds: (selectedParentIds: string[]) => void;

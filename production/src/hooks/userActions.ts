@@ -1,5 +1,5 @@
 import { SimpleEntityStore, StoreUpdater } from '../store/SimpleEntityStore';
-import { User } from '../types';
+import { User, Location } from '../types';
 
 /**
  * Actions utilisateur pour l'Entity Store
@@ -169,51 +169,38 @@ export function createUserActions(
       }
     },
     
-    // Action pour la création de compte (utilisée par le formulaire d'inscription)
-    signupUser: async (userData: {
-      name: string;
-      email: string;
-      password: string;
-      address?: string;
+    // Finalisation du profil (page /signup) après inscription via Keycloak.
+    // La création du compte elle-même se fait par registerWithSSO : il n'existe pas
+    // de création par email/mot de passe.
+    signupUser: async (profileData: {
       bio?: string;
       birthYear?: number;
+      location?: Location;
     }) => {
+      const currentUser = boundSelectors.getCurrentUser();
+      if (!currentUser?.isRegistered) {
+        throw new Error('NOT_AUTHENTICATED');
+      }
+
       try {
-        const { createUserAccount: createUserAccountApi } = await import('../api/authService');
-        
-        // Adapter les données au format attendu par l'API
-        const apiData = {
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          address: userData.address,
-          bio: userData.bio,
-          birthYear: userData.birthYear || new Date().getFullYear() - 25
+        const { updateUserProfileOnApi } = await import('../api/contentService');
+        const updates: Partial<User> = {
+          bio: profileData.bio,
+          birthYear: profileData.birthYear,
+          ...(profileData.location ? { location: profileData.location } : {})
         };
-        
-        const newUser = await createUserAccountApi(apiData);
-        
-        if (newUser) {
-          actions.addUser(newUser);
-          actions.setCurrentUserId(newUser.id);
-          actions.setPrefilledSignupData(null);
-          return newUser;
-        }
-        
-        // Si l'API retourne null, c'est probablement que l'email existe déjà
-        throw new Error('EMAIL_EXISTS');
+        const updatedUser = await updateUserProfileOnApi(currentUser.id, updates);
+
+        actions.updateUser(currentUser.id, updatedUser);
+        actions.setPrefilledSignupData(null);
+        return updatedUser;
       } catch (error: any) {
         console.error('❌ [hook/userActions] signupUser:', error);
-        
-        // Propager l'erreur avec un message compréhensible
-        if (error?.response?.status === 409 || error?.message === 'EMAIL_EXISTS') {
-          throw new Error('EMAIL_EXISTS');
-        }
-        
+
         if (error?.response?.status === 400) {
           throw new Error('INVALID_DATA');
         }
-        
+
         // Erreur générique
         throw new Error('SIGNUP_FAILED');
       }
@@ -262,21 +249,20 @@ export function createUserActions(
       
       try {
         // Si l'utilisateur est enregistré, supprimer via l'API
+        // (deleteUserAccountOnApi ne renvoie rien et lève une erreur en cas d'échec)
         if (currentUser.isRegistered) {
           const { deleteUserAccountOnApi } = await import('../api/contentService');
-          const apiSuccess = await deleteUserAccountOnApi(currentUser.id);
-          
-          if (!apiSuccess) {
-            console.error('❌ [hook/userActions] deleteCurrentUser: Échec de la suppression via l\'API');
-            return false;
-          }
+          await deleteUserAccountOnApi(currentUser.id);
+        } else {
+          // Invité : oublier le compte pour ne pas le retrouver au prochain chargement
+          localStorage.removeItem('ideosphere_guest_email');
         }
-        
-        // Supprimer du store local
-        actions.rawActions.removeUser(currentUser.id);
-        
+
+        // Supprimer du store local (`actions` = actions brutes du store)
+        actions.removeUser(currentUser.id);
+
         // Déconnecter l'utilisateur
-        actions.rawActions.setCurrentUserId(null);
+        actions.setCurrentUserId(null);
         
         console.log('✅ [hook/userActions] Compte utilisateur supprimé avec succès:', currentUser.name);
         return true;
