@@ -3,7 +3,7 @@
 // - Évaluer avec Mistral : les scores s'affichent, rien n'est retiré, l'admin décide ensuite.
 //   L'évaluation est gardée en base : rouvrir la fenêtre la réaffiche sans rappeler Mistral ;
 // - Bannir : le contenu (idée, post ou commentaire) est retiré du site et archivé ; il reste
-//   restaurable dans Administration > Modération auto.
+//   restaurable dans Administration > Modération (historique).
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Ban, Loader2, RefreshCw, ScanSearch, Shield, LucideIcon } from 'lucide-react';
@@ -123,7 +123,7 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
       toast.error(result.error || 'Impossible de bannir ce contenu');
       return;
     }
-    toast.success('Contenu banni : retiré du site et archivé (restaurable dans Administration > Modération auto)');
+    toast.success('Contenu banni : retiré du site et archivé (restaurable dans Administration > Modération > Historique)');
     onOpenChange(false);
     if (onBanned) onBanned();
     else setTimeout(() => window.location.reload(), 1200);
@@ -140,7 +140,7 @@ export function AdminModerateDialog({ open, onOpenChange, contentId, commentId, 
           </DialogTitle>
           <DialogDescription>
             {step === 'ban'
-              ? 'Le contenu est retiré du site et archivé. Vous pourrez le restaurer depuis Administration > Modération auto.'
+              ? 'Le contenu est retiré du site et archivé. Vous pourrez le restaurer depuis Administration > Modération > Historique.'
               : 'Faites évaluer le contenu par Mistral avant de décider, ou bannissez-le directement.'}
           </DialogDescription>
         </DialogHeader>

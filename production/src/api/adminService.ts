@@ -6,22 +6,16 @@ import { Group, Location } from '../types';
 import { RawGroup, transformGroup } from './transformService';
 
 /**
- * Type pour le contenu signalé
+ * Modération : un dossier par contenu signalé (par Mistral ou par des utilisateurs) ou retiré
  */
-export interface ReportedContent {
-  contentType: 'ideas' | 'posts';
-  contentId: string;
-  content: any;
-  reportCount: number;
-  firstReportedAt: string;
-}
-
-/**
- * Modération automatique (Mistral) : un dossier par contenu signalé ou retiré
- */
-export type ModerationView = 'pending' | 'removed' | 'history';
+// pending : ce qui attend un humain (signalés, retraits automatiques à vérifier) ; history : ce qui est réglé
+export type ModerationView = 'pending' | 'history';
+// Qui a soulevé le cas : Mistral, ou un humain (signalements d'utilisateurs, admin)
+export type ModerationOrigin = 'mistral' | 'human';
 export type ModerationAction = 'remove' | 'dismiss' | 'confirm' | 'restore';
 export type ModerationStatus = 'flagged' | 'removed' | 'confirmed' | 'restored' | 'dismissed';
+export type ModerationCounts = Record<ModerationView, { all: number; mistral: number; human: number }>;
+export interface ModerationThresholds { remove: number; flag: number }
 
 export interface ModerationReason {
   category: string;
@@ -39,7 +33,9 @@ export interface ModerationRecord {
   text: string;
   online: boolean;            // le contenu est-il visible sur le site ?
   authors: { id: string; name: string }[];
-  decidedBy: string | null;   // "mistral" ou "admin:..."
+  decidedBy: string | null;   // "mistral", "admin:..." ou "users" (signalé par des utilisateurs)
+  raisedBy: ('mistral' | 'users' | 'admin')[];
+  reportCount: number;        // nombre d'utilisateurs qui ont signalé le contenu
   createdAt: string;
   reasons: ModerationReason[];
   categoryScores: Record<string, number>;
@@ -145,20 +141,23 @@ export async function banContent(
 }
 
 /**
- * Liste les dossiers de modération d'une vue
- * GET /api/admin/moderation?view=pending|removed|history
+ * Liste les dossiers d'une vue (« À traiter » ou « Historique »), éventuellement limités à ce qu'a
+ * soulevé Mistral ou un humain (signalements d'utilisateurs, admin)
+ * GET /api/admin/moderation?view=pending|history&origin=mistral|human
  */
 export async function fetchModerationRecords(
   view: ModerationView,
+  origin: ModerationOrigin | null = null,
   limit: number = 50,
   offset: number = 0
-): Promise<{ data: ModerationRecord[]; counts: Record<ModerationView, number>; unauthorized?: boolean } | null> {
+): Promise<{ data: ModerationRecord[]; counts: ModerationCounts; thresholds?: ModerationThresholds; unauthorized?: boolean } | null> {
   try {
-    const response = await apiClient.get('/admin/moderation', { params: { view, limit, offset } });
+    const response = await apiClient.get('/admin/moderation', { params: { view, origin: origin || undefined, limit, offset } });
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 403) {
-      return { data: [], counts: { pending: 0, removed: 0, history: 0 }, unauthorized: true };
+      const empty = { all: 0, mistral: 0, human: 0 };
+      return { data: [], counts: { pending: empty, history: empty }, unauthorized: true };
     }
     console.error(`❌ [Admin API] Erreur lors de la récupération des dossiers de modération:`, error);
     return null;
@@ -248,54 +247,6 @@ export async function reportContent(contentType: 'ideas' | 'posts', contentId: s
   } catch (error) {
     console.error(`❌ [Admin API] Erreur lors du signalement:`, error);
     return false;
-  }
-}
-
-/**
- * Supprime ou ignore un signalement
- * DELETE /api/admin/report/{contentType}/{contentId}?action=delete|ignore
- */
-export async function handleReport(
-  contentType: 'ideas' | 'posts',
-  contentId: string,
-  action: 'delete' | 'ignore'
-): Promise<{ success: boolean; data?: any }> {
-  console.log(`🔄 [Admin API] ${action} signalement de ${contentType}/${contentId}`);
-  try {
-    const response = await apiClient.delete(`/admin/report/${contentType}/${contentId}`, {
-      params: { action }
-    });
-    console.log(`✅ [Admin API] Signalement traité avec succès:`, response.data);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error(`❌ [Admin API] Erreur lors du traitement du signalement:`, error);
-    return { success: false };
-  }
-}
-
-/**
- * Liste les contenus signalés
- * GET /api/admin/reported-content?limit=20&offset=0
- */
-export async function fetchReportedContent(
-  limit: number = 20,
-  offset: number = 0
-): Promise<{ data: ReportedContent[]; total: number; limit: number; offset: number; unauthorized?: boolean } | null> {
-  console.log(`🔄 [Admin API] Récupération des contenus signalés (limit: ${limit}, offset: ${offset})`);
-  try {
-    const response = await apiClient.get('/admin/reported-content', {
-      params: { limit, offset }
-    });
-    console.log(`✅ [Admin API] ${response.data.total} contenus signalés récupérés`);
-    return response.data;
-  } catch (error: any) {
-    // Vérifier si c'est une erreur 403 (non autorisé)
-    if (error.response?.status === 403) {
-      console.warn(`⚠️ [Admin API] Accès refusé (403) - Utilisateur non autorisé`);
-      return { data: [], total: 0, limit, offset, unauthorized: true };
-    }
-    console.error(`❌ [Admin API] Erreur lors de la récupération des contenus signalés:`, error);
-    return null;
   }
 }
 
