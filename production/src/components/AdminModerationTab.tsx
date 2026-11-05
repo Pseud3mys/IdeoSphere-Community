@@ -1,6 +1,9 @@
 // src/components/AdminModerationTab.tsx
-// Onglet « Modération auto » de la page Admin : dossiers créés par Mistral (ou par un admin),
-// avec les décisions bannir / garder / restaurer / confirmer.
+// Onglet « Modération » de la page Admin. Deux vues :
+// - À traiter : contenus signalés (par Mistral ou par des utilisateurs) et retraits automatiques
+//   de Mistral pas encore vérifiés -> Bannir ou Ignorer ;
+// - Historique : tout ce qui est réglé -> Restaurer ce qui a été retiré.
+// Dans chaque vue, un filtre garde ce qu'a soulevé Mistral ou un humain (utilisateurs, admin).
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,25 +16,37 @@ import {
   applyModerationAction,
   fetchModerationRecords,
   ModerationAction,
+  ModerationCounts,
+  ModerationOrigin,
   ModerationRecord,
-  ModerationStatus,
+  ModerationThresholds,
   ModerationView,
 } from '../api/adminService';
 
 const VIEWS: { value: ModerationView; label: string; empty: string }[] = [
-  { value: 'pending', label: 'À traiter', empty: 'Aucun contenu signalé en attente de décision.' },
-  { value: 'removed', label: 'Retirés', empty: 'Aucun contenu retiré en attente de confirmation.' },
-  { value: 'history', label: 'Historique', empty: 'Aucune décision prise pour le moment.' },
+  { value: 'pending', label: 'À traiter', empty: 'Rien à traiter pour le moment.' },
+  { value: 'history', label: 'Historique', empty: 'Aucune décision pour le moment.' },
 ];
+
+const ORIGINS: { value: ModerationOrigin | null; label: string }[] = [
+  { value: null, label: 'Tous' },
+  { value: 'mistral', label: 'Mistral' },
+  { value: 'human', label: 'Humain' },
+];
+
+const EMPTY_COUNTS: ModerationCounts = {
+  pending: { all: 0, mistral: 0, human: 0 },
+  history: { all: 0, mistral: 0, human: 0 },
+};
 
 // Le CSS Tailwind est pré-compilé (src/index.css) : seules les classes déjà présentes fonctionnent,
 // les autres couleurs passent par `style`.
-const STATUS: Record<ModerationStatus, { label: string; className: string; accent: string }> = {
-  flagged: { label: 'Signalé, toujours en ligne', className: 'bg-amber-50 text-amber-800 border-amber-200', accent: '#f59e0b' },
-  removed: { label: 'Retiré', className: 'bg-red-100 text-red-800 border-red-200', accent: '#ef4444' },
-  confirmed: { label: 'Retrait confirmé', className: 'bg-red-50 text-red-700 border-red-200', accent: '#fca5a5' },
-  restored: { label: 'Restauré', className: 'bg-green-100 text-green-800 border-green-200', accent: '#86efac' },
-  dismissed: { label: 'Gardé en ligne', className: 'bg-gray-100 text-gray-700 border-gray-200', accent: '#d1d5db' },
+const STATUS_STYLE = {
+  flagged: { className: 'bg-amber-50 text-amber-800 border-amber-200', accent: '#f59e0b' },
+  removed: { className: 'bg-red-100 text-red-800 border-red-200', accent: '#ef4444' },
+  confirmed: { className: 'bg-red-50 text-red-700 border-red-200', accent: '#fca5a5' },
+  restored: { className: 'bg-green-100 text-green-800 border-green-200', accent: '#86efac' },
+  dismissed: { className: 'bg-gray-100 text-gray-700 border-gray-200', accent: '#d1d5db' },
 };
 
 const TYPE_LABEL: Record<ModerationRecord['contentType'], string> = {
@@ -41,11 +56,34 @@ const TYPE_LABEL: Record<ModerationRecord['contentType'], string> = {
 };
 
 const ACTION_DONE: Record<ModerationAction, string> = {
-  remove: 'Contenu retiré du site et archivé',
-  dismiss: 'Contenu gardé en ligne',
+  remove: 'Contenu banni : retiré du site et archivé',
+  dismiss: 'Signalement ignoré : le contenu reste en ligne',
   confirm: 'Retrait confirmé',
-  restore: 'Contenu restauré',
+  restore: 'Contenu remis en ligne',
 };
+
+// Retrait automatique de Mistral, pas encore vérifié par un humain
+const isAutoRemoval = (record: ModerationRecord) => record.status === 'removed' && record.decidedBy === 'mistral';
+
+function statusLabel(record: ModerationRecord) {
+  switch (record.status) {
+    case 'flagged': return 'Signalé, toujours en ligne';
+    case 'removed': return isAutoRemoval(record) ? 'Retiré automatiquement, à vérifier' : 'Retiré par un admin';
+    case 'confirmed': return 'Retrait confirmé';
+    case 'restored': return 'Remis en ligne';
+    case 'dismissed': return 'Ignoré, toujours en ligne';
+  }
+}
+
+// Qui a soulevé le cas
+function originLabels(record: ModerationRecord) {
+  return record.raisedBy.map((origin) => {
+    if (origin === 'mistral') return 'Mistral';
+    if (origin === 'admin') return 'Admin';
+    const n = record.reportCount;
+    return n > 0 ? `${n} signalement${n > 1 ? 's' : ''} d'utilisateur${n > 1 ? 's' : ''}` : 'Signalé par des utilisateurs';
+  });
+}
 
 function formatDate(iso: string | null) {
   if (!iso) return '';
@@ -54,35 +92,35 @@ function formatDate(iso: string | null) {
   });
 }
 
-function decidedByLabel(record: ModerationRecord) {
-  if (!record.decidedBy) return '';
-  if (record.decidedBy === 'mistral') return 'Mistral (automatique)';
-  return record.history.some((h) => h.action === 'ban') ? 'Banni à la main par un admin' : 'Admin';
-}
+const percent = (score: number) =>
+  `${(score * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 
 export function AdminModerationTab() {
   const navigate = useNavigate();
   const [view, setView] = useState<ModerationView>('pending');
+  const [origin, setOrigin] = useState<ModerationOrigin | null>(null);
   const [records, setRecords] = useState<ModerationRecord[]>([]);
-  const [counts, setCounts] = useState<Record<ModerationView, number>>({ pending: 0, removed: 0, history: 0 });
+  const [counts, setCounts] = useState<ModerationCounts>(EMPTY_COUNTS);
+  const [thresholds, setThresholds] = useState<ModerationThresholds | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processingKey, setProcessingKey] = useState<string | null>(null);
 
-  const load = useCallback(async (v: ModerationView) => {
+  const load = useCallback(async (v: ModerationView, o: ModerationOrigin | null) => {
     setIsLoading(true);
-    const result = await fetchModerationRecords(v);
+    const result = await fetchModerationRecords(v, o);
     if (!result) {
       toast.error('Impossible de charger les dossiers de modération');
     } else {
       setRecords(result.data);
       setCounts(result.counts);
+      setThresholds(result.thresholds ?? null);
     }
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    load(view);
-  }, [view, load]);
+    load(view, origin);
+  }, [view, origin, load]);
 
   const act = async (record: ModerationRecord, action: ModerationAction) => {
     setProcessingKey(record.key);
@@ -92,7 +130,7 @@ export function AdminModerationTab() {
       toast.success(skipped && action === 'restore'
         ? `${ACTION_DONE[action]} (${skipped} lien${skipped > 1 ? 's' : ''} non recréé${skipped > 1 ? 's' : ''})`
         : ACTION_DONE[action]);
-      await load(view);
+      await load(view, origin);
     } else {
       toast.error(result.error || 'Action impossible');
     }
@@ -104,14 +142,17 @@ export function AdminModerationTab() {
     navigate(`/content/${collection}/${key}`);
   };
 
+  const barColor = (score: number) =>
+    !thresholds ? '#f59e0b' : score >= thresholds.remove ? '#ef4444' : score >= thresholds.flag ? '#f59e0b' : '#9ca3af';
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-600">
-        Contenus analysés par Mistral : les cas douteux sont signalés et restent en ligne en attendant votre décision,
-        les cas graves sont retirés automatiquement. Tout retrait est archivé et peut être annulé.
+        « À traiter » regroupe ce qui attend une décision : les contenus signalés par Mistral ou par des utilisateurs,
+        et les retraits automatiques de Mistral à vérifier. Tout retrait est archivé et se restaure depuis l'historique.
       </p>
 
-      {/* Filtres */}
+      {/* Vues */}
       <div className="flex flex-wrap gap-2">
         {VIEWS.map((v) => (
           <Button
@@ -121,11 +162,26 @@ export function AdminModerationTab() {
             onClick={() => setView(v.value)}
           >
             {v.label}
-            {v.value !== 'history' && counts[v.value] > 0 && (
+            {v.value === 'pending' && counts.pending.all > 0 && (
               <Badge variant={view === v.value ? 'secondary' : 'destructive'} className="ml-1">
-                {counts[v.value]}
+                {counts.pending.all}
               </Badge>
             )}
+          </Button>
+        ))}
+      </div>
+
+      {/* Qui a soulevé le cas */}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-gray-500">Soulevé par :</span>
+        {ORIGINS.map((o) => (
+          <Button
+            key={o.label}
+            size="sm"
+            variant={origin === o.value ? 'secondary' : 'ghost'}
+            onClick={() => setOrigin(o.value)}
+          >
+            {o.label} ({counts[view][o.value ?? 'all']})
           </Button>
         ))}
       </div>
@@ -142,16 +198,17 @@ export function AdminModerationTab() {
       ) : (
         records.map((record) => {
           const busy = processingKey === record.key;
-          const status = STATUS[record.status];
+          const style = STATUS_STYLE[record.status];
           return (
-            <Card key={record.key} className="border-l-4" style={{ borderLeftColor: status.accent }}>
+            <Card key={record.key} className="border-l-4" style={{ borderLeftColor: style.accent }}>
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{TYPE_LABEL[record.contentType]}</Badge>
-                  <Badge variant="outline" className={status.className}>{status.label}</Badge>
-                  <span className="text-sm text-gray-500">
-                    {decidedByLabel(record)} · {formatDate(record.createdAt)}
-                  </span>
+                  <Badge variant="outline" className={style.className}>{statusLabel(record)}</Badge>
+                  {originLabels(record).map((label) => (
+                    <Badge key={label} variant="secondary">{label}</Badge>
+                  ))}
+                  <span className="text-sm text-gray-500">{formatDate(record.createdAt)}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
                   Par {record.authors.map((a) => a.name).join(', ') || 'auteur inconnu'}
@@ -166,10 +223,10 @@ export function AdminModerationTab() {
                   </p>
                 </div>
 
-                {/* Motifs */}
-                {record.reasons.length > 0 && (
+                {/* Motifs (les signalements d'utilisateurs sont déjà dans le badge d'origine) */}
+                {record.reasons.some((r) => r.category !== 'user_reports') && (
                   <div className="space-y-2">
-                    {record.reasons.map((reason) => (
+                    {record.reasons.filter((r) => r.category !== 'user_reports').map((reason) => (
                       <div key={reason.category} className="flex items-center gap-3 text-sm">
                         <span className="w-52 shrink-0 text-gray-700">{reason.label}</span>
                         {typeof reason.score === 'number' && (
@@ -177,13 +234,10 @@ export function AdminModerationTab() {
                             <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden" style={{ maxWidth: '12rem' }}>
                               <div
                                 className="h-full"
-                                style={{
-                                  width: `${Math.round(reason.score * 100)}%`,
-                                  backgroundColor: reason.score >= 0.8 ? '#ef4444' : '#f59e0b',
-                                }}
+                                style={{ width: `${reason.score * 100}%`, backgroundColor: barColor(reason.score) }}
                               />
                             </div>
-                            <span className="w-12 text-right text-gray-600">{Math.round(reason.score * 100)}%</span>
+                            <span className="text-right text-gray-600" style={{ width: '3.5rem' }}>{percent(reason.score)}</span>
                           </>
                         )}
                       </div>
@@ -197,38 +251,32 @@ export function AdminModerationTab() {
                   </p>
                 )}
 
-                {/* Actions */}
+                {/* Actions : bannir ou ignorer dans « À traiter », restaurer dans l'historique */}
                 <div className="flex flex-wrap gap-2">
-                  {record.status === 'flagged' && (
+                  {view === 'pending' && (
                     <>
-                      <Button variant="destructive" disabled={busy} onClick={() => act(record, 'remove')}>
+                      <Button
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => act(record, isAutoRemoval(record) ? 'confirm' : 'remove')}
+                      >
                         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
                         Bannir
                       </Button>
-                      <Button variant="outline" disabled={busy} onClick={() => act(record, 'dismiss')}>
+                      <Button
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => act(record, isAutoRemoval(record) ? 'restore' : 'dismiss')}
+                      >
                         <CheckCircle className="w-4 h-4" />
-                        Garder en ligne
+                        {isAutoRemoval(record) ? 'Ignorer et remettre en ligne' : 'Ignorer'}
                       </Button>
                     </>
                   )}
-                  {(record.status === 'removed' || record.status === 'confirmed') && (
+                  {view === 'history' && (record.status === 'removed' || record.status === 'confirmed') && (
                     <Button variant="outline" disabled={busy} onClick={() => act(record, 'restore')}>
                       {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
                       Restaurer
-                    </Button>
-                  )}
-                  {record.status === 'removed' && (
-                    <Button variant="destructive" disabled={busy} onClick={() => act(record, 'confirm')}>
-                      <Ban className="w-4 h-4" />
-                      Confirmer le retrait
-                    </Button>
-                  )}
-                  {/* Fausse manip : un contenu gardé en ligne ou restauré peut être retiré après coup */}
-                  {(record.status === 'dismissed' || record.status === 'restored') && (
-                    <Button variant="destructive" disabled={busy || !record.online} onClick={() => act(record, 'remove')}
-                      title={record.online ? undefined : "Le contenu n'est plus en ligne"}>
-                      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
-                      Retirer
                     </Button>
                   )}
                   {record.online && (

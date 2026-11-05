@@ -1,13 +1,7 @@
 // src/router/AdminPageWrapper.tsx
 import { useState, useEffect } from 'react';
 import { AdminPage } from '../components/AdminPage';
-import { 
-  fetchReportedContent, 
-  handleReport, 
-  ReportedContent,
-  FieldContact,
-  addFieldContact
-} from '../api/adminService';
+import { FieldContact, addFieldContact } from '../api/adminService';
 import { toast } from 'sonner';
 import { useAuth } from '../context/authContext';
 import { Loader2, Shield, AlertTriangle } from 'lucide-react';
@@ -21,82 +15,22 @@ import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
  * Vérifie l'autorisation admin avant d'afficher la page
  */
 export function AdminPageWrapper() {
-  const [reportedContent, setReportedContent] = useState<ReportedContent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
 
-  // Charger les contenus signalés une fois l'auth initialisée
+  // Une fois l'auth initialisée, vérifier le rôle admin
+  // (les signalements des utilisateurs sont dans l'onglet « Modération », qui les charge lui-même)
   useEffect(() => {
     if (!authLoading) {
-      // Vérifier si l'utilisateur a le rôle admin
       // hasAdminRole() vérifie automatiquement :
       // 1. Si l'utilisateur est authentifié via Keycloak (pas un invité)
       // 2. Si l'utilisateur a le rôle "admin:{tenant}"
       if (!hasAdminRole()) {
         console.warn('⚠️ [AdminPage] Utilisateur non autorisé');
         setIsUnauthorized(true);
-        setIsLoading(false);
-        return;
       }
-      loadReportedContent();
     }
   }, [authLoading]);
-
-  const loadReportedContent = async () => {
-    setIsLoading(true);
-    try {
-      console.log('🔄 [AdminPage] Chargement des contenus signalés...');
-      const result = await fetchReportedContent(20, 0);
-      if (result) {
-        // Vérifier si l'utilisateur est non autorisé (erreur 403 de l'API)
-        if (result.unauthorized) {
-          console.warn('⚠️ [AdminPage] Accès refusé par l\'API (403)');
-          setIsUnauthorized(true);
-        } else {
-          setReportedContent(result.data);
-          console.log(`✅ [AdminPage] ${result.data.length} contenus signalés chargés`);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors du chargement des contenus signalés:', error);
-      toast.error('Impossible de charger les contenus signalés');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteReport = async (contentType: 'ideas' | 'posts', contentId: string) => {
-    try {
-      const result = await handleReport(contentType, contentId, 'delete');
-      if (result.success) {
-        toast.success('Contenu retiré et archivé (restaurable dans « Modération auto »)');
-        // Recharger la liste
-        await loadReportedContent();
-      } else {
-        toast.error('Erreur lors de la suppression du contenu');
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      toast.error('Erreur lors de la suppression du contenu');
-    }
-  };
-
-  const handleIgnoreReport = async (contentType: 'ideas' | 'posts', contentId: string) => {
-    try {
-      const result = await handleReport(contentType, contentId, 'ignore');
-      if (result.success) {
-        toast.success('Signalement ignoré avec succès');
-        // Recharger la liste
-        await loadReportedContent();
-      } else {
-        toast.error('Erreur lors de l\'ignorance du signalement');
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'ignorance:', error);
-      toast.error('Erreur lors de l\'ignorance du signalement');
-    }
-  };
 
   const handleAddContact = async (contact: FieldContact): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -156,12 +90,6 @@ export function AdminPageWrapper() {
   }
 
   return (
-    <AdminPage
-      onDeleteReport={handleDeleteReport}
-      onIgnoreReport={handleIgnoreReport}
-      reportedContent={reportedContent}
-      isLoading={isLoading}
-      onAddContact={handleAddContact}
-    />
+    <AdminPage onAddContact={handleAddContact} />
   );
 }

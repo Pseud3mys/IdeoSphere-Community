@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Idea, User } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Heart, Eye, MapPin, Flag, Ban } from 'lucide-react';
+import { Heart, Eye, MapPin, Flag, Shield } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { ContentActionDialogs } from './ContentActionDialogs';
@@ -13,7 +13,7 @@ import { CreatorAvatar } from './CreatorAvatar';
 import { CreatorNames } from './CreatorNames';
 import { getFirstCreator } from '../utils/userValidation';
 import { GroupBadgeList } from './group/GroupBadgeList';
-import { AdminBanDialog, isAdminUser } from './AdminBanDialog';
+import { AdminModerateDialog, isAdminUser } from './AdminModerateDialog';
 
 interface IdeaCardProps {
   idea: Idea;
@@ -62,7 +62,7 @@ export function IdeaCard({
 }: IdeaCardProps) {
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
+  const [isModerateDialogOpen, setIsModerateDialogOpen] = useState(false);
 
   const { getCurrentUser, getIdeaById, getUserById, getGroupById } = useEntityStoreSimple();
   
@@ -220,11 +220,11 @@ export function IdeaCard({
                   size="sm" 
                   className="text-xs text-muted-foreground hover:text-gray-600 h-8 px-3 sm:h-6 sm:px-2"
                   onClick={(e) => e.stopPropagation()}
-                  title="Ignorer ou Signaler"
+                  title={isAdminUser() ? 'Masquer ou Modérer' : 'Ignorer ou Signaler'}
                 >
                   {/* Mobile: flag only, desktop: text only */}
                   <span className="sm:hidden"><Flag className="w-4 h-4" /></span>
-                  <span className="hidden sm:inline">Ignorer/Signaler</span>
+                  <span className="hidden sm:inline">{isAdminUser() ? 'Masquer/Modérer' : 'Ignorer/Signaler'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -236,7 +236,8 @@ export function IdeaCard({
                     Masquer cette idée
                   </DropdownMenuItem>
                 )}
-                {onReport && (
+                {/* Un admin ne signale pas : il modère (évaluation Mistral ou bannissement) */}
+                {onReport && !isAdminUser() && (
                   <DropdownMenuItem 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -252,12 +253,12 @@ export function IdeaCard({
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsBanDialogOpen(true);
+                      setIsModerateDialogOpen(true);
                     }}
                     className="text-destructive"
                   >
-                    <Ban className="w-4 h-4 mr-2" />
-                    Bannir (admin)
+                    <Shield className="w-4 h-4 mr-2" />
+                    Modérer (admin)
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -309,7 +310,7 @@ export function IdeaCard({
         onReportConfirm={handleReportConfirm}
       />
       {isAdminUser() && (
-        <AdminBanDialog open={isBanDialogOpen} onOpenChange={setIsBanDialogOpen} contentId={latestIdea.id} kind="idea" />
+        <AdminModerateDialog open={isModerateDialogOpen} onOpenChange={setIsModerateDialogOpen} contentId={latestIdea.id} kind="idea" />
       )}
     </div>
   );

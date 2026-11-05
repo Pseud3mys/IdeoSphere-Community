@@ -6,22 +6,16 @@ import { Group, Location } from '../types';
 import { RawGroup, transformGroup } from './transformService';
 
 /**
- * Type pour le contenu signalé
+ * Modération : un dossier par contenu signalé (par Mistral ou par des utilisateurs) ou retiré
  */
-export interface ReportedContent {
-  contentType: 'ideas' | 'posts';
-  contentId: string;
-  content: any;
-  reportCount: number;
-  firstReportedAt: string;
-}
-
-/**
- * Modération automatique (Mistral) : un dossier par contenu signalé ou retiré
- */
-export type ModerationView = 'pending' | 'removed' | 'history';
+// pending : ce qui attend un humain (signalés, retraits automatiques à vérifier) ; history : ce qui est réglé
+export type ModerationView = 'pending' | 'history';
+// Qui a soulevé le cas : Mistral, ou un humain (signalements d'utilisateurs, admin)
+export type ModerationOrigin = 'mistral' | 'human';
 export type ModerationAction = 'remove' | 'dismiss' | 'confirm' | 'restore';
 export type ModerationStatus = 'flagged' | 'removed' | 'confirmed' | 'restored' | 'dismissed';
+export type ModerationCounts = Record<ModerationView, { all: number; mistral: number; human: number }>;
+export interface ModerationThresholds { remove: number; flag: number }
 
 export interface ModerationReason {
   category: string;
@@ -39,7 +33,9 @@ export interface ModerationRecord {
   text: string;
   online: boolean;            // le contenu est-il visible sur le site ?
   authors: { id: string; name: string }[];
-  decidedBy: string | null;   // "mistral" ou "admin:..."
+  decidedBy: string | null;   // "mistral", "admin:..." ou "users" (signalé par des utilisateurs)
+  raisedBy: ('mistral' | 'users' | 'admin')[];
+  reportCount: number;        // nombre d'utilisateurs qui ont signalé le contenu
   createdAt: string;
   reasons: ModerationReason[];
   categoryScores: Record<string, number>;
@@ -69,8 +65,61 @@ export async function fetchBanReasons(): Promise<ModerationReason[]> {
 }
 
 /**
+ * Évaluation Mistral demandée par un admin : rien n'est retiré, l'admin décide ensuite
+ */
+export interface ContentEvaluation {
+  action: 'none' | 'flag' | 'remove';   // ce qu'aurait fait la modération automatique (seuils actuels)
+  scores: Required<ModerationReason>[]; // catégories prises en compte, de la plus haute à la plus basse
+  reasons: Required<ModerationReason>[];
+  thresholds: { remove: number; flag: number };
+  evaluatedAt: string | null;
+}
+
+/**
+ * Dernière évaluation Mistral du contenu, gardée en base : réaffichée sans rappeler Mistral.
+ * null s'il n'y en a pas (ou si le texte a changé depuis).
+ * GET /api/admin/moderation/evaluation?contentId=&commentId=
+ */
+export async function fetchLastEvaluation(contentId: string, commentId?: string): Promise<ContentEvaluation | null> {
+  try {
+    const response = await apiClient.get('/admin/moderation/evaluation', { params: { contentId, commentId } });
+    return response.data.status === 'done' ? response.data : null;
+  } catch (error) {
+    console.error(`❌ [Admin API] Erreur lors de la lecture de l'évaluation de ${contentId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Demande à Mistral d'évaluer un contenu et attend sa réponse (en général quelques secondes)
+ * POST /api/admin/moderation/evaluate, puis GET /api/admin/moderation/evaluate/{id} chaque seconde
+ */
+export async function evaluateContent(
+  contentId: string,
+  commentId?: string,
+  timeoutMs: number = 30000
+): Promise<{ success: boolean; data?: ContentEvaluation; error?: string }> {
+  try {
+    const start = await apiClient.post('/admin/moderation/evaluate', { contentId, commentId });
+    const evaluationId: string = start.data.evaluationId;
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await apiClient.get(`/admin/moderation/evaluate/${evaluationId}`);
+      if (response.data.status === 'done') return { success: true, data: response.data };
+      if (response.data.status === 'error') return { success: false, error: response.data.message };
+    }
+    return { success: false, error: "Mistral n'a pas répondu à temps." };
+  } catch (error: any) {
+    console.error(`❌ [Admin API] Erreur lors de l'évaluation de ${contentId}:`, error);
+    return { success: false, error: error.response?.data?.message };
+  }
+}
+
+/**
  * Bannit à la main un contenu vu sur le site (retiré et archivé, restaurable)
  * POST /api/admin/moderation/ban
+ * Si le contenu a été évalué par Mistral, le serveur joint l'évaluation au dossier.
  */
 export async function banContent(
   contentId: string,
@@ -92,20 +141,23 @@ export async function banContent(
 }
 
 /**
- * Liste les dossiers de modération d'une vue
- * GET /api/admin/moderation?view=pending|removed|history
+ * Liste les dossiers d'une vue (« À traiter » ou « Historique »), éventuellement limités à ce qu'a
+ * soulevé Mistral ou un humain (signalements d'utilisateurs, admin)
+ * GET /api/admin/moderation?view=pending|history&origin=mistral|human
  */
 export async function fetchModerationRecords(
   view: ModerationView,
+  origin: ModerationOrigin | null = null,
   limit: number = 50,
   offset: number = 0
-): Promise<{ data: ModerationRecord[]; counts: Record<ModerationView, number>; unauthorized?: boolean } | null> {
+): Promise<{ data: ModerationRecord[]; counts: ModerationCounts; thresholds?: ModerationThresholds; unauthorized?: boolean } | null> {
   try {
-    const response = await apiClient.get('/admin/moderation', { params: { view, limit, offset } });
+    const response = await apiClient.get('/admin/moderation', { params: { view, origin: origin || undefined, limit, offset } });
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 403) {
-      return { data: [], counts: { pending: 0, removed: 0, history: 0 }, unauthorized: true };
+      const empty = { all: 0, mistral: 0, human: 0 };
+      return { data: [], counts: { pending: empty, history: empty }, unauthorized: true };
     }
     console.error(`❌ [Admin API] Erreur lors de la récupération des dossiers de modération:`, error);
     return null;
@@ -195,54 +247,6 @@ export async function reportContent(contentType: 'ideas' | 'posts', contentId: s
   } catch (error) {
     console.error(`❌ [Admin API] Erreur lors du signalement:`, error);
     return false;
-  }
-}
-
-/**
- * Supprime ou ignore un signalement
- * DELETE /api/admin/report/{contentType}/{contentId}?action=delete|ignore
- */
-export async function handleReport(
-  contentType: 'ideas' | 'posts',
-  contentId: string,
-  action: 'delete' | 'ignore'
-): Promise<{ success: boolean; data?: any }> {
-  console.log(`🔄 [Admin API] ${action} signalement de ${contentType}/${contentId}`);
-  try {
-    const response = await apiClient.delete(`/admin/report/${contentType}/${contentId}`, {
-      params: { action }
-    });
-    console.log(`✅ [Admin API] Signalement traité avec succès:`, response.data);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error(`❌ [Admin API] Erreur lors du traitement du signalement:`, error);
-    return { success: false };
-  }
-}
-
-/**
- * Liste les contenus signalés
- * GET /api/admin/reported-content?limit=20&offset=0
- */
-export async function fetchReportedContent(
-  limit: number = 20,
-  offset: number = 0
-): Promise<{ data: ReportedContent[]; total: number; limit: number; offset: number; unauthorized?: boolean } | null> {
-  console.log(`🔄 [Admin API] Récupération des contenus signalés (limit: ${limit}, offset: ${offset})`);
-  try {
-    const response = await apiClient.get('/admin/reported-content', {
-      params: { limit, offset }
-    });
-    console.log(`✅ [Admin API] ${response.data.total} contenus signalés récupérés`);
-    return response.data;
-  } catch (error: any) {
-    // Vérifier si c'est une erreur 403 (non autorisé)
-    if (error.response?.status === 403) {
-      console.warn(`⚠️ [Admin API] Accès refusé (403) - Utilisateur non autorisé`);
-      return { data: [], total: 0, limit, offset, unauthorized: true };
-    }
-    console.error(`❌ [Admin API] Erreur lors de la récupération des contenus signalés:`, error);
-    return null;
   }
 }
 
