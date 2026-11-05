@@ -3,6 +3,7 @@ import IdeoSphereLogo from '../assets/logo.png';
 import { AuthButtons } from './AuthButtons';
 import { clientConfig } from '../config/clientConfig';
 import { Button } from './ui/button';
+import { NotificationBell } from './NotificationBell';
 
 interface AppHeaderProps {
   currentUserData: User | null;
@@ -68,6 +69,9 @@ export function AppHeader({
               </Button>
             )}
             
+            {/* Notifications (utilisateur connecté, pages internes) */}
+            {!isWelcomePage && <NotificationBell />}
+
             {/* Bouton d'aide pour les pages internes */}
             {!isWelcomePage && onHelpClick && (
               <button

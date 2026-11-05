@@ -1,4 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNotifications } from '../context/NotificationContext';
+import { AppNotification } from '../api/notificationService';
+import { notificationTarget } from '../utils/notificationText';
+import { NotificationItem } from './NotificationItem';
 import { Idea, Post } from '../types';
 import { useEntityStoreSimple } from '../hooks/useEntityStoreSimple';
 import { useAuth } from '../context/authContext';
@@ -14,10 +19,9 @@ import {
   Bell,
   Filter,
   Plus,
-  MessageCircle,
-  Heart,
-  TrendingUp,
   Lightbulb,
+  Loader2,
+  CheckCheck,
   LogIn,
   UserPlus,
   Lock,
@@ -50,19 +54,6 @@ type ContentTypeFilter = 'all' | 'posts' | 'ideas';
 type RelationFilter = 'all' | 'created' | 'participated' | 'supported';
 type GroupFilter = 'all' | string; // 'all' ou un groupId
 
-// Interface pour les notifications
-interface Notification {
-  id: string;
-  type: 'new_support' | 'new_comment' | 'new_rating' | 'new_discussion' | 'new_version' | 'new_reply' | 'idea_from_post';
-  contentId: string;
-  contentType: 'idea' | 'post';
-  contentTitle: string;
-  actors: Array<{ name: string; avatar: string }>; // Plusieurs acteurs pour les notifications groupées
-  timestamp: Date; // Date de la plus récente activité
-  count: number; // Nombre d'activités groupées
-  metadata?: any; // Données supplémentaires (ex: version number, discussion title)
-}
-
 export function MyContributionsPage({
   onIdeaClick,
   onPostClick,
@@ -80,7 +71,6 @@ export function MyContributionsPage({
     getAllPosts,
     getAllIdeas,
     getAllGroups,
-    getUserById,
   } = useEntityStoreSimple();
 
   const { login, register } = useAuth();
@@ -91,7 +81,33 @@ export function MyContributionsPage({
   const allGroups = getAllGroups();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'contributions' | 'notifications'>('contributions');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'contributions' | 'notifications'>(
+    searchParams.get('tab') === 'notifications' ? 'notifications' : 'contributions'
+  );
+  const notificationsState = useNotifications();
+  const navigate = useNavigate();
+
+  // Lien de la cloche alors qu'on est déjà sur la page : on bascule sur l'onglet
+  useEffect(() => {
+    if (searchParams.get('tab') === 'notifications') setActiveTab('notifications');
+  }, [searchParams]);
+
+  // Ouverture de l'onglet : liste à jour
+  const { refresh: refreshNotifications } = notificationsState;
+  useEffect(() => {
+    if (activeTab === 'notifications') refreshNotifications();
+  }, [activeTab, refreshNotifications]);
+
+  const changeTab = (tab: 'contributions' | 'notifications') => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'notifications' ? { tab } : {}, { replace: true });
+  };
+
+  const openNotification = (n: AppNotification) => {
+    notificationsState.markRead([n.key]);
+    navigate(notificationTarget(n));
+  };
   
   // Filtres
   const [contentTypeFilter, setContentTypeFilter] = useState<ContentTypeFilter>('all');
@@ -220,219 +236,6 @@ export function MyContributionsPage({
   }, [allMyContent, contentTypeFilter, relationFilter, groupFilter, searchQuery]);
 
   // ============================================================================
-  // CALCUL DES NOTIFICATIONS (GROUPÉES)
-  // ============================================================================
-
-  const notifications = useMemo(() => {
-    if (!currentUser) return [];
-    
-    // Map temporaire pour grouper: clé = type-contentId
-    const groupedMap = new Map<string, Notification>();
-
-    // Parcourir tout mon contenu pour détecter les activités
-    allMyContent.forEach(({ item, type }) => {
-      if (type === 'post') {
-        const post = item as Post;
-        
-        // Grouper les soutiens sur ce post
-        const supportKey = `support-post-${post.id}`;
-        const supporters = post.supporters
-          .filter(id => id !== currentUser.id)
-          .map(id => getUserById(id))
-          .filter(Boolean) as any[];
-        
-        if (supporters.length > 0) {
-          groupedMap.set(supportKey, {
-            id: supportKey,
-            type: 'new_support',
-            contentId: post.id,
-            contentType: 'post',
-            contentTitle: post.title || post.content.substring(0, 50) + '...',
-            actors: supporters.map(s => ({ name: s.name, avatar: s.avatar })),
-            timestamp: post.createdAt,
-            count: supporters.length,
-          });
-        }
-
-        // Grouper les réponses (replies) sur ce post
-        const replyKey = `reply-post-${post.id}`;
-        const repliers = post.replies
-          .filter(reply => reply.authorId !== currentUser.id)
-          .map(reply => ({
-            user: getUserById(reply.authorId),
-            date: reply.createdAt
-          }))
-          .filter(item => item.user);
-        
-        if (repliers.length > 0) {
-          // Trouver la date de la réponse la plus récente
-          const mostRecentDate = repliers.reduce((latest, item) => 
-            item.date > latest ? item.date : latest, 
-            repliers[0].date
-          );
-
-          groupedMap.set(replyKey, {
-            id: replyKey,
-            type: 'new_reply',
-            contentId: post.id,
-            contentType: 'post',
-            contentTitle: post.title || post.content.substring(0, 50) + '...',
-            actors: repliers.map(c => ({ name: c.user!.name, avatar: c.user!.avatar })),
-            timestamp: mostRecentDate,
-            count: repliers.length,
-          });
-        }
-      } else {
-        const idea = item as Idea;
-        
-        // Grouper les soutiens sur cette idée
-        const supportKey = `support-idea-${idea.id}`;
-        const supporters = idea.supporters
-          .filter(id => id !== currentUser.id)
-          .map(id => getUserById(id))
-          .filter(Boolean) as any[];
-        
-        if (supporters.length > 0) {
-          groupedMap.set(supportKey, {
-            id: supportKey,
-            type: 'new_support',
-            contentId: idea.id,
-            contentType: 'idea',
-            contentTitle: idea.title,
-            actors: supporters.map(s => ({ name: s.name, avatar: s.avatar })),
-            timestamp: idea.createdAt,
-            count: supporters.length,
-          });
-        }
-
-        // Grouper les évaluations sur cette idée
-        const ratingKey = `rating-idea-${idea.id}`;
-        const raters = (idea.ratings || [])
-          .filter(rating => rating.userId !== currentUser.id)
-          .map(rating => getUserById(rating.userId))
-          .filter(Boolean) as any[];
-        
-        if (raters.length > 0) {
-          groupedMap.set(ratingKey, {
-            id: ratingKey,
-            type: 'new_rating',
-            contentId: idea.id,
-            contentType: 'idea',
-            contentTitle: idea.title,
-            actors: raters.map(r => ({ name: r.name, avatar: r.avatar })),
-            timestamp: idea.createdAt,
-            count: raters.length,
-          });
-        }
-
-        // Nouvelles discussions dans ce projet
-        if (idea.discussionThreads && idea.discussionThreads.length > 0) {
-          const discussionKey = `discussion-idea-${idea.id}`;
-          const discussionCreators = idea.discussionThreads
-            .filter(thread => thread.createdBy !== currentUser.id)
-            .map(thread => ({
-              user: getUserById(thread.createdBy),
-              date: thread.createdAt,
-              title: thread.title
-            }))
-            .filter(item => item.user);
-
-          if (discussionCreators.length > 0) {
-            const mostRecentDate = discussionCreators.reduce((latest, item) => 
-              item.date > latest ? item.date : latest, 
-              discussionCreators[0].date
-            );
-
-            groupedMap.set(discussionKey, {
-              id: discussionKey,
-              type: 'new_discussion',
-              contentId: idea.id,
-              contentType: 'idea',
-              contentTitle: idea.title,
-              actors: discussionCreators.map(d => ({ name: d.user!.name, avatar: d.user!.avatar })),
-              timestamp: mostRecentDate,
-              count: discussionCreators.length,
-              metadata: { discussionTitle: discussionCreators[0].title }
-            });
-          }
-        }
-
-        // Nouvelles versions de ce projet
-        if (idea.versionHistory && idea.versionHistory.length > 1) {
-          const versionKey = `version-idea-${idea.id}`;
-          // Exclure la version initiale (version 1)
-          const versions = idea.versionHistory
-            .filter(v => v.version > 1)
-            .map(v => ({
-              user: getUserById(v.createdBy),
-              date: v.createdAt,
-              version: v.version,
-              description: v.description
-            }))
-            .filter(item => item.user);
-
-          if (versions.length > 0) {
-            const mostRecentVersion = versions.reduce((latest, item) => 
-              item.date > latest.date ? item : latest, 
-              versions[0]
-            );
-
-            groupedMap.set(versionKey, {
-              id: versionKey,
-              type: 'new_version',
-              contentId: idea.id,
-              contentType: 'idea',
-              contentTitle: idea.title,
-              actors: versions.map(v => ({ name: v.user!.name, avatar: v.user!.avatar })),
-              timestamp: mostRecentVersion.date,
-              count: versions.length,
-              metadata: { versionNumber: mostRecentVersion.version, description: mostRecentVersion.description }
-            });
-          }
-        }
-      }
-    });
-
-    // Détecter les projets créés à partir de mes posts
-    const myPostIds = allPosts
-      .filter(post => post.authorId === currentUser.id)
-      .map(post => post.id);
-
-    allIdeas.forEach(idea => {
-      if (idea.sourcePostId && myPostIds.includes(idea.sourcePostId)) {
-        const ideaKey = `idea-from-post-${idea.id}`;
-        const creators = idea.creatorIds
-          .filter(id => id !== currentUser.id)
-          .map(id => getUserById(id))
-          .filter(Boolean) as any[];
-
-        if (creators.length > 0) {
-          const sourcePost = allPosts.find(p => p.id === idea.sourcePostId);
-          groupedMap.set(ideaKey, {
-            id: ideaKey,
-            type: 'idea_from_post',
-            contentId: idea.id,
-            contentType: 'idea',
-            contentTitle: idea.title,
-            actors: creators.map(c => ({ name: c.name, avatar: c.avatar })),
-            timestamp: idea.createdAt,
-            count: creators.length,
-            metadata: { sourcePostTitle: sourcePost?.title || sourcePost?.content.substring(0, 50) + '...' }
-          });
-        }
-      }
-    });
-
-    // Convertir en array et trier par date décroissante (plus récent d'abord)
-    return Array.from(groupedMap.values()).sort((a, b) => {
-      // Sécurité : vérifier que les timestamps existent et sont valides
-      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : 0;
-      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : 0;
-      return timeB - timeA;
-    });
-  }, [allMyContent, currentUser, getUserById, allPosts, allIdeas]);
-
-  // ============================================================================
   // STATISTIQUES
   // ============================================================================
 
@@ -460,46 +263,6 @@ export function MyContributionsPage({
   // ============================================================================
   // HELPERS
   // ============================================================================
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'new_support': return <Heart className="h-4 w-4 text-red-500" />;
-      case 'new_reply': return <MessageCircle className="h-4 w-4 text-blue-500" />;
-      case 'new_rating': return <TrendingUp className="h-4 w-4 text-green-500" />;
-      case 'new_discussion': return <MessageCircle className="h-4 w-4 text-purple-500" />;
-      case 'new_version': return <FileText className="h-4 w-4 text-orange-500" />;
-      case 'idea_from_post': return <Lightbulb className="h-4 w-4 text-yellow-500" />;
-      default: return <Bell className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getNotificationText = (notification: Notification) => {
-    const { count, type, contentType } = notification;
-    
-    if (count === 1) {
-      // Une seule personne
-      switch (type) {
-        case 'new_support': return `a soutenu votre ${contentType === 'idea' ? 'projet' : 'post'}`;
-        case 'new_reply': return 'a répondu à votre post';
-        case 'new_rating': return 'a évalué votre projet';
-        case 'new_discussion': return 'a créé une discussion sur votre projet';
-        case 'new_version': return `a publié une nouvelle version de votre projet (v${notification.metadata?.versionNumber})`;
-        case 'idea_from_post': return 'a créé un projet à partir de votre post';
-        default: return 'a interagi avec votre contenu';
-      }
-    } else {
-      // Plusieurs personnes
-      switch (type) {
-        case 'new_support': return `ont soutenu votre ${contentType === 'idea' ? 'projet' : 'post'}`;
-        case 'new_reply': return 'ont répondu à votre post';
-        case 'new_rating': return 'ont évalué votre projet';
-        case 'new_discussion': return 'ont créé des discussions sur votre projet';
-        case 'new_version': return `ont publié des nouvelles versions de votre projet`;
-        case 'idea_from_post': return 'ont créé des projets à partir de votre post';
-        default: return 'ont interagi avec votre contenu';
-      }
-    }
-  };
 
   const getRelationLabel = (relation: string) => {
     switch (relation) {
@@ -594,7 +357,7 @@ export function MyContributionsPage({
       </div>
 
       {/* Tabs principales */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(v) => changeTab(v as 'contributions' | 'notifications')} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="contributions" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -604,8 +367,8 @@ export function MyContributionsPage({
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notifications
-            {notifications.length > 0 && (
-              <Badge variant="destructive" className="ml-2">{notifications.length}</Badge>
+            {notificationsState.unread > 0 && (
+              <Badge variant="destructive" className="ml-2">{notificationsState.unread}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
@@ -750,86 +513,40 @@ export function MyContributionsPage({
           )}
         </TabsContent>
 
-        {/* Tab: Notifications */}
-        <TabsContent value="notifications" className="space-y-6">
-          
-          {notifications.length === 0 ? (
+        {/* Tab: Notifications (regroupées côté serveur, voir NotificationContext) */}
+        <TabsContent value="notifications" className="space-y-4">
+          {notificationsState.unread > 0 && (
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={notificationsState.markAllRead}>
+                <CheckCheck className="h-4 w-4" />
+                Tout marquer comme lu
+              </Button>
+            </div>
+          )}
+
+          {notificationsState.isLoading && notificationsState.notifications.length === 0 ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          ) : notificationsState.notifications.length === 0 ? (
             <Alert>
               <AlertDescription>
-                Aucune activité pour le moment. Créez du contenu et attendez que la communauté interagisse !
+                Aucune activité pour le moment. Vous serez prévenu ici quand la communauté réagira à vos contenus,
+                ou quand un contenu que vous soutenez deviendra populaire.
               </AlertDescription>
             </Alert>
           ) : (
-            <div className="space-y-2">
-              {notifications.map(notification => (
-                <div
-                  key={notification.id}
-                  onClick={() => {
-                    if (notification.contentType === 'idea') {
-                      onIdeaClick(notification.contentId);
-                    } else {
-                      onPostClick(notification.contentId);
-                    }
-                  }}
-                  className="flex items-start gap-3 p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
-                >
-                  <div className="mt-1">{getNotificationIcon(notification.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    {notification.count === 1 ? (
-                      // Une seule personne
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="h-6 w-6 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                          {notification.actors[0].avatar && (
-                            <img src={notification.actors[0].avatar} alt="" className="w-full h-full object-cover" />
-                          )}
-                        </div>
-                        <span className="font-medium text-sm">{notification.actors[0].name}</span>
-                        <span className="text-sm text-gray-600">
-                          {getNotificationText(notification)}
-                        </span>
-                      </div>
-                    ) : (
-                      // Plusieurs personnes
-                      <div className="mb-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {/* Afficher jusqu'à 3 avatars */}
-                          <div className="flex -space-x-2">
-                            {notification.actors.slice(0, 3).map((actor, idx) => (
-                              <div
-                                key={idx}
-                                className="h-6 w-6 rounded-full bg-gray-200 overflow-hidden border-2 border-white flex-shrink-0"
-                              >
-                                {actor.avatar && (
-                                  <img src={actor.avatar} alt="" className="w-full h-full object-cover" />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="font-medium text-sm">
-                            {notification.count === 2 
-                              ? `${notification.actors[0].name} et ${notification.actors[1].name}`
-                              : `${notification.actors[0].name} et ${notification.count - 1} autres`
-                            }
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {getNotificationText(notification)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-sm text-gray-700 truncate">"{notification.contentTitle}"</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.timestamp).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-1">
+              {notificationsState.notifications.map((n) => (
+                <NotificationItem key={n.key} notification={n} onClick={openNotification} />
               ))}
+              {notificationsState.hasMore && (
+                <div className="flex justify-center pt-2">
+                  <Button variant="ghost" size="sm" onClick={notificationsState.loadMore}>
+                    Voir plus
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </TabsContent>

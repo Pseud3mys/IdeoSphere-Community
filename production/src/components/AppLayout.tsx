@@ -5,6 +5,7 @@ import { AppHeader } from './AppHeader';
 import { Navigation } from './Navigation';
 import { OnboardingTour } from './OnboardingTour';
 import { Toaster } from './ui/sonner';
+import { NotificationProvider } from '../context/NotificationContext';
 
 /**
  * AppLayout
@@ -60,6 +61,7 @@ export function AppLayout() {
   };
 
   return (
+    <NotificationProvider>
     <div className="min-h-screen bg-gray-50">
       {/* Header de l'application */}
       <AppHeader
@@ -89,5 +91,6 @@ export function AppLayout() {
       {/* Notifications toast */}
       <Toaster position="bottom-right" />
     </div>
+    </NotificationProvider>
   );
 }
